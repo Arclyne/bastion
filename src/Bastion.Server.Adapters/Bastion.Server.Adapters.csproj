@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+        <PackageReference Include="log4net" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Bastion.Domain\Bastion.Domain.csproj" />
+        <ProjectReference Include="..\Bastion.Server.Application\Bastion.Server.Application.csproj" />
+    </ItemGroup>
+
+</Project>

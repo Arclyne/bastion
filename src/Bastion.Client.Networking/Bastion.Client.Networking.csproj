@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <PackageReference Include="System.ServiceModel.Primitives" />
+        <PackageReference Include="System.ServiceModel.NetTcp" />
+        <PackageReference Include="log4net" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Bastion.Contracts\Bastion.Contracts.csproj" PrivateAssets="all" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CommonExitButton" xml:space="preserve">
+    <value>Salir</value>
+  </data>
+  <data name="LoginTagline" xml:space="preserve">
+    <value>Laberinto de muros</value>
+  </data>
+  <data name="LoginIdentifierLabel" xml:space="preserve">
+    <value>Nickname o correo</value>
+  </data>
+  <data name="LoginIdentifierPlaceholder" xml:space="preserve">
+    <value>Escribe tu nickname o correo</value>
+  </data>
+  <data name="LoginIdentifierRequired" xml:space="preserve">
+    <value>Escribe tu nickname o correo.</value>
+  </data>
+  <data name="LoginPasswordLabel" xml:space="preserve">
+    <value>Contraseña</value>
+  </data>
+  <data name="LoginPasswordRequired" xml:space="preserve">
+    <value>Escribe tu contraseña.</value>
+  </data>
+  <data name="LoginShowPasswordButton" xml:space="preserve">
+    <value>Mostrar</value>
+  </data>
+  <data name="LoginButton" xml:space="preserve">
+    <value>Iniciar sesión</value>
+  </data>
+  <data name="LoginNoAccount" xml:space="preserve">
+    <value>¿Aún no tienes cuenta?</value>
+  </data>
+  <data name="LoginCreateAccountButton" xml:space="preserve">
+    <value>Crear cuenta</value>
+  </data>
+  <data name="LoginTwoFactorHint" xml:space="preserve">
+    <value>Si activaste la verificación en dos pasos, después te pediremos un código.</value>
+  </data>
+  <data name="LoginButtonBusy" xml:space="preserve">
+    <value>Iniciando sesión...</value>
+  </data>
+  <data name="LoginCredentialsRejected" xml:space="preserve">
+    <value>El usuario o la contraseña son incorrectos. Revisa los dos datos e inténtalo de nuevo.</value>
+  </data>
+  <data name="LoginAccountLockedTitleFormat" xml:space="preserve">
+    <value>Cuenta bloqueada por {0} minutos</value>
+  </data>
+  <data name="LoginAccountLockedMessage" xml:space="preserve">
+    <value>Hubo demasiados intentos seguidos. Espera unos minutos y vuelve a intentarlo.</value>
+  </data>
+  <data name="LoginAccountPending" xml:space="preserve">
+    <value>Tu cuenta aún no está verificada. Revisa tu correo.</value>
+  </data>
+  <data name="LoginAccountSanctioned" xml:space="preserve">
+    <value>Tu cuenta está suspendida y no puede iniciar sesión por ahora.</value>
+  </data>
+  <data name="DialogServerUnreachableTitle" xml:space="preserve">
+    <value>No pudimos conectar con el servidor</value>
+  </data>
+  <data name="DialogServerUnreachableMessage" xml:space="preserve">
+    <value>Revisa tu conexión a internet e inténtalo de nuevo. Si sigue igual, puede que el servidor esté en mantenimiento.</value>
+  </data>
+  <data name="DialogConnectionLostTitle" xml:space="preserve">
+    <value>Se perdió la conexión</value>
+  </data>
+  <data name="DialogConnectionLostMessage" xml:space="preserve">
+    <value>No sabemos si tu solicitud llegó al servidor. Vuelve a intentarlo en un momento.</value>
+  </data>
+  <data name="DialogServerErrorTitle" xml:space="preserve">
+    <value>Algo salió mal en el servidor</value>
+  </data>
+  <data name="DialogServerErrorMessage" xml:space="preserve">
+    <value>No pudimos abrir tu sesión. Inténtalo de nuevo en un momento.</value>
+  </data>
+  <data name="CommonRetryButton" xml:space="preserve">
+    <value>Reintentar</value>
+  </data>
+  <data name="CommonAcceptButton" xml:space="preserve">
+    <value>Aceptar</value>
+  </data>
+  <data name="MainMenuFindMatch" xml:space="preserve">
+    <value>Buscar partida</value>
+  </data>
+  <data name="MainMenuFindMatchDetail" xml:space="preserve">
+    <value>Clásico 9×9 · 5 min</value>
+  </data>
+  <data name="MainMenuPrivateMatch" xml:space="preserve">
+    <value>Partida privada</value>
+  </data>
+  <data name="MainMenuCreateRoom" xml:space="preserve">
+    <value>Crear sala</value>
+  </data>
+  <data name="MainMenuJoinWithCode" xml:space="preserve">
+    <value>Unirse con código</value>
+  </data>
+  <data name="MainMenuSettings" xml:space="preserve">
+    <value>Ajustes</value>
+  </data>
+  <data name="MainMenuHowToPlay" xml:space="preserve">
+    <value>Cómo jugar</value>
+  </data>
+  <data name="MainMenuClassicMode" xml:space="preserve">
+    <value>Clásico 9×9</value>
+  </data>
+</root>

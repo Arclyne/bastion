@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <PackageReference Include="log4net" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Bastion.Domain\Bastion.Domain.csproj" />
+    </ItemGroup>
+
+</Project>

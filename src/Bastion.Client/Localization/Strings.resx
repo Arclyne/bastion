@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppName" xml:space="preserve">
+    <value>Bastión</value>
+  </data>
+  <data name="AppVersionFormat" xml:space="preserve">
+    <value>Bastión {0}</value>
+  </data>
+  <data name="LanguageNameEnglish" xml:space="preserve">
+    <value>English (US)</value>
+  </data>
+  <data name="LanguageNameSpanish" xml:space="preserve">
+    <value>Español (MX)</value>
+  </data>
+  <data name="CommonExitButton" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="LoginTagline" xml:space="preserve">
+    <value>Maze of walls</value>
+  </data>
+  <data name="LoginIdentifierLabel" xml:space="preserve">
+    <value>Nickname or email</value>
+  </data>
+  <data name="LoginIdentifierPlaceholder" xml:space="preserve">
+    <value>Enter your nickname or email</value>
+  </data>
+  <data name="LoginIdentifierRequired" xml:space="preserve">
+    <value>Enter your nickname or email.</value>
+  </data>
+  <data name="LoginPasswordLabel" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="LoginPasswordRequired" xml:space="preserve">
+    <value>Enter your password.</value>
+  </data>
+  <data name="LoginShowPasswordButton" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="LoginButton" xml:space="preserve">
+    <value>Log in</value>
+  </data>
+  <data name="LoginNoAccount" xml:space="preserve">
+    <value>Don't have an account yet?</value>
+  </data>
+  <data name="LoginCreateAccountButton" xml:space="preserve">
+    <value>Create account</value>
+  </data>
+  <data name="LoginTwoFactorHint" xml:space="preserve">
+    <value>If you turned on two-step verification, we'll ask you for a code next.</value>
+  </data>
+  <data name="LoginButtonBusy" xml:space="preserve">
+    <value>Signing in...</value>
+  </data>
+  <data name="LoginCredentialsRejected" xml:space="preserve">
+    <value>The username or password is incorrect. Check both and try again.</value>
+  </data>
+  <data name="LoginAccountLockedTitleFormat" xml:space="preserve">
+    <value>Account locked for {0} minutes</value>
+  </data>
+  <data name="LoginAccountLockedMessage" xml:space="preserve">
+    <value>There were too many attempts in a row. Wait a few minutes and try again.</value>
+  </data>
+  <data name="LoginAccountPending" xml:space="preserve">
+    <value>Your account isn't verified yet. Check your email.</value>
+  </data>
+  <data name="LoginAccountSanctioned" xml:space="preserve">
+    <value>Your account is suspended and can't sign in right now.</value>
+  </data>
+  <data name="DialogServerUnreachableTitle" xml:space="preserve">
+    <value>We couldn't connect to the server</value>
+  </data>
+  <data name="DialogServerUnreachableMessage" xml:space="preserve">
+    <value>Check your internet connection and try again. If it keeps happening, the server may be under maintenance.</value>
+  </data>
+  <data name="DialogConnectionLostTitle" xml:space="preserve">
+    <value>The connection was lost</value>
+  </data>
+  <data name="DialogConnectionLostMessage" xml:space="preserve">
+    <value>We don't know if your request reached the server. Try again in a moment.</value>
+  </data>
+  <data name="DialogServerErrorTitle" xml:space="preserve">
+    <value>Something went wrong on the server</value>
+  </data>
+  <data name="DialogServerErrorMessage" xml:space="preserve">
+    <value>We couldn't open your session. Try again in a moment.</value>
+  </data>
+  <data name="CommonRetryButton" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="CommonAcceptButton" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="MainMenuFindMatch" xml:space="preserve">
+    <value>Find a match</value>
+  </data>
+  <data name="MainMenuFindMatchDetail" xml:space="preserve">
+    <value>Classic 9×9 · 5 min</value>
+  </data>
+  <data name="MainMenuPrivateMatch" xml:space="preserve">
+    <value>Private match</value>
+  </data>
+  <data name="MainMenuCreateRoom" xml:space="preserve">
+    <value>Create room</value>
+  </data>
+  <data name="MainMenuJoinWithCode" xml:space="preserve">
+    <value>Join with code</value>
+  </data>
+  <data name="MainMenuSettings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="MainMenuHowToPlay" xml:space="preserve">
+    <value>How to play</value>
+  </data>
+  <data name="MainMenuClassicMode" xml:space="preserve">
+    <value>Classic 9×9</value>
+  </data>
+</root>

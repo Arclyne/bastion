@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Bastion.Server.Application\Bastion.Server.Application.csproj" />
+    </ItemGroup>
+
+</Project>

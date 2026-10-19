@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <UserSecretsId>bastion-server-host</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CoreWCF.Primitives" />
+        <PackageReference Include="CoreWCF.NetTcp" />
+        <PackageReference Include="CoreWCF.ConfigurationManager" />
+        <PackageReference Include="log4net" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Bastion.Contracts\Bastion.Contracts.csproj" />
+        <ProjectReference Include="..\Bastion.Server.Application\Bastion.Server.Application.csproj" />
+        <ProjectReference Include="..\Bastion.Server.Adapters\Bastion.Server.Adapters.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="ServiceModel.config" CopyToOutputDirectory="PreserveNewest" />
+        <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+        <None Update="log4net.config" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+</Project>

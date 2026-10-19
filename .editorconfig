@@ -1,0 +1,108 @@
+# Bastion: formatting and naming rules derived from the team coding standard.
+# IDE* rules are checked at build time because Directory.Build.props sets EnforceCodeStyleInBuild.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{csproj,props,targets,slnx,xml,config,json,resx,yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.cs]
+# 3.1.1 Four spaces per level
+indent_style = space
+indent_size = 4
+tab_width = 4
+
+# 3.4.1 At most 120 characters per line
+max_line_length = 120
+
+# 3.3.1 Allman braces
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+
+# 3.2.1 Spacing
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_around_binary_operators = before_and_after
+
+# 4.3.1 Braces are mandatory (IDE0011)
+csharp_prefer_braces = true:warning
+dotnet_diagnostic.IDE0011.severity = warning
+
+# 3.5.1 var only when the type is apparent (IDE0007 / IDE0008)
+csharp_style_var_for_built_in_types = false:warning
+csharp_style_var_when_type_is_apparent = true:warning
+csharp_style_var_elsewhere = false:warning
+dotnet_diagnostic.IDE0007.severity = warning
+dotnet_diagnostic.IDE0008.severity = warning
+
+# 6.3 usings outside the namespace, System first, no blank lines between groups (IDE0065)
+csharp_using_directive_placement = outside_namespace:warning
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+dotnet_diagnostic.IDE0065.severity = warning
+
+# 6.4 File-scoped namespaces
+csharp_style_namespace_declarations = file_scoped:warning
+
+# 9.3.1 Catching the generic Exception is forbidden
+dotnet_diagnostic.CA1031.severity = warning
+
+# 4.6.1 Cyclomatic complexity <= 10 (threshold in CodeMetricsConfig.txt: "CA1502: 10")
+dotnet_diagnostic.CA1502.severity = warning
+
+# ---- Naming (section 2) ----
+
+# 2.5.1 Interfaces prefixed with I
+dotnet_naming_rule.interfaces_prefix_i.symbols = interface_symbols
+dotnet_naming_rule.interfaces_prefix_i.style = prefix_i_pascal
+dotnet_naming_rule.interfaces_prefix_i.severity = warning
+dotnet_naming_symbols.interface_symbols.applicable_kinds = interface
+dotnet_naming_style.prefix_i_pascal.required_prefix = I
+dotnet_naming_style.prefix_i_pascal.capitalization = pascal_case
+
+# 2.13.1 Generic type parameters prefixed with T
+dotnet_naming_rule.type_parameters_prefix_t.symbols = type_parameter_symbols
+dotnet_naming_rule.type_parameters_prefix_t.style = prefix_t_pascal
+dotnet_naming_rule.type_parameters_prefix_t.severity = warning
+dotnet_naming_symbols.type_parameter_symbols.applicable_kinds = type_parameter
+dotnet_naming_style.prefix_t_pascal.required_prefix = T
+dotnet_naming_style.prefix_t_pascal.capitalization = pascal_case
+
+# 2.3.1 Constants in PascalCase (must precede the private field rule)
+dotnet_naming_rule.constants_pascal.symbols = constant_symbols
+dotnet_naming_rule.constants_pascal.style = pascal_style
+dotnet_naming_rule.constants_pascal.severity = warning
+dotnet_naming_symbols.constant_symbols.applicable_kinds = field, local
+dotnet_naming_symbols.constant_symbols.required_modifiers = const
+
+# 2.6.1 / 2.6.2 Private and internal fields (instance and static) in _camelCase
+dotnet_naming_rule.private_fields_underscore.symbols = private_field_symbols
+dotnet_naming_rule.private_fields_underscore.style = underscore_camel
+dotnet_naming_rule.private_fields_underscore.severity = warning
+dotnet_naming_symbols.private_field_symbols.applicable_kinds = field
+dotnet_naming_symbols.private_field_symbols.applicable_accessibilities = private, internal
+dotnet_naming_style.underscore_camel.required_prefix = _
+dotnet_naming_style.underscore_camel.capitalization = camel_case
+
+# 2.1.1 Parameters and locals in camelCase
+dotnet_naming_rule.locals_camel.symbols = local_symbols
+dotnet_naming_rule.locals_camel.style = camel_style
+dotnet_naming_rule.locals_camel.severity = warning
+dotnet_naming_symbols.local_symbols.applicable_kinds = parameter, local
+
+# 2.2.1 / 2.4.1 / 2.11.1 / 2.12.1 Types and members in PascalCase
+dotnet_naming_rule.members_pascal.symbols = member_symbols
+dotnet_naming_rule.members_pascal.style = pascal_style
+dotnet_naming_rule.members_pascal.severity = warning
+dotnet_naming_symbols.member_symbols.applicable_kinds = class, struct, enum, delegate, method, property, event, namespace
+
+dotnet_naming_style.pascal_style.capitalization = pascal_case
+dotnet_naming_style.camel_style.capitalization = camel_case

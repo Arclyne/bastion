@@ -1,0 +1,23 @@
+<Solution>
+    <Folder Name="/Solution Items/">
+        <File Path=".gitattributes" />
+        <File Path=".gitignore" />
+        <File Path="Directory.Build.props" />
+        <File Path="Directory.Packages.props" />
+    </Folder>
+    <Folder Name="/src/">
+        <Project Path="src/Bastion.Client/Bastion.Client.csproj" />
+        <Project Path="src/Bastion.Client.Networking/Bastion.Client.Networking.csproj" />
+        <Project Path="src/Bastion.Contracts/Bastion.Contracts.csproj" />
+        <Project Path="src/Bastion.Domain/Bastion.Domain.csproj" />
+        <Project Path="src/Bastion.Server.Adapters/Bastion.Server.Adapters.csproj" />
+        <Project Path="src/Bastion.Server.Application/Bastion.Server.Application.csproj" />
+        <Project Path="src/Bastion.Server.Host/Bastion.Server.Host.csproj" />
+    </Folder>
+    <Folder Name="/tests/">
+        <File Path="tests/Directory.Build.props" />
+        <Project Path="tests/Bastion.Client.Tests/Bastion.Client.Tests.csproj" />
+        <Project Path="tests/Bastion.Domain.Tests/Bastion.Domain.Tests.csproj" />
+        <Project Path="tests/Bastion.Server.Application.Tests/Bastion.Server.Application.Tests.csproj" />
+    </Folder>
+</Solution>
