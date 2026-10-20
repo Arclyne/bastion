@@ -6,5 +6,7 @@ namespace Bastion.Contracts.Accounts;
 public interface IAccountService
 {
     [OperationContract]
-    AccessDecision LogIn(PlayerCredentials credentials, ClientDevice device);
+    [FaultContract(typeof(InvalidCredentialsFault))]
+    [FaultContract(typeof(AccountRestrictedFault))]
+    PlayerSession LogIn(PlayerCredentials credentials, ClientDevice device);
 }

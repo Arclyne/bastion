@@ -29,17 +29,15 @@ public class TestLoginService
     }
 
     [Fact]
-    public void LogIn_UnknownIdentifier_ReturnsInvalidCredentials()
+    public void LogIn_UnknownIdentifier_ThrowsInvalidCredentials()
     {
-        LoginOutcome outcome = _service.LogIn(CreateAttempt("nadie"), Password);
-
-        Assert.Equal(LoginOutcomeCode.InvalidCredentials, outcome.Code);
+        Assert.Throws<InvalidCredentialsException>(() => _service.LogIn(CreateAttempt("nadie"), Password));
     }
 
     [Fact]
     public void LogIn_UnknownIdentifier_StillChecksAPassword()
     {
-        _service.LogIn(CreateAttempt("nadie"), Password);
+        TryLogIn("nadie", Password);
 
         Assert.Equal(1, _passwordHasher.VerifyCount);
     }
@@ -47,19 +45,17 @@ public class TestLoginService
     [Fact]
     public void LogIn_UnknownIdentifier_RecordsAccountNotFound()
     {
-        _service.LogIn(CreateAttempt("nadie"), Password);
+        TryLogIn("nadie", Password);
 
         Assert.Equal(AccessLogResult.AccountNotFound, _unitOfWork.AccessLogStore.AccessLogs[0].Result);
     }
 
     [Fact]
-    public void LogIn_WrongPassword_ReturnsInvalidCredentials()
+    public void LogIn_WrongPassword_ThrowsInvalidCredentials()
     {
         StoreActiveAccount();
 
-        LoginOutcome outcome = _service.LogIn(CreateAttempt(Nickname), WrongPassword);
-
-        Assert.Equal(LoginOutcomeCode.InvalidCredentials, outcome.Code);
+        Assert.Throws<InvalidCredentialsException>(() => _service.LogIn(CreateAttempt(Nickname), WrongPassword));
     }
 
     [Fact]
@@ -67,32 +63,34 @@ public class TestLoginService
     {
         Account account = StoreActiveAccount();
 
-        _service.LogIn(CreateAttempt(Nickname), WrongPassword);
+        TryLogIn(Nickname, WrongPassword);
 
         Assert.Equal(1, account.FailedAttempts);
     }
 
     [Fact]
-    public void LogIn_ThirdWrongPassword_ReturnsAccountLockedForFiveMinutes()
+    public void LogIn_ThirdWrongPassword_ThrowsAccountLockedForFiveMinutes()
     {
         StoreActiveAccount();
-        _service.LogIn(CreateAttempt(Nickname), WrongPassword);
-        _service.LogIn(CreateAttempt(Nickname), WrongPassword);
+        TryLogIn(Nickname, WrongPassword);
+        TryLogIn(Nickname, WrongPassword);
 
-        LoginOutcome outcome = _service.LogIn(CreateAttempt(Nickname), WrongPassword);
+        var rejection =
+            Record.Exception(() => _service.LogIn(CreateAttempt(Nickname), WrongPassword)) as AccountRestrictedException;
 
-        Assert.Equal(LoginOutcome.Locked(5), outcome);
+        Assert.Equal(5, rejection?.LockMinutes);
     }
 
     [Fact]
-    public void LogIn_LockedAccountWithRightPassword_ReturnsAccountLocked()
+    public void LogIn_LockedAccountWithRightPassword_ThrowsAccountLocked()
     {
         Account account = StoreActiveAccount();
         LockAccount(account);
 
-        LoginOutcome outcome = _service.LogIn(CreateAttempt(Nickname), Password);
+        var rejection =
+            Record.Exception(() => _service.LogIn(CreateAttempt(Nickname), Password)) as AccountRestrictedException;
 
-        Assert.Equal(LoginOutcomeCode.AccountLocked, outcome.Code);
+        Assert.Equal(AccountRestriction.Locked, rejection?.Restriction);
     }
 
     [Fact]
@@ -102,21 +100,22 @@ public class TestLoginService
         LockAccount(account);
         DateTime? lockedUntil = account.LockedUntil;
 
-        _service.LogIn(CreateAttempt(Nickname), WrongPassword);
+        TryLogIn(Nickname, WrongPassword);
 
         Assert.Equal(lockedUntil, account.LockedUntil);
     }
 
     [Fact]
-    public void LogIn_PendingAccount_ReturnsAccountPending()
+    public void LogIn_PendingAccount_ThrowsAccountPending()
     {
         var account = new Account(Nickname, Email);
         account.ChangePassword(FakePasswordHasher.HashOf(Password), new byte[] { 9 });
         _unitOfWork.AccountStore.Store(account);
 
-        LoginOutcome outcome = _service.LogIn(CreateAttempt(Nickname), Password);
+        var rejection =
+            Record.Exception(() => _service.LogIn(CreateAttempt(Nickname), Password)) as AccountRestrictedException;
 
-        Assert.Equal(LoginOutcomeCode.AccountPending, outcome.Code);
+        Assert.Equal(AccountRestriction.Pending, rejection?.Restriction);
     }
 
     [Fact]
@@ -124,19 +123,19 @@ public class TestLoginService
     {
         StoreActiveAccount();
 
-        LoginOutcome outcome = _service.LogIn(CreateAttempt(Nickname), Password);
+        SignedInPlayer player = _service.LogIn(CreateAttempt(Nickname), Password);
 
-        Assert.Equal(FakeSessionTokenGenerator.Token, outcome.Player?.SessionToken);
+        Assert.Equal(FakeSessionTokenGenerator.Token, player.SessionToken);
     }
 
     [Fact]
-    public void LogIn_ValidEmail_ReturnsSuccess()
+    public void LogIn_ValidEmail_ReturnsThePlayerNickname()
     {
         StoreActiveAccount();
 
-        LoginOutcome outcome = _service.LogIn(CreateAttempt(Email), Password);
+        SignedInPlayer player = _service.LogIn(CreateAttempt(Email), Password);
 
-        Assert.Equal(LoginOutcomeCode.Success, outcome.Code);
+        Assert.Equal(Nickname, player.Nickname);
     }
 
     [Fact]
@@ -153,7 +152,7 @@ public class TestLoginService
     public void LogIn_ValidCredentials_ResetsFailedAttempts()
     {
         Account account = StoreActiveAccount();
-        _service.LogIn(CreateAttempt(Nickname), WrongPassword);
+        TryLogIn(Nickname, WrongPassword);
 
         _service.LogIn(CreateAttempt(Nickname), Password);
 
@@ -200,5 +199,10 @@ public class TestLoginService
         account.Activate();
         _unitOfWork.AccountStore.Store(account);
         return account;
+    }
+
+    private void TryLogIn(string identifier, string password)
+    {
+        Record.Exception(() => _service.LogIn(CreateAttempt(identifier), password));
     }
 }

@@ -15,6 +15,8 @@ namespace Bastion.Server.Host.Accounts;
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class AccountService : IAccountService
 {
+    private const string ServerFailureReason = "The server could not complete the sign-in.";
+
     private static readonly ILog _logger = LogManager.GetLogger(typeof(AccountService));
 
     private readonly IServiceScopeFactory _scopeFactory;
@@ -26,11 +28,11 @@ public sealed class AccountService : IAccountService
         _scopeFactory = scopeFactory;
     }
 
-    public AccessDecision LogIn(PlayerCredentials credentials, ClientDevice device)
+    public PlayerSession LogIn(PlayerCredentials credentials, ClientDevice device)
     {
         if (credentials is null || device is null)
         {
-            return LoginTranslator.Deny(AccessDecisionCode.InvalidCredentials);
+            throw LoginTranslator.ToFault(new InvalidCredentialsException());
         }
 
         ClientConnection connection = LoginTranslator.ToConnection(device, CallerAddress.GetCurrent());
@@ -39,18 +41,26 @@ public sealed class AccountService : IAccountService
         {
             using IServiceScope scope = _scopeFactory.CreateScope();
             ILoginService loginService = scope.ServiceProvider.GetRequiredService<ILoginService>();
-            LoginOutcome outcome = loginService.LogIn(attempt, credentials.Password ?? string.Empty);
-            return LoginTranslator.ToDecision(outcome);
+            SignedInPlayer player = loginService.LogIn(attempt, credentials.Password ?? string.Empty);
+            return LoginTranslator.ToSession(player);
+        }
+        catch (InvalidCredentialsException ex)
+        {
+            throw LoginTranslator.ToFault(ex);
+        }
+        catch (AccountRestrictedException ex)
+        {
+            throw LoginTranslator.ToFault(ex);
         }
         catch (DbUpdateException ex)
         {
             _logger.Error($"The sign-in could not be saved. IpAddress={connection.IpAddress}", ex);
-            return LoginTranslator.Deny(AccessDecisionCode.ServerError);
+            throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)
         {
             _logger.Error($"The database could not be reached. IpAddress={connection.IpAddress}", ex);
-            return LoginTranslator.Deny(AccessDecisionCode.ServerError);
+            throw new FaultException(ServerFailureReason);
         }
     }
 }

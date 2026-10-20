@@ -1,4 +1,5 @@
 using System;
+using CoreWCF;
 using Bastion.Contracts.Accounts;
 using Bastion.Domain.Auditing;
 using Bastion.Domain.Sessions;
@@ -27,29 +28,9 @@ public static class LoginTranslator
         return new AccessAttempt((credentials.Identifier ?? string.Empty).Trim(), connection, now);
     }
 
-    public static AccessDecision ToDecision(LoginOutcome outcome)
+    public static PlayerSession ToSession(SignedInPlayer player)
     {
-        ArgumentNullException.ThrowIfNull(outcome);
-
-        return new AccessDecision
-        {
-            Code = ToDecisionCode(outcome.Code),
-            Session = ToSession(outcome.Player),
-            LockMinutes = outcome.LockMinutes,
-        };
-    }
-
-    public static AccessDecision Deny(AccessDecisionCode code)
-    {
-        return new AccessDecision { Code = code };
-    }
-
-    private static PlayerSession? ToSession(SignedInPlayer? player)
-    {
-        if (player is null)
-        {
-            return null;
-        }
+        ArgumentNullException.ThrowIfNull(player);
 
         return new PlayerSession
         {
@@ -59,24 +40,39 @@ public static class LoginTranslator
         };
     }
 
-    private static AccessDecisionCode ToDecisionCode(LoginOutcomeCode code)
+    public static FaultException<InvalidCredentialsFault> ToFault(InvalidCredentialsException rejection)
     {
-        switch (code)
+        ArgumentNullException.ThrowIfNull(rejection);
+
+        return new FaultException<InvalidCredentialsFault>(
+            new InvalidCredentialsFault(),
+            new FaultReason(rejection.Message));
+    }
+
+    public static FaultException<AccountRestrictedFault> ToFault(AccountRestrictedException rejection)
+    {
+        ArgumentNullException.ThrowIfNull(rejection);
+
+        var fault = new AccountRestrictedFault
         {
-            case LoginOutcomeCode.Success:
-                return AccessDecisionCode.Granted;
-            case LoginOutcomeCode.InvalidCredentials:
-                return AccessDecisionCode.InvalidCredentials;
-            case LoginOutcomeCode.AccountLocked:
-                return AccessDecisionCode.AccountLocked;
-            case LoginOutcomeCode.AccountPending:
-                return AccessDecisionCode.AccountPending;
-            case LoginOutcomeCode.AccountSuspended:
-                return AccessDecisionCode.AccountSuspended;
-            case LoginOutcomeCode.AccountBanned:
-                return AccessDecisionCode.AccountBanned;
+            Reason = ToReason(rejection.Restriction),
+            LockMinutes = rejection.LockMinutes,
+        };
+        return new FaultException<AccountRestrictedFault>(fault, new FaultReason(rejection.Message));
+    }
+
+    private static RestrictionReason ToReason(AccountRestriction restriction)
+    {
+        switch (restriction)
+        {
+            case AccountRestriction.Locked:
+                return RestrictionReason.Locked;
+            case AccountRestriction.Pending:
+                return RestrictionReason.Pending;
+            case AccountRestriction.Suspended:
+                return RestrictionReason.Suspended;
             default:
-                return AccessDecisionCode.ServerError;
+                return RestrictionReason.Banned;
         }
     }
 }

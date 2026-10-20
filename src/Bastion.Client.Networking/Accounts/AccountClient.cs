@@ -30,8 +30,8 @@ public sealed class AccountClient : IAccountClient, IDisposable
         };
         try
         {
-            AccessDecision decision = _channel.Call(service => service.LogIn(playerCredentials, device));
-            return ToOutcome(decision);
+            PlayerSession session = _channel.Call(service => service.LogIn(playerCredentials, device));
+            return new LoginOutcome(LoginStatus.Success, ToSignedInSession(session), 0);
         }
         catch (EndpointNotFoundException ex)
         {
@@ -40,8 +40,8 @@ public sealed class AccountClient : IAccountClient, IDisposable
         }
         catch (FaultException ex)
         {
-            _logger.Warn("The server answered with a fault.", ex);
-            return LoginOutcome.Failed(LoginStatus.ServerError);
+            _logger.Warn("The server turned down the sign-in.", ex);
+            return ToOutcome(ex);
         }
         catch (CommunicationException ex)
         {
@@ -60,36 +60,39 @@ public sealed class AccountClient : IAccountClient, IDisposable
         _channel.Dispose();
     }
 
-    private static LoginOutcome ToOutcome(AccessDecision decision)
+    private static SignedInSession ToSignedInSession(PlayerSession session)
     {
-        if (decision.Code != AccessDecisionCode.Granted || decision.Session is null)
-        {
-            return new LoginOutcome(ToStatus(decision.Code), null, decision.LockMinutes);
-        }
-
-        var session = new SignedInSession(
-            decision.Session.Token ?? string.Empty,
-            decision.Session.Nickname ?? string.Empty,
-            decision.Session.PreferredLanguage ?? string.Empty);
-        return new LoginOutcome(LoginStatus.Success, session, 0);
+        return new SignedInSession(
+            session.Token ?? string.Empty,
+            session.Nickname ?? string.Empty,
+            session.PreferredLanguage ?? string.Empty);
     }
 
-    private static LoginStatus ToStatus(AccessDecisionCode code)
+    private static LoginOutcome ToOutcome(FaultException fault)
     {
-        switch (code)
+        switch (fault)
         {
-            case AccessDecisionCode.InvalidCredentials:
-                return LoginStatus.InvalidCredentials;
-            case AccessDecisionCode.AccountLocked:
-                return LoginStatus.AccountLocked;
-            case AccessDecisionCode.AccountPending:
-                return LoginStatus.AccountPending;
-            case AccessDecisionCode.AccountSuspended:
-                return LoginStatus.AccountSuspended;
-            case AccessDecisionCode.AccountBanned:
-                return LoginStatus.AccountBanned;
+            case FaultException<InvalidCredentialsFault>:
+                return LoginOutcome.Failed(LoginStatus.InvalidCredentials);
+            case FaultException<AccountRestrictedFault> restricted:
+                return new LoginOutcome(ToStatus(restricted.Detail.Reason), null, restricted.Detail.LockMinutes);
             default:
-                return LoginStatus.ServerError;
+                return LoginOutcome.Failed(LoginStatus.ServerError);
+        }
+    }
+
+    private static LoginStatus ToStatus(RestrictionReason reason)
+    {
+        switch (reason)
+        {
+            case RestrictionReason.Locked:
+                return LoginStatus.AccountLocked;
+            case RestrictionReason.Pending:
+                return LoginStatus.AccountPending;
+            case RestrictionReason.Suspended:
+                return LoginStatus.AccountSuspended;
+            default:
+                return LoginStatus.AccountBanned;
         }
     }
 }

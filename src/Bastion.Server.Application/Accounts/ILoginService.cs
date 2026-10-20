@@ -4,5 +4,5 @@ namespace Bastion.Server.Application.Accounts;
 
 public interface ILoginService
 {
-    LoginOutcome LogIn(AccessAttempt attempt, string password);
+    SignedInPlayer LogIn(AccessAttempt attempt, string password);
 }

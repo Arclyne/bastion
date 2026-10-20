@@ -3,13 +3,10 @@ using System.Runtime.Serialization;
 namespace Bastion.Contracts.Accounts;
 
 [DataContract]
-public sealed class AccessDecision
+public sealed class AccountRestrictedFault
 {
     [DataMember]
-    public AccessDecisionCode Code { get; set; }
-
-    [DataMember]
-    public PlayerSession? Session { get; set; }
+    public RestrictionReason Reason { get; set; }
 
     [DataMember]
     public int LockMinutes { get; set; }

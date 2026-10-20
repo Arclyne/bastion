@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using log4net;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Auditing;
@@ -27,7 +28,7 @@ public sealed class LoginService : ILoginService
         _tokenGenerator = tokenGenerator;
     }
 
-    public LoginOutcome LogIn(AccessAttempt attempt, string password)
+    public SignedInPlayer LogIn(AccessAttempt attempt, string password)
     {
         ArgumentNullException.ThrowIfNull(attempt);
         ArgumentNullException.ThrowIfNull(password);
@@ -36,79 +37,90 @@ public sealed class LoginService : ILoginService
         if (account is null || !account.HasPassword)
         {
             _passwordHasher.Verify(password, null, null);
-            return Finish(
+            throw Reject(
                 new AccessLog(AccessLogResult.AccountNotFound, attempt, null),
-                LoginOutcome.Failed(LoginOutcomeCode.InvalidCredentials));
+                new InvalidCredentialsException());
         }
 
         if (account.IsLockedAt(attempt.OccurredAt))
         {
-            return Finish(
+            throw Reject(
                 new AccessLog(AccessLogResult.AccountLocked, attempt, account.AccountId),
-                LoginOutcome.Locked(account.GetRemainingLockMinutes(attempt.OccurredAt)));
+                CreateLockRestriction(account, attempt.OccurredAt));
         }
 
         if (!_passwordHasher.Verify(password, account.PasswordHash, account.PasswordSalt))
         {
-            return RejectPassword(account, attempt);
+            RejectPassword(account, attempt);
         }
 
         account.RecordSuccessfulSignIn();
         return Admit(account, attempt);
     }
 
-    private LoginOutcome RejectPassword(Account account, AccessAttempt attempt)
+    private static AccountRestrictedException CreateLockRestriction(Account account, DateTime now)
     {
-        account.RecordFailedSignIn(attempt.OccurredAt);
-        bool isNowLocked = account.IsLockedAt(attempt.OccurredAt);
-        LoginOutcome outcome = isNowLocked
-            ? LoginOutcome.Locked(account.GetRemainingLockMinutes(attempt.OccurredAt))
-            : LoginOutcome.Failed(LoginOutcomeCode.InvalidCredentials);
-        return Finish(new AccessLog(AccessLogResult.WrongPassword, attempt, account.AccountId), outcome);
+        return new AccountRestrictedException(AccountRestriction.Locked, account.GetRemainingLockMinutes(now));
     }
 
-    private LoginOutcome Admit(Account account, AccessAttempt attempt)
+    [DoesNotReturn]
+    private void RejectPassword(Account account, AccessAttempt attempt)
+    {
+        account.RecordFailedSignIn(attempt.OccurredAt);
+        var accessLog = new AccessLog(AccessLogResult.WrongPassword, attempt, account.AccountId);
+        if (account.IsLockedAt(attempt.OccurredAt))
+        {
+            throw Reject(accessLog, CreateLockRestriction(account, attempt.OccurredAt));
+        }
+
+        throw Reject(accessLog, new InvalidCredentialsException());
+    }
+
+    private SignedInPlayer Admit(Account account, AccessAttempt attempt)
     {
         switch (account.AccountStatus)
         {
             case AccountStatus.Active:
                 return OpenSession(account, attempt);
             case AccountStatus.Pending:
-                return Finish(
+                throw Reject(
                     new AccessLog(AccessLogResult.AccountPending, attempt, account.AccountId),
-                    LoginOutcome.Failed(LoginOutcomeCode.AccountPending));
+                    new AccountRestrictedException(AccountRestriction.Pending, 0));
             case AccountStatus.Suspended:
-                return Finish(
+                throw Reject(
                     new AccessLog(AccessLogResult.AccountSanctioned, attempt, account.AccountId),
-                    LoginOutcome.Failed(LoginOutcomeCode.AccountSuspended));
+                    new AccountRestrictedException(AccountRestriction.Suspended, 0));
             case AccountStatus.Banned:
-                return Finish(
+                throw Reject(
                     new AccessLog(AccessLogResult.AccountSanctioned, attempt, account.AccountId),
-                    LoginOutcome.Failed(LoginOutcomeCode.AccountBanned));
+                    new AccountRestrictedException(AccountRestriction.Banned, 0));
             default:
-                return Finish(
+                throw Reject(
                     new AccessLog(AccessLogResult.AccountNotFound, attempt, account.AccountId),
-                    LoginOutcome.Failed(LoginOutcomeCode.InvalidCredentials));
+                    new InvalidCredentialsException());
         }
     }
 
-    private LoginOutcome OpenSession(Account account, AccessAttempt attempt)
+    private SignedInPlayer OpenSession(Account account, AccessAttempt attempt)
     {
         GeneratedToken token = _tokenGenerator.Generate();
         var ticket = new SessionTicket(token.TokenHash, attempt.OccurredAt);
         _unitOfWork.Sessions.Add(new Session(account.AccountId, ticket, attempt.Connection));
-
-        var player = new SignedInPlayer(token.Token, account.Nickname, account.PreferredLanguage);
-        return Finish(
-            new AccessLog(AccessLogResult.LoginSucceeded, attempt, account.AccountId),
-            LoginOutcome.Succeeded(player));
+        Record(new AccessLog(AccessLogResult.LoginSucceeded, attempt, account.AccountId));
+        return new SignedInPlayer(token.Token, account.Nickname, account.PreferredLanguage);
     }
 
-    private LoginOutcome Finish(AccessLog accessLog, LoginOutcome outcome)
+    private TException Reject<TException>(AccessLog accessLog, TException rejection)
+        where TException : Exception
+    {
+        Record(accessLog);
+        return rejection;
+    }
+
+    private void Record(AccessLog accessLog)
     {
         _unitOfWork.AccessLogs.Add(accessLog);
         _unitOfWork.SaveChanges();
         _logger.Info($"Sign-in attempt processed. Result={accessLog.Result}; AccountId={accessLog.AccountId}");
-        return outcome;
     }
 }
