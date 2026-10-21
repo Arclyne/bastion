@@ -14,7 +14,7 @@ public sealed class AccountClient : IAccountClient, IDisposable
     private readonly ServiceChannel<IAccountService> _channel =
         new ServiceChannel<IAccountService>(ServiceEndpoints.AccountsPath);
 
-    public LoginOutcome LogIn(LoginCredentials credentials)
+    public SignedInSession LogIn(LoginCredentials credentials)
     {
         ArgumentNullException.ThrowIfNull(credentials);
 
@@ -31,27 +31,37 @@ public sealed class AccountClient : IAccountClient, IDisposable
         try
         {
             PlayerSession session = _channel.Call(service => service.LogIn(playerCredentials, device));
-            return new LoginOutcome(LoginStatus.Success, ToSignedInSession(session), 0);
+            return ToSignedInSession(session);
         }
         catch (EndpointNotFoundException ex)
         {
             _logger.Warn("The server could not be reached.", ex);
-            return LoginOutcome.Failed(LoginStatus.ServerUnreachable);
+            throw new ServerUnreachableException(ex);
+        }
+        catch (FaultException<InvalidCredentialsFault> ex)
+        {
+            _logger.Warn("The server turned down the credentials.", ex);
+            throw new InvalidCredentialsException(ex);
+        }
+        catch (FaultException<AccountRestrictedFault> ex)
+        {
+            _logger.Warn("The server turned down a restricted account.", ex);
+            throw new AccountRestrictedException(ToRestriction(ex.Detail.Reason), ex.Detail.LockMinutes, ex);
         }
         catch (FaultException ex)
         {
-            _logger.Warn("The server turned down the sign-in.", ex);
-            return ToOutcome(ex);
+            _logger.Warn("The server could not complete the sign-in.", ex);
+            throw new ServerErrorException(ex);
         }
         catch (CommunicationException ex)
         {
             _logger.Warn("The connection with the server was lost.", ex);
-            return LoginOutcome.Failed(LoginStatus.ConnectionLost);
+            throw new ConnectionLostException(ex);
         }
         catch (TimeoutException ex)
         {
             _logger.Warn("The server did not answer in time.", ex);
-            return LoginOutcome.Failed(LoginStatus.ConnectionLost);
+            throw new ConnectionLostException(ex);
         }
     }
 
@@ -68,31 +78,18 @@ public sealed class AccountClient : IAccountClient, IDisposable
             session.PreferredLanguage ?? string.Empty);
     }
 
-    private static LoginOutcome ToOutcome(FaultException fault)
-    {
-        switch (fault)
-        {
-            case FaultException<InvalidCredentialsFault>:
-                return LoginOutcome.Failed(LoginStatus.InvalidCredentials);
-            case FaultException<AccountRestrictedFault> restricted:
-                return new LoginOutcome(ToStatus(restricted.Detail.Reason), null, restricted.Detail.LockMinutes);
-            default:
-                return LoginOutcome.Failed(LoginStatus.ServerError);
-        }
-    }
-
-    private static LoginStatus ToStatus(RestrictionReason reason)
+    private static AccountRestriction ToRestriction(RestrictionReason reason)
     {
         switch (reason)
         {
             case RestrictionReason.Locked:
-                return LoginStatus.AccountLocked;
+                return AccountRestriction.Locked;
             case RestrictionReason.Pending:
-                return LoginStatus.AccountPending;
+                return AccountRestriction.Pending;
             case RestrictionReason.Suspended:
-                return LoginStatus.AccountSuspended;
+                return AccountRestriction.Suspended;
             default:
-                return LoginStatus.AccountBanned;
+                return AccountRestriction.Banned;
         }
     }
 }

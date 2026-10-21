@@ -163,9 +163,7 @@ public sealed class LoginViewModel : ViewModel
         IsBusy = true;
         try
         {
-            var credentials = new LoginCredentials(Identifier.Trim(), Password);
-            LoginOutcome outcome = await Task.Run(() => _accounts.LogIn(credentials));
-            ShowOutcome(outcome);
+            await RequestSession();
         }
         finally
         {
@@ -191,69 +189,64 @@ public sealed class LoginViewModel : ViewModel
         return !IsIdentifierMissing && !IsPasswordMissing;
     }
 
-    private void ShowOutcome(LoginOutcome outcome)
+    private async Task RequestSession()
     {
-        switch (outcome.Status)
+        try
         {
-            case LoginStatus.ServerUnreachable:
-                ShowDialog(
-                    nameof(Strings.DialogServerUnreachableTitle),
-                    nameof(Strings.DialogServerUnreachableMessage),
-                    true);
-                break;
-            case LoginStatus.ConnectionLost:
-                ShowDialog(
-                    nameof(Strings.DialogConnectionLostTitle),
-                    nameof(Strings.DialogConnectionLostMessage),
-                    false);
-                break;
-            case LoginStatus.ServerError:
-                ShowServerErrorDialog();
-                break;
-            default:
-                ShowAccountResult(outcome);
-                break;
+            var credentials = new LoginCredentials(Identifier.Trim(), Password);
+            SignedInSession session = await Task.Run(() => _accounts.LogIn(credentials));
+            EnterMainMenu(session);
         }
-    }
-
-    private void ShowAccountResult(LoginOutcome outcome)
-    {
-        switch (outcome.Status)
+        catch (InvalidCredentialsException)
         {
-            case LoginStatus.Success:
-                EnterMainMenu(outcome.Session);
-                break;
-            case LoginStatus.AccountLocked:
-                ShowNotice(
-                    NoticeTone.Warning,
-                    Format(Strings.LoginAccountLockedTitleFormat, outcome.LockMinutes),
-                    Strings.LoginAccountLockedMessage);
-                break;
-            case LoginStatus.AccountPending:
-                ShowNotice(NoticeTone.Warning, string.Empty, Strings.LoginAccountPending);
-                break;
-            case LoginStatus.AccountSuspended:
-            case LoginStatus.AccountBanned:
-                ShowNotice(NoticeTone.Error, string.Empty, Strings.LoginAccountSanctioned);
-                break;
-            case LoginStatus.InvalidCredentials:
-                Password = string.Empty;
-                ShowNotice(NoticeTone.Error, string.Empty, Strings.LoginCredentialsRejected);
-                break;
-            default:
-                ShowServerErrorDialog();
-                break;
+            Password = string.Empty;
+            ShowNotice(NoticeTone.Error, string.Empty, Strings.LoginCredentialsRejected);
         }
-    }
-
-    private void EnterMainMenu(SignedInSession? session)
-    {
-        if (session is null)
+        catch (AccountRestrictedException ex)
+        {
+            ShowRestriction(ex);
+        }
+        catch (ServerUnreachableException)
+        {
+            ShowDialog(
+                nameof(Strings.DialogServerUnreachableTitle),
+                nameof(Strings.DialogServerUnreachableMessage),
+                true);
+        }
+        catch (ConnectionLostException)
+        {
+            ShowDialog(
+                nameof(Strings.DialogConnectionLostTitle),
+                nameof(Strings.DialogConnectionLostMessage),
+                false);
+        }
+        catch (ServerErrorException)
         {
             ShowServerErrorDialog();
-            return;
         }
+    }
 
+    private void ShowRestriction(AccountRestrictedException restriction)
+    {
+        switch (restriction.Restriction)
+        {
+            case AccountRestriction.Locked:
+                ShowNotice(
+                    NoticeTone.Warning,
+                    Format(Strings.LoginAccountLockedTitleFormat, restriction.LockMinutes),
+                    Strings.LoginAccountLockedMessage);
+                break;
+            case AccountRestriction.Pending:
+                ShowNotice(NoticeTone.Warning, string.Empty, Strings.LoginAccountPending);
+                break;
+            default:
+                ShowNotice(NoticeTone.Error, string.Empty, Strings.LoginAccountSanctioned);
+                break;
+        }
+    }
+
+    private void EnterMainMenu(SignedInSession session)
+    {
         ApplyPreferredLanguage(session.PreferredLanguage);
         _navigator.ShowMainMenu(session.Nickname);
     }
