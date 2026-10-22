@@ -11,8 +11,7 @@ public sealed class AccountClient : IAccountClient, IDisposable
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(AccountClient));
 
-    private readonly ServiceChannel<IAccountService> _channel =
-        new ServiceChannel<IAccountService>(ServiceEndpoints.AccountsPath);
+    private readonly ServiceChannel<IAccountService> _channel = new ServiceChannel<IAccountService>(ServiceEndpoints.AccountsPath);
 
     public SignedInSession LogIn(LoginCredentials credentials)
     {

@@ -4,7 +4,6 @@ using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
 
 namespace Bastion.Client.Screens.Login;
 
