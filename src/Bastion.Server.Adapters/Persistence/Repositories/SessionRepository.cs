@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Bastion.Domain.Sessions;
 using Bastion.Server.Application.Sessions;
 
@@ -20,5 +21,12 @@ public sealed class SessionRepository : ISessionRepository
         ArgumentNullException.ThrowIfNull(session);
 
         _context.Sessions.Add(session);
+    }
+
+    public Session? FindByTokenHash(byte[] tokenHash)
+    {
+        ArgumentNullException.ThrowIfNull(tokenHash);
+
+        return _context.Sessions.FirstOrDefault(session => session.TokenHash == tokenHash);
     }
 }

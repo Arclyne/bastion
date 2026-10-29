@@ -4,6 +4,8 @@ using CoreWCF;
 using CoreWCF.Configuration;
 using Microsoft.Extensions.Configuration;
 using Bastion.Server.Host.Accounts;
+using Bastion.Server.Host.Chat;
+using Bastion.Server.Host.Sessions;
 
 namespace Bastion.Server.Host;
 
@@ -38,6 +40,8 @@ public sealed class ServerCertificate
         ArgumentNullException.ThrowIfNull(serviceBuilder);
 
         serviceBuilder.AddService<AccountService>();
+        serviceBuilder.AddService<SessionService>();
+        serviceBuilder.AddService<ChatService>();
         serviceBuilder.ConfigureAllServiceHostBase(ApplyTo);
     }
 

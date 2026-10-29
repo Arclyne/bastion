@@ -1,36 +1,30 @@
 using System;
 using System.ServiceModel;
-using System.ServiceModel.Security;
 
 namespace Bastion.Client.Networking.Channels;
 
 public sealed class ServiceChannel<TContract> : IDisposable
     where TContract : class
 {
-    private const string ServerCertificateName = "bastion-server";
-    private const int OpenTimeoutSeconds = 10;
-    private const int SendTimeoutSeconds = 20;
-
     private readonly ChannelFactory<TContract> _factory;
 
     public ServiceChannel(string path)
     {
         ArgumentNullException.ThrowIfNull(path);
 
-        var binding = new NetTcpBinding(SecurityMode.Transport)
-        {
-            OpenTimeout = TimeSpan.FromSeconds(OpenTimeoutSeconds),
-            SendTimeout = TimeSpan.FromSeconds(SendTimeoutSeconds),
-        };
-        binding.Security.Transport.ClientCredentialType = TcpClientCredentialType.None;
+        _factory = new ChannelFactory<TContract>(ChannelSettings.CreateBinding(), ChannelSettings.CreateAddress(path));
+        ChannelSettings.ApplyCertificateValidation(_factory);
+    }
 
-        var address = new EndpointAddress(ServerAddress.Create(path), new DnsEndpointIdentity(ServerCertificateName));
-        _factory = new ChannelFactory<TContract>(binding, address);
-        _factory.Credentials.ServiceCertificate.SslCertificateAuthentication = new X509ServiceCertificateAuthentication
+    public void Call(Action<TContract> operation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+
+        Call(channel =>
         {
-            CertificateValidationMode = X509CertificateValidationMode.Custom,
-            CustomCertificateValidator = new ThumbprintCertificateValidator(ServerAddress.GetCertificateThumbprint()),
-        };
+            operation(channel);
+            return true;
+        });
     }
 
     public TResult Call<TResult>(Func<TContract, TResult> operation)

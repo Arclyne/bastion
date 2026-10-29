@@ -12,7 +12,13 @@ public sealed class SessionTokenGenerator : ISessionTokenGenerator
     public GeneratedToken Generate()
     {
         string token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(TokenLength));
-        byte[] tokenHash = SHA256.HashData(Encoding.UTF8.GetBytes(token));
-        return new GeneratedToken(token, tokenHash);
+        return new GeneratedToken(token, Hash(token));
+    }
+
+    public byte[] Hash(string token)
+    {
+        ArgumentNullException.ThrowIfNull(token);
+
+        return SHA256.HashData(Encoding.UTF8.GetBytes(token));
     }
 }

@@ -3,7 +3,7 @@ using Gum;
 using Gum.Forms;
 using Microsoft.Xna.Framework;
 using Bastion.Client.Localization;
-using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking;
 using Bastion.Client.Screens;
 using Bastion.Client.Theme;
 
@@ -21,7 +21,7 @@ public sealed class BastionGame : Game
     private const float MaximumUiScale = 1.5f;
 
     private readonly GraphicsDeviceManager _graphics;
-    private readonly AccountClient _accountClient = new AccountClient();
+    private readonly ServerClients _serverClients = new ServerClients();
 
     public BastionGame()
     {
@@ -42,7 +42,7 @@ public sealed class BastionGame : Game
         ThemeInitializer.Initialize(this);
         var languages = new LanguageService(new LanguagePreferenceStore(), GumService.Default.LocalizationService);
         languages.Start();
-        new ScreenNavigator(languages, _accountClient).ShowLogin();
+        new ScreenNavigator(languages, _serverClients).ShowLogin();
         Window.ClientSizeChanged += OnClientSizeChanged;
         ApplyUiScale();
         base.Initialize();
@@ -66,7 +66,7 @@ public sealed class BastionGame : Game
         if (disposing)
         {
             Window.ClientSizeChanged -= OnClientSizeChanged;
-            _accountClient.Dispose();
+            _serverClients.Dispose();
         }
 
         base.Dispose(disposing);

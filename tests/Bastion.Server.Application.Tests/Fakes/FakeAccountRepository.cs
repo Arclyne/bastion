@@ -28,4 +28,9 @@ public sealed class FakeAccountRepository : IAccountRepository
 
         return null;
     }
+
+    public Account? FindById(int accountId)
+    {
+        return _accounts.Find(account => account.AccountId == accountId);
+    }
 }

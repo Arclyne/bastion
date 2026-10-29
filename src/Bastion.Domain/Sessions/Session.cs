@@ -48,4 +48,9 @@ public class Session
     public string DeviceFingerprint { get; private set; }
 
     public string ClientVersion { get; private set; }
+
+    public bool IsActiveAt(DateTime now)
+    {
+        return EndedAt is null && now < ExpiresAt;
+    }
 }

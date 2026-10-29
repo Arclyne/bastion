@@ -1,5 +1,6 @@
 using System;
 using Bastion.Client.Localization;
+using Bastion.Client.Networking;
 using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Screens.Login;
 using Bastion.Client.Screens.MainMenu;
@@ -11,28 +12,30 @@ namespace Bastion.Client.Screens;
 public sealed class ScreenNavigator : INavigator
 {
     private readonly ILanguageService _languages;
-    private readonly IAccountClient _accounts;
+    private readonly ServerClients _clients;
     private FrameworkElement? _currentScreen;
 
-    public ScreenNavigator(ILanguageService languages, IAccountClient accounts)
+    public ScreenNavigator(ILanguageService languages, ServerClients clients)
     {
         ArgumentNullException.ThrowIfNull(languages);
-        ArgumentNullException.ThrowIfNull(accounts);
+        ArgumentNullException.ThrowIfNull(clients);
 
         _languages = languages;
-        _accounts = accounts;
+        _clients = clients;
     }
 
     public void ShowLogin()
     {
-        Show(new LoginView(new LoginViewModel(_languages, _accounts, this)));
+        Show(new LoginView(new LoginViewModel(_languages, _clients.Accounts, this)));
     }
 
-    public void ShowMainMenu(string nickname)
+    public void ShowMainMenu(SignedInSession session)
     {
-        ArgumentNullException.ThrowIfNull(nickname);
+        ArgumentNullException.ThrowIfNull(session);
 
-        Show(new MainMenuView(new MainMenuViewModel(nickname)));
+        var viewModel = new MainMenuViewModel(session, _clients.Notifications, _clients.Chat);
+        Show(new MainMenuView(viewModel));
+        _ = viewModel.ConnectChat();
     }
 
     private void Show(FrameworkElement screen)

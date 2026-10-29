@@ -114,4 +114,19 @@
   <data name="MainMenuClassicMode" xml:space="preserve">
     <value>Clásico 9×9</value>
   </data>
+  <data name="MainMenuChatInvalid" xml:space="preserve">
+    <value>El mensaje debe tener de 1 a 200 caracteres.</value>
+  </data>
+  <data name="MainMenuChatPlaceholder" xml:space="preserve">
+    <value>Escribe un mensaje…</value>
+  </data>
+  <data name="MainMenuChatSend" xml:space="preserve">
+    <value>Enviar</value>
+  </data>
+  <data name="MainMenuChatTitle" xml:space="preserve">
+    <value>Chat del lobby</value>
+  </data>
+  <data name="MainMenuChatUnavailable" xml:space="preserve">
+    <value>El chat no está disponible por ahora.</value>
+  </data>
 </root>

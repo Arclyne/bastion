@@ -48,6 +48,7 @@ public sealed class MainMenuView : Panel
     private const float PrivateButtonWidth = 193;
     private const float PrivateButtonHeight = 52;
     private const float PrivateButtonSpacing = 14;
+    private const float ChatPanelY = 110;
 
     public MainMenuView(MainMenuViewModel viewModel)
     {
@@ -58,6 +59,7 @@ public sealed class MainMenuView : Panel
         AddChild(CreateIdentityChip());
         AddChild(CreateSettingsButton());
         AddChild(CreateTablet());
+        AddChild(CreateChatPanel(viewModel));
         AddChild(CreateHowToPlayButton());
         AddChild(ViewFactory.CreateVersionLabel());
     }
@@ -119,6 +121,16 @@ public sealed class MainMenuView : Panel
         text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuClassicMode), TextStyles.IdentityDetail));
         CenterVertically(text);
         return text;
+    }
+
+    private static LobbyChatPanel CreateChatPanel(MainMenuViewModel viewModel)
+    {
+        var panel = new LobbyChatPanel(viewModel)
+        {
+            X = ScreenMarginX,
+            Y = ChatPanelY,
+        };
+        return panel;
     }
 
     private static Button CreateSettingsButton()

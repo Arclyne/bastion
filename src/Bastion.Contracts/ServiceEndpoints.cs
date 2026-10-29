@@ -7,6 +7,8 @@ public static class ServiceEndpoints
     public const string DefaultHost = "localhost";
     public const int DefaultPort = 8000;
     public const string AccountsPath = "accounts";
+    public const string SessionsPath = "sessions";
+    public const string ChatPath = "chat";
 
     private const string Scheme = "net.tcp";
 
