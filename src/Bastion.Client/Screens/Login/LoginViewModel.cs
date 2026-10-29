@@ -248,7 +248,7 @@ public sealed class LoginViewModel : ViewModel
     private void EnterMainMenu(SignedInSession session)
     {
         ApplyPreferredLanguage(session.PreferredLanguage);
-        _navigator.ShowMainMenu(session.Nickname);
+        _navigator.ShowMainMenu(session);
     }
 
     private void ApplyPreferredLanguage(string preferredLanguage)

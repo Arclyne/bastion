@@ -8,6 +8,11 @@ public sealed class FakeSessionTokenGenerator : ISessionTokenGenerator
 
     public GeneratedToken Generate()
     {
-        return new GeneratedToken(Token, new byte[] { 1, 2, 3 });
+        return new GeneratedToken(Token, Hash(Token));
+    }
+
+    public byte[] Hash(string token)
+    {
+        return token == Token ? new byte[] { 1, 2, 3 } : new byte[] { 9 };
     }
 }

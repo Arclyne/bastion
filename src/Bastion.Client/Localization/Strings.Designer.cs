@@ -328,6 +328,51 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Messages must be 1 to 200 characters..
+        /// </summary>
+        internal static string MainMenuChatInvalid {
+            get {
+                return ResourceManager.GetString("MainMenuChatInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Write a message….
+        /// </summary>
+        internal static string MainMenuChatPlaceholder {
+            get {
+                return ResourceManager.GetString("MainMenuChatPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Send.
+        /// </summary>
+        internal static string MainMenuChatSend {
+            get {
+                return ResourceManager.GetString("MainMenuChatSend", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lobby chat.
+        /// </summary>
+        internal static string MainMenuChatTitle {
+            get {
+                return ResourceManager.GetString("MainMenuChatTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chat is unavailable right now..
+        /// </summary>
+        internal static string MainMenuChatUnavailable {
+            get {
+                return ResourceManager.GetString("MainMenuChatUnavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Classic 9×9.
         /// </summary>
         internal static string MainMenuClassicMode {

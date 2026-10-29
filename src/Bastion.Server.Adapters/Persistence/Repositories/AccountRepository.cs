@@ -24,4 +24,9 @@ public sealed class AccountRepository : IAccountRepository
         return _context.Accounts.FirstOrDefault(
             account => account.Nickname == identifier || account.Email == email);
     }
+
+    public Account? FindById(int accountId)
+    {
+        return _context.Accounts.FirstOrDefault(account => account.AccountId == accountId);
+    }
 }
