@@ -20,11 +20,7 @@ public sealed class ServiceChannel<TContract> : IDisposable
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        Call(channel =>
-        {
-            operation(channel);
-            return true;
-        });
+        Call(channel => Invoke(operation, channel));
     }
 
     public TResult Call<TResult>(Func<TContract, TResult> operation)
@@ -53,12 +49,12 @@ public sealed class ServiceChannel<TContract> : IDisposable
 
     public void Dispose()
     {
-        if (_factory.State == CommunicationState.Faulted)
-        {
-            _factory.Abort();
-            return;
-        }
+        ChannelCloser.CloseOrAbort(_factory);
+    }
 
-        _factory.Close();
+    private static bool Invoke(Action<TContract> operation, TContract channel)
+    {
+        operation(channel);
+        return true;
     }
 }

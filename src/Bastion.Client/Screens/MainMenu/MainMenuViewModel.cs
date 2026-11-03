@@ -9,12 +9,15 @@ using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.Sessions;
 using Bastion.Domain.Chat;
 using Gum.Mvvm;
+using log4net;
 
 namespace Bastion.Client.Screens.MainMenu;
 
 public sealed class MainMenuViewModel : ViewModel
 {
     private const int MaximumChatLines = 50;
+
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(MainMenuViewModel));
 
     private readonly SignedInSession _session;
     private readonly INotificationClient _notifications;
@@ -34,7 +37,7 @@ public sealed class MainMenuViewModel : ViewModel
         Nickname = session.Nickname;
         ChatDraft = string.Empty;
         ChatStatusKey = string.Empty;
-        _notifications.ChatMessageReceived += OnChatMessageReceived;
+        _notifications.ChatMessageReceived += HandleChatMessageReceived;
     }
 
     public string Nickname
@@ -81,9 +84,21 @@ public sealed class MainMenuViewModel : ViewModel
         {
             await Task.Run(() => _notifications.Connect(_session.Token));
         }
-        catch (Exception ex) when (IsChatFailure(ex))
+        catch (InvalidSessionException ex)
         {
-            ChatStatusKey = nameof(Strings.MainMenuChatUnavailable);
+            ReportConnectFailure(ex);
+        }
+        catch (ServerUnreachableException ex)
+        {
+            ReportConnectFailure(ex);
+        }
+        catch (ConnectionLostException ex)
+        {
+            ReportConnectFailure(ex);
+        }
+        catch (ServerErrorException ex)
+        {
+            ReportConnectFailure(ex);
         }
     }
 
@@ -107,13 +122,26 @@ public sealed class MainMenuViewModel : ViewModel
             await Task.Run(() => _chat.Send(_session.Token, text));
             ChatDraft = string.Empty;
         }
-        catch (InvalidChatMessageException)
+        catch (InvalidChatMessageException ex)
         {
+            _logger.Warn("The server turned down the chat message.", ex);
             ChatStatusKey = nameof(Strings.MainMenuChatInvalid);
         }
-        catch (Exception ex) when (IsChatFailure(ex))
+        catch (InvalidSessionException ex)
         {
-            ChatStatusKey = nameof(Strings.MainMenuChatUnavailable);
+            ReportSendFailure(ex);
+        }
+        catch (ServerUnreachableException ex)
+        {
+            ReportSendFailure(ex);
+        }
+        catch (ConnectionLostException ex)
+        {
+            ReportSendFailure(ex);
+        }
+        catch (ServerErrorException ex)
+        {
+            ReportSendFailure(ex);
         }
         finally
         {
@@ -121,17 +149,26 @@ public sealed class MainMenuViewModel : ViewModel
         }
     }
 
-    private static bool IsChatFailure(Exception ex)
+    private void ReportConnectFailure(Exception ex)
     {
-        return ex is InvalidSessionException
-            || ex is ServerUnreachableException
-            || ex is ConnectionLostException
-            || ex is ServerErrorException;
+        _logger.Warn("The lobby chat could not be connected.", ex);
+        ShowChatUnavailable();
     }
 
-    private void OnChatMessageReceived(object? sender, ChatMessage message)
+    private void ReportSendFailure(Exception ex)
     {
-        string line = $"{message.SenderNickname}: {message.Text}";
+        _logger.Warn("The chat message could not be sent.", ex);
+        ShowChatUnavailable();
+    }
+
+    private void ShowChatUnavailable()
+    {
+        ChatStatusKey = nameof(Strings.MainMenuChatUnavailable);
+    }
+
+    private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)
+    {
+        string line = $"{e.SenderNickname}: {e.Text}";
         if (_uiContext is null)
         {
             AddChatLine(line);

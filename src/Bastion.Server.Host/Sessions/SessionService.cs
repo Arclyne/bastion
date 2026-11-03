@@ -1,11 +1,11 @@
 using System;
 using System.Data.Common;
-using CoreWCF;
-using log4net;
-using Microsoft.Extensions.DependencyInjection;
 using Bastion.Contracts.Notifications;
 using Bastion.Contracts.Sessions;
 using Bastion.Server.Application.Sessions;
+using CoreWCF;
+using log4net;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Host.Sessions;
 
@@ -18,23 +18,31 @@ public sealed class SessionService : ISessionService
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ConnectedPlayerRegistry _registry;
+    private readonly TimeProvider _timeProvider;
 
-    public SessionService(IServiceScopeFactory scopeFactory, ConnectedPlayerRegistry registry)
+    public SessionService(IServiceScopeFactory scopeFactory, ConnectedPlayerRegistry registry, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(scopeFactory);
         ArgumentNullException.ThrowIfNull(registry);
+        ArgumentNullException.ThrowIfNull(timeProvider);
 
         _scopeFactory = scopeFactory;
         _registry = registry;
+        _timeProvider = timeProvider;
     }
 
-    public void Subscribe(string sessionToken)
+    public void Subscribe(string? sessionToken)
     {
+        if (sessionToken is null)
+        {
+            throw SessionTranslator.ToFault(new InvalidSessionException());
+        }
+
         try
         {
             using IServiceScope scope = _scopeFactory.CreateScope();
             ISessionVerifier verifier = scope.ServiceProvider.GetRequiredService<ISessionVerifier>();
-            ConnectedPlayer player = verifier.Verify(sessionToken ?? string.Empty, DateTime.UtcNow);
+            ConnectedPlayer player = verifier.Verify(sessionToken, _timeProvider.GetUtcNow().UtcDateTime);
             _registry.Register(player, OperationContext.Current.GetCallbackChannel<INotificationCallback>());
         }
         catch (InvalidSessionException ex)

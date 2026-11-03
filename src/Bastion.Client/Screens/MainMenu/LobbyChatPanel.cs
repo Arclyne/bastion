@@ -6,6 +6,7 @@ using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
+using log4net;
 
 namespace Bastion.Client.Screens.MainMenu;
 
@@ -22,6 +23,8 @@ public sealed class LobbyChatPanel : Panel
     private const float InputHeight = 44;
     private const float SendButtonWidth = 80;
     private const float InputSpacing = 8;
+
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(LobbyChatPanel));
 
     private readonly MainMenuViewModel _viewModel;
     private readonly ScrollViewer _lines;
@@ -59,7 +62,7 @@ public sealed class LobbyChatPanel : Panel
         AddChild(content);
         Skins.ApplyCard(Visual);
 
-        _viewModel.ChatLines.CollectionChanged += OnChatLinesChanged;
+        _viewModel.ChatLines.CollectionChanged += HandleChatLinesCollectionChanged;
     }
 
     private static Label CreateStatus()
@@ -83,15 +86,19 @@ public sealed class LobbyChatPanel : Panel
         Button send = ViewFactory.CreateButton(nameof(Strings.MainMenuChatSend), SendButtonWidth, InputHeight);
         ButtonSkin.Apply(send, ButtonLooks.Secondary);
         send.SetBinding(nameof(IsEnabled), nameof(MainMenuViewModel.CanSend));
-        send.Click += OnSendClick;
+        send.Click += HandleSendClick;
 
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = InputSpacing };
+        var row = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = InputSpacing,
+        };
         row.AddChild(input);
         row.AddChild(send);
         return row;
     }
 
-    private void OnChatLinesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void HandleChatLinesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Remove)
         {
@@ -122,8 +129,15 @@ public sealed class LobbyChatPanel : Panel
         return label;
     }
 
-    private async void OnSendClick(object? sender, EventArgs e)
+    private async void HandleSendClick(object? sender, EventArgs e)
     {
-        await _viewModel.SendChatMessage();
+        try
+        {
+            await _viewModel.SendChatMessage();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The chat message could not be sent because the connection is closed.", ex);
+        }
     }
 }

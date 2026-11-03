@@ -8,5 +8,5 @@ public interface ISessionService
 {
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
-    void Subscribe(string sessionToken);
+    void Subscribe(string? sessionToken);
 }

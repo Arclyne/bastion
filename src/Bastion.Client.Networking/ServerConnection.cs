@@ -5,17 +5,24 @@ using Bastion.Client.Networking.Notifications;
 
 namespace Bastion.Client.Networking;
 
-public sealed class ServerClients : IDisposable
+public sealed class ServerConnection : IDisposable
 {
     private readonly AccountClient _accounts = new AccountClient();
     private readonly NotificationClient _notifications = new NotificationClient();
     private readonly ChatClient _chat = new ChatClient();
 
-    public IAccountClient Accounts => _accounts;
+    public ServerConnection()
+    {
+        Accounts = _accounts;
+        Notifications = _notifications;
+        Chat = _chat;
+    }
 
-    public INotificationClient Notifications => _notifications;
+    public IAccountClient Accounts { get; }
 
-    public IChatClient Chat => _chat;
+    public INotificationClient Notifications { get; }
+
+    public IChatClient Chat { get; }
 
     public void Dispose()
     {

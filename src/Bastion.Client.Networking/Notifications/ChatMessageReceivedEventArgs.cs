@@ -2,9 +2,9 @@ using System;
 
 namespace Bastion.Client.Networking.Notifications;
 
-public sealed class ChatMessage
+public sealed class ChatMessageReceivedEventArgs : EventArgs
 {
-    public ChatMessage(string senderNickname, string text, DateTime sentAt)
+    public ChatMessageReceivedEventArgs(string senderNickname, string text, DateTime sentAt)
     {
         ArgumentNullException.ThrowIfNull(senderNickname);
         ArgumentNullException.ThrowIfNull(text);

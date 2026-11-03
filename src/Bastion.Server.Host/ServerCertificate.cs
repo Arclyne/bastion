@@ -1,15 +1,15 @@
 using System;
 using System.Security.Cryptography.X509Certificates;
-using CoreWCF;
-using CoreWCF.Configuration;
-using Microsoft.Extensions.Configuration;
 using Bastion.Server.Host.Accounts;
 using Bastion.Server.Host.Chat;
 using Bastion.Server.Host.Sessions;
+using CoreWCF;
+using CoreWCF.Configuration;
+using Microsoft.Extensions.Configuration;
 
 namespace Bastion.Server.Host;
 
-public sealed class ServerCertificate
+public sealed class ServerCertificate : IDisposable
 {
     private const string PathKey = "Server:CertificatePath";
     private const string PasswordKey = "Server:CertificatePassword";
@@ -43,6 +43,11 @@ public sealed class ServerCertificate
         serviceBuilder.AddService<SessionService>();
         serviceBuilder.AddService<ChatService>();
         serviceBuilder.ConfigureAllServiceHostBase(ApplyTo);
+    }
+
+    public void Dispose()
+    {
+        _certificate.Dispose();
     }
 
     private void ApplyTo(ServiceHostBase host)
