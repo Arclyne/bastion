@@ -16,7 +16,7 @@ public class TestAccount
     {
         var account = new Account(Nickname, Email);
 
-        bool canSignIn = account.CanSignIn;
+        bool canSignIn = account.CanSignIn();
 
         Assert.False(canSignIn);
     }
@@ -26,7 +26,7 @@ public class TestAccount
     {
         Account account = CreateActiveAccount();
 
-        bool canSignIn = account.CanSignIn;
+        bool canSignIn = account.CanSignIn();
 
         Assert.True(canSignIn);
     }

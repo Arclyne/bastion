@@ -6,8 +6,8 @@ namespace Bastion.Contracts.Accounts;
 public sealed class ClientDevice
 {
     [DataMember]
-    public string DeviceFingerprint { get; set; } = string.Empty;
+    public string? DeviceFingerprint { get; set; }
 
     [DataMember]
-    public string ClientVersion { get; set; } = string.Empty;
+    public string? ClientVersion { get; set; }
 }

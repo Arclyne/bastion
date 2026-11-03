@@ -6,8 +6,8 @@ namespace Bastion.Contracts.Accounts;
 public sealed class PlayerCredentials
 {
     [DataMember]
-    public string Identifier { get; set; } = string.Empty;
+    public string? Identifier { get; set; }
 
     [DataMember]
-    public string Password { get; set; } = string.Empty;
+    public string? Password { get; set; }
 }

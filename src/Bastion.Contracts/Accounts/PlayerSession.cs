@@ -6,11 +6,11 @@ namespace Bastion.Contracts.Accounts;
 public sealed class PlayerSession
 {
     [DataMember]
-    public string Token { get; set; } = string.Empty;
+    public string? Token { get; set; }
 
     [DataMember]
-    public string Nickname { get; set; } = string.Empty;
+    public string? Nickname { get; set; }
 
     [DataMember]
-    public string PreferredLanguage { get; set; } = string.Empty;
+    public string? PreferredLanguage { get; set; }
 }

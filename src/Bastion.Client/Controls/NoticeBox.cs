@@ -16,6 +16,7 @@ public sealed class NoticeBox : Panel
     private const float BorderWidth = 1.5f;
     private const float TitleSpacing = 2;
     private const byte BorderAlpha = 0x33;
+    private const int HorizontalSideCount = 2;
 
     private readonly RectangleRuntime _surface;
     private readonly Label _title;
@@ -29,7 +30,7 @@ public sealed class NoticeBox : Panel
         Height = PaddingY;
         HeightUnits = DimensionUnitType.RelativeToChildren;
 
-        float textWidth = width - (PaddingX * 2);
+        float textWidth = width - (PaddingX * HorizontalSideCount);
         _title = CreateLabel(TextStyles.NoticeTitle, textWidth);
         _message = CreateLabel(TextStyles.NoticeMessage, textWidth);
         var content = new StackPanel { X = PaddingX, Y = PaddingY, Spacing = TitleSpacing };
@@ -56,7 +57,7 @@ public sealed class NoticeBox : Panel
         }
     }
 
-    public string Title
+    public string? Title
     {
         get => _title.Text ?? string.Empty;
         set
@@ -67,7 +68,7 @@ public sealed class NoticeBox : Panel
         }
     }
 
-    public string Message
+    public string? Message
     {
         get => _message.Text ?? string.Empty;
         set => _message.SetTextNoTranslate(value ?? string.Empty);

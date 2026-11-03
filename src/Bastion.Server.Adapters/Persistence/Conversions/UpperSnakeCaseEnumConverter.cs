@@ -8,6 +8,7 @@ public sealed class UpperSnakeCaseEnumConverter<TEnum> : ValueConverter<TEnum, s
     where TEnum : struct, Enum
 {
     private const char Separator = '_';
+    private const int MaximumCodeLengthFactor = 2;
 
     public UpperSnakeCaseEnumConverter()
         : base(value => ToCode(value), code => FromCode(code))
@@ -17,7 +18,7 @@ public sealed class UpperSnakeCaseEnumConverter<TEnum> : ValueConverter<TEnum, s
     public static string ToCode(TEnum value)
     {
         string name = value.ToString();
-        var builder = new StringBuilder(name.Length * 2);
+        var builder = new StringBuilder(name.Length * MaximumCodeLengthFactor);
         for (int letterIndex = 0; letterIndex < name.Length; letterIndex++)
         {
             if (letterIndex > 0 && char.IsUpper(name[letterIndex]))
@@ -33,6 +34,8 @@ public sealed class UpperSnakeCaseEnumConverter<TEnum> : ValueConverter<TEnum, s
 
     public static TEnum FromCode(string code)
     {
+        ArgumentNullException.ThrowIfNull(code);
+
         string name = code.Replace(Separator.ToString(), string.Empty, StringComparison.Ordinal);
         return Enum.Parse<TEnum>(name, ignoreCase: true);
     }

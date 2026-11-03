@@ -1,6 +1,5 @@
 using System;
 using System.ServiceModel;
-using log4net;
 using Bastion.Client.Networking.Channels;
 using Bastion.Contracts;
 using Bastion.Contracts.Accounts;
@@ -9,8 +8,6 @@ namespace Bastion.Client.Networking.Accounts;
 
 public sealed class AccountClient : IAccountClient, IDisposable
 {
-    private static readonly ILog _logger = LogManager.GetLogger(typeof(AccountClient));
-
     private readonly ServiceChannel<IAccountService> _channel = new ServiceChannel<IAccountService>(ServiceEndpoints.AccountsPath);
 
     public SignedInSession LogIn(LoginCredentials credentials)
@@ -34,32 +31,26 @@ public sealed class AccountClient : IAccountClient, IDisposable
         }
         catch (EndpointNotFoundException ex)
         {
-            _logger.Warn("The server could not be reached.", ex);
             throw new ServerUnreachableException(ex);
         }
         catch (FaultException<InvalidCredentialsFault> ex)
         {
-            _logger.Warn("The server turned down the credentials.", ex);
             throw new InvalidCredentialsException(ex);
         }
         catch (FaultException<AccountRestrictedFault> ex)
         {
-            _logger.Warn("The server turned down a restricted account.", ex);
             throw new AccountRestrictedException(ToRestriction(ex.Detail.Reason), ex.Detail.LockMinutes, ex);
         }
         catch (FaultException ex)
         {
-            _logger.Warn("The server could not complete the sign-in.", ex);
             throw new ServerErrorException(ex);
         }
         catch (CommunicationException ex)
         {
-            _logger.Warn("The connection with the server was lost.", ex);
             throw new ConnectionLostException(ex);
         }
         catch (TimeoutException ex)
         {
-            _logger.Warn("The server did not answer in time.", ex);
             throw new ConnectionLostException(ex);
         }
     }
@@ -87,8 +78,10 @@ public sealed class AccountClient : IAccountClient, IDisposable
                 return AccountRestriction.Pending;
             case RestrictionReason.Suspended:
                 return AccountRestriction.Suspended;
-            default:
+            case RestrictionReason.Banned:
                 return AccountRestriction.Banned;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported restriction reason.");
         }
     }
 }

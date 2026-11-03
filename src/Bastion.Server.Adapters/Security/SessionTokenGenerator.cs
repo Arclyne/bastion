@@ -7,6 +7,8 @@ namespace Bastion.Server.Adapters.Security;
 
 public sealed class SessionTokenGenerator : ISessionTokenGenerator
 {
+    public const int TokenHashLength = SHA256.HashSizeInBytes;
+
     private const int TokenLength = 32;
 
     public GeneratedToken Generate()

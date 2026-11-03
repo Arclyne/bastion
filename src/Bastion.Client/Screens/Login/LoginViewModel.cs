@@ -5,11 +5,14 @@ using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
 using Gum.Mvvm;
+using log4net;
 
 namespace Bastion.Client.Screens.Login;
 
 public sealed class LoginViewModel : ViewModel
 {
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(LoginViewModel));
+
     private readonly ILanguageService _languages;
     private readonly IAccountClient _accounts;
     private readonly INavigator _navigator;
@@ -197,31 +200,36 @@ public sealed class LoginViewModel : ViewModel
             SignedInSession session = await Task.Run(() => _accounts.LogIn(credentials));
             EnterMainMenu(session);
         }
-        catch (InvalidCredentialsException)
+        catch (InvalidCredentialsException ex)
         {
+            _logger.Warn("The server turned down the credentials.", ex);
             Password = string.Empty;
             ShowNotice(NoticeTone.Error, string.Empty, Strings.LoginCredentialsRejected);
         }
         catch (AccountRestrictedException ex)
         {
+            _logger.Warn($"The server turned down a restricted account. Restriction={ex.Restriction}", ex);
             ShowRestriction(ex);
         }
-        catch (ServerUnreachableException)
+        catch (ServerUnreachableException ex)
         {
+            _logger.Warn("The server could not be reached.", ex);
             ShowDialog(
                 nameof(Strings.DialogServerUnreachableTitle),
                 nameof(Strings.DialogServerUnreachableMessage),
                 true);
         }
-        catch (ConnectionLostException)
+        catch (ConnectionLostException ex)
         {
+            _logger.Warn("The connection with the server was lost.", ex);
             ShowDialog(
                 nameof(Strings.DialogConnectionLostTitle),
                 nameof(Strings.DialogConnectionLostMessage),
                 false);
         }
-        catch (ServerErrorException)
+        catch (ServerErrorException ex)
         {
+            _logger.Warn("The server could not complete the sign-in.", ex);
             ShowServerErrorDialog();
         }
     }
@@ -239,9 +247,15 @@ public sealed class LoginViewModel : ViewModel
             case AccountRestriction.Pending:
                 ShowNotice(NoticeTone.Warning, string.Empty, Strings.LoginAccountPending);
                 break;
-            default:
+            case AccountRestriction.Suspended:
+            case AccountRestriction.Banned:
                 ShowNotice(NoticeTone.Error, string.Empty, Strings.LoginAccountSanctioned);
                 break;
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(restriction),
+                    restriction.Restriction,
+                    "Unsupported account restriction.");
         }
     }
 

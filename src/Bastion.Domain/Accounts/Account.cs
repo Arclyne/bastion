@@ -48,9 +48,15 @@ public class Account
 
     public bool IsTwoFactorEnabled { get; private set; }
 
-    public bool CanSignIn => AccountType == AccountType.Registered && AccountStatus == AccountStatus.Active;
+    public bool CanSignIn()
+    {
+        return AccountType == AccountType.Registered && AccountStatus == AccountStatus.Active;
+    }
 
-    public bool HasPassword => PasswordHash is not null && PasswordSalt is not null;
+    public bool HasPassword()
+    {
+        return PasswordHash is not null && PasswordSalt is not null;
+    }
 
     public void ChangePassword(byte[] hash, byte[] salt)
     {
