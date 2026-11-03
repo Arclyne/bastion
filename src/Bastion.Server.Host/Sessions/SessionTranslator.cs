@@ -1,7 +1,7 @@
 using System;
-using CoreWCF;
 using Bastion.Contracts.Sessions;
 using Bastion.Server.Application.Sessions;
+using CoreWCF;
 
 namespace Bastion.Server.Host.Sessions;
 

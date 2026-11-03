@@ -1,6 +1,5 @@
 using System;
 using System.ServiceModel;
-using log4net;
 using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Sessions;
@@ -11,25 +10,23 @@ namespace Bastion.Client.Networking.Notifications;
 
 public sealed class NotificationClient : INotificationClient, IDisposable
 {
-    private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationClient));
-
-    private readonly NotificationReceiver _receiver = new NotificationReceiver();
+    private readonly NotificationCallback _callback = new NotificationCallback();
     private readonly DuplexChannelFactory<ISessionService> _factory;
     private ISessionService? _channel;
 
     public NotificationClient()
     {
         _factory = new DuplexChannelFactory<ISessionService>(
-            new InstanceContext(_receiver),
+            new InstanceContext(_callback),
             ChannelSettings.CreateBinding(),
             ChannelSettings.CreateAddress(ServiceEndpoints.SessionsPath));
         ChannelSettings.ApplyCertificateValidation(_factory);
     }
 
-    public event EventHandler<ChatMessage>? ChatMessageReceived
+    public event EventHandler<ChatMessageReceivedEventArgs>? ChatMessageReceived
     {
-        add => _receiver.ChatMessageReceived += value;
-        remove => _receiver.ChatMessageReceived -= value;
+        add => _callback.ChatMessageReceived += value;
+        remove => _callback.ChatMessageReceived -= value;
     }
 
     public void Connect(string sessionToken)
@@ -43,10 +40,13 @@ public sealed class NotificationClient : INotificationClient, IDisposable
             channel.Subscribe(sessionToken);
             _channel = channel;
         }
-        catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException)
+        catch (CommunicationException ex)
         {
-            ((ICommunicationObject)channel).Abort();
-            throw ToClientException(ex);
+            throw AbortSubscription(channel, ex);
+        }
+        catch (TimeoutException ex)
+        {
+            throw AbortSubscription(channel, ex);
         }
     }
 
@@ -59,25 +59,19 @@ public sealed class NotificationClient : INotificationClient, IDisposable
 
         var communicationObject = (ICommunicationObject)_channel;
         _channel = null;
-        if (communicationObject.State == CommunicationState.Opened)
-        {
-            communicationObject.Close();
-            return;
-        }
-
-        communicationObject.Abort();
+        ChannelCloser.CloseOrAbort(communicationObject);
     }
 
     public void Dispose()
     {
         Disconnect();
-        if (_factory.State == CommunicationState.Faulted)
-        {
-            _factory.Abort();
-            return;
-        }
+        ChannelCloser.CloseOrAbort(_factory);
+    }
 
-        _factory.Close();
+    private static Exception AbortSubscription(ISessionService channel, Exception ex)
+    {
+        ((ICommunicationObject)channel).Abort();
+        return ToClientException(ex);
     }
 
     private static Exception ToClientException(Exception ex)
@@ -85,17 +79,16 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         switch (ex)
         {
             case EndpointNotFoundException:
-                _logger.Warn("The server could not be reached.", ex);
                 return new ServerUnreachableException(ex);
             case FaultException<InvalidSessionFault>:
-                _logger.Warn("The server turned down the session.", ex);
                 return new InvalidSessionException(ex);
             case FaultException:
-                _logger.Warn("The server could not open the notification channel.", ex);
                 return new ServerErrorException(ex);
-            default:
-                _logger.Warn("The connection with the server was lost.", ex);
+            case CommunicationException:
+            case TimeoutException:
                 return new ConnectionLostException(ex);
+            default:
+                throw new ArgumentOutOfRangeException(nameof(ex), ex.GetType(), "Unsupported exception type.");
         }
     }
 }

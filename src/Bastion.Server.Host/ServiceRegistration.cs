@@ -1,11 +1,11 @@
 using System;
-using Microsoft.Extensions.DependencyInjection;
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Accounts;
 using Bastion.Server.Host.Chat;
 using Bastion.Server.Host.Sessions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Host;
 
@@ -27,6 +27,7 @@ public static class ServiceRegistration
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        services.AddSingleton(TimeProvider.System);
         services.AddTransient<AccountService>();
         services.AddTransient<SessionService>();
         services.AddTransient<ChatService>();

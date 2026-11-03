@@ -34,7 +34,7 @@ public sealed class LoginService : ILoginService
         ArgumentNullException.ThrowIfNull(password);
 
         Account? account = _unitOfWork.Accounts.FindByIdentifier(attempt.EnteredIdentifier);
-        if (account is null || !account.HasPassword)
+        if (account is null || !account.HasPassword())
         {
             _passwordHasher.Verify(password, null, null);
             throw Reject(
@@ -94,10 +94,13 @@ public sealed class LoginService : ILoginService
                 throw Reject(
                     new AccessLog(AccessLogResult.AccountSanctioned, attempt, account.AccountId),
                     new AccountRestrictedException(AccountRestriction.Banned, 0));
-            default:
+            case AccountStatus.Deleted:
                 throw Reject(
                     new AccessLog(AccessLogResult.AccountNotFound, attempt, account.AccountId),
                     new InvalidCredentialsException());
+            default:
+                throw new InvalidOperationException(
+                    $"Unsupported account status. AccountStatus={account.AccountStatus}");
         }
     }
 
@@ -121,6 +124,13 @@ public sealed class LoginService : ILoginService
     {
         _unitOfWork.AccessLogs.Add(accessLog);
         _unitOfWork.SaveChanges();
-        _logger.Info($"Sign-in attempt processed. Result={accessLog.Result}; AccountId={accessLog.AccountId}");
+        string message = $"Sign-in attempt processed. Result={accessLog.Result}; AccountId={accessLog.AccountId}";
+        if (accessLog.Result == AccessLogResult.LoginSucceeded)
+        {
+            _logger.Info(message);
+            return;
+        }
+
+        _logger.Warn(message);
     }
 }

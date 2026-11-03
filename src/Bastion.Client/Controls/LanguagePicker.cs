@@ -17,10 +17,10 @@ public sealed class LanguagePicker : ComboBox
         HeightUnits = DimensionUnitType.Absolute;
         DisplayMemberPath = nameof(SupportedLanguage.DisplayName);
         PickerSkin.Apply(this);
-        GumService.Default.LocalizationService.CurrentLanguageChanged += OnLanguageChanged;
+        GumService.Default.LocalizationService.CurrentLanguageChanged += HandleCurrentLanguageChanged;
     }
 
-    private void OnLanguageChanged()
+    private void HandleCurrentLanguageChanged()
     {
         RefreshListItems();
         UpdateToObject(SelectedObject);

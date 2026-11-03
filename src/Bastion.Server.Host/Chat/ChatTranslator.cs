@@ -1,8 +1,8 @@
 using System;
-using CoreWCF;
 using Bastion.Contracts.Chat;
 using Bastion.Contracts.Notifications;
 using Bastion.Server.Application.Chat;
+using CoreWCF;
 
 namespace Bastion.Server.Host.Chat;
 

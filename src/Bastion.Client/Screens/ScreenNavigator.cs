@@ -12,28 +12,28 @@ namespace Bastion.Client.Screens;
 public sealed class ScreenNavigator : INavigator
 {
     private readonly ILanguageService _languages;
-    private readonly ServerClients _clients;
+    private readonly ServerConnection _connection;
     private FrameworkElement? _currentScreen;
 
-    public ScreenNavigator(ILanguageService languages, ServerClients clients)
+    public ScreenNavigator(ILanguageService languages, ServerConnection connection)
     {
         ArgumentNullException.ThrowIfNull(languages);
-        ArgumentNullException.ThrowIfNull(clients);
+        ArgumentNullException.ThrowIfNull(connection);
 
         _languages = languages;
-        _clients = clients;
+        _connection = connection;
     }
 
     public void ShowLogin()
     {
-        Show(new LoginView(new LoginViewModel(_languages, _clients.Accounts, this)));
+        Show(new LoginView(new LoginViewModel(_languages, _connection.Accounts, this)));
     }
 
     public void ShowMainMenu(SignedInSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
 
-        var viewModel = new MainMenuViewModel(session, _clients.Notifications, _clients.Chat);
+        var viewModel = new MainMenuViewModel(session, _connection.Notifications, _connection.Chat);
         Show(new MainMenuView(viewModel));
         _ = viewModel.ConnectChat();
     }

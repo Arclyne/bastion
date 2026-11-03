@@ -20,12 +20,15 @@ public sealed class AccountService : IAccountService
     private static readonly ILog _logger = LogManager.GetLogger(typeof(AccountService));
 
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly TimeProvider _timeProvider;
 
-    public AccountService(IServiceScopeFactory scopeFactory)
+    public AccountService(IServiceScopeFactory scopeFactory, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(scopeFactory);
+        ArgumentNullException.ThrowIfNull(timeProvider);
 
         _scopeFactory = scopeFactory;
+        _timeProvider = timeProvider;
     }
 
     public PlayerSession LogIn(PlayerCredentials credentials, ClientDevice device)
@@ -36,7 +39,10 @@ public sealed class AccountService : IAccountService
         }
 
         ClientConnection connection = LoginTranslator.ToConnection(device, CallerAddress.GetCurrent());
-        AccessAttempt attempt = LoginTranslator.ToAttempt(credentials, connection, DateTime.UtcNow);
+        AccessAttempt attempt = LoginTranslator.ToAttempt(
+            credentials,
+            connection,
+            _timeProvider.GetUtcNow().UtcDateTime);
         try
         {
             using IServiceScope scope = _scopeFactory.CreateScope();

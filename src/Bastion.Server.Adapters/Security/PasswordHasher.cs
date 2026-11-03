@@ -1,3 +1,4 @@
+using System;
 using System.Security.Cryptography;
 using System.Text;
 using Bastion.Server.Application.Security;
@@ -16,13 +17,15 @@ public sealed class PasswordHasher : IPasswordHasher
 
     public bool Verify(string password, byte[]? storedHash, byte[]? storedSalt)
     {
+        ArgumentNullException.ThrowIfNull(password);
+
         bool hasStoredPassword = storedHash is not null && storedSalt is not null;
         byte[] salt = storedSalt ?? _decoySalt;
         byte[] expectedHash = storedHash ?? _decoyHash;
 
-        byte[] derivedHash = Derive(password ?? string.Empty, salt);
+        byte[] derivedHash = Derive(password, salt);
         bool isMatch = CryptographicOperations.FixedTimeEquals(derivedHash, expectedHash);
-        return hasStoredPassword && isMatch && !string.IsNullOrEmpty(password);
+        return hasStoredPassword && isMatch && password.Length > 0;
     }
 
     private static byte[] Derive(string password, byte[] salt)

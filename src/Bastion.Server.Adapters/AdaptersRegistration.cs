@@ -1,10 +1,10 @@
 using System;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Bastion.Server.Adapters.Persistence;
 using Bastion.Server.Adapters.Security;
 using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Security;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Adapters;
 

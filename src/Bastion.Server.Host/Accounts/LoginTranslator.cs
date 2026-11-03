@@ -71,8 +71,10 @@ public static class LoginTranslator
                 return RestrictionReason.Pending;
             case AccountRestriction.Suspended:
                 return RestrictionReason.Suspended;
-            default:
+            case AccountRestriction.Banned:
                 return RestrictionReason.Banned;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(restriction), restriction, "Unsupported account restriction.");
         }
     }
 }

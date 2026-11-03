@@ -5,6 +5,7 @@ using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
+using log4net;
 
 namespace Bastion.Client.Screens.Login;
 
@@ -21,6 +22,10 @@ public sealed class LoginDialogView : Panel
     private const float BorderWidth = 1.5f;
     private const float ShadowOffsetY = 30;
     private const float ShadowBlur = 60;
+    private const int HorizontalSideCount = 2;
+    private const int ButtonsPerRow = 2;
+
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(LoginDialogView));
 
     private readonly LoginViewModel _viewModel;
 
@@ -40,7 +45,7 @@ public sealed class LoginDialogView : Panel
 
     private StackPanel CreateContent()
     {
-        float contentWidth = DialogWidth - (PaddingX * 2);
+        float contentWidth = DialogWidth - (PaddingX * HorizontalSideCount);
         var content = new StackPanel { X = PaddingX, Y = PaddingTop, Spacing = SectionSpacing };
         content.AddChild(CreateBoundLabel(nameof(LoginViewModel.DialogTitleKey), TextStyles.DialogTitle, contentWidth));
         content.AddChild(CreateBoundLabel(
@@ -53,14 +58,14 @@ public sealed class LoginDialogView : Panel
 
     private StackPanel CreateButtons(float contentWidth)
     {
-        float buttonWidth = (contentWidth - ButtonSpacing) / 2;
+        float buttonWidth = (contentWidth - ButtonSpacing) / ButtonsPerRow;
 
         Button retryButton = CreateButton(nameof(Strings.CommonRetryButton), buttonWidth, ButtonLooks.Primary);
         retryButton.SetBinding(nameof(IsVisible), nameof(LoginViewModel.CanRetry));
-        retryButton.Click += OnRetryClick;
+        retryButton.Click += HandleRetryClick;
 
         Button acceptButton = CreateButton(nameof(Strings.CommonAcceptButton), buttonWidth, ButtonLooks.Secondary);
-        acceptButton.Click += OnAcceptClick;
+        acceptButton.Click += HandleAcceptClick;
 
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = ButtonSpacing };
         row.AddChild(retryButton);
@@ -101,12 +106,19 @@ public sealed class LoginDialogView : Panel
         return surface;
     }
 
-    private async void OnRetryClick(object? sender, EventArgs e)
+    private async void HandleRetryClick(object? sender, EventArgs e)
     {
-        await _viewModel.Retry();
+        try
+        {
+            await _viewModel.Retry();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The sign-in retry could not be completed because the connection is closed.", ex);
+        }
     }
 
-    private void OnAcceptClick(object? sender, EventArgs e)
+    private void HandleAcceptClick(object? sender, EventArgs e)
     {
         _viewModel.CloseDialog();
     }

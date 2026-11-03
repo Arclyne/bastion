@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Bastion.Server.Adapters;
 using CoreWCF.Configuration;
 using log4net;
 using log4net.Config;
@@ -8,7 +9,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Bastion.Server.Adapters;
 
 namespace Bastion.Server.Host;
 
@@ -24,16 +24,24 @@ public static class Program
     public static void Main(string[] args)
     {
         ConfigureLogging();
-        var options = new WebApplicationOptions { Args = args, ContentRootPath = AppContext.BaseDirectory };
+        var options = new WebApplicationOptions
+        {
+            Args = args,
+            ContentRootPath = AppContext.BaseDirectory,
+        };
         WebApplicationBuilder builder = WebApplication.CreateBuilder(options);
         builder.Configuration.AddUserSecrets(typeof(Program).Assembly, optional: true);
 
         string connectionString = GetConnectionString(builder.Configuration);
         int netTcpPort = GetNetTcpPort(builder.Configuration);
-        var certificate = ServerCertificate.Load(builder.Configuration);
+        using var certificate = ServerCertificate.Load(builder.Configuration);
 
         builder.Logging.ClearProviders();
-        builder.Logging.AddLog4Net(new Log4NetProviderOptions { ExternalConfigurationSetup = true });
+        var log4NetOptions = new Log4NetProviderOptions
+        {
+            ExternalConfigurationSetup = true,
+        };
+        builder.Logging.AddLog4Net(log4NetOptions);
         builder.WebHost.UseNetTcp(netTcpPort);
         builder.Services.AddServiceModelServices();
         builder.Services.AddServiceModelConfigurationManagerFile(
@@ -42,7 +50,7 @@ public static class Program
         builder.Services.AddBastionApplication();
         builder.Services.AddBastionServiceModel();
 
-        WebApplication app = builder.Build();
+        using WebApplication app = builder.Build();
         app.UseServiceModel(certificate.ConfigureServices);
         _logger.Info($"Game server started. NetTcpPort={netTcpPort}");
         app.Run();

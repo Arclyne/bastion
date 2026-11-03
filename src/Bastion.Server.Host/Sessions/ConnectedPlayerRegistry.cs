@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using CoreWCF;
-using log4net;
 using Bastion.Contracts.Notifications;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Chat;
+using CoreWCF;
+using log4net;
 
 namespace Bastion.Server.Host.Sessions;
 
@@ -24,8 +24,8 @@ public sealed class ConnectedPlayerRegistry : IChatBroadcaster
 
         _callbacks[player.AccountId] = callback;
         var channel = (ICommunicationObject)callback;
-        channel.Closed += (sender, args) => Remove(player.AccountId, callback);
-        channel.Faulted += (sender, args) => Remove(player.AccountId, callback);
+        channel.Closed += (sender, e) => Remove(player.AccountId, callback);
+        channel.Faulted += (sender, e) => Remove(player.AccountId, callback);
         _logger.Info($"Player subscribed to notifications. AccountId={player.AccountId}");
     }
 

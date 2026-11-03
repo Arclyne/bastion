@@ -4,6 +4,7 @@ using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
+using log4net;
 
 namespace Bastion.Client.Screens.Login;
 
@@ -30,6 +31,8 @@ public sealed class LoginView : Panel
     private const float ExitButtonHeight = 42;
     private const float ScreenMarginX = 24;
     private const float ExitButtonMarginY = 22;
+
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(LoginView));
 
     private readonly LoginViewModel _viewModel;
     private readonly ModalLayer _dialogLayer;
@@ -189,7 +192,7 @@ public sealed class LoginView : Panel
         Button button = ViewFactory.CreateButton(nameof(Strings.LoginButton), ContentWidth, PrimaryButtonHeight);
         ButtonSkin.Apply(button, ButtonLooks.Primary);
         button.SetBinding(nameof(Button.Text), nameof(LoginViewModel.LogInButtonTextKey));
-        button.Click += OnLogInClick;
+        button.Click += HandleLogInClick;
         return button;
     }
 
@@ -245,8 +248,15 @@ public sealed class LoginView : Panel
         return button;
     }
 
-    private async void OnLogInClick(object? sender, EventArgs e)
+    private async void HandleLogInClick(object? sender, EventArgs e)
     {
-        await _viewModel.LogIn();
+        try
+        {
+            await _viewModel.LogIn();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The sign-in could not be completed because the connection is closed.", ex);
+        }
     }
 }

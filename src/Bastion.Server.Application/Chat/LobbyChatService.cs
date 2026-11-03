@@ -20,6 +20,9 @@ public sealed class LobbyChatService : ILobbyChatService
 
     public void Send(string sessionToken, string text, DateTime now)
     {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(text);
+
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
         if (!ChatRules.IsMessage(text))
         {

@@ -8,11 +8,14 @@ public static class AccountRules
     public const int MinimumNicknameLength = 3;
     public const int MaximumNicknameLength = 30;
     public const int MaximumEmailLength = 254;
+    public const int MaximumIdentifierLength = MaximumEmailLength;
 
-    private static readonly TimeSpan _matchTimeout = TimeSpan.FromMilliseconds(250);
+    private const int MatchTimeoutMilliseconds = 250;
+
+    private static readonly TimeSpan _matchTimeout = TimeSpan.FromMilliseconds(MatchTimeoutMilliseconds);
 
     private static readonly Regex _nicknamePattern = new Regex(
-        @"^[A-Za-z0-9_]{3,30}$",
+        $"^[A-Za-z0-9_]{{{MinimumNicknameLength},{MaximumNicknameLength}}}$",
         RegexOptions.CultureInvariant,
         _matchTimeout);
 
