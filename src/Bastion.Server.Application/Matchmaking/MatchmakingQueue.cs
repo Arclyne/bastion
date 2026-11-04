@@ -5,7 +5,7 @@ using Bastion.Domain.Matchmaking;
 
 namespace Bastion.Server.Application.Matchmaking;
 
-public sealed class MatchmakingQueue
+public sealed class MatchmakingQueue : IMatchmakingQueue
 {
     private readonly object _gate = new object();
     private readonly Dictionary<int, MatchSearch> _searches = new Dictionary<int, MatchSearch>();
