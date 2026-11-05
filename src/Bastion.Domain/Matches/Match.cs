@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Bastion.Domain.Matches;
 
@@ -36,6 +37,10 @@ public class Match
 
     public DateTime StartedAt { get; private set; }
 
+    public DateTime? EndedAt { get; private set; }
+
+    public MatchEndReason? EndReason { get; private set; }
+
     public byte CurrentTurnOrder { get; private set; }
 
     // Entity Framework Core defines the navigation by this property (rule 2.11.4).
@@ -63,5 +68,34 @@ public class Match
         }
 
         return match;
+    }
+
+    public bool CanBeAbandonedBy(int accountId)
+    {
+        Participation? participation = FindParticipation(accountId);
+        return Status == MatchStatus.InProgress && participation is not null && !participation.Result.HasValue;
+    }
+
+    public void EndByAbandonment(int abandoningAccountId, DateTime endedAt)
+    {
+        if (!CanBeAbandonedBy(abandoningAccountId))
+        {
+            throw new InvalidOperationException("Only a player of a match in progress can abandon it.");
+        }
+
+        foreach (Participation participation in _participations)
+        {
+            bool isAbandoning = participation.AccountId == abandoningAccountId;
+            participation.Finish(isAbandoning ? ParticipationResult.Lost : ParticipationResult.Won);
+        }
+
+        Status = MatchStatus.Finished;
+        EndedAt = endedAt;
+        EndReason = MatchEndReason.Abandonment;
+    }
+
+    private Participation? FindParticipation(int accountId)
+    {
+        return _participations.FirstOrDefault(participation => participation.AccountId == accountId);
     }
 }

@@ -10,6 +10,7 @@ public sealed class MatchConfiguration : IEntityTypeConfiguration<Match>
 {
     private const int MatchTypeLength = 15;
     private const int StatusLength = 20;
+    private const int EndReasonLength = 15;
     private const string CurrentTurnOrderColumn = "CurrentTurn";
 
     public void Configure(EntityTypeBuilder<Match> builder)
@@ -25,6 +26,10 @@ public sealed class MatchConfiguration : IEntityTypeConfiguration<Match>
         builder.Property(match => match.Status)
             .HasConversion(new UpperSnakeCaseEnumConverter<MatchStatus>())
             .HasMaxLength(StatusLength)
+            .IsUnicode(false);
+        builder.Property(match => match.EndReason)
+            .HasConversion(new UpperSnakeCaseEnumConverter<MatchEndReason>())
+            .HasMaxLength(EndReasonLength)
             .IsUnicode(false);
         builder.Property(match => match.CurrentTurnOrder).HasColumnName(CurrentTurnOrderColumn);
         builder.HasMany(match => match.Participations)

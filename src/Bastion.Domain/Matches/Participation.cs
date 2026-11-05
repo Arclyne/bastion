@@ -56,4 +56,14 @@ public class Participation
 
         return _pawnSymbolsInTurnOrder[turnOrder - Match.FirstTurnOrder];
     }
+
+    internal void Finish(ParticipationResult result)
+    {
+        if (Result.HasValue)
+        {
+            throw new InvalidOperationException("The participation has already ended.");
+        }
+
+        Result = result;
+    }
 }

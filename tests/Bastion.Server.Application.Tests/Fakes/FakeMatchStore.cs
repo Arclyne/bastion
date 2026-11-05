@@ -33,6 +33,10 @@ public sealed class FakeMatchStore : IMatchStore
 
     public MatchStoreException? MatchChatMessageSaveFailure { get; set; }
 
+    public Dictionary<int, Match> MatchesById { get; } = new Dictionary<int, Match>();
+
+    public List<Match> SavedMatchEnds { get; } = new List<Match>();
+
     public bool HasUnfinishedParticipation(int accountId)
     {
         return AccountIdsWithUnfinishedParticipation.Contains(accountId);
@@ -81,6 +85,18 @@ public sealed class FakeMatchStore : IMatchStore
 
         SavedMatchChatMessages.Add(message);
         return SavedMatchChatMessages.Count;
+    }
+
+    public Match? FindMatch(int matchId)
+    {
+        return MatchesById.GetValueOrDefault(matchId);
+    }
+
+    public void SaveMatchEnd(Match match)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+
+        SavedMatchEnds.Add(match);
     }
 
     private static GameMode CreateClassicGameMode()

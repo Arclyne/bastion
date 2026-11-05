@@ -22,8 +22,10 @@ public class TestMatch
     private const string ClassicFirstSquare = "e1";
     private const string ClassicSecondSquare = "e9";
     private const string QuickSecondSquare = "d7";
+    private const int OutsiderAccountId = 9;
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime _endedAt = new DateTime(2026, 11, 5, 18, 7, 0, DateTimeKind.Utc);
     private static readonly MatchEntrant[] _entrants = new MatchEntrant[]
     {
         new MatchEntrant(FirstAccountId, FirstEloRating),
@@ -127,6 +129,90 @@ public class TestMatch
         MatchEntrant[] entrants = _entrants.Take(1).ToArray();
 
         Assert.Throws<ArgumentException>(() => Match.StartRanked(format, entrants, _startedAt));
+    }
+
+    [Fact]
+    public void EndByAbandonment_FirstPlayerLeaves_FirstPlayerLoses()
+    {
+        Match match = StartClassicMatch();
+
+        match.EndByAbandonment(FirstAccountId, _endedAt);
+
+        Assert.Equal(ParticipationResult.Lost, FindParticipation(match, FirstAccountId).Result);
+    }
+
+    [Fact]
+    public void EndByAbandonment_FirstPlayerLeaves_RivalWins()
+    {
+        Match match = StartClassicMatch();
+
+        match.EndByAbandonment(FirstAccountId, _endedAt);
+
+        Assert.Equal(ParticipationResult.Won, FindParticipation(match, SecondAccountId).Result);
+    }
+
+    [Fact]
+    public void EndByAbandonment_MatchInProgress_FinishesMatch()
+    {
+        Match match = StartClassicMatch();
+
+        match.EndByAbandonment(SecondAccountId, _endedAt);
+
+        Assert.Equal(MatchStatus.Finished, match.Status);
+    }
+
+    [Fact]
+    public void EndByAbandonment_MatchInProgress_RecordsAbandonment()
+    {
+        Match match = StartClassicMatch();
+
+        match.EndByAbandonment(SecondAccountId, _endedAt);
+
+        Assert.Equal(MatchEndReason.Abandonment, match.EndReason);
+    }
+
+    [Fact]
+    public void EndByAbandonment_MatchInProgress_RecordsEndTime()
+    {
+        Match match = StartClassicMatch();
+
+        match.EndByAbandonment(SecondAccountId, _endedAt);
+
+        Assert.Equal(_endedAt, match.EndedAt);
+    }
+
+    [Fact]
+    public void EndByAbandonment_FinishedMatch_ThrowsInvalidOperationException()
+    {
+        Match match = StartClassicMatch();
+        match.EndByAbandonment(FirstAccountId, _endedAt);
+
+        Assert.Throws<InvalidOperationException>(() => match.EndByAbandonment(SecondAccountId, _endedAt));
+    }
+
+    [Fact]
+    public void CanBeAbandonedBy_PlayerOfMatchInProgress_ReturnsTrue()
+    {
+        Match match = StartClassicMatch();
+
+        bool canAbandon = match.CanBeAbandonedBy(FirstAccountId);
+
+        Assert.True(canAbandon);
+    }
+
+    [Fact]
+    public void CanBeAbandonedBy_Outsider_ReturnsFalse()
+    {
+        Match match = StartClassicMatch();
+
+        bool canAbandon = match.CanBeAbandonedBy(OutsiderAccountId);
+
+        Assert.False(canAbandon);
+    }
+
+    private static Match StartClassicMatch()
+    {
+        return Match.StartRanked(CreateClassicFormat(), _entrants, _startedAt);
     }
 
     private static MatchFormat CreateClassicFormat()

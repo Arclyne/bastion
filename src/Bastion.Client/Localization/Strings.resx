@@ -477,4 +477,19 @@
   <data name="MatchChatUnavailable" xml:space="preserve">
     <value>The match chat is not available right now.</value>
   </data>
+  <data name="MatchAbandonButton" xml:space="preserve">
+    <value>Leave match</value>
+  </data>
+  <data name="MatchAbandonFailed" xml:space="preserve">
+    <value>The match could not be closed. Try again.</value>
+  </data>
+  <data name="MatchOverTitle" xml:space="preserve">
+    <value>Match over</value>
+  </data>
+  <data name="MatchRivalAbandonedFormat" xml:space="preserve">
+    <value>{0} left the match. You win.</value>
+  </data>
+  <data name="MatchBackToMenuButton" xml:space="preserve">
+    <value>Back to menu</value>
+  </data>
 </root>

@@ -8,6 +8,8 @@ public interface INotificationClient
 
     event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
 
+    event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
+
     event EventHandler<MatchFoundEventArgs>? MatchFound;
 
     event EventHandler<PresenceRequestedEventArgs>? PresenceRequested;

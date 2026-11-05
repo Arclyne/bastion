@@ -59,6 +59,18 @@ public sealed class MatchStore : IMatchStore
         return RunInNewContext(context => AddMatchChatMessage(context, message));
     }
 
+    public Match? FindMatch(int matchId)
+    {
+        return RunInNewContext(context => LoadMatch(context, matchId));
+    }
+
+    public void SaveMatchEnd(Match match)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+
+        RunInNewContext(context => UpdateMatch(context, match));
+    }
+
     private static bool HasUnfinishedParticipationInContext(BastionDbContext context, int accountId)
     {
         return context.Participations.Any(
@@ -105,6 +117,21 @@ public sealed class MatchStore : IMatchStore
         context.Messages.Add(message);
         context.SaveChanges();
         return message.MessageId;
+    }
+
+    private static Match? LoadMatch(BastionDbContext context, int matchId)
+    {
+        return context.Matches
+            .AsNoTracking()
+            .Include(match => match.Participations)
+            .FirstOrDefault(match => match.MatchId == matchId);
+    }
+
+    private static int UpdateMatch(BastionDbContext context, Match match)
+    {
+        // The match and its participations are written in one SaveChanges, so they cannot end apart (CU-18 RN-10).
+        context.Matches.Update(match);
+        return context.SaveChanges();
     }
 
     private TResult RunInNewContext<TResult>(Func<BastionDbContext, TResult> operation)

@@ -3,6 +3,7 @@ using System.Security.Cryptography.X509Certificates;
 using Bastion.Server.Host.Accounts;
 using Bastion.Server.Host.Chat;
 using Bastion.Server.Host.Friends;
+using Bastion.Server.Host.Matches;
 using Bastion.Server.Host.Matchmaking;
 using Bastion.Server.Host.PrivateChat;
 using Bastion.Server.Host.Sessions;
@@ -46,6 +47,7 @@ public sealed class ServerCertificate : IDisposable
         serviceBuilder.AddService<SessionService>();
         serviceBuilder.AddService<ChatService>();
         serviceBuilder.AddService<MatchmakingService>();
+        serviceBuilder.AddService<MatchService>();
         serviceBuilder.AddService<FriendshipService>();
         serviceBuilder.AddService<ConversationService>();
         serviceBuilder.ConfigureAllServiceHostBase(ApplyCertificateTo);
