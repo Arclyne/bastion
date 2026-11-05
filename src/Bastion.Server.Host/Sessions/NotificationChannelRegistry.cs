@@ -53,15 +53,24 @@ public sealed class NotificationChannelRegistry
         _presenceReporter.ReportConnected(player.AccountId);
     }
 
-    public void Broadcast(ChatLine line)
+    public void Broadcast(PostedChatLine line)
     {
         ArgumentNullException.ThrowIfNull(line);
 
         ChatMessageNotification notification = ChatTranslator.ToNotification(line);
+        int senderAccountId = line.Line.Sender.AccountId;
         foreach (KeyValuePair<int, INotificationCallback> subscription in _callbacksByAccountId)
         {
-            DeliverNotification(subscription.Key, subscription.Value, notification);
+            if (subscription.Key != senderAccountId)
+            {
+                DeliverNotification(subscription.Key, subscription.Value, notification);
+            }
         }
+    }
+
+    public int CountListeners()
+    {
+        return _callbacksByAccountId.Count;
     }
 
     public bool HasNotificationChannel(int accountId)

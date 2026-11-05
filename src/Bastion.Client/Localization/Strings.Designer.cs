@@ -76,6 +76,204 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Back.
+        /// </summary>
+        internal static string ChatBack {
+            get {
+                return ResourceManager.GetString("ChatBack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} online.
+        /// </summary>
+        internal static string ChatConnectedCountFormat {
+            get {
+                return ResourceManager.GetString("ChatConnectedCountFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}/{1}.
+        /// </summary>
+        internal static string ChatCounterFormat {
+            get {
+                return ResourceManager.GetString("ChatCounterFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No messages yet. Say hi!.
+        /// </summary>
+        internal static string ChatEmpty {
+            get {
+                return ResourceManager.GetString("ChatEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Global chat.
+        /// </summary>
+        internal static string ChatGlobalChannel {
+            get {
+                return ResourceManager.GetString("ChatGlobalChannel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The chat could not be loaded..
+        /// </summary>
+        internal static string ChatLoadFailed {
+            get {
+                return ResourceManager.GetString("ChatLoadFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are muted in the chat permanently..
+        /// </summary>
+        internal static string ChatMutedPermanently {
+            get {
+                return ResourceManager.GetString("ChatMutedPermanently", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are muted in the chat until {0}..
+        /// </summary>
+        internal static string ChatMutedUntilFormat {
+            get {
+                return ResourceManager.GetString("ChatMutedUntilFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1 new message.
+        /// </summary>
+        internal static string ChatNewMessage {
+            get {
+                return ResourceManager.GetString("ChatNewMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} new messages.
+        /// </summary>
+        internal static string ChatNewMessagesFormat {
+            get {
+                return ResourceManager.GetString("ChatNewMessagesFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open.
+        /// </summary>
+        internal static string ChatOpen {
+            get {
+                return ResourceManager.GetString("ChatOpen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to you.
+        /// </summary>
+        internal static string ChatOwnAuthor {
+            get {
+                return ResourceManager.GetString("ChatOwnAuthor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Write a message.
+        /// </summary>
+        internal static string ChatPlaceholder {
+            get {
+                return ResourceManager.GetString("ChatPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not sent: it has a word that is not allowed..
+        /// </summary>
+        internal static string ChatRejectedBannedTerm {
+            get {
+                return ResourceManager.GetString("ChatRejectedBannedTerm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not sent: write between 1 and {0} characters..
+        /// </summary>
+        internal static string ChatRejectedInvalidFormat {
+            get {
+                return ResourceManager.GetString("ChatRejectedInvalidFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not sent: you are muted in the chat..
+        /// </summary>
+        internal static string ChatRejectedMuted {
+            get {
+                return ResourceManager.GetString("ChatRejectedMuted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not sent: wait a few seconds between messages..
+        /// </summary>
+        internal static string ChatRejectedTooFast {
+            get {
+                return ResourceManager.GetString("ChatRejectedTooFast", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retry.
+        /// </summary>
+        internal static string ChatRetry {
+            get {
+                return ResourceManager.GetString("ChatRetry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Send.
+        /// </summary>
+        internal static string ChatSend {
+            get {
+                return ResourceManager.GetString("ChatSend", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not sent: the server did not answer. Try again..
+        /// </summary>
+        internal static string ChatSendFailed {
+            get {
+                return ResourceManager.GetString("ChatSendFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sending….
+        /// </summary>
+        internal static string ChatSending {
+            get {
+                return ResourceManager.GetString("ChatSending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Be respectful: messages with banned words are not sent..
+        /// </summary>
+        internal static string ChatSystemNotice {
+            get {
+                return ResourceManager.GetString("ChatSystemNotice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to OK.
         /// </summary>
         internal static string CommonAcceptButton {
@@ -103,7 +301,7 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to We don&apos;t know if your request reached the server. Try again in a moment..
+        ///   Looks up a localized string similar to We don't know if your request reached the server. Try again in a moment..
         /// </summary>
         internal static string DialogConnectionLostMessage {
             get {
@@ -121,7 +319,7 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to We couldn&apos;t open your session. Try again in a moment..
+        ///   Looks up a localized string similar to We couldn't open your session. Try again in a moment..
         /// </summary>
         internal static string DialogServerErrorMessage {
             get {
@@ -148,7 +346,7 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to We couldn&apos;t connect to the server.
+        ///   Looks up a localized string similar to We couldn't connect to the server.
         /// </summary>
         internal static string DialogServerUnreachableTitle {
             get {
@@ -225,15 +423,6 @@ namespace Bastion.Client.Localization {
         internal static string FriendsCodeCopied {
             get {
                 return ResourceManager.GetString("FriendsCodeCopied", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Coming soon.
-        /// </summary>
-        internal static string FriendsComingSoon {
-            get {
-                return ResourceManager.GetString("FriendsComingSoon", resourceCulture);
             }
         }
         
@@ -715,7 +904,7 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Your account isn&apos;t verified yet. Check your email..
+        ///   Looks up a localized string similar to Your account isn't verified yet. Check your email..
         /// </summary>
         internal static string LoginAccountPending {
             get {
@@ -724,7 +913,7 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Your account is suspended and can&apos;t sign in right now..
+        ///   Looks up a localized string similar to Your account is suspended and can't sign in right now..
         /// </summary>
         internal static string LoginAccountSanctioned {
             get {
@@ -796,7 +985,7 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Don&apos;t have an account yet?.
+        ///   Looks up a localized string similar to Don't have an account yet?.
         /// </summary>
         internal static string LoginNoAccount {
             get {
@@ -841,7 +1030,7 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to If you turned on two-step verification, we&apos;ll ask you for a code next..
+        ///   Looks up a localized string similar to If you turned on two-step verification, we'll ask you for a code next..
         /// </summary>
         internal static string LoginTwoFactorHint {
             get {
@@ -855,51 +1044,6 @@ namespace Bastion.Client.Localization {
         internal static string MainMenuChat {
             get {
                 return ResourceManager.GetString("MainMenuChat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Messages must be 1 to 200 characters..
-        /// </summary>
-        internal static string MainMenuChatInvalid {
-            get {
-                return ResourceManager.GetString("MainMenuChatInvalid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Write a message….
-        /// </summary>
-        internal static string MainMenuChatPlaceholder {
-            get {
-                return ResourceManager.GetString("MainMenuChatPlaceholder", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Send.
-        /// </summary>
-        internal static string MainMenuChatSend {
-            get {
-                return ResourceManager.GetString("MainMenuChatSend", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Lobby chat.
-        /// </summary>
-        internal static string MainMenuChatTitle {
-            get {
-                return ResourceManager.GetString("MainMenuChatTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Chat is unavailable right now..
-        /// </summary>
-        internal static string MainMenuChatUnavailable {
-            get {
-                return ResourceManager.GetString("MainMenuChatUnavailable", resourceCulture);
             }
         }
         

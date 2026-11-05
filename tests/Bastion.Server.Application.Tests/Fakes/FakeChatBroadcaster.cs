@@ -5,10 +5,17 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeChatBroadcaster : IChatBroadcaster
 {
-    public List<ChatLine> Lines { get; } = new List<ChatLine>();
+    public List<PostedChatLine> Lines { get; } = new List<PostedChatLine>();
 
-    public void Broadcast(ChatLine line)
+    public int ListenerCount { get; set; }
+
+    public void Broadcast(PostedChatLine line)
     {
         Lines.Add(line);
+    }
+
+    public int CountListeners()
+    {
+        return ListenerCount;
     }
 }

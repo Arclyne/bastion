@@ -2,5 +2,7 @@ namespace Bastion.Server.Application.Chat;
 
 public interface IChatBroadcaster
 {
-    void Broadcast(ChatLine line);
+    void Broadcast(PostedChatLine line);
+
+    int CountListeners();
 }

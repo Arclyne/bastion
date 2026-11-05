@@ -50,7 +50,6 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
     private const float PrivateButtonWidth = 193;
     private const float PrivateButtonHeight = 52;
     private const float PrivateButtonSpacing = 14;
-    private const float ChatPanelY = 110;
     private const float PillSpacing = 10;
     private const float FriendsPillWidth = 112;
     private const float ChatPillWidth = 92;
@@ -76,7 +75,6 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         AddChild(CreatePendingBadge(friendsPanel.Requests));
         AddChild(CreateChatButton());
         AddChild(CreateTablet());
-        AddChild(CreateChatPanel(viewModel));
         AddChild(CreateHowToPlayButton());
         AddChild(ViewFactory.CreateVersionLabel());
         AddChild(CreateFriendsPanel(friendsPanel));
@@ -145,16 +143,6 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuClassicMode), TextStyles.IdentityDetail));
         ViewFactory.CenterVertically(text);
         return text;
-    }
-
-    private static LobbyChatPanel CreateChatPanel(MainMenuViewModel viewModel)
-    {
-        var panel = new LobbyChatPanel(viewModel)
-        {
-            X = ScreenMarginX,
-            Y = ChatPanelY,
-        };
-        return panel;
     }
 
     private static Button CreateSettingsButton()

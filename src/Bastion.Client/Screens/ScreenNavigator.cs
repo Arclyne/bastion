@@ -34,10 +34,11 @@ public sealed class ScreenNavigator : INavigator
     {
         ArgumentNullException.ThrowIfNull(session);
 
-        var viewModel = new MainMenuViewModel(session, _connection.Notifications, _connection.Chat);
-        var friendsPanel = new FriendsPanelViewModel(session, _connection.Friends, _connection.Notifications);
+        var viewModel = new MainMenuViewModel(session, _connection.Notifications);
+        var clients = new SocialClients(_connection.Friends, _connection.Chat, _connection.Notifications);
+        var friendsPanel = new FriendsPanelViewModel(session, clients);
         ShowScreen(new MainMenuView(viewModel, friendsPanel));
-        _ = viewModel.ConnectChat();
+        _ = viewModel.ConnectNotifications();
         _ = friendsPanel.LoadFriends();
         _ = friendsPanel.Requests.LoadRequests();
     }

@@ -101,7 +101,7 @@ public class TestNotificationCallback
 
         _notificationCallback.ReceiveNotification(notification);
 
-        Assert.Equal(FirstNickname, _chatMessage?.SenderNickname);
+        Assert.Equal(FirstNickname, _chatMessage?.Message.Author.Nickname);
     }
 
     [Fact]
