@@ -6,7 +6,7 @@ public interface IMatchmakingNotifier
 
     void NotifyMatchFound(MatchPairing pairing);
 
-    void RequestPresence(PresenceRequest request);
+    void NotifyPresenceRequested(PresenceRequest request);
 
     void NotifySearchEnded(int accountId, SearchEndReason reason);
 }

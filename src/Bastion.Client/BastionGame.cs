@@ -41,7 +41,7 @@ public sealed class BastionGame : Game
         GumService.Default.UseSingleThreadedAsync();
         ThemeInitializer.Initialize(this);
         var languages = new LanguageService(new LanguagePreferenceStore(), GumService.Default.LocalizationService);
-        languages.Start();
+        languages.LoadInitialLanguage();
         new ScreenNavigator(languages, _serverConnection).ShowLogin();
         Window.ClientSizeChanged += OnClientSizeChanged;
         ApplyUiScale();

@@ -20,7 +20,7 @@ public class TestNotificationCallback
         SecondNickname,
     };
 
-    private readonly NotificationCallback _callback = new NotificationCallback();
+    private readonly NotificationCallback _notificationCallback = new NotificationCallback();
     private ChatMessageReceivedEventArgs? _chatMessage;
     private MatchFoundEventArgs? _matchFound;
     private PresenceRequestedEventArgs? _presenceRequested;
@@ -28,10 +28,10 @@ public class TestNotificationCallback
 
     public TestNotificationCallback()
     {
-        _callback.ChatMessageReceived += HandleChatMessageReceived;
-        _callback.MatchFound += HandleMatchFound;
-        _callback.PresenceRequested += HandlePresenceRequested;
-        _callback.SearchEnded += HandleSearchEnded;
+        _notificationCallback.ChatMessageReceived += HandleChatMessageReceived;
+        _notificationCallback.MatchFound += HandleMatchFound;
+        _notificationCallback.PresenceRequested += HandlePresenceRequested;
+        _notificationCallback.SearchEnded += HandleSearchEnded;
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class TestNotificationCallback
             OccurredAt = _sentAt,
         };
 
-        _callback.ReceiveNotification(notification);
+        _notificationCallback.ReceiveNotification(notification);
 
         Assert.Equal(FirstNickname, _chatMessage?.SenderNickname);
     }
@@ -58,7 +58,7 @@ public class TestNotificationCallback
             OccurredAt = _sentAt,
         };
 
-        _callback.ReceiveNotification(notification);
+        _notificationCallback.ReceiveNotification(notification);
 
         Assert.Equal(_participantNicknames, _matchFound?.ParticipantNicknames);
     }
@@ -72,7 +72,7 @@ public class TestNotificationCallback
             Deadline = _sentAt.AddSeconds(ResponseSeconds),
         };
 
-        _callback.ReceiveNotification(notification);
+        _notificationCallback.ReceiveNotification(notification);
 
         Assert.Equal(TimeSpan.FromSeconds(ResponseSeconds), _presenceRequested?.ResponseWindow);
     }
@@ -86,7 +86,7 @@ public class TestNotificationCallback
             OccurredAt = _sentAt,
         };
 
-        _callback.ReceiveNotification(notification);
+        _notificationCallback.ReceiveNotification(notification);
 
         Assert.Equal(SearchEndReason.PresenceExpired, _searchEnded?.Reason);
     }
@@ -99,7 +99,7 @@ public class TestNotificationCallback
             OccurredAt = _sentAt,
         };
 
-        Exception? exception = Record.Exception(() => _callback.ReceiveNotification(notification));
+        Exception? exception = Record.Exception(() => _notificationCallback.ReceiveNotification(notification));
 
         Assert.Null(exception);
     }

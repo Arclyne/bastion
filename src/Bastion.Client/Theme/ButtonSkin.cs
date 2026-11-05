@@ -36,7 +36,7 @@ public sealed class ButtonSkin : InteractiveSkin
         Shapes.InsertBehindContent(button.Visual, _halo, _surface);
     }
 
-    public static ButtonSkin Apply(ButtonBase button, ButtonLook look)
+    public static ButtonSkin CreateAndAttach(ButtonBase button, ButtonLook look)
     {
         ArgumentNullException.ThrowIfNull(button);
         ArgumentNullException.ThrowIfNull(look);
@@ -46,7 +46,7 @@ public sealed class ButtonSkin : InteractiveSkin
         return skin;
     }
 
-    public override void Show(InteractionFlags flags)
+    public override void ShowState(InteractionFlags flags)
     {
         bool isDisabled = flags.HasFlag(InteractionFlags.Disabled);
         bool isHovered = flags.HasFlag(InteractionFlags.Hovered);

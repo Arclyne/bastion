@@ -2,7 +2,7 @@ namespace Bastion.Client.Localization;
 
 public interface ILanguagePreferenceStore
 {
-    string? Load();
+    string? LoadCultureName();
 
-    void Save(string cultureName);
+    void SaveCultureName(string cultureName);
 }

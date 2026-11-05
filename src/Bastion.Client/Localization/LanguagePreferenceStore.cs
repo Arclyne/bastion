@@ -22,7 +22,7 @@ public sealed class LanguagePreferenceStore : ILanguagePreferenceStore
         _filePath = Path.Combine(_directoryPath, FileName);
     }
 
-    public string? Load()
+    public string? LoadCultureName()
     {
         if (!File.Exists(_filePath))
         {
@@ -45,7 +45,7 @@ public sealed class LanguagePreferenceStore : ILanguagePreferenceStore
         }
     }
 
-    public void Save(string cultureName)
+    public void SaveCultureName(string cultureName)
     {
         ArgumentNullException.ThrowIfNull(cultureName);
 

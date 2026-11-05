@@ -16,7 +16,7 @@ public interface IMatchSearchService
     /// <exception cref="ArgumentNullException"><paramref name="sessionToken"/> is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="SearchRejectedException">The player cannot search; the rejection says why.</exception>
-    void Start(string sessionToken, DateTime now);
+    void StartSearch(string sessionToken, DateTime now);
 
     /// <summary>
     /// Ends the player's search and tells the player that it was cancelled. Does nothing if the player is not searching.
@@ -25,7 +25,7 @@ public interface IMatchSearchService
     /// <param name="now">The current UTC time.</param>
     /// <exception cref="ArgumentNullException"><paramref name="sessionToken"/> is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
-    void Cancel(string sessionToken, DateTime now);
+    void CancelSearch(string sessionToken, DateTime now);
 
     /// <summary>
     /// Confirms that the player is still waiting, so the search goes on. A late confirmation is ignored.

@@ -26,7 +26,7 @@ public sealed class FakeMatchmakingNotifier : IMatchmakingNotifier
         Pairings.Add(pairing);
     }
 
-    public void RequestPresence(PresenceRequest request)
+    public void NotifyPresenceRequested(PresenceRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 

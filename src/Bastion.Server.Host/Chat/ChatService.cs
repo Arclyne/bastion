@@ -45,7 +45,7 @@ public sealed class ChatService : IChatService
         {
             using IServiceScope scope = _scopeFactory.CreateScope();
             ILobbyChatService chat = scope.ServiceProvider.GetRequiredService<ILobbyChatService>();
-            chat.Send(sessionToken, text, _timeProvider.GetUtcNow().UtcDateTime);
+            chat.SendMessage(sessionToken, text, _timeProvider.GetUtcNow().UtcDateTime);
         }
         catch (InvalidSessionException ex)
         {

@@ -5,34 +5,34 @@ namespace Bastion.Server.Application.Matchmaking;
 
 public sealed class MatchmakingDispatcher
 {
-    private readonly IMatchmakingQueue _queue;
-    private readonly IMatchmakingNotifier _notifier;
+    private readonly IMatchmakingQueue _matchmakingQueue;
+    private readonly IMatchmakingNotifier _matchmakingNotifier;
 
-    public MatchmakingDispatcher(IMatchmakingQueue queue, IMatchmakingNotifier notifier)
+    public MatchmakingDispatcher(IMatchmakingQueue matchmakingQueue, IMatchmakingNotifier matchmakingNotifier)
     {
-        ArgumentNullException.ThrowIfNull(queue);
-        ArgumentNullException.ThrowIfNull(notifier);
+        ArgumentNullException.ThrowIfNull(matchmakingQueue);
+        ArgumentNullException.ThrowIfNull(matchmakingNotifier);
 
-        _queue = queue;
-        _notifier = notifier;
+        _matchmakingQueue = matchmakingQueue;
+        _matchmakingNotifier = matchmakingNotifier;
     }
 
-    public void Review(DateTime now)
+    public void ReviewAndNotify(DateTime now)
     {
-        QueueReview review = _queue.Review(now);
+        QueueReview review = _matchmakingQueue.Review(now);
         foreach (MatchSearch search in review.ExpiredSearches)
         {
-            _notifier.NotifySearchEnded(search.AccountId, SearchEndReason.PresenceExpired);
+            _matchmakingNotifier.NotifySearchEnded(search.AccountId, SearchEndReason.PresenceExpired);
         }
 
         foreach (MatchPairing pairing in review.Pairings)
         {
-            _notifier.NotifyMatchFound(pairing);
+            _matchmakingNotifier.NotifyMatchFound(pairing);
         }
 
         foreach (PresenceRequest request in review.PresenceRequests)
         {
-            _notifier.RequestPresence(request);
+            _matchmakingNotifier.NotifyPresenceRequested(request);
         }
     }
 }

@@ -16,41 +16,41 @@ public class TestMatchmakingDispatcher
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 4, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _presenceCheckAt = _startedAt.Add(MatchmakingRules.PresenceCheckInterval);
 
-    private readonly MatchmakingQueue _queue = new MatchmakingQueue();
-    private readonly FakeMatchmakingNotifier _notifier = new FakeMatchmakingNotifier();
-    private readonly MatchmakingDispatcher _dispatcher;
+    private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
+    private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
+    private readonly MatchmakingDispatcher _matchmakingDispatcher;
 
     public TestMatchmakingDispatcher()
     {
-        _dispatcher = new MatchmakingDispatcher(_queue, _notifier);
-        _queue.TryAdd(new MatchSearch(FirstAccountId, FirstNickname, _startedAt));
+        _matchmakingDispatcher = new MatchmakingDispatcher(_matchmakingQueue, _matchmakingNotifier);
+        _matchmakingQueue.TryAdd(new MatchSearch(FirstAccountId, FirstNickname, _startedAt));
     }
 
     [Fact]
-    public void Review_TwoWaitingPlayers_NotifiesMatchFound()
+    public void ReviewAndNotify_TwoWaitingPlayers_NotifiesMatchFound()
     {
-        _queue.TryAdd(new MatchSearch(SecondAccountId, SecondNickname, _startedAt));
+        _matchmakingQueue.TryAdd(new MatchSearch(SecondAccountId, SecondNickname, _startedAt));
 
-        _dispatcher.Review(_startedAt);
+        _matchmakingDispatcher.ReviewAndNotify(_startedAt);
 
-        Assert.Single(_notifier.Pairings);
+        Assert.Single(_matchmakingNotifier.Pairings);
     }
 
     [Fact]
-    public void Review_FifteenMinutesWaiting_RequestsPresence()
+    public void ReviewAndNotify_FifteenMinutesWaiting_RequestsPresence()
     {
-        _dispatcher.Review(_presenceCheckAt);
+        _matchmakingDispatcher.ReviewAndNotify(_presenceCheckAt);
 
-        Assert.Single(_notifier.PresenceRequests);
+        Assert.Single(_matchmakingNotifier.PresenceRequests);
     }
 
     [Fact]
-    public void Review_PresenceUnanswered_NotifiesPresenceExpired()
+    public void ReviewAndNotify_PresenceUnanswered_NotifiesPresenceExpired()
     {
-        _dispatcher.Review(_presenceCheckAt);
+        _matchmakingDispatcher.ReviewAndNotify(_presenceCheckAt);
 
-        _dispatcher.Review(_presenceCheckAt.Add(MatchmakingRules.PresenceResponseWindow));
+        _matchmakingDispatcher.ReviewAndNotify(_presenceCheckAt.Add(MatchmakingRules.PresenceResponseWindow));
 
-        Assert.Equal(SearchEndReason.PresenceExpired, _notifier.EndReasons[FirstAccountId]);
+        Assert.Equal(SearchEndReason.PresenceExpired, _matchmakingNotifier.EndReasons[FirstAccountId]);
     }
 }

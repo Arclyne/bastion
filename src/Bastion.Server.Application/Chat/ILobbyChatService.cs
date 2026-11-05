@@ -4,5 +4,5 @@ namespace Bastion.Server.Application.Chat;
 
 public interface ILobbyChatService
 {
-    void Send(string sessionToken, string text, DateTime now);
+    void SendMessage(string sessionToken, string text, DateTime now);
 }

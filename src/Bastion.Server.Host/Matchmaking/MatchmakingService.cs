@@ -40,7 +40,7 @@ public sealed class MatchmakingService : IMatchmakingService
 
         try
         {
-            Run(search => search.Start(sessionToken, GetNow()));
+            RunInRequestScope(searchService => searchService.StartSearch(sessionToken, GetUtcNow()));
         }
         catch (InvalidSessionException ex)
         {
@@ -60,13 +60,13 @@ public sealed class MatchmakingService : IMatchmakingService
     /// <inheritdoc/>
     public void CancelSearch(string? sessionToken)
     {
-        RunOneWay(sessionToken, nameof(CancelSearch), (search, token) => search.Cancel(token, GetNow()));
+        RunOneWay(sessionToken, nameof(CancelSearch), (searchService, token) => searchService.CancelSearch(token, GetUtcNow()));
     }
 
     /// <inheritdoc/>
     public void ConfirmPresence(string? sessionToken)
     {
-        RunOneWay(sessionToken, nameof(ConfirmPresence), (search, token) => search.ConfirmPresence(token, GetNow()));
+        RunOneWay(sessionToken, nameof(ConfirmPresence), (searchService, token) => searchService.ConfirmPresence(token, GetUtcNow()));
     }
 
     private void RunOneWay(string? sessionToken, string operationName, Action<IMatchSearchService, string> operation)
@@ -80,7 +80,7 @@ public sealed class MatchmakingService : IMatchmakingService
         // A one-way operation has no reply, so a failure is logged here instead of being sent to the client.
         try
         {
-            Run(search => operation(search, sessionToken));
+            RunInRequestScope(searchService => operation(searchService, sessionToken));
         }
         catch (InvalidSessionException ex)
         {
@@ -92,14 +92,14 @@ public sealed class MatchmakingService : IMatchmakingService
         }
     }
 
-    private void Run(Action<IMatchSearchService> operation)
+    private void RunInRequestScope(Action<IMatchSearchService> operation)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
-        IMatchSearchService search = scope.ServiceProvider.GetRequiredService<IMatchSearchService>();
-        operation(search);
+        IMatchSearchService searchService = scope.ServiceProvider.GetRequiredService<IMatchSearchService>();
+        operation(searchService);
     }
 
-    private DateTime GetNow()
+    private DateTime GetUtcNow()
     {
         return _timeProvider.GetUtcNow().UtcDateTime;
     }

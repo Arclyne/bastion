@@ -11,7 +11,7 @@ public sealed class ChatClient : IChatClient, IDisposable
     private readonly ServiceChannel<IChatService> _channel =
         new ServiceChannel<IChatService>(ServiceEndpoints.ChatPath);
 
-    public void Send(string sessionToken, string text)
+    public void SendMessage(string sessionToken, string text)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(text);

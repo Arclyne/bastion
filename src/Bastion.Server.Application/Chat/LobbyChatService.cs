@@ -18,13 +18,13 @@ public sealed class LobbyChatService : ILobbyChatService
         _broadcaster = broadcaster;
     }
 
-    public void Send(string sessionToken, string text, DateTime now)
+    public void SendMessage(string sessionToken, string text, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(text);
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        if (!ChatRules.IsMessage(text))
+        if (!ChatRules.IsValidMessage(text))
         {
             throw new InvalidChatMessageException();
         }

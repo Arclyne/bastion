@@ -44,7 +44,7 @@ public sealed class ServerCertificate : IDisposable
         serviceBuilder.AddService<SessionService>();
         serviceBuilder.AddService<ChatService>();
         serviceBuilder.AddService<MatchmakingService>();
-        serviceBuilder.ConfigureAllServiceHostBase(ApplyTo);
+        serviceBuilder.ConfigureAllServiceHostBase(ApplyCertificateTo);
     }
 
     public void Dispose()
@@ -52,7 +52,7 @@ public sealed class ServerCertificate : IDisposable
         _certificate.Dispose();
     }
 
-    private void ApplyTo(ServiceHostBase host)
+    private void ApplyCertificateTo(ServiceHostBase host)
     {
         host.Credentials.ServiceCertificate.Certificate = _certificate;
     }

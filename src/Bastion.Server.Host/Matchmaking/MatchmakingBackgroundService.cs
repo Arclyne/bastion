@@ -12,15 +12,15 @@ public sealed class MatchmakingBackgroundService : BackgroundService
 
     private static readonly TimeSpan _reviewInterval = TimeSpan.FromSeconds(ReviewIntervalSeconds);
 
-    private readonly MatchmakingDispatcher _dispatcher;
+    private readonly MatchmakingDispatcher _matchmakingDispatcher;
     private readonly TimeProvider _timeProvider;
 
-    public MatchmakingBackgroundService(MatchmakingDispatcher dispatcher, TimeProvider timeProvider)
+    public MatchmakingBackgroundService(MatchmakingDispatcher matchmakingDispatcher, TimeProvider timeProvider)
     {
-        ArgumentNullException.ThrowIfNull(dispatcher);
+        ArgumentNullException.ThrowIfNull(matchmakingDispatcher);
         ArgumentNullException.ThrowIfNull(timeProvider);
 
-        _dispatcher = dispatcher;
+        _matchmakingDispatcher = matchmakingDispatcher;
         _timeProvider = timeProvider;
     }
 
@@ -29,7 +29,7 @@ public sealed class MatchmakingBackgroundService : BackgroundService
         using var timer = new PeriodicTimer(_reviewInterval, _timeProvider);
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
-            _dispatcher.Review(_timeProvider.GetUtcNow().UtcDateTime);
+            _matchmakingDispatcher.ReviewAndNotify(_timeProvider.GetUtcNow().UtcDateTime);
         }
     }
 }

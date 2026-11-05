@@ -32,7 +32,7 @@ public class MatchSearch
         return Status == SearchStatus.Searching;
     }
 
-    public bool ShouldRequestPresence(DateTime now)
+    public bool ShouldStartPresenceCheck(DateTime now)
     {
         return IsAvailable() && now - LastConfirmedAt >= MatchmakingRules.PresenceCheckInterval;
     }
@@ -43,7 +43,7 @@ public class MatchSearch
             && now - requestedAt >= MatchmakingRules.PresenceResponseWindow;
     }
 
-    public DateTime RequestPresence(DateTime now)
+    public DateTime StartPresenceCheck(DateTime now)
     {
         if (!IsAvailable())
         {

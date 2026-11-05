@@ -19,78 +19,78 @@ public class TestMatchSearchService
     private static readonly DateTime _presenceCheckAt = _now.Add(MatchmakingRules.PresenceCheckInterval);
 
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
-    private readonly MatchmakingQueue _queue = new MatchmakingQueue();
-    private readonly FakeMatchmakingNotifier _notifier = new FakeMatchmakingNotifier();
-    private readonly MatchSearchService _service;
+    private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
+    private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
+    private readonly MatchSearchService _matchSearchService;
 
     public TestMatchSearchService()
     {
-        _service = new MatchSearchService(_sessionVerifier, _queue, _notifier);
+        _matchSearchService = new MatchSearchService(_sessionVerifier, _matchmakingQueue, _matchmakingNotifier);
         _sessionVerifier.Add(Token, new ConnectedPlayer(AccountId, Nickname));
-        _notifier.SubscribedAccountIds.Add(AccountId);
+        _matchmakingNotifier.SubscribedAccountIds.Add(AccountId);
     }
 
     [Fact]
-    public void Start_InvalidSession_ThrowsInvalidSession()
+    public void StartSearch_InvalidSession_ThrowsInvalidSession()
     {
-        Assert.Throws<InvalidSessionException>(() => _service.Start(UnknownToken, _now));
+        Assert.Throws<InvalidSessionException>(() => _matchSearchService.StartSearch(UnknownToken, _now));
     }
 
     [Fact]
-    public void Start_PlayerWithoutNotifications_ThrowsSearchRejected()
+    public void StartSearch_PlayerWithoutNotifications_ThrowsSearchRejected()
     {
-        _notifier.SubscribedAccountIds.Clear();
+        _matchmakingNotifier.SubscribedAccountIds.Clear();
 
-        Assert.Throws<SearchRejectedException>(() => _service.Start(Token, _now));
+        Assert.Throws<SearchRejectedException>(() => _matchSearchService.StartSearch(Token, _now));
     }
 
     [Fact]
-    public void Start_SubscribedPlayer_JoinsQueue()
+    public void StartSearch_SubscribedPlayer_JoinsQueue()
     {
-        _service.Start(Token, _now);
+        _matchSearchService.StartSearch(Token, _now);
 
-        bool isRemoved = _queue.TryRemove(AccountId);
+        bool isRemoved = _matchmakingQueue.TryRemove(AccountId);
 
         Assert.True(isRemoved);
     }
 
     [Fact]
-    public void Start_PlayerAlreadySearching_KeepsFirstSearch()
+    public void StartSearch_PlayerAlreadySearching_KeepsFirstSearch()
     {
-        _service.Start(Token, _now);
-        _service.Start(Token, _now.AddMinutes(RepeatedStartMinutes));
+        _matchSearchService.StartSearch(Token, _now);
+        _matchSearchService.StartSearch(Token, _now.AddMinutes(RepeatedStartMinutes));
 
-        QueueReview review = _queue.Review(_presenceCheckAt);
+        QueueReview review = _matchmakingQueue.Review(_presenceCheckAt);
 
         Assert.Single(review.PresenceRequests);
     }
 
     [Fact]
-    public void Cancel_SearchingPlayer_NotifiesCancelled()
+    public void CancelSearch_SearchingPlayer_NotifiesCancelled()
     {
-        _service.Start(Token, _now);
+        _matchSearchService.StartSearch(Token, _now);
 
-        _service.Cancel(Token, _now);
+        _matchSearchService.CancelSearch(Token, _now);
 
-        Assert.Equal(SearchEndReason.Cancelled, _notifier.EndReasons[AccountId]);
+        Assert.Equal(SearchEndReason.Cancelled, _matchmakingNotifier.EndReasons[AccountId]);
     }
 
     [Fact]
-    public void Cancel_PlayerNotSearching_NotifiesNothing()
+    public void CancelSearch_PlayerNotSearching_NotifiesNothing()
     {
-        _service.Cancel(Token, _now);
+        _matchSearchService.CancelSearch(Token, _now);
 
-        Assert.Empty(_notifier.EndReasons);
+        Assert.Empty(_matchmakingNotifier.EndReasons);
     }
 
     [Fact]
     public void ConfirmPresence_PlayerAwaitingPresence_KeepsSearching()
     {
-        _service.Start(Token, _now);
-        _queue.Review(_presenceCheckAt);
-        _service.ConfirmPresence(Token, _presenceCheckAt);
+        _matchSearchService.StartSearch(Token, _now);
+        _matchmakingQueue.Review(_presenceCheckAt);
+        _matchSearchService.ConfirmPresence(Token, _presenceCheckAt);
 
-        QueueReview review = _queue.Review(_presenceCheckAt.Add(MatchmakingRules.PresenceResponseWindow));
+        QueueReview review = _matchmakingQueue.Review(_presenceCheckAt.Add(MatchmakingRules.PresenceResponseWindow));
 
         Assert.Empty(review.ExpiredSearches);
     }

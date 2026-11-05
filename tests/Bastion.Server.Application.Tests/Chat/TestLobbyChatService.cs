@@ -20,38 +20,38 @@ public class TestLobbyChatService
     private readonly FakeUnitOfWork _unitOfWork = new FakeUnitOfWork();
     private readonly FakeSessionTokenGenerator _tokenGenerator = new FakeSessionTokenGenerator();
     private readonly FakeChatBroadcaster _broadcaster = new FakeChatBroadcaster();
-    private readonly LobbyChatService _service;
+    private readonly LobbyChatService _lobbyChatService;
 
     public TestLobbyChatService()
     {
-        _service = new LobbyChatService(new SessionVerifier(_unitOfWork, _tokenGenerator), _broadcaster);
+        _lobbyChatService = new LobbyChatService(new SessionVerifier(_unitOfWork, _tokenGenerator), _broadcaster);
         StoreSession();
     }
 
     [Fact]
-    public void Send_InvalidSession_ThrowsInvalidSession()
+    public void SendMessage_InvalidSession_ThrowsInvalidSession()
     {
-        Assert.Throws<InvalidSessionException>(() => _service.Send("otro-token", "hola", _now));
+        Assert.Throws<InvalidSessionException>(() => _lobbyChatService.SendMessage("otro-token", "hola", _now));
     }
 
     [Fact]
-    public void Send_EmptyText_ThrowsInvalidChatMessage()
+    public void SendMessage_EmptyText_ThrowsInvalidChatMessage()
     {
-        Assert.Throws<InvalidChatMessageException>(() => _service.Send(FakeSessionTokenGenerator.Token, "   ", _now));
+        Assert.Throws<InvalidChatMessageException>(() => _lobbyChatService.SendMessage(FakeSessionTokenGenerator.Token, "   ", _now));
     }
 
     [Fact]
-    public void Send_ValidText_BroadcastsTrimmedText()
+    public void SendMessage_ValidText_BroadcastsTrimmedText()
     {
-        _service.Send(FakeSessionTokenGenerator.Token, "  hola  ", _now);
+        _lobbyChatService.SendMessage(FakeSessionTokenGenerator.Token, "  hola  ", _now);
 
         Assert.Equal("hola", _broadcaster.Lines[0].Text);
     }
 
     [Fact]
-    public void Send_ValidText_BroadcastsSenderNickname()
+    public void SendMessage_ValidText_BroadcastsSenderNickname()
     {
-        _service.Send(FakeSessionTokenGenerator.Token, "hola", _now);
+        _lobbyChatService.SendMessage(FakeSessionTokenGenerator.Token, "hola", _now);
 
         Assert.Equal(Nickname, _broadcaster.Lines[0].SenderNickname);
     }

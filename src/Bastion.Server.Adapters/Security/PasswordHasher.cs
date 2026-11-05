@@ -23,12 +23,12 @@ public sealed class PasswordHasher : IPasswordHasher
         byte[] salt = storedSalt ?? _decoySalt;
         byte[] expectedHash = storedHash ?? _decoyHash;
 
-        byte[] derivedHash = Derive(password, salt);
+        byte[] derivedHash = DeriveHash(password, salt);
         bool isMatch = CryptographicOperations.FixedTimeEquals(derivedHash, expectedHash);
         return hasStoredPassword && isMatch && password.Length > 0;
     }
 
-    private static byte[] Derive(string password, byte[] salt)
+    private static byte[] DeriveHash(string password, byte[] salt)
     {
         return Rfc2898DeriveBytes.Pbkdf2(
             Encoding.UTF8.GetBytes(password),

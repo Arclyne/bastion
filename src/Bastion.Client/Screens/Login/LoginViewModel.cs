@@ -32,7 +32,7 @@ public sealed class LoginViewModel : ViewModel
         NoticeMessage = string.Empty;
         DialogTitleKey = string.Empty;
         DialogMessageKey = string.Empty;
-        Set(languages.Current, nameof(SelectedLanguage));
+        Set(languages.CurrentLanguage, nameof(SelectedLanguage));
     }
 
     public IReadOnlyList<SupportedLanguage> Languages => _languages.Languages;
@@ -47,7 +47,7 @@ public sealed class LoginViewModel : ViewModel
                 return;
             }
 
-            _languages.Change(value);
+            _languages.ChangeLanguage(value);
             Password = string.Empty;
             ClearNotice();
         }
@@ -174,7 +174,7 @@ public sealed class LoginViewModel : ViewModel
         }
     }
 
-    public Task Retry()
+    public Task RetryLogIn()
     {
         CloseDialog();
         return LogIn();
@@ -241,7 +241,7 @@ public sealed class LoginViewModel : ViewModel
             case AccountRestriction.Locked:
                 ShowNotice(
                     NoticeTone.Warning,
-                    Format(Strings.LoginAccountLockedTitleFormat, restriction.LockMinutes),
+                    FormatWithCurrentCulture(Strings.LoginAccountLockedTitleFormat, restriction.LockMinutes),
                     Strings.LoginAccountLockedMessage);
                 break;
             case AccountRestriction.Pending:
@@ -304,7 +304,7 @@ public sealed class LoginViewModel : ViewModel
         IsDialogOpen = true;
     }
 
-    private static string Format(string format, object? argument)
+    private static string FormatWithCurrentCulture(string format, object? argument)
     {
         return string.Format(CultureInfo.CurrentCulture, format, argument);
     }

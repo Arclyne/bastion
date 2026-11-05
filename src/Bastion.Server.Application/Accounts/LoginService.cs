@@ -55,7 +55,7 @@ public sealed class LoginService : ILoginService
         }
 
         account.RecordSuccessfulSignIn();
-        return Admit(account, attempt);
+        return AdmitByAccountStatus(account, attempt);
     }
 
     private static AccountRestrictedException CreateLockRestriction(Account account, DateTime now)
@@ -76,7 +76,7 @@ public sealed class LoginService : ILoginService
         throw Reject(accessLog, new InvalidCredentialsException());
     }
 
-    private SignedInPlayer Admit(Account account, AccessAttempt attempt)
+    private SignedInPlayer AdmitByAccountStatus(Account account, AccessAttempt attempt)
     {
         switch (account.AccountStatus)
         {
@@ -109,18 +109,18 @@ public sealed class LoginService : ILoginService
         GeneratedToken token = _tokenGenerator.Generate();
         var ticket = new SessionTicket(token.TokenHash, attempt.OccurredAt);
         _unitOfWork.Sessions.Add(new Session(account.AccountId, ticket, attempt.Connection));
-        Record(new AccessLog(AccessLogResult.LoginSucceeded, attempt, account.AccountId));
+        RecordAccessLog(new AccessLog(AccessLogResult.LoginSucceeded, attempt, account.AccountId));
         return new SignedInPlayer(token.Token, account.Nickname, account.PreferredLanguage);
     }
 
     private TException Reject<TException>(AccessLog accessLog, TException rejection)
         where TException : Exception
     {
-        Record(accessLog);
+        RecordAccessLog(accessLog);
         return rejection;
     }
 
-    private void Record(AccessLog accessLog)
+    private void RecordAccessLog(AccessLog accessLog)
     {
         _unitOfWork.AccessLogs.Add(accessLog);
         _unitOfWork.SaveChanges();

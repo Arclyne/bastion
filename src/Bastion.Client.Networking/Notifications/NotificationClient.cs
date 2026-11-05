@@ -15,10 +15,10 @@ public sealed class NotificationClient : INotificationClient, IDisposable
     private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationClient));
     private static readonly TimeSpan _keepAliveInterval = TimeSpan.FromSeconds(KeepAliveSeconds);
 
-    private readonly NotificationCallback _callback = new NotificationCallback();
-    private readonly DuplexChannelFactory<ISessionService> _factory;
+    private readonly NotificationCallback _notificationCallback = new NotificationCallback();
+    private readonly DuplexChannelFactory<ISessionService> _sessionChannelFactory;
     private readonly TimeProvider _timeProvider;
-    private ISessionService? _channel;
+    private ISessionService? _sessionChannel;
     private ITimer? _keepAliveTimer;
 
     public NotificationClient(TimeProvider timeProvider)
@@ -26,35 +26,35 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         ArgumentNullException.ThrowIfNull(timeProvider);
 
         _timeProvider = timeProvider;
-        _factory = new DuplexChannelFactory<ISessionService>(
-            new InstanceContext(_callback),
+        _sessionChannelFactory = new DuplexChannelFactory<ISessionService>(
+            new InstanceContext(_notificationCallback),
             ChannelSettings.CreateBinding(),
             ChannelSettings.CreateAddress(ServiceEndpoints.SessionsPath));
-        ChannelSettings.ApplyCertificateValidation(_factory);
+        ChannelSettings.ApplyCertificateValidation(_sessionChannelFactory);
     }
 
     public event EventHandler<ChatMessageReceivedEventArgs>? ChatMessageReceived
     {
-        add => _callback.ChatMessageReceived += value;
-        remove => _callback.ChatMessageReceived -= value;
+        add => _notificationCallback.ChatMessageReceived += value;
+        remove => _notificationCallback.ChatMessageReceived -= value;
     }
 
     public event EventHandler<MatchFoundEventArgs>? MatchFound
     {
-        add => _callback.MatchFound += value;
-        remove => _callback.MatchFound -= value;
+        add => _notificationCallback.MatchFound += value;
+        remove => _notificationCallback.MatchFound -= value;
     }
 
     public event EventHandler<PresenceRequestedEventArgs>? PresenceRequested
     {
-        add => _callback.PresenceRequested += value;
-        remove => _callback.PresenceRequested -= value;
+        add => _notificationCallback.PresenceRequested += value;
+        remove => _notificationCallback.PresenceRequested -= value;
     }
 
     public event EventHandler<SearchEndedEventArgs>? SearchEnded
     {
-        add => _callback.SearchEnded += value;
-        remove => _callback.SearchEnded -= value;
+        add => _notificationCallback.SearchEnded += value;
+        remove => _notificationCallback.SearchEnded -= value;
     }
 
     public event EventHandler? Disconnected;
@@ -64,7 +64,7 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         ArgumentNullException.ThrowIfNull(sessionToken);
 
         Disconnect();
-        ISessionService channel = _factory.CreateChannel();
+        ISessionService channel = _sessionChannelFactory.CreateChannel();
         try
         {
             channel.Subscribe(sessionToken);
@@ -79,28 +79,28 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         }
 
         ((ICommunicationObject)channel).Faulted += HandleChannelFaulted;
-        _channel = channel;
+        _sessionChannel = channel;
         _keepAliveTimer = _timeProvider.CreateTimer(SendKeepAlive, null, _keepAliveInterval, _keepAliveInterval);
     }
 
     public void Disconnect()
     {
         TryStopKeepAlive();
-        if (_channel is null)
+        if (_sessionChannel is null)
         {
             return;
         }
 
-        var communicationObject = (ICommunicationObject)_channel;
+        var communicationObject = (ICommunicationObject)_sessionChannel;
         communicationObject.Faulted -= HandleChannelFaulted;
-        _channel = null;
+        _sessionChannel = null;
         ChannelCloser.CloseOrAbort(communicationObject);
     }
 
     public void Dispose()
     {
         Disconnect();
-        ChannelCloser.CloseOrAbort(_factory);
+        ChannelCloser.CloseOrAbort(_sessionChannelFactory);
     }
 
     private static Exception AbortSubscription(ISessionService channel, Exception ex)
@@ -111,7 +111,7 @@ public sealed class NotificationClient : INotificationClient, IDisposable
 
     private void SendKeepAlive(object? state)
     {
-        ISessionService? channel = _channel;
+        ISessionService? channel = _sessionChannel;
         if (channel is null)
         {
             return;

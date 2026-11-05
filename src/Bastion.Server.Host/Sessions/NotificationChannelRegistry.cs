@@ -64,13 +64,13 @@ public sealed class NotificationChannelRegistry : IChatBroadcaster, IMatchmaking
         ArgumentNullException.ThrowIfNull(pairing);
 
         MatchFoundNotification notification = MatchmakingTranslator.ToNotification(pairing, GetUtcNow());
-        foreach (MatchSearch player in pairing.Players)
+        foreach (MatchSearch search in pairing.Players)
         {
-            NotifyPlayer(player.AccountId, notification);
+            NotifyPlayer(search.AccountId, notification);
         }
     }
 
-    public void RequestPresence(PresenceRequest request)
+    public void NotifyPresenceRequested(PresenceRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 

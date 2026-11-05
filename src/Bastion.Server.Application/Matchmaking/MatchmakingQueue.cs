@@ -7,14 +7,14 @@ namespace Bastion.Server.Application.Matchmaking;
 
 public sealed class MatchmakingQueue : IMatchmakingQueue
 {
-    private readonly object _gate = new object();
+    private readonly object _searchesLock = new object();
     private readonly Dictionary<int, MatchSearch> _searches = new Dictionary<int, MatchSearch>();
 
     public bool TryAdd(MatchSearch search)
     {
         ArgumentNullException.ThrowIfNull(search);
 
-        lock (_gate)
+        lock (_searchesLock)
         {
             return _searches.TryAdd(search.AccountId, search);
         }
@@ -22,7 +22,7 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
 
     public bool TryRemove(int accountId)
     {
-        lock (_gate)
+        lock (_searchesLock)
         {
             return _searches.Remove(accountId);
         }
@@ -30,7 +30,7 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
 
     public void ConfirmPresence(int accountId, DateTime now)
     {
-        lock (_gate)
+        lock (_searchesLock)
         {
             if (_searches.TryGetValue(accountId, out MatchSearch? search))
             {
@@ -41,11 +41,11 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
 
     public QueueReview Review(DateTime now)
     {
-        lock (_gate)
+        lock (_searchesLock)
         {
             List<MatchSearch> expiredSearches = RemoveExpiredSearches(now);
             List<MatchPairing> pairings = TakePairings();
-            List<PresenceRequest> presenceRequests = RequestPresence(now);
+            List<PresenceRequest> presenceRequests = StartPresenceChecks(now);
             return new QueueReview(expiredSearches, pairings, presenceRequests);
         }
     }
@@ -75,13 +75,13 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
         return pairings;
     }
 
-    private List<PresenceRequest> RequestPresence(DateTime now)
+    private List<PresenceRequest> StartPresenceChecks(DateTime now)
     {
-        IEnumerable<MatchSearch> idleSearches = _searches.Values.Where(search => search.ShouldRequestPresence(now));
+        IEnumerable<MatchSearch> idleSearches = _searches.Values.Where(search => search.ShouldStartPresenceCheck(now));
         var presenceRequests = new List<PresenceRequest>();
         foreach (MatchSearch search in idleSearches)
         {
-            presenceRequests.Add(new PresenceRequest(search.AccountId, search.RequestPresence(now)));
+            presenceRequests.Add(new PresenceRequest(search.AccountId, search.StartPresenceCheck(now)));
         }
 
         return presenceRequests;
