@@ -29,6 +29,8 @@ public class TestNotificationCallback
     private PresenceRequestedEventArgs? _presenceRequested;
     private SearchEndedEventArgs? _searchEnded;
     private FriendPresenceChangedEventArgs? _friendPresence;
+    private FriendRequestReceivedEventArgs? _friendRequest;
+    private FriendshipStartedEventArgs? _friendshipStarted;
 
     public TestNotificationCallback()
     {
@@ -37,6 +39,38 @@ public class TestNotificationCallback
         _notificationCallback.PresenceRequested += HandlePresenceRequested;
         _notificationCallback.SearchEnded += HandleSearchEnded;
         _notificationCallback.FriendPresenceChanged += HandleFriendPresenceChanged;
+        _notificationCallback.FriendRequestReceived += HandleFriendRequestReceived;
+        _notificationCallback.FriendshipStarted += HandleFriendshipStarted;
+    }
+
+    [Fact]
+    public void ReceiveNotification_FriendRequest_RaisesRequesterNickname()
+    {
+        var notification = new FriendRequestNotification
+        {
+            RequesterNickname = FirstNickname,
+            RequesterFriendCode = FriendCode,
+            OccurredAt = _sentAt,
+        };
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(FirstNickname, _friendRequest?.Request.Player.Nickname);
+    }
+
+    [Fact]
+    public void ReceiveNotification_FriendshipStarted_RaisesFriendCode()
+    {
+        var notification = new FriendshipStartedNotification
+        {
+            FriendNickname = FirstNickname,
+            FriendCode = FriendCode,
+            OccurredAt = _sentAt,
+        };
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(FriendCode, _friendshipStarted?.Friend.FriendCode);
     }
 
     [Fact]
@@ -148,6 +182,16 @@ public class TestNotificationCallback
     private void HandleFriendPresenceChanged(object? sender, FriendPresenceChangedEventArgs e)
     {
         _friendPresence = e;
+    }
+
+    private void HandleFriendRequestReceived(object? sender, FriendRequestReceivedEventArgs e)
+    {
+        _friendRequest = e;
+    }
+
+    private void HandleFriendshipStarted(object? sender, FriendshipStartedEventArgs e)
+    {
+        _friendshipStarted = e;
     }
 
     private static FriendPresenceNotification CreateFriendPresenceNotification()

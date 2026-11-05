@@ -14,6 +14,10 @@ public interface INotificationClient
 
     event EventHandler<FriendPresenceChangedEventArgs>? FriendPresenceChanged;
 
+    event EventHandler<FriendRequestReceivedEventArgs>? FriendRequestReceived;
+
+    event EventHandler<FriendshipStartedEventArgs>? FriendshipStarted;
+
     event EventHandler? Disconnected;
 
     void Connect(string sessionToken);

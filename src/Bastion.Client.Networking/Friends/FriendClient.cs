@@ -38,6 +38,38 @@ public sealed class FriendClient : IFriendClient, IDisposable
         return FriendContractTranslator.ToOutcome(result);
     }
 
+    public FriendRequestListing ListFriendRequests(string sessionToken)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
+        FriendRequestList list = Call(service => service.ListFriendRequests(sessionToken));
+        return FriendContractTranslator.ToFriendRequestListing(list);
+    }
+
+    public void AcceptFriendRequest(string sessionToken, string requesterFriendCode)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(requesterFriendCode);
+
+        Call(service => service.AcceptFriendRequest(sessionToken, requesterFriendCode));
+    }
+
+    public void RejectFriendRequest(string sessionToken, string requesterFriendCode)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(requesterFriendCode);
+
+        Call(service => service.RejectFriendRequest(sessionToken, requesterFriendCode));
+    }
+
+    public void CancelFriendRequest(string sessionToken, string recipientFriendCode)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(recipientFriendCode);
+
+        Call(service => service.CancelFriendRequest(sessionToken, recipientFriendCode));
+    }
+
     public void Dispose()
     {
         _channel.Dispose();
@@ -51,6 +83,15 @@ public sealed class FriendClient : IFriendClient, IDisposable
         }
 
         return ServiceFailureTranslator.ToClientException(ex);
+    }
+
+    private void Call(Action<IFriendshipService> operation)
+    {
+        Call(service =>
+        {
+            operation(service);
+            return true;
+        });
     }
 
     private TResult Call<TResult>(Func<IFriendshipService, TResult> operation)

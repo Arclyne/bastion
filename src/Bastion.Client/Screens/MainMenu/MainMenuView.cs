@@ -54,6 +54,8 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
     private const float FriendsPillWidth = 112;
     private const float ChatPillWidth = 92;
     private const float FriendsPanelGapY = 12;
+    private const float BadgeSize = 22;
+    private const float BadgeOverlap = 8;
 
     private readonly FriendsPanelViewModel _friendsPanel;
 
@@ -68,12 +70,14 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         AddChild(CreateIdentityChip());
         AddChild(CreateSettingsButton());
         AddChild(CreateFriendsButton());
+        AddChild(CreatePendingBadge(friendsPanel.Requests));
         AddChild(CreateChatButton());
         AddChild(CreateTablet());
         AddChild(CreateChatPanel(viewModel));
         AddChild(CreateHowToPlayButton());
         AddChild(ViewFactory.CreateVersionLabel());
         AddChild(CreateFriendsPanel(friendsPanel));
+        AddChild(CreateRequestToast(friendsPanel.Requests));
     }
 
     public void ReceiveEscapeKey()
@@ -166,6 +170,40 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         panel.X = -ScreenMarginX;
         panel.Y = TopMarginY + SettingsOffsetY + PillHeight + FriendsPanelGapY;
         return panel;
+    }
+
+    private static Panel CreatePendingBadge(FriendRequestsViewModel requests)
+    {
+        Label count = ViewFactory.CreateLabel(string.Empty, TextStyles.PrimaryButton);
+        ((LabelVisual)count.Visual).LocalizeText = false;
+        count.SetBinding(nameof(Label.Text), nameof(FriendRequestsViewModel.PendingCountText));
+        count.XUnits = GeneralUnitType.PixelsFromMiddle;
+        count.XOrigin = HorizontalAlignment.Center;
+        ViewFactory.CenterVertically(count);
+
+        var badge = new Panel
+        {
+            Width = BadgeSize,
+            WidthUnits = DimensionUnitType.Absolute,
+            Height = BadgeSize,
+            HeightUnits = DimensionUnitType.Absolute,
+            BindingContext = requests,
+        };
+        Shapes.InsertBehindContent(badge.Visual, Shapes.CreateRounded(Palette.PlayerOne, BadgeSize / 2));
+        badge.AddChild(count);
+        badge.Anchor(Gum.Wireframe.Anchor.TopRight);
+        badge.X = -(ScreenMarginX + SettingsWidth + PillSpacing) + BadgeOverlap;
+        badge.Y = TopMarginY + SettingsOffsetY - BadgeOverlap;
+        badge.SetBinding(nameof(IsVisible), nameof(FriendRequestsViewModel.HasPending));
+        return badge;
+    }
+
+    private static FriendRequestToast CreateRequestToast(FriendRequestsViewModel requests)
+    {
+        var toast = new FriendRequestToast(requests);
+        toast.Anchor(Gum.Wireframe.Anchor.Top);
+        toast.Y = TopMarginY;
+        return toast;
     }
 
     private Button CreateFriendsButton()

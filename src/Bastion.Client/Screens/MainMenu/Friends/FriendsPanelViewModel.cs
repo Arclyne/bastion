@@ -36,7 +36,11 @@ public sealed class FriendsPanelViewModel : ViewModel
         _uiContext = SynchronizationContext.Current;
         AddFriend = new AddFriendViewModel(session, friends);
         AddFriend.FriendshipStarted += HandleFriendshipStarted;
+        Requests = new FriendRequestsViewModel(session, friends);
+        Requests.FriendshipStarted += HandleFriendshipStarted;
         notifications.FriendPresenceChanged += HandleFriendPresenceChanged;
+        notifications.FriendRequestReceived += HandleFriendRequestReceived;
+        notifications.FriendshipStarted += HandleRemoteFriendshipStarted;
         SelectedTab = FriendsTab.Friends;
         FilterText = string.Empty;
         HeaderText = string.Empty;
@@ -48,6 +52,8 @@ public sealed class FriendsPanelViewModel : ViewModel
     }
 
     public AddFriendViewModel AddFriend { get; }
+
+    public FriendRequestsViewModel Requests { get; }
 
     public bool IsOpen
     {
@@ -77,7 +83,7 @@ public sealed class FriendsPanelViewModel : ViewModel
     public bool IsChatTab => SelectedTab == FriendsTab.Chat;
 
     [DependsOn(nameof(SelectedTab))]
-    public bool IsPlaceholderTab => SelectedTab != FriendsTab.Friends;
+    public bool IsPlaceholderTab => SelectedTab == FriendsTab.Chat;
 
     [DependsOn(nameof(SelectedTab))]
     [DependsOn(nameof(IsAddingFriend))]
@@ -270,13 +276,32 @@ public sealed class FriendsPanelViewModel : ViewModel
 
     private void HandleFriendPresenceChanged(object? sender, FriendPresenceChangedEventArgs e)
     {
+        RunOnUi(() => UpdateFriendPresence(e));
+    }
+
+    private void HandleFriendRequestReceived(object? sender, FriendRequestReceivedEventArgs e)
+    {
+        RunOnUi(() => Requests.ReceiveRequest(e.Request, !(IsOpen && IsRequestsTab)));
+    }
+
+    private void HandleRemoteFriendshipStarted(object? sender, FriendshipStartedEventArgs e)
+    {
+        RunOnUi(() =>
+        {
+            _ = LoadFriends();
+            _ = Requests.LoadRequests();
+        });
+    }
+
+    private void RunOnUi(Action action)
+    {
         if (_uiContext is null)
         {
-            UpdateFriendPresence(e);
+            action();
             return;
         }
 
-        _uiContext.Post(state => UpdateFriendPresence((FriendPresenceChangedEventArgs)state!), e);
+        _uiContext.Post(state => ((Action)state!).Invoke(), action);
     }
 
     private void UpdateFriendPresence(FriendPresenceChangedEventArgs change)

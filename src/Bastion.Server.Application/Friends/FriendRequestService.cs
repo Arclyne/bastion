@@ -14,14 +14,20 @@ public sealed class FriendRequestService : IFriendRequestService
 
     private readonly IUnitOfWork _unitOfWork;
     private readonly ISessionVerifier _sessionVerifier;
+    private readonly IFriendNotifier _friendNotifier;
 
-    public FriendRequestService(IUnitOfWork unitOfWork, ISessionVerifier sessionVerifier)
+    public FriendRequestService(
+        IUnitOfWork unitOfWork,
+        ISessionVerifier sessionVerifier,
+        IFriendNotifier friendNotifier)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         ArgumentNullException.ThrowIfNull(sessionVerifier);
+        ArgumentNullException.ThrowIfNull(friendNotifier);
 
         _unitOfWork = unitOfWork;
         _sessionVerifier = sessionVerifier;
+        _friendNotifier = friendNotifier;
     }
 
     public IReadOnlyList<PlayerSearchResult> SearchPlayers(string sessionToken, string text, DateTime now)
@@ -47,21 +53,21 @@ public sealed class FriendRequestService : IFriendRequestService
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(friendCode);
 
-        ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        PlayerIdentity recipient = FindRecipient(friendCode);
-        if (recipient.AccountId == player.AccountId)
+        PlayerIdentity sender = VerifyPlayer(sessionToken, now);
+        PlayerIdentity recipient = FindPlayerByCode(friendCode);
+        if (recipient.AccountId == sender.AccountId)
         {
             throw new FriendshipRejectedException(FriendshipRejection.OwnAccount);
         }
 
-        IReadOnlyList<int> ownFriendAccountIds = _unitOfWork.Friendships.ListFriendAccountIds(player.AccountId);
+        IReadOnlyList<int> ownFriendAccountIds = _unitOfWork.Friendships.ListFriendAccountIds(sender.AccountId);
         if (ownFriendAccountIds.Contains(recipient.AccountId))
         {
             throw new FriendshipRejectedException(FriendshipRejection.AlreadyFriends);
         }
 
-        FriendRequest? pendingRequest = FindPendingRequest(player.AccountId, recipient.AccountId, now);
-        if (pendingRequest is not null && pendingRequest.IsSentBy(player.AccountId))
+        FriendRequest? pendingRequest = FindPendingRequest(sender.AccountId, recipient.AccountId, now);
+        if (pendingRequest is not null && pendingRequest.IsSentBy(sender.AccountId))
         {
             throw new FriendshipRejectedException(FriendshipRejection.RequestAlreadySent);
         }
@@ -69,21 +75,81 @@ public sealed class FriendRequestService : IFriendRequestService
         EnsureBelowFriendLimit(ownFriendAccountIds.Count, recipient.AccountId);
         if (pendingRequest is not null)
         {
-            return StartFriendship(pendingRequest, now);
+            StartFriendship(pendingRequest, sender, now);
+            return FriendRequestOutcome.FriendshipStarted;
         }
 
-        _unitOfWork.FriendRequests.Add(new FriendRequest(player.AccountId, recipient.AccountId, now));
+        var request = new FriendRequest(sender.AccountId, recipient.AccountId, now);
+        _unitOfWork.FriendRequests.Add(request);
         _unitOfWork.SaveChanges();
+        _friendNotifier.NotifyFriendRequestReceived(
+            recipient.AccountId,
+            new FriendRequestSummary(sender, request.RequestedAt, request.ExpiresAt));
         return FriendRequestOutcome.RequestSent;
     }
 
-    private PlayerIdentity FindRecipient(string friendCode)
+    public FriendRequestBoard ListFriendRequests(string sessionToken, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
+        ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
+        var received = _unitOfWork.FriendRequests.ListReceived(player.AccountId)
+            .Where(request => request.ExpiresAt > now)
+            .ToList();
+        var sent = _unitOfWork.FriendRequests.ListSent(player.AccountId)
+            .Where(request => request.ExpiresAt > now)
+            .ToList();
+        return new FriendRequestBoard(received, sent, now);
+    }
+
+    public void AcceptFriendRequest(string sessionToken, string requesterFriendCode, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(requesterFriendCode);
+
+        PlayerIdentity recipient = VerifyPlayer(sessionToken, now);
+        PlayerIdentity requester = FindPlayerByCode(requesterFriendCode);
+        FriendRequest request = FindRequestSentBy(requester.AccountId, recipient.AccountId, now);
+        int ownFriendCount = _unitOfWork.Friendships.ListFriendAccountIds(recipient.AccountId).Count;
+        EnsureBelowFriendLimit(ownFriendCount, requester.AccountId);
+        StartFriendship(request, recipient, now);
+    }
+
+    public void RejectFriendRequest(string sessionToken, string requesterFriendCode, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(requesterFriendCode);
+
+        ConnectedPlayer recipient = _sessionVerifier.Verify(sessionToken, now);
+        PlayerIdentity requester = FindPlayerByCode(requesterFriendCode);
+        FriendRequest request = FindRequestSentBy(requester.AccountId, recipient.AccountId, now);
+        _unitOfWork.FriendRequests.Remove(request);
+    }
+
+    public void CancelFriendRequest(string sessionToken, string recipientFriendCode, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(recipientFriendCode);
+
+        ConnectedPlayer requester = _sessionVerifier.Verify(sessionToken, now);
+        PlayerIdentity recipient = FindPlayerByCode(recipientFriendCode);
+        FriendRequest request = FindRequestSentBy(requester.AccountId, recipient.AccountId, now);
+        _unitOfWork.FriendRequests.Remove(request);
+    }
+
+    private PlayerIdentity VerifyPlayer(string sessionToken, DateTime now)
+    {
+        ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
+        return _unitOfWork.Accounts.FindPlayerIdentity(player.AccountId) ?? throw new InvalidSessionException();
+    }
+
+    private PlayerIdentity FindPlayerByCode(string friendCode)
     {
         string normalizedCode = FriendCodeRules.NormalizeFriendCode(friendCode);
-        PlayerIdentity? recipient = FriendCodeRules.IsValidFriendCode(normalizedCode)
+        PlayerIdentity? player = FriendCodeRules.IsValidFriendCode(normalizedCode)
             ? _unitOfWork.Accounts.FindPlayerIdentityByFriendCode(normalizedCode)
             : null;
-        return recipient ?? throw new FriendshipRejectedException(FriendshipRejection.PlayerNotFound);
+        return player ?? throw new FriendshipRejectedException(FriendshipRejection.PlayerNotFound);
     }
 
     private FriendRequest? FindPendingRequest(int accountId, int otherAccountId, DateTime now)
@@ -98,25 +164,36 @@ public sealed class FriendRequestService : IFriendRequestService
         return null;
     }
 
-    private void EnsureBelowFriendLimit(int ownFriendCount, int recipientAccountId)
+    private FriendRequest FindRequestSentBy(int requesterAccountId, int recipientAccountId, DateTime now)
+    {
+        FriendRequest? request = _unitOfWork.FriendRequests.FindBetween(requesterAccountId, recipientAccountId);
+        if (request is null || !request.IsSentBy(requesterAccountId) || request.IsExpiredAt(now))
+        {
+            throw new FriendshipRejectedException(FriendshipRejection.RequestNotFound);
+        }
+
+        return request;
+    }
+
+    private void EnsureBelowFriendLimit(int ownFriendCount, int otherAccountId)
     {
         if (ownFriendCount >= FriendshipRules.MaximumFriends)
         {
             throw new FriendshipRejectedException(FriendshipRejection.FriendLimitReached);
         }
 
-        if (_unitOfWork.Friendships.ListFriendAccountIds(recipientAccountId).Count >= FriendshipRules.MaximumFriends)
+        if (_unitOfWork.Friendships.ListFriendAccountIds(otherAccountId).Count >= FriendshipRules.MaximumFriends)
         {
             throw new FriendshipRejectedException(FriendshipRejection.RecipientFriendLimitReached);
         }
     }
 
-    private FriendRequestOutcome StartFriendship(FriendRequest request, DateTime now)
+    private void StartFriendship(FriendRequest request, PlayerIdentity accepter, DateTime now)
     {
         _unitOfWork.Friendships.Add(new Friendship(request.RequesterId, request.RecipientId, now));
         _unitOfWork.SaveChanges();
         _unitOfWork.FriendRequests.Remove(request);
-        return FriendRequestOutcome.FriendshipStarted;
+        _friendNotifier.NotifyFriendshipStarted(request.RequesterId, accepter);
     }
 
     private IReadOnlyList<PlayerIdentity> FindPlayers(string searchText)

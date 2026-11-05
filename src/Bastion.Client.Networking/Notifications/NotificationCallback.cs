@@ -19,6 +19,10 @@ public sealed class NotificationCallback : INotificationCallback
 
     public event EventHandler<FriendPresenceChangedEventArgs>? FriendPresenceChanged;
 
+    public event EventHandler<FriendRequestReceivedEventArgs>? FriendRequestReceived;
+
+    public event EventHandler<FriendshipStartedEventArgs>? FriendshipStarted;
+
     public void ReceiveNotification(Notification notification)
     {
         // An exception here would fault the duplex channel and stop every notification, so any other type is ignored.
@@ -63,6 +67,25 @@ public sealed class NotificationCallback : INotificationCallback
         if (notification is FriendPresenceNotification friendPresence)
         {
             FriendPresenceChanged?.Invoke(this, ToEventArgs(friendPresence));
+            return true;
+        }
+
+        return RaiseFriendRequestEvent(notification);
+    }
+
+    private bool RaiseFriendRequestEvent(Notification notification)
+    {
+        if (notification is FriendRequestNotification friendRequest)
+        {
+            PendingFriendRequest request = FriendContractTranslator.ToPendingRequest(friendRequest);
+            FriendRequestReceived?.Invoke(this, new FriendRequestReceivedEventArgs(request));
+            return true;
+        }
+
+        if (notification is FriendshipStartedNotification friendshipStarted)
+        {
+            var friend = FriendContractTranslator.ToPlayerTag(friendshipStarted);
+            FriendshipStarted?.Invoke(this, new FriendshipStartedEventArgs(friend));
             return true;
         }
 

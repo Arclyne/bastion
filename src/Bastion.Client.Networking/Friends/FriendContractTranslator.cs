@@ -34,6 +34,33 @@ public static class FriendContractTranslator
         return (entries ?? Array.Empty<PlayerSearchEntry>()).Select(ToFoundPlayer).ToList();
     }
 
+    public static FriendRequestListing ToFriendRequestListing(FriendRequestList list)
+    {
+        ArgumentNullException.ThrowIfNull(list);
+
+        return new FriendRequestListing(
+            ToPendingRequests(list.Received),
+            ToPendingRequests(list.Sent),
+            list.ListedAt);
+    }
+
+    public static PendingFriendRequest ToPendingRequest(FriendRequestNotification notification)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+
+        var requester = new PlayerTag(
+            notification.RequesterNickname ?? string.Empty,
+            notification.RequesterFriendCode ?? string.Empty);
+        return new PendingFriendRequest(requester, notification.OccurredAt, notification.ExpiresAt);
+    }
+
+    public static PlayerTag ToPlayerTag(FriendshipStartedNotification notification)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+
+        return new PlayerTag(notification.FriendNickname ?? string.Empty, notification.FriendCode ?? string.Empty);
+    }
+
     public static FriendRequestOutcome ToOutcome(FriendRequestResult result)
     {
         switch (result)
@@ -63,9 +90,22 @@ public static class FriendContractTranslator
                 return FriendshipRejection.FriendLimitReached;
             case FriendshipRejectionReason.RecipientFriendLimitReached:
                 return FriendshipRejection.RecipientFriendLimitReached;
+            case FriendshipRejectionReason.RequestNotFound:
+                return FriendshipRejection.RequestNotFound;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported rejection reason.");
         }
+    }
+
+    private static List<PendingFriendRequest> ToPendingRequests(FriendRequestEntry[]? entries)
+    {
+        return (entries ?? Array.Empty<FriendRequestEntry>()).Select(ToPendingRequest).ToList();
+    }
+
+    private static PendingFriendRequest ToPendingRequest(FriendRequestEntry entry)
+    {
+        var player = new PlayerTag(entry.Nickname ?? string.Empty, entry.FriendCode ?? string.Empty);
+        return new PendingFriendRequest(player, entry.RequestedAt, entry.ExpiresAt);
     }
 
     private static FoundPlayer ToFoundPlayer(PlayerSearchEntry entry)

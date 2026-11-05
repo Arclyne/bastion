@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using Bastion.Domain.Accounts;
 using Bastion.Domain.Friends;
 using Bastion.Server.Application.Friends;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +35,20 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
             .ToList();
     }
 
+    public IReadOnlyList<FriendRequestSummary> ListReceived(int accountId)
+    {
+        return ListSummaries(
+            _context.FriendRequests.Where(request => request.RecipientId == accountId),
+            request => request.RequesterId);
+    }
+
+    public IReadOnlyList<FriendRequestSummary> ListSent(int accountId)
+    {
+        return ListSummaries(
+            _context.FriendRequests.Where(request => request.RequesterId == accountId),
+            request => request.RecipientId);
+    }
+
     public void Add(FriendRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -52,5 +68,21 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
             .AsEnumerable()
             .Single();
         _context.Entry(request).State = EntityState.Detached;
+    }
+
+    private List<FriendRequestSummary> ListSummaries(
+        IQueryable<FriendRequest> requests,
+        Expression<Func<FriendRequest, int>> counterpartAccountId)
+    {
+        return requests
+            .Join(
+                _context.Accounts.Where(account => account.AccountStatus != AccountStatus.Deleted),
+                counterpartAccountId,
+                account => account.AccountId,
+                (request, account) => new FriendRequestSummary(
+                    new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode),
+                    request.RequestedAt,
+                    request.RequestedAt.AddDays(FriendshipRules.RequestLifetimeDays)))
+            .ToList();
     }
 }

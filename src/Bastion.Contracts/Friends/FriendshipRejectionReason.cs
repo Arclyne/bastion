@@ -22,4 +22,7 @@ public enum FriendshipRejectionReason
 
     [EnumMember]
     RecipientFriendLimitReached,
+
+    [EnumMember]
+    RequestNotFound,
 }

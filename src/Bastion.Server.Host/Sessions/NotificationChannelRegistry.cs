@@ -109,6 +109,20 @@ public sealed class NotificationChannelRegistry
         }
     }
 
+    public void NotifyFriendRequestReceived(int recipientAccountId, FriendRequestSummary request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        NotifyPlayer(recipientAccountId, FriendshipTranslator.ToRequestNotification(request, GetUtcNow()));
+    }
+
+    public void NotifyFriendshipStarted(int accountId, PlayerIdentity friend)
+    {
+        ArgumentNullException.ThrowIfNull(friend);
+
+        NotifyPlayer(accountId, FriendshipTranslator.ToFriendshipStartedNotification(friend, GetUtcNow()));
+    }
+
     private DateTime GetUtcNow()
     {
         return _timeProvider.GetUtcNow().UtcDateTime;

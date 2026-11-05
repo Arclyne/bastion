@@ -26,6 +26,22 @@ public sealed class FakeFriendRequestRepository : IFriendRequestRepository
             .ToList();
     }
 
+    public IReadOnlyList<FriendRequestSummary> ListReceived(int accountId)
+    {
+        return Requests
+            .Where(request => request.RecipientId == accountId)
+            .Select(request => ToSummary(request.RequesterId, request))
+            .ToList();
+    }
+
+    public IReadOnlyList<FriendRequestSummary> ListSent(int accountId)
+    {
+        return Requests
+            .Where(request => request.RequesterId == accountId)
+            .Select(request => ToSummary(request.RecipientId, request))
+            .ToList();
+    }
+
     public void Add(FriendRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -39,5 +55,11 @@ public sealed class FakeFriendRequestRepository : IFriendRequestRepository
 
         Requests.Remove(request);
         RemovedRequests.Add(request);
+    }
+
+    private static FriendRequestSummary ToSummary(int counterpartAccountId, FriendRequest request)
+    {
+        var counterpart = new PlayerIdentity(counterpartAccountId, string.Empty, string.Empty);
+        return new FriendRequestSummary(counterpart, request.RequestedAt, request.ExpiresAt);
     }
 }

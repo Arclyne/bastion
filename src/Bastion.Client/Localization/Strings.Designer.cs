@@ -202,6 +202,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        internal static string FriendsCancelRequest {
+            get {
+                return ResourceManager.GetString("FriendsCancelRequest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ×.
         /// </summary>
         internal static string FriendsCloseButton {
@@ -252,6 +261,24 @@ namespace Bastion.Client.Localization {
         internal static string FriendsEmptyTitle {
             get {
                 return ResourceManager.GetString("FriendsEmptyTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expires in {0} days.
+        /// </summary>
+        internal static string FriendsExpiresInDaysFormat {
+            get {
+                return ResourceManager.GetString("FriendsExpiresInDaysFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expires tomorrow.
+        /// </summary>
+        internal static string FriendsExpiresTomorrow {
+            get {
+                return ResourceManager.GetString("FriendsExpiresTomorrow", resourceCulture);
             }
         }
         
@@ -346,11 +373,56 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You have no new requests.
+        /// </summary>
+        internal static string FriendsNoReceivedRequests {
+            get {
+                return ResourceManager.GetString("FriendsNoReceivedRequests", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have not sent any requests.
+        /// </summary>
+        internal static string FriendsNoSentRequests {
+            get {
+                return ResourceManager.GetString("FriendsNoSentRequests", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are now friends.
+        /// </summary>
+        internal static string FriendsNowFriends {
+            get {
+                return ResourceManager.GetString("FriendsNowFriends", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Your friend code {0}.
         /// </summary>
         internal static string FriendsOwnCodeFormat {
             get {
                 return ResourceManager.GetString("FriendsOwnCodeFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Received {0}.
+        /// </summary>
+        internal static string FriendsReceivedFormat {
+            get {
+                return ResourceManager.GetString("FriendsReceivedFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reject.
+        /// </summary>
+        internal static string FriendsReject {
+            get {
+                return ResourceManager.GetString("FriendsReject", resourceCulture);
             }
         }
         
@@ -382,6 +454,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This request is no longer available..
+        /// </summary>
+        internal static string FriendsRejectedRequestNotFound {
+            get {
+                return ResourceManager.GetString("FriendsRejectedRequestNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to That player already has 100 friends..
         /// </summary>
         internal static string FriendsRejectedTheirLimit {
@@ -396,6 +477,24 @@ namespace Bastion.Client.Localization {
         internal static string FriendsRequestSent {
             get {
                 return ResourceManager.GetString("FriendsRequestSent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your requests could not be loaded..
+        /// </summary>
+        internal static string FriendsRequestsFailed {
+            get {
+                return ResourceManager.GetString("FriendsRequestsFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} wants to be your friend.
+        /// </summary>
+        internal static string FriendsRequestToastFormat {
+            get {
+                return ResourceManager.GetString("FriendsRequestToastFormat", resourceCulture);
             }
         }
         
@@ -450,6 +549,15 @@ namespace Bastion.Client.Localization {
         internal static string FriendsSearchPlaceholder {
             get {
                 return ResourceManager.GetString("FriendsSearchPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sent {0}.
+        /// </summary>
+        internal static string FriendsSentFormat {
+            get {
+                return ResourceManager.GetString("FriendsSentFormat", resourceCulture);
             }
         }
         

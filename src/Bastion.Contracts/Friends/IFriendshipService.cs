@@ -18,4 +18,23 @@ public interface IFriendshipService
     [FaultContract(typeof(InvalidSessionFault))]
     [FaultContract(typeof(FriendshipRejectedFault))]
     FriendRequestResult SendFriendRequest(string? sessionToken, string? friendCode);
+
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    FriendRequestList ListFriendRequests(string? sessionToken);
+
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    [FaultContract(typeof(FriendshipRejectedFault))]
+    void AcceptFriendRequest(string? sessionToken, string? requesterFriendCode);
+
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    [FaultContract(typeof(FriendshipRejectedFault))]
+    void RejectFriendRequest(string? sessionToken, string? requesterFriendCode);
+
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    [FaultContract(typeof(FriendshipRejectedFault))]
+    void CancelFriendRequest(string? sessionToken, string? recipientFriendCode);
 }

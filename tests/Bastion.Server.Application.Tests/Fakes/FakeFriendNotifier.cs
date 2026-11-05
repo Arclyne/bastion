@@ -10,6 +10,10 @@ public sealed class FakeFriendNotifier : IFriendNotifier
 
     public List<FriendPresenceChange> Changes { get; } = new List<FriendPresenceChange>();
 
+    public List<int> RequestRecipientAccountIds { get; } = new List<int>();
+
+    public List<int> FriendshipStartedAccountIds { get; } = new List<int>();
+
     public void NotifyPresenceChanged(IReadOnlyList<int> recipientAccountIds, FriendPresenceChange change)
     {
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
@@ -17,5 +21,19 @@ public sealed class FakeFriendNotifier : IFriendNotifier
 
         RecipientAccountIds.AddRange(recipientAccountIds);
         Changes.Add(change);
+    }
+
+    public void NotifyFriendRequestReceived(int recipientAccountId, FriendRequestSummary request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        RequestRecipientAccountIds.Add(recipientAccountId);
+    }
+
+    public void NotifyFriendshipStarted(int accountId, PlayerIdentity friend)
+    {
+        ArgumentNullException.ThrowIfNull(friend);
+
+        FriendshipStartedAccountIds.Add(accountId);
     }
 }

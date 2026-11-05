@@ -93,6 +93,16 @@ public class TestFriendContractTranslator
         Assert.Equal(FriendshipRejection.FriendLimitReached, rejection);
     }
 
+    [Fact]
+    public void ToFriendRequestListing_NullLists_ReturnsEmptyReceived()
+    {
+        var list = new FriendRequestList { ListedAt = _listedAt };
+
+        var listing = FriendContractTranslator.ToFriendRequestListing(list);
+
+        Assert.Empty(listing.Received);
+    }
+
     private static FriendList CreateList(FriendListEntry entry)
     {
         return new FriendList

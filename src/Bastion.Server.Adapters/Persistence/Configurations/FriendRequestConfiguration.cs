@@ -10,5 +10,6 @@ public sealed class FriendRequestConfiguration : IEntityTypeConfiguration<Friend
     {
         builder.ToTable(nameof(FriendRequest));
         builder.HasKey(request => new { request.RequesterId, request.RecipientId });
+        builder.Ignore(request => request.ExpiresAt);
     }
 }

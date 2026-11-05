@@ -39,6 +39,7 @@ public sealed class ScreenNavigator : INavigator
         ShowScreen(new MainMenuView(viewModel, friendsPanel));
         _ = viewModel.ConnectChat();
         _ = friendsPanel.LoadFriends();
+        _ = friendsPanel.Requests.LoadRequests();
     }
 
     public void ReceiveEscapeKey()

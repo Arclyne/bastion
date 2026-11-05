@@ -66,9 +66,61 @@ public sealed class FriendshipService : IFriendshipService
         });
     }
 
+    public FriendRequestList ListFriendRequests(string? sessionToken)
+    {
+        string token = RequireSessionToken(sessionToken);
+        return Run(nameof(ListFriendRequests), services =>
+        {
+            IFriendRequestService requestService = services.GetRequiredService<IFriendRequestService>();
+            return FriendshipTranslator.ToFriendRequestList(requestService.ListFriendRequests(token, GetUtcNow()));
+        });
+    }
+
+    public void AcceptFriendRequest(string? sessionToken, string? requesterFriendCode)
+    {
+        string token = RequireSessionToken(sessionToken);
+        string code = RequireRequestCode(requesterFriendCode);
+        RunResponse(
+            nameof(AcceptFriendRequest),
+            requestService => requestService.AcceptFriendRequest(token, code, GetUtcNow()));
+    }
+
+    public void RejectFriendRequest(string? sessionToken, string? requesterFriendCode)
+    {
+        string token = RequireSessionToken(sessionToken);
+        string code = RequireRequestCode(requesterFriendCode);
+        RunResponse(
+            nameof(RejectFriendRequest),
+            requestService => requestService.RejectFriendRequest(token, code, GetUtcNow()));
+    }
+
+    public void CancelFriendRequest(string? sessionToken, string? recipientFriendCode)
+    {
+        string token = RequireSessionToken(sessionToken);
+        string code = RequireRequestCode(recipientFriendCode);
+        RunResponse(
+            nameof(CancelFriendRequest),
+            requestService => requestService.CancelFriendRequest(token, code, GetUtcNow()));
+    }
+
     private static string RequireSessionToken(string? sessionToken)
     {
         return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());
+    }
+
+    private static string RequireRequestCode(string? friendCode)
+    {
+        return friendCode
+            ?? throw FriendshipTranslator.ToFault(new FriendshipRejectedException(FriendshipRejection.RequestNotFound));
+    }
+
+    private void RunResponse(string operationName, Action<IFriendRequestService> response)
+    {
+        Run(operationName, services =>
+        {
+            response(services.GetRequiredService<IFriendRequestService>());
+            return true;
+        });
     }
 
     private TResult Run<TResult>(string operationName, Func<IServiceProvider, TResult> operation)

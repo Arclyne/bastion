@@ -50,6 +50,7 @@ public sealed class FriendsPanel : Panel
         content.AddChild(CreateHeader());
         content.AddChild(CreateFriendList(viewModel));
         content.AddChild(CreateAddFriend(viewModel));
+        content.AddChild(CreateRequests(viewModel));
         content.AddChild(CreatePlaceholder());
         AddChild(content);
         AddChild(CreateFooter(viewModel));
@@ -81,6 +82,18 @@ public sealed class FriendsPanel : Panel
         };
         container.AddChild(new AddFriendView(viewModel));
         container.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsAddFriendVisible));
+        return container;
+    }
+
+    private static Panel CreateRequests(FriendsPanelViewModel viewModel)
+    {
+        var container = new Panel
+        {
+            WidthUnits = DimensionUnitType.RelativeToChildren,
+            HeightUnits = DimensionUnitType.RelativeToChildren,
+        };
+        container.AddChild(new FriendRequestsView(viewModel.Requests));
+        container.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsRequestsTab));
         return container;
     }
 

@@ -261,4 +261,40 @@
   <data name="FriendsRejectedTheirLimit" xml:space="preserve">
     <value>That player already has 100 friends.</value>
   </data>
+  <data name="FriendsReceivedFormat" xml:space="preserve">
+    <value>Received {0}</value>
+  </data>
+  <data name="FriendsSentFormat" xml:space="preserve">
+    <value>Sent {0}</value>
+  </data>
+  <data name="FriendsExpiresInDaysFormat" xml:space="preserve">
+    <value>Expires in {0} days</value>
+  </data>
+  <data name="FriendsExpiresTomorrow" xml:space="preserve">
+    <value>Expires tomorrow</value>
+  </data>
+  <data name="FriendsReject" xml:space="preserve">
+    <value>Reject</value>
+  </data>
+  <data name="FriendsCancelRequest" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="FriendsNoReceivedRequests" xml:space="preserve">
+    <value>You have no new requests</value>
+  </data>
+  <data name="FriendsNoSentRequests" xml:space="preserve">
+    <value>You have not sent any requests</value>
+  </data>
+  <data name="FriendsRequestToastFormat" xml:space="preserve">
+    <value>{0} wants to be your friend</value>
+  </data>
+  <data name="FriendsNowFriends" xml:space="preserve">
+    <value>You are now friends</value>
+  </data>
+  <data name="FriendsRejectedRequestNotFound" xml:space="preserve">
+    <value>This request is no longer available.</value>
+  </data>
+  <data name="FriendsRequestsFailed" xml:space="preserve">
+    <value>Your requests could not be loaded.</value>
+  </data>
 </root>

@@ -56,6 +56,43 @@ public static class FriendshipTranslator
         }
     }
 
+    public static FriendRequestList ToFriendRequestList(FriendRequestBoard board)
+    {
+        ArgumentNullException.ThrowIfNull(board);
+
+        return new FriendRequestList
+        {
+            Received = board.Received.Select(ToRequestEntry).ToArray(),
+            Sent = board.Sent.Select(ToRequestEntry).ToArray(),
+            ListedAt = board.ListedAt,
+        };
+    }
+
+    public static FriendRequestNotification ToRequestNotification(FriendRequestSummary request, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        return new FriendRequestNotification
+        {
+            OccurredAt = now,
+            RequesterNickname = request.Counterpart.Nickname,
+            RequesterFriendCode = request.Counterpart.FriendCode,
+            ExpiresAt = request.ExpiresAt,
+        };
+    }
+
+    public static FriendshipStartedNotification ToFriendshipStartedNotification(PlayerIdentity friend, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(friend);
+
+        return new FriendshipStartedNotification
+        {
+            OccurredAt = now,
+            FriendNickname = friend.Nickname,
+            FriendCode = friend.FriendCode,
+        };
+    }
+
     public static FaultException<FriendshipRejectedFault> ToFault(FriendshipRejectedException rejection)
     {
         ArgumentNullException.ThrowIfNull(rejection);
@@ -65,6 +102,17 @@ public static class FriendshipTranslator
             Reason = ToReason(rejection.Rejection),
         };
         return new FaultException<FriendshipRejectedFault>(fault, new FaultReason(rejection.Message));
+    }
+
+    private static FriendRequestEntry ToRequestEntry(FriendRequestSummary request)
+    {
+        return new FriendRequestEntry
+        {
+            Nickname = request.Counterpart.Nickname,
+            FriendCode = request.Counterpart.FriendCode,
+            RequestedAt = request.RequestedAt,
+            ExpiresAt = request.ExpiresAt,
+        };
     }
 
     private static PlayerSearchEntry ToSearchEntry(PlayerSearchResult result)
@@ -112,6 +160,8 @@ public static class FriendshipTranslator
                 return FriendshipRejectionReason.FriendLimitReached;
             case FriendshipRejection.RecipientFriendLimitReached:
                 return FriendshipRejectionReason.RecipientFriendLimitReached;
+            case FriendshipRejection.RequestNotFound:
+                return FriendshipRejectionReason.RequestNotFound;
             default:
                 throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported rejection.");
         }
