@@ -13,3 +13,20 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin Models/tablero_clasico_9x9.fbx
+/importer:FbxImporter
+/processor:ModelProcessor
+/processorParam:Scale=0.01
+/build:Models/tablero_clasico_9x9.fbx
+
+#begin Models/tablero_clasico_7x7.fbx
+/importer:FbxImporter
+/processor:ModelProcessor
+/processorParam:Scale=0.01
+/build:Models/tablero_clasico_7x7.fbx
+
+#begin Models/peon_clasico.fbx
+/importer:FbxImporter
+/processor:ModelProcessor
+/build:Models/peon_clasico.fbx
+

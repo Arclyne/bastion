@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking;
 using Bastion.Client.Screens;
+using Bastion.Client.Screens.Matches;
+using Bastion.Client.Screens.Matches.Scene;
 using Bastion.Client.Theme;
 
 namespace Bastion.Client;
@@ -24,6 +26,7 @@ public sealed class BastionGame : Game
     private readonly GraphicsDeviceManager _graphics;
     private readonly ServerConnection _serverConnection = new ServerConnection(TimeProvider.System);
     private ScreenNavigator? _screenNavigator;
+    private BoardScene? _boardScene;
 
     public BastionGame()
     {
@@ -51,6 +54,12 @@ public sealed class BastionGame : Game
         base.Initialize();
     }
 
+    protected override void LoadContent()
+    {
+        _boardScene = new BoardScene(GraphicsDevice, Content);
+        base.LoadContent();
+    }
+
     protected override void Update(GameTime gameTime)
     {
         GumService.Default.Update(gameTime);
@@ -65,6 +74,7 @@ public sealed class BastionGame : Game
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Palette.Background);
+        DrawShownMatchBoard();
         GumService.Default.Draw();
         base.Draw(gameTime);
     }
@@ -79,6 +89,17 @@ public sealed class BastionGame : Game
         }
 
         base.Dispose(disposing);
+    }
+
+    private void DrawShownMatchBoard()
+    {
+        MatchViewModel? shownMatch = _screenNavigator?.ShownMatch;
+        if (shownMatch is null || _boardScene is null)
+        {
+            return;
+        }
+
+        _boardScene.Draw(shownMatch);
     }
 
     private void OnClientSizeChanged(object? sender, EventArgs e)
