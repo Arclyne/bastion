@@ -26,6 +26,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
     private SignedInSession? _signedInSession;
     private JoinedMatch? _joinedMatch;
     private MatchChatViewModel? _matchChatViewModel;
+    private MatchAbandonmentViewModel? _matchAbandonmentViewModel;
 
     public ScreenNavigator(ILanguageService languages, ServerConnection connection, TimeProvider timeProvider)
     {
@@ -40,26 +41,15 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 
     public void ShowLogin()
     {
-        ShowScreen(new LoginView(new LoginViewModel(_languages, _connection.Accounts, this)));
+        ShowScreen(() => new LoginView(new LoginViewModel(_languages, _connection.Accounts, this)));
     }
 
     public void ShowMainMenu(SignedInSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
 
-        var mainMenuViewModel = new MainMenuViewModel(session, _connection.Notifications);
-        var chatClients = new ChatClients(_connection.Chat, _connection.Conversations, _connection.Notifications);
-        var clients = new SocialClients(_connection.Friends, chatClients, _connection.Notifications);
-        var friendsPanel = new FriendsPanelViewModel(session, clients);
-        var matchSearchViewModel = new MatchSearchViewModel(session, _connection.Matchmaking, _timeProvider);
-        matchSearchViewModel.MatchFound += HandleMatchFound;
-        var mainMenuView = new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel);
-        ShowScreen(mainMenuView, friendsPanel, matchSearchViewModel);
-        _signedInSession = session;
+        MainMenuViewModel mainMenuViewModel = OpenMainMenu(session);
         _ = mainMenuViewModel.ConnectNotifications();
-        _ = friendsPanel.LoadFriends();
-        _ = friendsPanel.Requests.LoadRequests();
-        _ = friendsPanel.Chat.LoadConversations();
     }
 
     public void ReceiveEscapeKey()
@@ -75,36 +65,70 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         DisposeViewModelsExcept(Array.Empty<IDisposable>());
     }
 
+    private MainMenuViewModel OpenMainMenu(SignedInSession session)
+    {
+        var mainMenuViewModel = new MainMenuViewModel(session, _connection.Notifications);
+        var chatClients = new ChatClients(_connection.Chat, _connection.Conversations, _connection.Notifications);
+        var clients = new SocialClients(_connection.Friends, chatClients, _connection.Notifications);
+        var friendsPanel = new FriendsPanelViewModel(session, clients);
+        var matchSearchViewModel = new MatchSearchViewModel(session, _connection.Matchmaking, _timeProvider);
+        matchSearchViewModel.MatchFound += HandleMatchFound;
+        ShowScreen(
+            () => new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel),
+            friendsPanel,
+            matchSearchViewModel);
+        _signedInSession = session;
+        _ = friendsPanel.LoadFriends();
+        _ = friendsPanel.Requests.LoadRequests();
+        _ = friendsPanel.Chat.LoadConversations();
+        return mainMenuViewModel;
+    }
+
     private void ShowVersus(JoinedMatch joinedMatch)
     {
-        // The match chat listens from the VS screen on, so a rival whose countdown ends first is not missed.
+        // The match chat and the rival's abandonment are heard from the VS screen on, so nothing sent meanwhile is
+        // missed.
         var matchChatViewModel = new MatchChatViewModel(joinedMatch, _connection.Chat, _timeProvider);
+        var matchAbandonmentViewModel = new MatchAbandonmentViewModel(joinedMatch, _connection.Matches);
+        matchAbandonmentViewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
         var versusViewModel = new VersusViewModel(joinedMatch, _timeProvider);
         versusViewModel.CountdownFinished += HandleCountdownFinished;
-        ShowScreen(new VersusView(versusViewModel), versusViewModel, matchChatViewModel);
+        ShowScreen(
+            () => new VersusView(versusViewModel),
+            versusViewModel,
+            matchChatViewModel,
+            matchAbandonmentViewModel);
         _joinedMatch = joinedMatch;
         _matchChatViewModel = matchChatViewModel;
+        _matchAbandonmentViewModel = matchAbandonmentViewModel;
     }
 
-    private void ShowMatch(JoinedMatch joinedMatch, MatchChatViewModel matchChatViewModel)
+    private void ShowMatch(
+        JoinedMatch joinedMatch,
+        MatchChatViewModel matchChatViewModel,
+        MatchAbandonmentViewModel matchAbandonmentViewModel)
     {
-        ShowScreen(new MatchView(new MatchViewModel(joinedMatch), matchChatViewModel), matchChatViewModel);
+        ShowScreen(
+            () => new MatchView(new MatchViewModel(joinedMatch), matchChatViewModel, matchAbandonmentViewModel),
+            matchChatViewModel,
+            matchAbandonmentViewModel);
     }
 
-    private void ShowScreen(FrameworkElement screen, params IDisposable[] nextScreenViewModels)
+    private void ShowScreen(Func<FrameworkElement> createScreen, params IDisposable[] nextScreenViewModels)
     {
         if (_currentScreen is not null)
         {
             GumService.Default.Root.Children.Remove(_currentScreen.Visual);
         }
 
-        // A dialog or a text field of the screen being left must not keep the input of the next one.
+        // A dialog or a text field of the screen being left must not keep the input of the next one. The next screen
+        // is built only afterwards, so a dialog it opens at once, such as the rival's abandonment, is kept.
         GumService.Default.ModalRoot.Children.Clear();
         InteractiveGue.CurrentInputReceiver = null;
         DisposeViewModelsExcept(nextScreenViewModels);
         _screenViewModels.AddRange(nextScreenViewModels);
-        _currentScreen = screen;
-        GumService.Default.Root.AddChild(screen);
+        _currentScreen = createScreen();
+        GumService.Default.Root.AddChild(_currentScreen);
     }
 
     private void DisposeViewModelsExcept(IReadOnlyCollection<IDisposable> keptViewModels)
@@ -130,11 +154,22 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 
     private void HandleCountdownFinished(object? sender, EventArgs e)
     {
-        if (_joinedMatch is null || _matchChatViewModel is null)
+        if (_joinedMatch is null || _matchChatViewModel is null || _matchAbandonmentViewModel is null)
         {
             return;
         }
 
-        ShowMatch(_joinedMatch, _matchChatViewModel);
+        ShowMatch(_joinedMatch, _matchChatViewModel, _matchAbandonmentViewModel);
+    }
+
+    private void HandleReturnToMenuRequested(object? sender, EventArgs e)
+    {
+        if (_signedInSession is null)
+        {
+            return;
+        }
+
+        // The notification channel stays open during the match, so going back to the menu does not reconnect it.
+        OpenMainMenu(_signedInSession);
     }
 }

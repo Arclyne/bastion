@@ -1228,6 +1228,33 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Leave match.
+        /// </summary>
+        internal static string MatchAbandonButton {
+            get {
+                return ResourceManager.GetString("MatchAbandonButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The match could not be closed. Try again..
+        /// </summary>
+        internal static string MatchAbandonFailed {
+            get {
+                return ResourceManager.GetString("MatchAbandonFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Back to menu.
+        /// </summary>
+        internal static string MatchBackToMenuButton {
+            get {
+                return ResourceManager.GetString("MatchBackToMenuButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Match chat.
         /// </summary>
         internal static string MatchChatTitle {
@@ -1251,6 +1278,24 @@ namespace Bastion.Client.Localization {
         internal static string MatchEloFormat {
             get {
                 return ResourceManager.GetString("MatchEloFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Match over.
+        /// </summary>
+        internal static string MatchOverTitle {
+            get {
+                return ResourceManager.GetString("MatchOverTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} left the match. You win..
+        /// </summary>
+        internal static string MatchRivalAbandonedFormat {
+            get {
+                return ResourceManager.GetString("MatchRivalAbandonedFormat", resourceCulture);
             }
         }
         

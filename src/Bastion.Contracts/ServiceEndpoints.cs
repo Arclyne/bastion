@@ -10,6 +10,7 @@ public static class ServiceEndpoints
     public const string SessionsPath = "sessions";
     public const string ChatPath = "chat";
     public const string MatchmakingPath = "matchmaking";
+    public const string MatchesPath = "matches";
     public const string FriendsPath = "friends";
     public const string ConversationsPath = "conversations";
 

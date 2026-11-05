@@ -45,6 +45,12 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         remove => _notificationCallback.MatchChatMessageReceived -= value;
     }
 
+    public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned
+    {
+        add => _notificationCallback.MatchAbandoned += value;
+        remove => _notificationCallback.MatchAbandoned -= value;
+    }
+
     public event EventHandler<MatchFoundEventArgs>? MatchFound
     {
         add => _notificationCallback.MatchFound += value;

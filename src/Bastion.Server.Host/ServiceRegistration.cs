@@ -2,12 +2,14 @@ using System;
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.Friends;
+using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Matchmaking;
 using Bastion.Server.Application.PrivateChat;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Accounts;
 using Bastion.Server.Host.Chat;
 using Bastion.Server.Host.Friends;
+using Bastion.Server.Host.Matches;
 using Bastion.Server.Host.Matchmaking;
 using Bastion.Server.Host.PrivateChat;
 using Bastion.Server.Host.Sessions;
@@ -25,6 +27,7 @@ public static class ServiceRegistration
         services.AddScoped<ISessionVerifier, SessionVerifier>();
         services.AddScoped<ILobbyChatService, LobbyChatService>();
         services.AddScoped<IMatchChatService, MatchChatService>();
+        services.AddScoped<IMatchAbandonmentService, MatchAbandonmentService>();
         services.AddScoped<IChatModerator, ChatModerator>();
         services.AddScoped<IMatchSearchService, MatchSearchService>();
         services.AddScoped<IMatchmakingPlayerVerifier, MatchmakingPlayerVerifier>();
@@ -44,6 +47,8 @@ public static class ServiceRegistration
         services.AddSingleton<IMatchChatNotifier>(
             provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddSingleton<IMatchmakingNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
+        services.AddSingleton<IMatchEndNotifier>(
+            provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddSingleton<IPlayerPresence>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddSingleton<IFriendNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddSingleton<IPrivateMessageNotifier>(
@@ -61,6 +66,7 @@ public static class ServiceRegistration
         services.AddTransient<SessionService>();
         services.AddTransient<ChatService>();
         services.AddTransient<MatchmakingService>();
+        services.AddTransient<MatchService>();
         services.AddTransient<FriendshipService>();
         services.AddTransient<ConversationService>();
         return services;

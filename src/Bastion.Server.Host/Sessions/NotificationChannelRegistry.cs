@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using Bastion.Contracts.Notifications;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.Friends;
+using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Matchmaking;
 using Bastion.Server.Application.PrivateChat;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Chat;
 using Bastion.Server.Host.Friends;
+using Bastion.Server.Host.Matches;
 using Bastion.Server.Host.Matchmaking;
 using Bastion.Server.Host.PrivateChat;
 using CoreWCF;
@@ -19,6 +21,7 @@ namespace Bastion.Server.Host.Sessions;
 public sealed class NotificationChannelRegistry
     : IChatBroadcaster,
     IMatchChatNotifier,
+    IMatchEndNotifier,
     IMatchmakingNotifier,
     IPlayerPresence,
     IFriendNotifier,
@@ -109,6 +112,19 @@ public sealed class NotificationChannelRegistry
         ArgumentNullException.ThrowIfNull(postedLine);
 
         MatchChatMessageNotification notification = ChatTranslator.ToMatchChatNotification(matchId, postedLine);
+        NotifyPlayers(recipientAccountIds, notification);
+    }
+
+    public void NotifyMatchAbandoned(
+        int matchId,
+        IReadOnlyCollection<int> recipientAccountIds,
+        string abandoningNickname)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+        ArgumentNullException.ThrowIfNull(abandoningNickname);
+
+        MatchAbandonedNotification notification =
+            MatchTranslator.ToAbandonedNotification(matchId, abandoningNickname, GetUtcNow());
         NotifyPlayers(recipientAccountIds, notification);
     }
 

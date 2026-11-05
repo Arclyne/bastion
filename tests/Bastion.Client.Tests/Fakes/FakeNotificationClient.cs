@@ -9,6 +9,8 @@ public sealed class FakeNotificationClient : INotificationClient
 
     public event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
 
+    public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
+
     public event EventHandler<MatchFoundEventArgs>? MatchFound;
 
     public event EventHandler<PresenceRequestedEventArgs>? PresenceRequested;
@@ -36,15 +38,20 @@ public sealed class FakeNotificationClient : INotificationClient
 
     public bool HasAnySubscribers()
     {
-        return ChatMessageReceived is not null
-            || MatchChatMessageReceived is not null
-            || MatchFound is not null
-            || PresenceRequested is not null
-            || SearchEnded is not null
-            || FriendPresenceChanged is not null
-            || FriendRequestReceived is not null
-            || FriendshipStarted is not null
-            || PrivateMessageReceived is not null
-            || Disconnected is not null;
+        var handlers = new Delegate?[]
+        {
+            ChatMessageReceived,
+            MatchChatMessageReceived,
+            MatchAbandoned,
+            MatchFound,
+            PresenceRequested,
+            SearchEnded,
+            FriendPresenceChanged,
+            FriendRequestReceived,
+            FriendshipStarted,
+            PrivateMessageReceived,
+            Disconnected,
+        };
+        return Array.Exists(handlers, handler => handler is not null);
     }
 }

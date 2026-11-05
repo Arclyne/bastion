@@ -465,4 +465,19 @@
   <data name="MatchChatUnavailable" xml:space="preserve">
     <value>El chat de la partida no está disponible en este momento.</value>
   </data>
+  <data name="MatchAbandonButton" xml:space="preserve">
+    <value>Salir de la partida</value>
+  </data>
+  <data name="MatchAbandonFailed" xml:space="preserve">
+    <value>No se pudo cerrar la partida. Inténtalo de nuevo.</value>
+  </data>
+  <data name="MatchOverTitle" xml:space="preserve">
+    <value>Partida terminada</value>
+  </data>
+  <data name="MatchRivalAbandonedFormat" xml:space="preserve">
+    <value>{0} salió de la partida. Ganaste.</value>
+  </data>
+  <data name="MatchBackToMenuButton" xml:space="preserve">
+    <value>Volver al menú</value>
+  </data>
 </root>

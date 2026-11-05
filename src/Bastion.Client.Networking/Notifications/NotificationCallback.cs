@@ -16,6 +16,8 @@ public sealed class NotificationCallback : INotificationCallback
 
     public event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
 
+    public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
+
     public event EventHandler<MatchFoundEventArgs>? MatchFound;
 
     public event EventHandler<PresenceRequestedEventArgs>? PresenceRequested;
@@ -34,6 +36,7 @@ public sealed class NotificationCallback : INotificationCallback
     {
         // An exception here would fault the duplex channel and stop every notification, so any other type is ignored.
         if (TryDispatchChatNotification(notification)
+            || TryDispatchMatchEndNotification(notification)
             || TryDispatchFriendNotification(notification)
             || TryDispatchPrivateMessageNotification(notification))
         {
@@ -53,6 +56,11 @@ public sealed class NotificationCallback : INotificationCallback
         return new MatchChatMessageReceivedEventArgs(
             notification.MatchId,
             ChatContractTranslator.ToChatMessage(notification));
+    }
+
+    private static MatchAbandonedEventArgs ToEventArgs(MatchAbandonedNotification notification)
+    {
+        return new MatchAbandonedEventArgs(notification.MatchId, notification.AbandoningNickname ?? string.Empty);
     }
 
     private static MatchFoundEventArgs ToEventArgs(MatchFoundNotification notification)
@@ -132,6 +140,17 @@ public sealed class NotificationCallback : INotificationCallback
         return false;
     }
 
+    private bool TryDispatchMatchEndNotification(Notification notification)
+    {
+        if (notification is not MatchAbandonedNotification matchAbandoned)
+        {
+            return false;
+        }
+
+        OnMatchAbandoned(ToEventArgs(matchAbandoned));
+        return true;
+    }
+
     private bool TryDispatchFriendNotification(Notification notification)
     {
         if (notification is FriendPresenceNotification friendPresence)
@@ -196,6 +215,11 @@ public sealed class NotificationCallback : INotificationCallback
     private void OnMatchChatMessageReceived(MatchChatMessageReceivedEventArgs e)
     {
         MatchChatMessageReceived?.Invoke(this, e);
+    }
+
+    private void OnMatchAbandoned(MatchAbandonedEventArgs e)
+    {
+        MatchAbandoned?.Invoke(this, e);
     }
 
     private void OnMatchFound(MatchFoundEventArgs e)

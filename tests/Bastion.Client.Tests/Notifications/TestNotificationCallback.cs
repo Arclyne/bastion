@@ -18,6 +18,7 @@ public class TestNotificationCallback
     private const string FriendCode = "MA3R7T";
     private const int FoundMatchId = 12;
     private const int ChatMatchId = 21;
+    private const int AbandonedMatchId = 30;
     private const byte ClassicBoardSize = 9;
     private const byte ClassicWallsPerPlayer = 10;
     private const byte ClockMinutes = 5;
@@ -52,6 +53,7 @@ public class TestNotificationCallback
     private readonly NotificationCallback _notificationCallback = new NotificationCallback();
     private ChatMessageReceivedEventArgs? _chatMessage;
     private MatchChatMessageReceivedEventArgs? _matchChatMessage;
+    private MatchAbandonedEventArgs? _matchAbandoned;
     private MatchFoundEventArgs? _matchFound;
     private PresenceRequestedEventArgs? _presenceRequested;
     private SearchEndedEventArgs? _searchEnded;
@@ -64,6 +66,7 @@ public class TestNotificationCallback
     {
         _notificationCallback.ChatMessageReceived += HandleChatMessageReceived;
         _notificationCallback.MatchChatMessageReceived += HandleMatchChatMessageReceived;
+        _notificationCallback.MatchAbandoned += HandleMatchAbandoned;
         _notificationCallback.MatchFound += HandleMatchFound;
         _notificationCallback.PresenceRequested += HandlePresenceRequested;
         _notificationCallback.SearchEnded += HandleSearchEnded;
@@ -167,6 +170,21 @@ public class TestNotificationCallback
     }
 
     [Fact]
+    public void ReceiveNotification_MatchAbandoned_RaisesAbandoningNickname()
+    {
+        var notification = new MatchAbandonedNotification
+        {
+            MatchId = AbandonedMatchId,
+            AbandoningNickname = FirstNickname,
+            OccurredAt = _sentAt,
+        };
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(FirstNickname, _matchAbandoned?.AbandoningNickname);
+    }
+
+    [Fact]
     public void ReceiveNotification_MatchFound_RaisesMatchFormat()
     {
         MatchFoundNotification notification = CreateMatchFoundNotification();
@@ -253,6 +271,11 @@ public class TestNotificationCallback
     private void HandleMatchChatMessageReceived(object? sender, MatchChatMessageReceivedEventArgs e)
     {
         _matchChatMessage = e;
+    }
+
+    private void HandleMatchAbandoned(object? sender, MatchAbandonedEventArgs e)
+    {
+        _matchAbandoned = e;
     }
 
     private void HandlePrivateMessageReceived(object? sender, PrivateMessageReceivedEventArgs e)

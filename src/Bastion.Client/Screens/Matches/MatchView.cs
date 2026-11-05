@@ -1,24 +1,42 @@
 using System;
+using Bastion.Client.Controls;
+using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
+using log4net;
 
 namespace Bastion.Client.Screens.Matches;
 
 public sealed class MatchView : Panel
 {
     private const float TurnPillWidth = 160;
+    private const float AbandonButtonWidth = 210;
+    private const float AbandonStatusGap = 8;
 
-    public MatchView(MatchViewModel matchViewModel, MatchChatViewModel chatViewModel)
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchView));
+
+    private readonly MatchAbandonmentViewModel _abandonmentViewModel;
+    private readonly ModalLayer _rivalAbandonedLayer;
+
+    public MatchView(
+        MatchViewModel matchViewModel,
+        MatchChatViewModel chatViewModel,
+        MatchAbandonmentViewModel abandonmentViewModel)
     {
         ArgumentNullException.ThrowIfNull(matchViewModel);
         ArgumentNullException.ThrowIfNull(chatViewModel);
+        ArgumentNullException.ThrowIfNull(abandonmentViewModel);
 
+        _abandonmentViewModel = abandonmentViewModel;
         Dock(Gum.Wireframe.Dock.Fill);
         AddChild(CreateBoard(matchViewModel));
         AddChild(CreatePlayersPanel(matchViewModel));
         AddChild(CreateTurnPill(matchViewModel));
         AddChild(CreateChatPanel(chatViewModel));
+        AddChild(CreateAbandonButton());
+        AddChild(CreateAbandonStatus());
+        _rivalAbandonedLayer = CreateRivalAbandonedLayer(abandonmentViewModel);
     }
 
     private static BoardView CreateBoard(MatchViewModel matchViewModel)
@@ -56,6 +74,17 @@ public sealed class MatchView : Panel
         return pill;
     }
 
+    private static ModalLayer CreateRivalAbandonedLayer(MatchAbandonmentViewModel abandonmentViewModel)
+    {
+        var layer = new ModalLayer
+        {
+            BindingContext = abandonmentViewModel,
+        };
+        layer.SetBinding(nameof(ModalLayer.IsOpen), nameof(MatchAbandonmentViewModel.HasRivalAbandoned));
+        layer.AddChild(new RivalAbandonedDialogView(abandonmentViewModel));
+        return layer;
+    }
+
     private static MatchChatPanel CreateChatPanel(MatchChatViewModel chatViewModel)
     {
         var panel = new MatchChatPanel(chatViewModel);
@@ -63,5 +92,47 @@ public sealed class MatchView : Panel
         panel.X = -ScreenMetrics.MarginX;
         panel.Y = -ScreenMetrics.MarginY;
         return panel;
+    }
+
+    private Button CreateAbandonButton()
+    {
+        Button button = ViewFactory.CreateButton(
+            nameof(Strings.MatchAbandonButton),
+            AbandonButtonWidth,
+            ScreenMetrics.MenuPillHeight);
+        ButtonSkin.CreateAndAttach(button, ButtonLooks.Pill);
+        button.BindingContext = _abandonmentViewModel;
+        button.SetBinding(nameof(IsEnabled), nameof(MatchAbandonmentViewModel.CanAbandon));
+        button.Anchor(Gum.Wireframe.Anchor.BottomLeft);
+        button.X = ScreenMetrics.MarginX;
+        button.Y = -ScreenMetrics.MarginY;
+        button.Click += HandleAbandonClick;
+        return button;
+    }
+
+    private Label CreateAbandonStatus()
+    {
+        Label status = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(MatchAbandonmentViewModel.StatusText),
+            TextStyles.FieldError,
+            AbandonButtonWidth);
+        status.BindingContext = _abandonmentViewModel;
+        status.SetBinding(nameof(IsVisible), nameof(MatchAbandonmentViewModel.HasStatus));
+        status.Anchor(Gum.Wireframe.Anchor.BottomLeft);
+        status.X = ScreenMetrics.MarginX;
+        status.Y = -(ScreenMetrics.MarginY + ScreenMetrics.MenuPillHeight + AbandonStatusGap);
+        return status;
+    }
+
+    private async void HandleAbandonClick(object? sender, EventArgs e)
+    {
+        try
+        {
+            await _abandonmentViewModel.AbandonMatch();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The match could not be left because the connection is closed.", ex);
+        }
     }
 }
