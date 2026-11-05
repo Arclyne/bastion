@@ -30,20 +30,12 @@ public sealed class MatchView : Panel
 
         _abandonmentViewModel = abandonmentViewModel;
         Dock(Gum.Wireframe.Dock.Fill);
-        AddChild(CreateBoard(matchViewModel));
         AddChild(CreatePlayersPanel(matchViewModel));
         AddChild(CreateTurnPill(matchViewModel));
         AddChild(CreateChatPanel(chatViewModel));
         AddChild(CreateAbandonButton());
         AddChild(CreateAbandonStatus());
         _rivalAbandonedLayer = CreateRivalAbandonedLayer(abandonmentViewModel);
-    }
-
-    private static BoardView CreateBoard(MatchViewModel matchViewModel)
-    {
-        var board = new BoardView(matchViewModel);
-        board.Anchor(Gum.Wireframe.Anchor.Center);
-        return board;
     }
 
     private static MatchPlayersPanel CreatePlayersPanel(MatchViewModel matchViewModel)

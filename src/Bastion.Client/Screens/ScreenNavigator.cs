@@ -39,6 +39,8 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         _timeProvider = timeProvider;
     }
 
+    public MatchViewModel? ShownMatch { get; private set; }
+
     public void ShowLogin()
     {
         ShowScreen(() => new LoginView(new LoginViewModel(_languages, _connection.Accounts, this)));
@@ -108,14 +110,17 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         MatchChatViewModel matchChatViewModel,
         MatchAbandonmentViewModel matchAbandonmentViewModel)
     {
+        var matchViewModel = new MatchViewModel(joinedMatch);
         ShowScreen(
-            () => new MatchView(new MatchViewModel(joinedMatch), matchChatViewModel, matchAbandonmentViewModel),
+            () => new MatchView(matchViewModel, matchChatViewModel, matchAbandonmentViewModel),
             matchChatViewModel,
             matchAbandonmentViewModel);
+        ShownMatch = matchViewModel;
     }
 
     private void ShowScreen(Func<FrameworkElement> createScreen, params IDisposable[] nextScreenViewModels)
     {
+        ShownMatch = null;
         if (_currentScreen is not null)
         {
             GumService.Default.Root.Children.Remove(_currentScreen.Visual);
