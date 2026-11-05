@@ -73,6 +73,8 @@ public static class MatchmakingTranslator
                 return SearchRejectionReason.NotificationsUnavailable;
             case SearchRejection.UnfinishedMatch:
                 return SearchRejectionReason.UnfinishedMatch;
+            case SearchRejection.InRoom:
+                return SearchRejectionReason.InRoom;
             default:
                 throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported search rejection.");
         }

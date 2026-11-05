@@ -1,10 +1,12 @@
 using System;
 using Bastion.Server.Adapters.Matchmaking;
 using Bastion.Server.Adapters.Persistence;
+using Bastion.Server.Adapters.Rooms;
 using Bastion.Server.Adapters.Security;
 using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Matchmaking;
+using Bastion.Server.Application.Rooms;
 using Bastion.Server.Application.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,8 @@ public static class AdaptersRegistration
         services.AddDbContextFactory<BastionDbContext>(options => options.UseSqlServer(connectionString));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddSingleton<IMatchStore, MatchStore>();
+        services.AddSingleton<IRoomStore, RoomStore>();
+        services.AddSingleton<IRoomCodeGenerator, RoomCodeGenerator>();
         services.AddSingleton<ITurnOrderShuffler, TurnOrderShuffler>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<ISessionTokenGenerator, SessionTokenGenerator>();

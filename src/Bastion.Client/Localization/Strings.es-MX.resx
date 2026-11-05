@@ -435,6 +435,9 @@
   <data name="MatchSearchUnfinishedMatch" xml:space="preserve">
     <value>Ya tienes una partida en curso.</value>
   </data>
+  <data name="MatchSearchInRoom" xml:space="preserve">
+    <value>Sal de tu sala privada antes de buscar partida.</value>
+  </data>
   <data name="MatchSearchMatchCreationFailed" xml:space="preserve">
     <value>No se pudo crear la partida. Vuelve a buscar.</value>
   </data>

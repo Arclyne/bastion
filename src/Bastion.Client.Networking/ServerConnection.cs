@@ -6,6 +6,7 @@ using Bastion.Client.Networking.Matches;
 using Bastion.Client.Networking.Matchmaking;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.PrivateChat;
+using Bastion.Client.Networking.Rooms;
 
 namespace Bastion.Client.Networking;
 
@@ -18,6 +19,7 @@ public sealed class ServerConnection : IDisposable
     private readonly MatchClient _matches;
     private readonly FriendClient _friends = new FriendClient();
     private readonly ConversationClient _conversations = new ConversationClient();
+    private readonly RoomClient _rooms;
 
     public ServerConnection(TimeProvider timeProvider)
     {
@@ -27,6 +29,7 @@ public sealed class ServerConnection : IDisposable
         _chat = new ChatClient(_notifications);
         _matchmaking = new MatchmakingClient(_notifications);
         _matches = new MatchClient(_notifications);
+        _rooms = new RoomClient(_notifications);
         Accounts = _accounts;
         Notifications = _notifications;
         Chat = _chat;
@@ -34,6 +37,7 @@ public sealed class ServerConnection : IDisposable
         Matches = _matches;
         Friends = _friends;
         Conversations = _conversations;
+        Rooms = _rooms;
     }
 
     public IAccountClient Accounts { get; }
@@ -50,6 +54,8 @@ public sealed class ServerConnection : IDisposable
 
     public IConversationClient Conversations { get; }
 
+    public IRoomClient Rooms { get; }
+
     public void Dispose()
     {
         _notifications.Dispose();
@@ -58,6 +64,7 @@ public sealed class ServerConnection : IDisposable
         _matches.Dispose();
         _friends.Dispose();
         _conversations.Dispose();
+        _rooms.Dispose();
         _accounts.Dispose();
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Sessions;
 
@@ -7,20 +8,20 @@ namespace Bastion.Server.Application.Matchmaking;
 public sealed class MatchmakingPlayerVerifier : IMatchmakingPlayerVerifier
 {
     private readonly ISessionVerifier _sessionVerifier;
-    private readonly IMatchmakingNotifier _matchmakingNotifier;
+    private readonly IPlayerActivity _playerActivity;
     private readonly IMatchStore _matchStore;
 
     public MatchmakingPlayerVerifier(
         ISessionVerifier sessionVerifier,
-        IMatchmakingNotifier matchmakingNotifier,
+        IPlayerActivity playerActivity,
         IMatchStore matchStore)
     {
         ArgumentNullException.ThrowIfNull(sessionVerifier);
-        ArgumentNullException.ThrowIfNull(matchmakingNotifier);
+        ArgumentNullException.ThrowIfNull(playerActivity);
         ArgumentNullException.ThrowIfNull(matchStore);
 
         _sessionVerifier = sessionVerifier;
-        _matchmakingNotifier = matchmakingNotifier;
+        _playerActivity = playerActivity;
         _matchStore = matchStore;
     }
 
@@ -36,7 +37,7 @@ public sealed class MatchmakingPlayerVerifier : IMatchmakingPlayerVerifier
         ArgumentNullException.ThrowIfNull(sessionToken);
 
         ConnectedPlayer player = VerifySession(sessionToken, now);
-        if (!_matchmakingNotifier.HasNotificationChannel(player.AccountId))
+        if (!_playerActivity.HasNotificationChannel(player.AccountId))
         {
             throw new SearchRejectedException(SearchRejection.NotificationsUnavailable);
         }
@@ -45,6 +46,11 @@ public sealed class MatchmakingPlayerVerifier : IMatchmakingPlayerVerifier
         if (_matchStore.HasUnfinishedParticipation(player.AccountId))
         {
             throw new SearchRejectedException(SearchRejection.UnfinishedMatch);
+        }
+
+        if (_playerActivity.IsInRoom(player.AccountId))
+        {
+            throw new SearchRejectedException(SearchRejection.InRoom);
         }
 
         return player;

@@ -186,6 +186,8 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
                 return nameof(Strings.MatchSearchNotificationsUnavailable);
             case SearchRejection.UnfinishedMatch:
                 return nameof(Strings.MatchSearchUnfinishedMatch);
+            case SearchRejection.InRoom:
+                return nameof(Strings.MatchSearchInRoom);
             default:
                 throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported search rejection.");
         }

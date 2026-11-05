@@ -10,4 +10,7 @@ public enum SearchRejectionReason
 
     [EnumMember]
     UnfinishedMatch,
+
+    [EnumMember]
+    InRoom,
 }

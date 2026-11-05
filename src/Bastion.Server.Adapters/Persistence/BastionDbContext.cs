@@ -6,6 +6,7 @@ using Bastion.Domain.Friends;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
 using Bastion.Domain.Moderation;
+using Bastion.Domain.Rooms;
 using Bastion.Domain.Sessions;
 using Bastion.Domain.Statistics;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +43,8 @@ public sealed class BastionDbContext : DbContext
     public DbSet<BannedWord> BannedWords => Set<BannedWord>();
 
     public DbSet<Message> Messages => Set<Message>();
+
+    public DbSet<Room> Rooms => Set<Room>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

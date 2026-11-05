@@ -7,12 +7,14 @@ using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Matchmaking;
 using Bastion.Server.Application.PrivateChat;
+using Bastion.Server.Application.Rooms;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Chat;
 using Bastion.Server.Host.Friends;
 using Bastion.Server.Host.Matches;
 using Bastion.Server.Host.Matchmaking;
 using Bastion.Server.Host.PrivateChat;
+using Bastion.Server.Host.Rooms;
 using CoreWCF;
 using log4net;
 
@@ -25,7 +27,8 @@ public sealed class NotificationChannelRegistry
     IMatchmakingNotifier,
     IPlayerPresence,
     IFriendNotifier,
-    IPrivateMessageNotifier
+    IPrivateMessageNotifier,
+    IRoomNotifier
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationChannelRegistry));
 
@@ -48,6 +51,8 @@ public sealed class NotificationChannelRegistry
         _presenceReporter = presenceReporter;
         _timeProvider = timeProvider;
     }
+
+    public event EventHandler<PlayerDisconnectedEventArgs>? PlayerDisconnected;
 
     public void RegisterChannel(ConnectedPlayer player, INotificationCallback callback)
     {
@@ -170,6 +175,22 @@ public sealed class NotificationChannelRegistry
         NotifyPlayer(delivery.Message.RecipientId.GetValueOrDefault(), PrivateChatTranslator.ToNotification(delivery));
     }
 
+    public void NotifyRoomUpdated(RoomSnapshot room, int originAccountId)
+    {
+        ArgumentNullException.ThrowIfNull(room);
+
+        RoomUpdatedNotification notification = RoomTranslator.ToUpdatedNotification(room, GetUtcNow());
+        NotifyPlayers(room.ListAccountIdsExcept(originAccountId), notification);
+    }
+
+    public void NotifyRoomClosed(RoomSnapshot room, int originAccountId)
+    {
+        ArgumentNullException.ThrowIfNull(room);
+
+        RoomClosedNotification notification = RoomTranslator.ToClosedNotification(room, GetUtcNow());
+        NotifyPlayers(room.ListAccountIdsExcept(originAccountId), notification);
+    }
+
     private DateTime GetUtcNow()
     {
         return _timeProvider.GetUtcNow().UtcDateTime;
@@ -231,5 +252,12 @@ public sealed class NotificationChannelRegistry
         {
             _logger.Info($"Match search ended because the player disconnected. AccountId={accountId}");
         }
+
+        OnPlayerDisconnected(new PlayerDisconnectedEventArgs(accountId));
+    }
+
+    private void OnPlayerDisconnected(PlayerDisconnectedEventArgs e)
+    {
+        PlayerDisconnected?.Invoke(this, e);
     }
 }

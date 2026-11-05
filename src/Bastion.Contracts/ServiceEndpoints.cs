@@ -13,6 +13,7 @@ public static class ServiceEndpoints
     public const string MatchesPath = "matches";
     public const string FriendsPath = "friends";
     public const string ConversationsPath = "conversations";
+    public const string RoomsPath = "rooms";
 
     private const string Scheme = "net.tcp";
 
