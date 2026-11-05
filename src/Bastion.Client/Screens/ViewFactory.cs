@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
@@ -17,8 +18,30 @@ public static class ViewFactory
 
     public static Label CreateLabel(string textKey, TextStyle style)
     {
-        var label = new Label { Text = textKey };
+        var label = new Label
+        {
+            Text = textKey,
+        };
         style.ApplyTo((LabelVisual)label.Visual);
+        return label;
+    }
+
+    public static Label CreateBoundLabel(string viewModelProperty, TextStyle style, float width)
+    {
+        ArgumentNullException.ThrowIfNull(viewModelProperty);
+
+        Label label = CreateFixedWidthLabel(style, width);
+        label.SetBinding(nameof(Label.Text), viewModelProperty);
+        return label;
+    }
+
+    public static Label CreateBoundUntranslatedLabel(string viewModelProperty, TextStyle style, float width)
+    {
+        ArgumentNullException.ThrowIfNull(viewModelProperty);
+
+        Label label = CreateFixedWidthLabel(style, width);
+        ((LabelVisual)label.Visual).LocalizeText = false;
+        label.SetBinding(nameof(Label.Text), viewModelProperty);
         return label;
     }
 
@@ -50,6 +73,19 @@ public static class ViewFactory
         label.Anchor(Gum.Wireframe.Anchor.BottomRight);
         label.X = -ScreenMarginX;
         label.Y = -VersionMarginY;
+        return label;
+    }
+
+    private static Label CreateFixedWidthLabel(TextStyle style, float width)
+    {
+        ArgumentNullException.ThrowIfNull(style);
+
+        var label = new Label
+        {
+            Width = width,
+            WidthUnits = DimensionUnitType.Absolute,
+        };
+        style.ApplyTo((LabelVisual)label.Visual);
         return label;
     }
 }

@@ -22,6 +22,29 @@ public static class ChatTranslator
         };
     }
 
+    public static MatchChatMessageNotification ToMatchChatNotification(int matchId, PostedChatLine postedLine)
+    {
+        ArgumentNullException.ThrowIfNull(postedLine);
+
+        return new MatchChatMessageNotification
+        {
+            OccurredAt = postedLine.Line.SentAt,
+            MatchId = matchId,
+            MessageId = postedLine.MessageId,
+            SenderNickname = postedLine.Line.Sender.Nickname,
+            Text = postedLine.Line.Text,
+        };
+    }
+
+    public static FaultException<ChatChannelForbiddenFault> ToFault(ChatChannelForbiddenException rejection)
+    {
+        ArgumentNullException.ThrowIfNull(rejection);
+
+        return new FaultException<ChatChannelForbiddenFault>(
+            new ChatChannelForbiddenFault(),
+            new FaultReason(rejection.Message));
+    }
+
     public static ChatMessageReceipt ToReceipt(PostedChatLine postedLine)
     {
         ArgumentNullException.ThrowIfNull(postedLine);

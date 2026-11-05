@@ -6,6 +6,8 @@ public interface INotificationClient
 {
     event EventHandler<ChatMessageReceivedEventArgs>? ChatMessageReceived;
 
+    event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
+
     event EventHandler<MatchFoundEventArgs>? MatchFound;
 
     event EventHandler<PresenceRequestedEventArgs>? PresenceRequested;

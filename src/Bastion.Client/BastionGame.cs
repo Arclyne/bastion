@@ -23,7 +23,7 @@ public sealed class BastionGame : Game
 
     private readonly GraphicsDeviceManager _graphics;
     private readonly ServerConnection _serverConnection = new ServerConnection(TimeProvider.System);
-    private ScreenNavigator? _navigator;
+    private ScreenNavigator? _screenNavigator;
 
     public BastionGame()
     {
@@ -44,8 +44,8 @@ public sealed class BastionGame : Game
         ThemeInitializer.Initialize(this);
         var languages = new LanguageService(new LanguagePreferenceStore(), GumService.Default.LocalizationService);
         languages.LoadInitialLanguage();
-        _navigator = new ScreenNavigator(languages, _serverConnection);
-        _navigator.ShowLogin();
+        _screenNavigator = new ScreenNavigator(languages, _serverConnection, TimeProvider.System);
+        _screenNavigator.ShowLogin();
         Window.ClientSizeChanged += OnClientSizeChanged;
         ApplyUiScale();
         base.Initialize();
@@ -56,7 +56,7 @@ public sealed class BastionGame : Game
         GumService.Default.Update(gameTime);
         if (GumService.Default.Keyboard.KeyPushed(Keys.Escape))
         {
-            _navigator?.ReceiveEscapeKey();
+            _screenNavigator?.ReceiveEscapeKey();
         }
 
         base.Update(gameTime);
@@ -74,6 +74,7 @@ public sealed class BastionGame : Game
         if (disposing)
         {
             Window.ClientSizeChanged -= OnClientSizeChanged;
+            _screenNavigator?.Dispose();
             _serverConnection.Dispose();
         }
 

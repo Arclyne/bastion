@@ -8,6 +8,8 @@ public class TestMessage
 {
     private const int AuthorId = 3;
     private const int RecipientId = 4;
+    private const int MatchId = 16;
+    private const string MatchChatText = "good luck";
 
     private static readonly DateTime _sentAt = new DateTime(2026, 11, 5, 12, 0, 0, DateTimeKind.Utc);
 
@@ -61,5 +63,25 @@ public class TestMessage
     private static Message CreateMessage()
     {
         return new Message(new MessageParticipants(AuthorId, RecipientId), "hola", _sentAt);
+    }
+
+    [Fact]
+    public void CreateForMatch_MatchSubmission_UsesMatchChannel()
+    {
+        var submission = new MatchChatSubmission(MatchId, MatchChatText);
+
+        var message = Message.CreateForMatch(submission, AuthorId, _sentAt);
+
+        Assert.Equal(MessageChannel.Match, message.Channel);
+    }
+
+    [Fact]
+    public void CreateForMatch_MatchSubmission_KeepsMatchId()
+    {
+        var submission = new MatchChatSubmission(MatchId, MatchChatText);
+
+        var message = Message.CreateForMatch(submission, AuthorId, _sentAt);
+
+        Assert.Equal(MatchId, message.MatchId);
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
+using Bastion.Client.Networking.Notifications;
 using Bastion.Contracts;
 using Bastion.Contracts.Chat;
 
@@ -10,6 +11,20 @@ public sealed class ChatClient : IChatClient, IDisposable
 {
     private readonly ServiceChannel<IChatService> _channel =
         new ServiceChannel<IChatService>(ServiceEndpoints.ChatPath);
+    private readonly INotificationClient _notificationClient;
+
+    public ChatClient(INotificationClient notificationClient)
+    {
+        ArgumentNullException.ThrowIfNull(notificationClient);
+
+        _notificationClient = notificationClient;
+    }
+
+    public event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived
+    {
+        add => _notificationClient.MatchChatMessageReceived += value;
+        remove => _notificationClient.MatchChatMessageReceived -= value;
+    }
 
     public DateTime SendMessage(string sessionToken, string text)
     {
@@ -17,6 +32,15 @@ public sealed class ChatClient : IChatClient, IDisposable
         ArgumentNullException.ThrowIfNull(text);
 
         ChatMessageReceipt receipt = Call(service => service.SendChatMessage(sessionToken, text));
+        return receipt.SentAt;
+    }
+
+    public DateTime SendMatchChatMessage(string sessionToken, int matchId, string text)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(text);
+
+        ChatMessageReceipt receipt = Call(service => service.SendMatchChatMessage(sessionToken, matchId, text));
         return receipt.SentAt;
     }
 
@@ -41,6 +65,11 @@ public sealed class ChatClient : IChatClient, IDisposable
                 ChatContractTranslator.ToRejection(rejected.Detail.Reason),
                 rejected.Detail.MutedUntil,
                 ex);
+        }
+
+        if (ex is FaultException<ChatChannelForbiddenFault>)
+        {
+            return new ChatChannelForbiddenException(ex);
         }
 
         return ServiceFailureTranslator.ToClientException(ex);

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Bastion.Contracts.Notifications;
-using Bastion.Domain.Matchmaking;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Matchmaking;
@@ -18,7 +17,12 @@ using log4net;
 namespace Bastion.Server.Host.Sessions;
 
 public sealed class NotificationChannelRegistry
-    : IChatBroadcaster, IMatchmakingNotifier, IPlayerPresence, IFriendNotifier, IPrivateMessageNotifier
+    : IChatBroadcaster,
+    IMatchChatNotifier,
+    IMatchmakingNotifier,
+    IPlayerPresence,
+    IFriendNotifier,
+    IPrivateMessageNotifier
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationChannelRegistry));
 
@@ -85,15 +89,27 @@ public sealed class NotificationChannelRegistry
         return HasNotificationChannel(accountId);
     }
 
-    public void NotifyMatchFound(MatchPairing pairing)
+    public void NotifyMatchFound(CreatedMatch createdMatch)
     {
-        ArgumentNullException.ThrowIfNull(pairing);
+        ArgumentNullException.ThrowIfNull(createdMatch);
 
-        MatchFoundNotification notification = MatchmakingTranslator.ToNotification(pairing, GetUtcNow());
-        foreach (MatchSearch search in pairing.Players)
+        MatchFoundNotification notification = MatchmakingTranslator.ToNotification(createdMatch, GetUtcNow());
+        foreach (CreatedMatchParticipant participant in createdMatch.Participants)
         {
-            NotifyPlayer(search.AccountId, notification);
+            NotifyPlayer(participant.Player.AccountId, notification);
         }
+    }
+
+    public void NotifyMatchChatMessage(
+        int matchId,
+        IReadOnlyCollection<int> recipientAccountIds,
+        PostedChatLine postedLine)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+        ArgumentNullException.ThrowIfNull(postedLine);
+
+        MatchChatMessageNotification notification = ChatTranslator.ToMatchChatNotification(matchId, postedLine);
+        NotifyPlayers(recipientAccountIds, notification);
     }
 
     public void NotifyPresenceRequested(PresenceRequest request)
@@ -114,10 +130,7 @@ public sealed class NotificationChannelRegistry
         ArgumentNullException.ThrowIfNull(change);
 
         FriendPresenceNotification notification = FriendshipTranslator.ToNotification(change, GetUtcNow());
-        foreach (int accountId in recipientAccountIds)
-        {
-            NotifyPlayer(accountId, notification);
-        }
+        NotifyPlayers(recipientAccountIds, notification);
     }
 
     public void NotifyFriendRequestReceived(int recipientAccountId, FriendRequestSummary request)
@@ -144,6 +157,14 @@ public sealed class NotificationChannelRegistry
     private DateTime GetUtcNow()
     {
         return _timeProvider.GetUtcNow().UtcDateTime;
+    }
+
+    private void NotifyPlayers(IEnumerable<int> accountIds, Notification notification)
+    {
+        foreach (int accountId in accountIds)
+        {
+            NotifyPlayer(accountId, notification);
+        }
     }
 
     private void NotifyPlayer(int accountId, Notification notification)

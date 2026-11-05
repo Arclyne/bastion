@@ -22,8 +22,14 @@ public static class ChatContractTranslator
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        var author = new ChatAuthor(notification.SenderNickname ?? string.Empty, false);
-        return new ChatMessage(author, notification.Text ?? string.Empty, notification.OccurredAt);
+        return ToReceivedMessage(notification.SenderNickname, notification.Text, notification.OccurredAt);
+    }
+
+    public static ChatMessage ToChatMessage(MatchChatMessageNotification notification)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+
+        return ToReceivedMessage(notification.SenderNickname, notification.Text, notification.OccurredAt);
     }
 
     public static ChatRejection ToRejection(ChatRejectionReason reason)
@@ -51,5 +57,11 @@ public static class ChatContractTranslator
     {
         var author = new ChatAuthor(message.SenderNickname ?? string.Empty, message.IsOwn);
         return new ChatMessage(author, message.Text ?? string.Empty, message.SentAt);
+    }
+
+    private static ChatMessage ToReceivedMessage(string? senderNickname, string? text, DateTime sentAt)
+    {
+        var author = new ChatAuthor(senderNickname ?? string.Empty, false);
+        return new ChatMessage(author, text ?? string.Empty, sentAt);
     }
 }

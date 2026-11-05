@@ -39,10 +39,6 @@ SET NOCOUNT ON;
 SET XACT_ABORT ON;
 GO
 
-/*---------------------------------------------------------------------
-  1. Message columns for private messages
----------------------------------------------------------------------*/
-
 IF COL_LENGTH(N'dbo.Message', N'RecipientId') IS NULL
     ALTER TABLE dbo.Message ADD RecipientId INT NULL;  -- Friend who receives the message; only in the FRIENDS channel.
 GO
@@ -67,10 +63,6 @@ WHERE m.Channel = 'FRIENDS'
   AND m.RecipientId IS NULL;
 GO
 
-/*---------------------------------------------------------------------
-  2. Rules and indexes
----------------------------------------------------------------------*/
-
 IF OBJECT_ID(N'dbo.CK_Message_Channel', N'C') IS NOT NULL
    AND OBJECT_DEFINITION(OBJECT_ID(N'dbo.CK_Message_Channel')) NOT LIKE N'%RecipientId%'
     ALTER TABLE dbo.Message DROP CONSTRAINT CK_Message_Channel;
@@ -93,13 +85,10 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Message_Unread')
     CREATE INDEX IX_Message_Unread ON dbo.Message (RecipientId, AuthorId) WHERE Channel = 'FRIENDS' AND ReadAt IS NULL;  -- Unread messages per recipient and author.
 GO
 
-/*---------------------------------------------------------------------
-  3. Test data
-  luis_quo talks with marta_muros (yesterday and today, two of her
-  messages unread), with sofia_salto (all read) and with clara_path,
-  who is not his friend, so that conversation is read only. Dates are
-  relative to the moment the script runs.
----------------------------------------------------------------------*/
+-- luis_quo talks with marta_muros (yesterday and today, two of her
+-- messages unread), with sofia_salto (all read) and with clara_path,
+-- who is not his friend, so that conversation is read only. Dates are
+-- relative to the moment the script runs.
 
 DECLARE @Luis INT = (SELECT AccountId FROM dbo.Account WHERE Nickname = N'luis_quo');
 DECLARE @Marta INT = (SELECT AccountId FROM dbo.Account WHERE Nickname = N'marta_muros');
@@ -125,10 +114,6 @@ BEGIN
         (@Clara, 'FRIENDS', @Luis, N'¿me pasas la sala?', DATEADD(DAY, -12, @Now), DATEADD(DAY, -12, @Now));
 END;
 GO
-
-/*---------------------------------------------------------------------
-  4. Checks
----------------------------------------------------------------------*/
 
 -- 4.1 No message breaks the channel rules: 0 rows.
 SELECT MessageId, Channel, MatchId, RoomId, RecipientId

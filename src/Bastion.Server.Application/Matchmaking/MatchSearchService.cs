@@ -7,17 +7,20 @@ namespace Bastion.Server.Application.Matchmaking;
 /// <inheritdoc/>
 public sealed class MatchSearchService : IMatchSearchService
 {
-    private readonly ISessionVerifier _sessionVerifier;
+    private readonly IMatchmakingPlayerVerifier _playerVerifier;
     private readonly IMatchmakingQueue _matchmakingQueue;
     private readonly IMatchmakingNotifier _matchmakingNotifier;
 
-    public MatchSearchService(ISessionVerifier sessionVerifier, IMatchmakingQueue matchmakingQueue, IMatchmakingNotifier matchmakingNotifier)
+    public MatchSearchService(
+        IMatchmakingPlayerVerifier playerVerifier,
+        IMatchmakingQueue matchmakingQueue,
+        IMatchmakingNotifier matchmakingNotifier)
     {
-        ArgumentNullException.ThrowIfNull(sessionVerifier);
+        ArgumentNullException.ThrowIfNull(playerVerifier);
         ArgumentNullException.ThrowIfNull(matchmakingQueue);
         ArgumentNullException.ThrowIfNull(matchmakingNotifier);
 
-        _sessionVerifier = sessionVerifier;
+        _playerVerifier = playerVerifier;
         _matchmakingQueue = matchmakingQueue;
         _matchmakingNotifier = matchmakingNotifier;
     }
@@ -27,11 +30,7 @@ public sealed class MatchSearchService : IMatchSearchService
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        if (!_matchmakingNotifier.HasNotificationChannel(player.AccountId))
-        {
-            throw new SearchRejectedException(SearchRejection.NotificationsUnavailable);
-        }
+        ConnectedPlayer player = _playerVerifier.VerifyPlayerCanSearch(sessionToken, now);
 
         // A repeated request keeps the first search, so the player does not lose the time already waited.
         _matchmakingQueue.TryAdd(new MatchSearch(player.AccountId, player.Nickname, now));
@@ -42,7 +41,7 @@ public sealed class MatchSearchService : IMatchSearchService
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
+        ConnectedPlayer player = _playerVerifier.VerifySession(sessionToken, now);
         if (!_matchmakingQueue.TryRemove(player.AccountId))
         {
             return;
@@ -56,7 +55,7 @@ public sealed class MatchSearchService : IMatchSearchService
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
+        ConnectedPlayer player = _playerVerifier.VerifySession(sessionToken, now);
         _matchmakingQueue.ConfirmPresence(player.AccountId, now);
     }
 }

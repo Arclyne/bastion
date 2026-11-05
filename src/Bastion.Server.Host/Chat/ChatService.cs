@@ -1,7 +1,9 @@
 using System;
 using System.Data.Common;
 using Bastion.Contracts.Chat;
+using Bastion.Domain.Chat;
 using Bastion.Server.Application.Chat;
+using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Sessions;
 using CoreWCF;
@@ -10,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Host.Chat;
 
+/// <inheritdoc/>
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class ChatService : IChatService
 {
@@ -29,23 +32,33 @@ public sealed class ChatService : IChatService
         _timeProvider = timeProvider;
     }
 
+    /// <inheritdoc/>
     public ChatMessageReceipt SendChatMessage(string? sessionToken, string? text)
     {
         string token = RequireSessionToken(sessionToken);
-        if (text is null)
-        {
-            throw ChatTranslator.ToFault(new ChatMessageRejectedException(ChatRejection.InvalidMessage));
-        }
-
-        return Run(
+        string checkedText = RequireText(text);
+        return Run<ILobbyChatService, ChatMessageReceipt>(
             nameof(SendChatMessage),
-            chat => ChatTranslator.ToReceipt(chat.SendMessage(token, text, GetUtcNow())));
+            chat => ChatTranslator.ToReceipt(chat.SendMessage(token, checkedText, GetUtcNow())));
     }
 
+    /// <inheritdoc/>
     public LobbyChatLog OpenLobbyChat(string? sessionToken)
     {
         string token = RequireSessionToken(sessionToken);
-        return Run(nameof(OpenLobbyChat), chat => ChatTranslator.ToChatLog(chat.OpenLobbyChat(token, GetUtcNow())));
+        return Run<ILobbyChatService, LobbyChatLog>(
+            nameof(OpenLobbyChat),
+            chat => ChatTranslator.ToChatLog(chat.OpenLobbyChat(token, GetUtcNow())));
+    }
+
+    /// <inheritdoc/>
+    public ChatMessageReceipt SendMatchChatMessage(string? sessionToken, int matchId, string? text)
+    {
+        string token = RequireSessionToken(sessionToken);
+        var submission = new MatchChatSubmission(matchId, RequireText(text));
+        return Run<IMatchChatService, ChatMessageReceipt>(
+            nameof(SendMatchChatMessage),
+            chat => ChatTranslator.ToReceipt(chat.SendMessage(token, submission, GetUtcNow())));
     }
 
     private static string RequireSessionToken(string? sessionToken)
@@ -53,20 +66,35 @@ public sealed class ChatService : IChatService
         return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());
     }
 
-    private TResult Run<TResult>(string operationName, Func<ILobbyChatService, TResult> operation)
+    private static string RequireText(string? text)
+    {
+        return text ?? throw ChatTranslator.ToFault(new ChatMessageRejectedException(ChatRejection.InvalidMessage));
+    }
+
+    private TResult Run<TChatService, TResult>(string operationName, Func<TChatService, TResult> operation)
+        where TChatService : notnull
     {
         try
         {
             using IServiceScope scope = _scopeFactory.CreateScope();
-            return operation(scope.ServiceProvider.GetRequiredService<ILobbyChatService>());
+            return operation(scope.ServiceProvider.GetRequiredService<TChatService>());
         }
         catch (InvalidSessionException ex)
         {
             throw SessionTranslator.ToFault(ex);
         }
+        catch (ChatChannelForbiddenException ex)
+        {
+            throw ChatTranslator.ToFault(ex);
+        }
         catch (ChatMessageRejectedException ex)
         {
             throw ChatTranslator.ToFault(ex);
+        }
+        catch (MatchStoreException ex)
+        {
+            _logger.Error($"The match store could not be used. Operation={operationName}", ex);
+            throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)
         {

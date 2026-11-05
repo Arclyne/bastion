@@ -24,18 +24,25 @@ public static class ServiceRegistration
         services.AddScoped<ILoginService, LoginService>();
         services.AddScoped<ISessionVerifier, SessionVerifier>();
         services.AddScoped<ILobbyChatService, LobbyChatService>();
+        services.AddScoped<IMatchChatService, MatchChatService>();
+        services.AddScoped<IChatModerator, ChatModerator>();
         services.AddScoped<IMatchSearchService, MatchSearchService>();
+        services.AddScoped<IMatchmakingPlayerVerifier, MatchmakingPlayerVerifier>();
         services.AddScoped<IFriendListService, FriendListService>();
         services.AddScoped<IFriendRequestService, FriendRequestService>();
         services.AddScoped<IFriendPresenceService, FriendPresenceService>();
         services.AddScoped<IPrivateChatService, PrivateChatService>();
         services.AddSingleton<FriendPresenceReporter>();
         services.AddSingleton<IMatchmakingQueue, MatchmakingQueue>();
+        services.AddSingleton<IRankedMatchCreator, RankedMatchCreator>();
         services.AddSingleton<ILobbyChatRoom, LobbyChatRoom>();
+        services.AddSingleton<IMatchChatRelay, MatchChatRelay>();
         services.AddSingleton<IPrivateChatRoom, PrivateChatRoom>();
         services.AddSingleton<MatchmakingDispatcher>();
         services.AddSingleton<NotificationChannelRegistry>();
         services.AddSingleton<IChatBroadcaster>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
+        services.AddSingleton<IMatchChatNotifier>(
+            provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddSingleton<IMatchmakingNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddSingleton<IPlayerPresence>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddSingleton<IFriendNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());

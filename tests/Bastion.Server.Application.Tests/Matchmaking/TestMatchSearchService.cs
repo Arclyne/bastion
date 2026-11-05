@@ -21,11 +21,13 @@ public class TestMatchSearchService
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
     private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
     private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
+    private readonly FakeMatchStore _matchStore = new FakeMatchStore();
     private readonly MatchSearchService _matchSearchService;
 
     public TestMatchSearchService()
     {
-        _matchSearchService = new MatchSearchService(_sessionVerifier, _matchmakingQueue, _matchmakingNotifier);
+        var playerVerifier = new MatchmakingPlayerVerifier(_sessionVerifier, _matchmakingNotifier, _matchStore);
+        _matchSearchService = new MatchSearchService(playerVerifier, _matchmakingQueue, _matchmakingNotifier);
         _sessionVerifier.Add(Token, new ConnectedPlayer(AccountId, Nickname));
         _matchmakingNotifier.SubscribedAccountIds.Add(AccountId);
     }
@@ -40,6 +42,14 @@ public class TestMatchSearchService
     public void StartSearch_PlayerWithoutNotifications_ThrowsSearchRejected()
     {
         _matchmakingNotifier.SubscribedAccountIds.Clear();
+
+        Assert.Throws<SearchRejectedException>(() => _matchSearchService.StartSearch(Token, _now));
+    }
+
+    [Fact]
+    public void StartSearch_PlayerWithUnfinishedMatch_ThrowsSearchRejected()
+    {
+        _matchStore.AccountIdsWithUnfinishedParticipation.Add(AccountId);
 
         Assert.Throws<SearchRejectedException>(() => _matchSearchService.StartSearch(Token, _now));
     }

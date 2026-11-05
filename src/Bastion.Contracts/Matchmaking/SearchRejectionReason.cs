@@ -7,4 +7,7 @@ public enum SearchRejectionReason
 {
     [EnumMember]
     NotificationsUnavailable,
+
+    [EnumMember]
+    UnfinishedMatch,
 }

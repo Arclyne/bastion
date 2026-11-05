@@ -1,5 +1,6 @@
 using System;
 using Bastion.Domain.Matchmaking;
+using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Matchmaking;
 using Bastion.Server.Application.Tests.Fakes;
 using Xunit;
@@ -12,17 +13,20 @@ public class TestMatchmakingDispatcher
     private const int SecondAccountId = 2;
     private const string FirstNickname = "marta_muros";
     private const string SecondNickname = "leo_peon";
+    private const string StoreFailureMessage = "The database is not reachable.";
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 4, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _presenceCheckAt = _startedAt.Add(MatchmakingRules.PresenceCheckInterval);
 
     private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
     private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
+    private readonly FakeMatchStore _matchStore = new FakeMatchStore();
     private readonly MatchmakingDispatcher _matchmakingDispatcher;
 
     public TestMatchmakingDispatcher()
     {
-        _matchmakingDispatcher = new MatchmakingDispatcher(_matchmakingQueue, _matchmakingNotifier);
+        var rankedMatchCreator = new RankedMatchCreator(_matchStore, new FakeTurnOrderShuffler());
+        _matchmakingDispatcher = new MatchmakingDispatcher(_matchmakingQueue, _matchmakingNotifier, rankedMatchCreator);
         _matchmakingQueue.TryAdd(new MatchSearch(FirstAccountId, FirstNickname, _startedAt));
     }
 
@@ -33,7 +37,18 @@ public class TestMatchmakingDispatcher
 
         _matchmakingDispatcher.ReviewAndNotify(_startedAt);
 
-        Assert.Single(_matchmakingNotifier.Pairings);
+        Assert.Single(_matchmakingNotifier.CreatedMatches);
+    }
+
+    [Fact]
+    public void ReviewAndNotify_MatchNotSaved_NotifiesMatchCreationFailed()
+    {
+        _matchmakingQueue.TryAdd(new MatchSearch(SecondAccountId, SecondNickname, _startedAt));
+        _matchStore.MatchSaveFailure = new MatchStoreException(new InvalidOperationException(StoreFailureMessage));
+
+        _matchmakingDispatcher.ReviewAndNotify(_startedAt);
+
+        Assert.Equal(SearchEndReason.MatchCreationFailed, _matchmakingNotifier.EndReasons[FirstAccountId]);
     }
 
     [Fact]

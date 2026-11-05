@@ -5,7 +5,7 @@ using Bastion.Server.Application.Common;
 
 namespace Bastion.Server.Application.Chat;
 
-public sealed class ChatModerator
+public sealed class ChatModerator : IChatModerator
 {
     private readonly IUnitOfWork _unitOfWork;
 

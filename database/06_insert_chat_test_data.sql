@@ -33,10 +33,6 @@ SET NOCOUNT ON;
 SET XACT_ABORT ON;
 GO
 
-/*---------------------------------------------------------------------
-  1. Chat sanction in effect
----------------------------------------------------------------------*/
-
 DECLARE @SanctionedId INT = (SELECT AccountId FROM dbo.Account WHERE Nickname = N'pedro_peon');
 DECLARE @ModeratorId INT = (SELECT AccountId FROM dbo.Account WHERE Nickname = N'ana_modera');
 DECLARE @Reason NVARCHAR(500) = N'Envió el mismo mensaje muchas veces en el chat global.';
@@ -61,10 +57,6 @@ BEGIN
 END;
 GO
 
-/*---------------------------------------------------------------------
-  2. Checks
----------------------------------------------------------------------*/
-
 -- 2.1 Chat sanctions in effect: only pedro_peon, ending in about thirty days.
 SELECT a.Nickname, s.SanctionType, s.EndedAt
 FROM dbo.Sanction AS s
@@ -73,7 +65,7 @@ WHERE s.Scope = 'CHAT'
   AND s.RevokedAt IS NULL
   AND (s.EndedAt IS NULL OR s.EndedAt > SYSUTCDATETIME());
 
--- 2.2 Terms the global chat filters: tonto, idiota, estúpido, idiot and stupid.
+-- 2.2 Terms the global chat filters: three in Spanish, and idiot and stupid in English.
 SELECT Term, Language, Scope
 FROM dbo.BannedWord
 WHERE Scope IN ('CHAT', 'BOTH')

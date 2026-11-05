@@ -10,6 +10,7 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+using log4net;
 using RenderingLibrary.Graphics;
 
 namespace Bastion.Client.Screens.MainMenu;
@@ -57,16 +58,26 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
     private const float FriendsPanelGapY = 12;
     private const float BadgeSize = 22;
     private const float BadgeOverlap = 8;
+    private const float SearchPanelMarginY = 88;
+
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(MainMenuView));
 
     private readonly FriendsPanelViewModel _friendsPanel;
     private readonly ModalLayer _removeFriendLayer;
+    private readonly MatchSearchViewModel _matchSearchViewModel;
+    private readonly ModalLayer _presenceDialogLayer;
 
-    public MainMenuView(MainMenuViewModel viewModel, FriendsPanelViewModel friendsPanel)
+    public MainMenuView(
+        MainMenuViewModel viewModel,
+        FriendsPanelViewModel friendsPanel,
+        MatchSearchViewModel matchSearchViewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(friendsPanel);
+        ArgumentNullException.ThrowIfNull(matchSearchViewModel);
 
         _friendsPanel = friendsPanel;
+        _matchSearchViewModel = matchSearchViewModel;
         _removeFriendLayer = CreateRemoveFriendLayer(friendsPanel.Actions);
         BindingContext = viewModel;
         Dock(Gum.Wireframe.Dock.Fill);
@@ -85,10 +96,12 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
             new BadgeBinding(nameof(ChatTabViewModel.UnreadText), nameof(ChatTabViewModel.HasUnread)),
             ScreenMarginX + SettingsWidth + PillSpacing + FriendsPillWidth + PillSpacing));
         AddChild(CreateTablet());
+        AddChild(CreateMatchSearchPanel());
         AddChild(CreateHowToPlayButton());
         AddChild(ViewFactory.CreateVersionLabel());
         AddChild(CreateFriendsPanel(friendsPanel));
         AddChild(CreateRequestToast(friendsPanel.Requests));
+        _presenceDialogLayer = CreatePresenceDialogLayer();
     }
 
     public void ReceiveEscapeKey()
@@ -261,7 +274,7 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         return button;
     }
 
-    private static Panel CreateTablet()
+    private Panel CreateTablet()
     {
         var content = new StackPanel
         {
@@ -273,6 +286,7 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         };
         content.AddChild(CreateBrand());
         content.AddChild(CreateFindMatchButton());
+        content.AddChild(CreateMatchSearchStatus());
         content.AddChild(CreateCentered(ViewFactory.CreateLabel(
             nameof(Strings.MainMenuPrivateMatch),
             TextStyles.SectionLabel)));
@@ -300,10 +314,13 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         return CreateCentered(brand);
     }
 
-    private static Button CreateFindMatchButton()
+    private Button CreateFindMatchButton()
     {
         Button button = ViewFactory.CreateButton(string.Empty, TabletContentWidth, HeroHeight);
         ButtonSkin.CreateAndAttach(button, ButtonLooks.Hero);
+        button.BindingContext = _matchSearchViewModel;
+        button.SetBinding(nameof(IsEnabled), nameof(MatchSearchViewModel.CanStartSearch));
+        button.Click += HandleFindMatchClick;
 
         RectangleRuntime icon = Shapes.CreateRounded(Palette.HeroIconFill, HeroIconRadius);
         icon.Anchor(Gum.Wireframe.Anchor.Left);
@@ -351,5 +368,47 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         };
         row.AddChild(element);
         return row;
+    }
+
+    private Label CreateMatchSearchStatus()
+    {
+        Label status = ViewFactory.CreateBoundLabel(
+            nameof(MatchSearchViewModel.StatusKey),
+            TextStyles.FieldError,
+            TabletContentWidth);
+        status.BindingContext = _matchSearchViewModel;
+        status.SetBinding(nameof(IsVisible), nameof(MatchSearchViewModel.HasStatus));
+        return status;
+    }
+
+    private MatchSearchPanel CreateMatchSearchPanel()
+    {
+        var panel = new MatchSearchPanel(_matchSearchViewModel);
+        panel.Anchor(Gum.Wireframe.Anchor.Bottom);
+        panel.Y = -SearchPanelMarginY;
+        return panel;
+    }
+
+    private ModalLayer CreatePresenceDialogLayer()
+    {
+        var layer = new ModalLayer
+        {
+            BindingContext = _matchSearchViewModel,
+        };
+        layer.SetBinding(nameof(ModalLayer.IsOpen), nameof(MatchSearchViewModel.IsPresenceDialogOpen));
+        layer.AddChild(new PresenceDialogView(_matchSearchViewModel));
+        return layer;
+    }
+
+    private async void HandleFindMatchClick(object? sender, EventArgs e)
+    {
+        try
+        {
+            await _matchSearchViewModel.StartSearch();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The match search could not be started because the connection is closed.", ex);
+        }
     }
 }
