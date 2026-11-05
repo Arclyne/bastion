@@ -14,4 +14,6 @@ public enum RoomRejection
     TooManyPlayers,
     NotInRoom,
     NotHost,
+    NotReadyToStart,
+    MatchStarted,
 }

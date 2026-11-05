@@ -23,6 +23,7 @@ public class TestMatch
     private const string ClassicSecondSquare = "e9";
     private const string QuickSecondSquare = "d7";
     private const int OutsiderAccountId = 9;
+    private const byte RoomWallsPerPlayer = 3;
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _endedAt = new DateTime(2026, 11, 5, 18, 7, 0, DateTimeKind.Utc);
@@ -40,6 +41,36 @@ public class TestMatch
         var match = Match.StartRanked(format, _entrants, _startedAt);
 
         Assert.Equal(_entrants.Length, match.Participations.Count);
+    }
+
+    [Fact]
+    public void StartPrivate_TwoEntrants_CreatesPrivateMatch()
+    {
+        MatchFormat format = CreateClassicFormat();
+
+        var match = Match.StartPrivate(format, CreatePrivateEntrants(), _startedAt);
+
+        Assert.Equal(MatchType.Private, match.MatchType);
+    }
+
+    [Fact]
+    public void StartPrivate_WallsChosenForRoom_GivesThoseWallsToEveryPlayer()
+    {
+        MatchFormat format = CreateClassicFormat() with { WallsPerPlayer = RoomWallsPerPlayer };
+
+        var match = Match.StartPrivate(format, CreatePrivateEntrants(), _startedAt);
+
+        Assert.True(match.Participations.All(participation => participation.RemainingWalls == RoomWallsPerPlayer));
+    }
+
+    [Fact]
+    public void StartPrivate_EntrantsWithoutElo_SavesNoInitialElo()
+    {
+        MatchFormat format = CreateClassicFormat();
+
+        var match = Match.StartPrivate(format, CreatePrivateEntrants(), _startedAt);
+
+        Assert.True(match.Participations.All(participation => participation.InitialElo is null));
     }
 
     [Fact]
@@ -231,6 +262,15 @@ public class TestMatch
             IsActive = true,
         };
         return new MatchFormat(gameMode, ClockMinutes);
+    }
+
+    private static MatchEntrant[] CreatePrivateEntrants()
+    {
+        return new MatchEntrant[]
+        {
+            new MatchEntrant(FirstAccountId, null),
+            new MatchEntrant(SecondAccountId, null),
+        };
     }
 
     private static Participation FindParticipation(Match match, int accountId)

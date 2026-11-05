@@ -26,7 +26,10 @@ public static class RoomTranslator
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        return new RequestedRoomSettings(ToGameModeCode(options.GameMode), options.WallsPerPlayer, options.ClockMinutes);
+        return new RequestedRoomSettings(
+            ToGameModeCode(options.GameMode),
+            options.WallsPerPlayer,
+            options.ClockMinutes);
     }
 
     public static RoomState ToState(RoomSnapshot room)
@@ -153,6 +156,10 @@ public static class RoomTranslator
                 return RoomRejectionReason.NotInRoom;
             case RoomRejection.NotHost:
                 return RoomRejectionReason.NotHost;
+            case RoomRejection.NotReadyToStart:
+                return RoomRejectionReason.NotReadyToStart;
+            case RoomRejection.MatchStarted:
+                return RoomRejectionReason.MatchStarted;
             default:
                 throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported room rejection.");
         }

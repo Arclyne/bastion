@@ -5,6 +5,7 @@ using System.Linq;
 using Bastion.Domain.Chat;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
+using Bastion.Domain.Rooms;
 using Bastion.Server.Application.Matches;
 using Microsoft.EntityFrameworkCore;
 
@@ -131,7 +132,19 @@ public sealed class MatchStore : IMatchStore
     {
         // The match and its participations are written in one SaveChanges, so they cannot end apart (CU-18 RN-10).
         context.Matches.Update(match);
+        if (match.MatchType == MatchType.Private)
+        {
+            FinishRoomOfMatch(context, match);
+        }
+
         return context.SaveChanges();
+    }
+
+    private static void FinishRoomOfMatch(BastionDbContext context, Match match)
+    {
+        Room? room = context.Rooms.FirstOrDefault(
+            candidate => candidate.MatchId == match.MatchId && candidate.Status == RoomStatus.InMatch);
+        room?.FinishMatch(match.EndedAt.GetValueOrDefault(match.StartedAt));
     }
 
     private TResult RunInNewContext<TResult>(Func<BastionDbContext, TResult> operation)

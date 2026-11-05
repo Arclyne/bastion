@@ -1,4 +1,5 @@
 using System;
+using Bastion.Domain.Matches;
 using Bastion.Domain.Rooms;
 
 namespace Bastion.Server.Application.Rooms;
@@ -7,6 +8,8 @@ public interface IRoomStore
 {
     bool IsCodeTaken(string code);
 
+    bool IsRoomInMatch(string code);
+
     int AddRoom(Room room);
 
     void ChangeRoomSettings(int roomId, RoomSettings settings, DateTime changedAt);
@@ -14,4 +17,6 @@ public interface IRoomStore
     void CloseRoom(int roomId, DateTime closedAt);
 
     int CloseOpenRooms(DateTime closedAt);
+
+    int SaveRoomMatch(int roomId, Match match);
 }

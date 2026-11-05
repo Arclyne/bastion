@@ -19,6 +19,8 @@ public interface IRoomClient
 
     PrivateRoom ChangeOptions(string sessionToken, PrivateRoomOptions options);
 
+    void StartMatch(string sessionToken);
+
     void LeaveRoom(string sessionToken);
 
     PrivateRoom? FindOwnRoom(string sessionToken);

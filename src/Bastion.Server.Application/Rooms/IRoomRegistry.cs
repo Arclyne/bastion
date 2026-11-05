@@ -22,4 +22,6 @@ public interface IRoomRegistry
     RoomDeparture? Leave(int accountId);
 
     RoomSnapshot? FindRoomOf(int accountId);
+
+    TResult StartMatch<TResult>(int hostAccountId, Func<RoomSnapshot, TResult> startMatch);
 }

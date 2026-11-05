@@ -18,7 +18,7 @@ public class Participation
         TurnOrder = turnOrder;
         PawnSymbol = GetPawnSymbol(turnOrder);
         CurrentSquare = BoardLayout.GetStartingSquare(format.GameMode.BoardSize, turnOrder);
-        RemainingWalls = format.GameMode.WallsPerPlayer;
+        RemainingWalls = format.WallsPerPlayer;
         RemainingClockMilliseconds = (int)TimeSpan.FromMinutes(format.ClockMinutes).TotalMilliseconds;
         InitialElo = entrant.EloRating;
         IsConnected = true;

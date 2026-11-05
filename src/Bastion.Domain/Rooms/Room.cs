@@ -66,6 +66,26 @@ public class Room
         LastActivityAt = closedAt;
     }
 
+    public void StartMatch(int matchId, DateTime startedAt)
+    {
+        EnsureOpen();
+
+        Status = RoomStatus.InMatch;
+        MatchId = matchId;
+        LastActivityAt = startedAt;
+    }
+
+    public void FinishMatch(DateTime finishedAt)
+    {
+        if (Status != RoomStatus.InMatch)
+        {
+            throw new InvalidOperationException("Only a room in a match can finish it.");
+        }
+
+        Status = RoomStatus.Closed;
+        LastActivityAt = finishedAt;
+    }
+
     private void ApplySettings(RoomSettings settings, DateTime changedAt)
     {
         if (!settings.IsValid())

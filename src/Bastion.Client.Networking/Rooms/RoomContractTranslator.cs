@@ -80,6 +80,10 @@ public static class RoomContractTranslator
                 return RoomRejection.NotInRoom;
             case RoomRejectionReason.NotHost:
                 return RoomRejection.NotHost;
+            case RoomRejectionReason.NotReadyToStart:
+                return RoomRejection.NotReadyToStart;
+            case RoomRejectionReason.MatchStarted:
+                return RoomRejection.MatchStarted;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported room rejection reason.");
         }
@@ -101,7 +105,10 @@ public static class RoomContractTranslator
             case PrivateRoomGameMode.Quick:
                 return RoomGameMode.Quick;
             default:
-                throw new ArgumentOutOfRangeException(nameof(gameMode), gameMode, "Unsupported private room game mode.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(gameMode),
+                    gameMode,
+                    "Unsupported private room game mode.");
         }
     }
 

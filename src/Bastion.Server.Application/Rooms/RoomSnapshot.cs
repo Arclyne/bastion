@@ -5,7 +5,10 @@ using Bastion.Domain.Rooms;
 
 namespace Bastion.Server.Application.Rooms;
 
-public sealed record RoomSnapshot(RoomIdentity Identity, RoomSettings Settings, IReadOnlyList<RoomMemberSnapshot> Members)
+public sealed record RoomSnapshot(
+    RoomIdentity Identity,
+    RoomSettings Settings,
+    IReadOnlyList<RoomMemberSnapshot> Members)
 {
     public int SeatCount => Settings.GameMode.PlayerCount;
 
