@@ -28,6 +28,14 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
         }
     }
 
+    public bool IsSearching(int accountId)
+    {
+        lock (_searchesLock)
+        {
+            return _searches.ContainsKey(accountId);
+        }
+    }
+
     public void ConfirmPresence(int accountId, DateTime now)
     {
         lock (_searchesLock)

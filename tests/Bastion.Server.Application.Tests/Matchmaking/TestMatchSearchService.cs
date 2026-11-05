@@ -1,6 +1,9 @@
 using System;
 using Bastion.Domain.Matchmaking;
+using Bastion.Domain.Rooms;
+using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Matchmaking;
+using Bastion.Server.Application.Rooms;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Application.Tests.Fakes;
 using Xunit;
@@ -14,6 +17,8 @@ public class TestMatchSearchService
     private const string Token = "marta-token";
     private const string UnknownToken = "unknown-token";
     private const int RepeatedStartMinutes = 10;
+    private const int RoomId = 1;
+    private const string RoomCode = "K7MTQ3";
 
     private static readonly DateTime _now = new DateTime(2026, 11, 4, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _presenceCheckAt = _now.Add(MatchmakingRules.PresenceCheckInterval);
@@ -22,11 +27,13 @@ public class TestMatchSearchService
     private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
     private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
     private readonly FakeMatchStore _matchStore = new FakeMatchStore();
+    private readonly RoomRegistry _roomRegistry = new RoomRegistry(new FakeRoomCodeGenerator());
     private readonly MatchSearchService _matchSearchService;
 
     public TestMatchSearchService()
     {
-        var playerVerifier = new MatchmakingPlayerVerifier(_sessionVerifier, _matchmakingNotifier, _matchStore);
+        var playerActivity = new PlayerActivity(_matchmakingNotifier, _matchmakingQueue, _roomRegistry);
+        var playerVerifier = new MatchmakingPlayerVerifier(_sessionVerifier, playerActivity, _matchStore);
         _matchSearchService = new MatchSearchService(playerVerifier, _matchmakingQueue, _matchmakingNotifier);
         _sessionVerifier.Add(Token, new ConnectedPlayer(AccountId, Nickname));
         _matchmakingNotifier.SubscribedAccountIds.Add(AccountId);
@@ -52,6 +59,22 @@ public class TestMatchSearchService
         _matchStore.AccountIdsWithUnfinishedParticipation.Add(AccountId);
 
         Assert.Throws<SearchRejectedException>(() => _matchSearchService.StartSearch(Token, _now));
+    }
+
+    [Fact]
+    public void StartSearch_PlayerInRoom_RejectsInRoom()
+    {
+        var settings = new RoomSettings(
+            GameModeSamples.CreateClassic(),
+            GameModeSamples.ClassicWallsPerPlayer,
+            MatchmakingRules.RankedClockMinutes);
+        var host = new RoomMember(AccountId, Nickname);
+        _roomRegistry.TryOpen(new WaitingRoom(new RoomIdentity(RoomId, RoomCode), settings, host));
+
+        SearchRejectedException rejection =
+            Assert.Throws<SearchRejectedException>(() => _matchSearchService.StartSearch(Token, _now));
+
+        Assert.Equal(SearchRejection.InRoom, rejection.Rejection);
     }
 
     [Fact]

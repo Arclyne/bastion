@@ -9,6 +9,8 @@ public interface IMatchmakingQueue
 
     bool TryRemove(int accountId);
 
+    bool IsSearching(int accountId);
+
     void ConfirmPresence(int accountId, DateTime now);
 
     QueueReview Review(DateTime now);

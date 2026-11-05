@@ -24,6 +24,10 @@ public interface INotificationClient
 
     event EventHandler<PrivateMessageReceivedEventArgs>? PrivateMessageReceived;
 
+    event EventHandler<RoomUpdatedEventArgs>? RoomUpdated;
+
+    event EventHandler<RoomClosedEventArgs>? RoomClosed;
+
     event EventHandler? Disconnected;
 
     void Connect(string sessionToken);

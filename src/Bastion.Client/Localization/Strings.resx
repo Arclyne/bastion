@@ -447,6 +447,9 @@
   <data name="MatchSearchUnfinishedMatch" xml:space="preserve">
     <value>You already have a match in progress.</value>
   </data>
+  <data name="MatchSearchInRoom" xml:space="preserve">
+    <value>Leave your private room before searching for a match.</value>
+  </data>
   <data name="MatchSearchMatchCreationFailed" xml:space="preserve">
     <value>The match could not be created. Search again.</value>
   </data>

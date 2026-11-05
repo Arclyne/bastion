@@ -5,6 +5,7 @@ using Bastion.Client.Networking.Chat;
 using Bastion.Client.Networking.Friends;
 using Bastion.Client.Networking.Matchmaking;
 using Bastion.Client.Networking.PrivateChat;
+using Bastion.Client.Networking.Rooms;
 using Bastion.Contracts.Notifications;
 
 namespace Bastion.Client.Networking.Notifications;
@@ -32,13 +33,18 @@ public sealed class NotificationCallback : INotificationCallback
 
     public event EventHandler<PrivateMessageReceivedEventArgs>? PrivateMessageReceived;
 
+    public event EventHandler<RoomUpdatedEventArgs>? RoomUpdated;
+
+    public event EventHandler<RoomClosedEventArgs>? RoomClosed;
+
     public void ReceiveNotification(Notification notification)
     {
         // An exception here would fault the duplex channel and stop every notification, so any other type is ignored.
         if (TryDispatchChatNotification(notification)
             || TryDispatchMatchEndNotification(notification)
             || TryDispatchFriendNotification(notification)
-            || TryDispatchPrivateMessageNotification(notification))
+            || TryDispatchPrivateMessageNotification(notification)
+            || TryDispatchRoomNotification(notification))
         {
             return;
         }
@@ -187,6 +193,24 @@ public sealed class NotificationCallback : INotificationCallback
         return true;
     }
 
+    private bool TryDispatchRoomNotification(Notification notification)
+    {
+        if (notification is RoomUpdatedNotification { Room: not null } roomUpdated)
+        {
+            OnRoomUpdated(new RoomUpdatedEventArgs(RoomContractTranslator.ToPrivateRoom(roomUpdated.Room)));
+            return true;
+        }
+
+        if (notification is RoomClosedNotification roomClosed)
+        {
+            RoomCloseReason reason = RoomContractTranslator.ToCloseReason(roomClosed.Reason);
+            OnRoomClosed(new RoomClosedEventArgs(roomClosed.Code ?? string.Empty, reason));
+            return true;
+        }
+
+        return false;
+    }
+
     private void DispatchMatchmakingNotification(Notification notification)
     {
         if (notification is MatchFoundNotification matchFound)
@@ -255,5 +279,15 @@ public sealed class NotificationCallback : INotificationCallback
     private void OnPrivateMessageReceived(PrivateMessageReceivedEventArgs e)
     {
         PrivateMessageReceived?.Invoke(this, e);
+    }
+
+    private void OnRoomUpdated(RoomUpdatedEventArgs e)
+    {
+        RoomUpdated?.Invoke(this, e);
+    }
+
+    private void OnRoomClosed(RoomClosedEventArgs e)
+    {
+        RoomClosed?.Invoke(this, e);
     }
 }

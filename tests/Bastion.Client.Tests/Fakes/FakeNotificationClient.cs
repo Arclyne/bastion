@@ -25,6 +25,10 @@ public sealed class FakeNotificationClient : INotificationClient
 
     public event EventHandler<PrivateMessageReceivedEventArgs>? PrivateMessageReceived;
 
+    public event EventHandler<RoomUpdatedEventArgs>? RoomUpdated;
+
+    public event EventHandler<RoomClosedEventArgs>? RoomClosed;
+
     public event EventHandler? Disconnected;
 
     public void Connect(string sessionToken)
@@ -50,6 +54,8 @@ public sealed class FakeNotificationClient : INotificationClient
             FriendRequestReceived,
             FriendshipStarted,
             PrivateMessageReceived,
+            RoomUpdated,
+            RoomClosed,
             Disconnected,
         };
         return Array.Exists(handlers, handler => handler is not null);

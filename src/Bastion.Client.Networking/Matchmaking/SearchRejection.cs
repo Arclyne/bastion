@@ -4,4 +4,5 @@ public enum SearchRejection
 {
     NotificationsUnavailable,
     UnfinishedMatch,
+    InRoom,
 }

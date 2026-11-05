@@ -1408,6 +1408,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Leave your private room before searching for a match..
+        /// </summary>
+        internal static string MatchSearchInRoom {
+            get {
+                return ResourceManager.GetString("MatchSearchInRoom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} walls.
         /// </summary>
         internal static string MatchWallsFormat {

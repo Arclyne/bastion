@@ -1,0 +1,10 @@
+using System.Runtime.Serialization;
+
+namespace Bastion.Contracts.Notifications;
+
+[DataContract]
+public enum RoomClosedReason
+{
+    [EnumMember]
+    HostLeft,
+}

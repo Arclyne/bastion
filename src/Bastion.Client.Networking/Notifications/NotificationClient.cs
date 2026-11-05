@@ -93,6 +93,18 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         remove => _notificationCallback.PrivateMessageReceived -= value;
     }
 
+    public event EventHandler<RoomUpdatedEventArgs>? RoomUpdated
+    {
+        add => _notificationCallback.RoomUpdated += value;
+        remove => _notificationCallback.RoomUpdated -= value;
+    }
+
+    public event EventHandler<RoomClosedEventArgs>? RoomClosed
+    {
+        add => _notificationCallback.RoomClosed += value;
+        remove => _notificationCallback.RoomClosed -= value;
+    }
+
     public event EventHandler? Disconnected;
 
     public void Connect(string sessionToken)
