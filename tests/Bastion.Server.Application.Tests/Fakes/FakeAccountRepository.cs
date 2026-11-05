@@ -61,4 +61,9 @@ public sealed class FakeAccountRepository : IAccountRepository
             .Take(limit)
             .ToList();
     }
+
+    public IReadOnlyList<PlayerIdentity> ListPlayerIdentities(IReadOnlyCollection<int> accountIds)
+    {
+        return _playerIdentities.Where(playerIdentity => accountIds.Contains(playerIdentity.AccountId)).ToList();
+    }
 }

@@ -11,6 +11,7 @@ namespace Bastion.Contracts.Notifications;
 [KnownType(typeof(FriendPresenceNotification))]
 [KnownType(typeof(FriendRequestNotification))]
 [KnownType(typeof(FriendshipStartedNotification))]
+[KnownType(typeof(PrivateMessageNotification))]
 public abstract class Notification
 {
     [DataMember]

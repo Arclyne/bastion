@@ -18,7 +18,6 @@ public sealed class LobbyChatViewModel : ViewModel
 {
     private const int CounterVisibleFromLength = 180;
     private const int SingleMessage = 1;
-    private const string MuteEndFormat = "g";
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(LobbyChatViewModel));
 
@@ -204,7 +203,7 @@ public sealed class LobbyChatViewModel : ViewModel
         string text = Draft;
         if (!ChatRules.IsValidMessage(text))
         {
-            StatusText = FormatText(Strings.ChatRejectedInvalidFormat, ChatRules.MaximumMessageLength);
+            StatusText = ChatRejectionText.DescribeInvalidMessage();
             return;
         }
 
@@ -250,23 +249,6 @@ public sealed class LobbyChatViewModel : ViewModel
         return string.Format(CultureInfo.CurrentCulture, format, arguments);
     }
 
-    private static string ToRejectionText(ChatRejection rejection)
-    {
-        switch (rejection)
-        {
-            case ChatRejection.InvalidMessage:
-                return FormatText(Strings.ChatRejectedInvalidFormat, ChatRules.MaximumMessageLength);
-            case ChatRejection.Muted:
-                return Strings.ChatRejectedMuted;
-            case ChatRejection.BannedTerm:
-                return Strings.ChatRejectedBannedTerm;
-            case ChatRejection.TooFast:
-                return Strings.ChatRejectedTooFast;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported chat rejection.");
-        }
-    }
-
     private void ShowTranscript(LobbyChatTranscript transcript)
     {
         Messages.Clear();
@@ -283,25 +265,12 @@ public sealed class LobbyChatViewModel : ViewModel
     private void ShowMute(ChatMute mute)
     {
         IsMuted = mute.IsMuted;
-        if (!mute.IsMuted)
-        {
-            MuteText = string.Empty;
-            return;
-        }
-
-        if (mute.EndsAt is not DateTime endsAt)
-        {
-            MuteText = Strings.ChatMutedPermanently;
-            return;
-        }
-
-        string localEnd = endsAt.ToLocalTime().ToString(MuteEndFormat, CultureInfo.CurrentCulture);
-        MuteText = FormatText(Strings.ChatMutedUntilFormat, localEnd);
+        MuteText = ChatRejectionText.DescribeMute(mute);
     }
 
     private void ShowRejection(ChatMessageRowViewModel row, ChatMessageRejectedException rejection)
     {
-        row.Fail(ToRejectionText(rejection.Rejection));
+        row.Fail(ChatRejectionText.Describe(rejection.Rejection));
         if (rejection.Rejection == ChatRejection.Muted)
         {
             ShowMute(new ChatMute(true, rejection.MutedUntil));

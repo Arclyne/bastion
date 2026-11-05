@@ -14,5 +14,7 @@ public interface IAccountRepository
 
     PlayerIdentity? FindPlayerIdentityByFriendCode(string friendCode);
 
+    IReadOnlyList<PlayerIdentity> ListPlayerIdentities(IReadOnlyCollection<int> accountIds);
+
     IReadOnlyList<PlayerIdentity> SearchPlayerIdentities(string nicknamePrefix, int limit);
 }

@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Chat;
 using Gum.Mvvm;
@@ -8,8 +7,6 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public sealed class ChatMessageRowViewModel : ViewModel
 {
-    private const string TimeFormat = "HH:mm";
-
     public ChatMessageRowViewModel(ChatMessage message)
     {
         ArgumentNullException.ThrowIfNull(message);
@@ -82,6 +79,6 @@ public sealed class ChatMessageRowViewModel : ViewModel
 
     private static string FormatTime(DateTime sentAt)
     {
-        return sentAt.ToLocalTime().ToString(TimeFormat, CultureInfo.CurrentCulture);
+        return ChatTimeText.FormatTime(sentAt);
     }
 }

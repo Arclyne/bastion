@@ -11,6 +11,7 @@ public static class ServiceEndpoints
     public const string ChatPath = "chat";
     public const string MatchmakingPath = "matchmaking";
     public const string FriendsPath = "friends";
+    public const string ConversationsPath = "conversations";
 
     private const string Scheme = "net.tcp";
 

@@ -18,6 +18,8 @@ public interface INotificationClient
 
     event EventHandler<FriendshipStartedEventArgs>? FriendshipStarted;
 
+    event EventHandler<PrivateMessageReceivedEventArgs>? PrivateMessageReceived;
+
     event EventHandler? Disconnected;
 
     void Connect(string sessionToken);

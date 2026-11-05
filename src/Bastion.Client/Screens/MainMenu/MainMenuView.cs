@@ -1,6 +1,7 @@
 using System;
 using Bastion.Client.Controls;
 using Bastion.Client.Localization;
+using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Screens.MainMenu.Friends;
 using Bastion.Client.Theme;
 using Gum.Converters;
@@ -72,8 +73,17 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         AddChild(CreateIdentityChip());
         AddChild(CreateSettingsButton());
         AddChild(CreateFriendsButton());
-        AddChild(CreatePendingBadge(friendsPanel.Requests));
         AddChild(CreateChatButton());
+        AddChild(CreateCountBadge(
+            friendsPanel.Requests,
+            new BadgeBinding(
+                nameof(FriendRequestsViewModel.PendingCountText),
+                nameof(FriendRequestsViewModel.HasPending)),
+            ScreenMarginX + SettingsWidth + PillSpacing));
+        AddChild(CreateCountBadge(
+            friendsPanel.Chat,
+            new BadgeBinding(nameof(ChatTabViewModel.UnreadText), nameof(ChatTabViewModel.HasUnread)),
+            ScreenMarginX + SettingsWidth + PillSpacing + FriendsPillWidth + PillSpacing));
         AddChild(CreateTablet());
         AddChild(CreateHowToPlayButton());
         AddChild(ViewFactory.CreateVersionLabel());
@@ -163,11 +173,11 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         return panel;
     }
 
-    private static Panel CreatePendingBadge(FriendRequestsViewModel requests)
+    private static Panel CreateCountBadge(object context, BadgeBinding binding, float pillRightOffset)
     {
         Label count = ViewFactory.CreateLabel(string.Empty, TextStyles.PrimaryButton);
         ((LabelVisual)count.Visual).LocalizeText = false;
-        count.SetBinding(nameof(Label.Text), nameof(FriendRequestsViewModel.PendingCountText));
+        count.SetBinding(nameof(Label.Text), binding.TextProperty);
         count.XUnits = GeneralUnitType.PixelsFromMiddle;
         count.XOrigin = HorizontalAlignment.Center;
         ViewFactory.CenterVertically(count);
@@ -178,14 +188,14 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
             WidthUnits = DimensionUnitType.Absolute,
             Height = BadgeSize,
             HeightUnits = DimensionUnitType.Absolute,
-            BindingContext = requests,
+            BindingContext = context,
         };
         Shapes.InsertBehindContent(badge.Visual, Shapes.CreateRounded(Palette.PlayerOne, BadgeSize / 2));
         badge.AddChild(count);
         badge.Anchor(Gum.Wireframe.Anchor.TopRight);
-        badge.X = -(ScreenMarginX + SettingsWidth + PillSpacing) + BadgeOverlap;
+        badge.X = -pillRightOffset + BadgeOverlap;
         badge.Y = TopMarginY + SettingsOffsetY - BadgeOverlap;
-        badge.SetBinding(nameof(IsVisible), nameof(FriendRequestsViewModel.HasPending));
+        badge.SetBinding(nameof(IsVisible), binding.VisibilityProperty);
         return badge;
     }
 

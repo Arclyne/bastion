@@ -9,7 +9,7 @@ namespace Bastion.Server.Application.Chat;
 public sealed class LobbyChatService : ILobbyChatService
 {
     private readonly ISessionVerifier _sessionVerifier;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ChatModerator _moderator;
     private readonly ILobbyChatRoom _chatRoom;
 
     public LobbyChatService(ISessionVerifier sessionVerifier, IUnitOfWork unitOfWork, ILobbyChatRoom chatRoom)
@@ -19,7 +19,7 @@ public sealed class LobbyChatService : ILobbyChatService
         ArgumentNullException.ThrowIfNull(chatRoom);
 
         _sessionVerifier = sessionVerifier;
-        _unitOfWork = unitOfWork;
+        _moderator = new ChatModerator(unitOfWork);
         _chatRoom = chatRoom;
     }
 
@@ -29,29 +29,13 @@ public sealed class LobbyChatService : ILobbyChatService
         ArgumentNullException.ThrowIfNull(text);
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        if (!ChatRules.IsValidMessage(text))
-        {
-            throw new ChatMessageRejectedException(ChatRejection.InvalidMessage);
-        }
-
-        ChatMute mute = FindMute(player.AccountId, now);
-        if (mute.IsMuted)
-        {
-            throw new ChatMessageRejectedException(mute);
-        }
-
-        string trimmedText = text.Trim();
-        if (ChatWordFilter.ContainsBannedTerm(trimmedText, _unitOfWork.BannedWords.ListChatTerms()))
-        {
-            throw new ChatMessageRejectedException(ChatRejection.BannedTerm);
-        }
-
+        string screenedText = _moderator.Screen(player.AccountId, text, now);
         if (!_chatRoom.TryClaimTurn(player.AccountId, now))
         {
             throw new ChatMessageRejectedException(ChatRejection.TooFast);
         }
 
-        return _chatRoom.Post(new ChatLine(player, trimmedText, now));
+        return _chatRoom.Post(new ChatLine(player, screenedText, now));
     }
 
     public LobbyChatHistory OpenLobbyChat(string sessionToken, DateTime now)
@@ -62,14 +46,6 @@ public sealed class LobbyChatService : ILobbyChatService
         var entries = _chatRoom.ListRecent(ChatRules.RecentMessageCount)
             .Select(line => new ChatHistoryEntry(line, line.Line.Sender.AccountId == player.AccountId))
             .ToList();
-        return new LobbyChatHistory(entries, _chatRoom.CountListeners(), FindMute(player.AccountId, now));
-    }
-
-    private ChatMute FindMute(int accountId, DateTime now)
-    {
-        var sanctionsInEffect = _unitOfWork.Sanctions.ListChatSanctions(accountId)
-            .Where(sanction => sanction.IsInEffectAt(now))
-            .ToList();
-        return ChatMute.FromSanctionsInEffect(sanctionsInEffect);
+        return new LobbyChatHistory(entries, _chatRoom.CountListeners(), _moderator.FindMute(player.AccountId, now));
     }
 }

@@ -6,17 +6,19 @@ using Bastion.Domain.Matchmaking;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Matchmaking;
+using Bastion.Server.Application.PrivateChat;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Chat;
 using Bastion.Server.Host.Friends;
 using Bastion.Server.Host.Matchmaking;
+using Bastion.Server.Host.PrivateChat;
 using CoreWCF;
 using log4net;
 
 namespace Bastion.Server.Host.Sessions;
 
 public sealed class NotificationChannelRegistry
-    : IChatBroadcaster, IMatchmakingNotifier, IPlayerPresence, IFriendNotifier
+    : IChatBroadcaster, IMatchmakingNotifier, IPlayerPresence, IFriendNotifier, IPrivateMessageNotifier
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationChannelRegistry));
 
@@ -130,6 +132,13 @@ public sealed class NotificationChannelRegistry
         ArgumentNullException.ThrowIfNull(friend);
 
         NotifyPlayer(accountId, FriendshipTranslator.ToFriendshipStartedNotification(friend, GetUtcNow()));
+    }
+
+    public void NotifyPrivateMessage(PrivateMessageDelivery delivery)
+    {
+        ArgumentNullException.ThrowIfNull(delivery);
+
+        NotifyPlayer(delivery.Message.RecipientId.GetValueOrDefault(), PrivateChatTranslator.ToNotification(delivery));
     }
 
     private DateTime GetUtcNow()

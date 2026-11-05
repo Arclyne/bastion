@@ -38,6 +38,10 @@ public static class ChatContractTranslator
                 return ChatRejection.BannedTerm;
             case ChatRejectionReason.TooFast:
                 return ChatRejection.TooFast;
+            case ChatRejectionReason.NotFriends:
+                return ChatRejection.NotFriends;
+            case ChatRejectionReason.PlayerNotFound:
+                return ChatRejection.PlayerNotFound;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported rejection reason.");
         }
