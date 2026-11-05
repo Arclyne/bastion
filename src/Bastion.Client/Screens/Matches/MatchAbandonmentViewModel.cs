@@ -122,7 +122,6 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
         }
         catch (MatchNotJoinedException ex)
         {
-            // The match had already ended, for example because the rival left first, so the player may leave too.
             _logger.Warn("The match was already closed when the player left it.", ex);
             return true;
         }

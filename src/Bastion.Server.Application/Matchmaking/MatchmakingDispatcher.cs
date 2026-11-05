@@ -55,7 +55,6 @@ public sealed class MatchmakingDispatcher
 
     private void NotifyMatchCreationFailed(MatchPairing pairing)
     {
-        // The players already left the queue in the review, so each one is told the search ended (CU-09 EX-01).
         foreach (MatchSearch search in pairing.Players)
         {
             _matchmakingNotifier.NotifySearchEnded(search.AccountId, SearchEndReason.MatchCreationFailed);

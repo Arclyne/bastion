@@ -39,7 +39,6 @@ public sealed class NotificationCallback : INotificationCallback
 
     public void ReceiveNotification(Notification notification)
     {
-        // An exception here would fault the duplex channel and stop every notification, so any other type is ignored.
         if (TryDispatchChatNotification(notification)
             || TryDispatchMatchEndNotification(notification)
             || TryDispatchFriendNotification(notification)
@@ -94,7 +93,6 @@ public sealed class NotificationCallback : INotificationCallback
 
     private static PresenceRequestedEventArgs ToEventArgs(PresenceRequestedNotification notification)
     {
-        // Both times come from the server clock, so the countdown does not depend on the client clock.
         return new PresenceRequestedEventArgs(notification.Deadline - notification.OccurredAt);
     }
 

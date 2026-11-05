@@ -197,7 +197,6 @@ public sealed class NotificationClient : INotificationClient, IDisposable
 
     private void RaiseDisconnected()
     {
-        // Stopping the keep-alive is the guard: only the first report after a connection raises the event.
         if (!TryStopKeepAlive())
         {
             return;

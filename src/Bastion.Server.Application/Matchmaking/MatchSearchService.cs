@@ -32,7 +32,6 @@ public sealed class MatchSearchService : IMatchSearchService
 
         ConnectedPlayer player = _playerVerifier.VerifyPlayerCanSearch(sessionToken, now);
 
-        // A repeated request keeps the first search, so the player does not lose the time already waited.
         _matchmakingQueue.TryAdd(new MatchSearch(player.AccountId, player.Nickname, now));
     }
 

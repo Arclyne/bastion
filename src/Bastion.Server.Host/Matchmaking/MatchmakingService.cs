@@ -83,7 +83,6 @@ public sealed class MatchmakingService : IMatchmakingService
             return;
         }
 
-        // A one-way operation has no reply, so a failure is logged here instead of being sent to the client.
         try
         {
             RunInRequestScope(searchService => operation(searchService, sessionToken));

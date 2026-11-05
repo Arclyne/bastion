@@ -231,7 +231,6 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
 
     private void ShowSearching()
     {
-        // The match found notice can arrive before the reply to the start request; it must not be replaced.
         if (Stage != MatchSearchStage.Idle)
         {
             return;
@@ -293,7 +292,6 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
 
     private void EndActiveSearch(string statusKey)
     {
-        // A match found while a request was on its way wins: only a search that is still running ends here.
         if (Stage != MatchSearchStage.Searching)
         {
             return;

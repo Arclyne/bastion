@@ -9,7 +9,6 @@ public static class InlineUiContext
     {
         ArgumentNullException.ThrowIfNull(createViewModel);
 
-        // View models post their notices to the context they are created on; without one they run inline.
         SynchronizationContext? previousContext = SynchronizationContext.Current;
         SynchronizationContext.SetSynchronizationContext(null);
         try

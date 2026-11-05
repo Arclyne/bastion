@@ -26,7 +26,6 @@ public static class JoinedMatchSamples
     {
         byte rivalTurnOrder = ownTurnOrder == Match.FirstTurnOrder ? Match.SecondTurnOrder : Match.FirstTurnOrder;
 
-        // The rival comes first in the list, so the tests never rely on the order the server sends.
         var participants = new FoundMatchParticipant[]
         {
             new FoundMatchParticipant(RivalNickname, RivalEloRating, rivalTurnOrder),
