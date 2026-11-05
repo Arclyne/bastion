@@ -16,12 +16,14 @@ public class Account
         AccountType = AccountType.Registered;
         AccountStatus = AccountStatus.Pending;
         PreferredLanguage = DefaultLanguage;
+        FriendCode = string.Empty;
     }
 
     private Account()
     {
         Nickname = string.Empty;
         PreferredLanguage = DefaultLanguage;
+        FriendCode = string.Empty;
     }
 
     public int AccountId { get; private set; }
@@ -47,6 +49,10 @@ public class Account
     public DateTime? LockedUntil { get; private set; }
 
     public bool IsTwoFactorEnabled { get; private set; }
+
+    public string FriendCode { get; private set; }
+
+    public DateTime? LastSeenAt { get; private set; }
 
     public bool CanSignIn()
     {
@@ -117,5 +123,10 @@ public class Account
         FailedAttempts = 0;
         LastFailedAttemptAt = null;
         LockedUntil = null;
+    }
+
+    public void RecordLastSeen(DateTime now)
+    {
+        LastSeenAt = now;
     }
 }

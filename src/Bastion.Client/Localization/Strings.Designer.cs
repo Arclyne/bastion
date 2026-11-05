@@ -166,6 +166,528 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Accept.
+        /// </summary>
+        internal static string FriendsAccept {
+            get {
+                return ResourceManager.GetString("FriendsAccept", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        internal static string FriendsAdd {
+            get {
+                return ResourceManager.GetString("FriendsAdd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add friend.
+        /// </summary>
+        internal static string FriendsAddFriend {
+            get {
+                return ResourceManager.GetString("FriendsAddFriend", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Already your friend.
+        /// </summary>
+        internal static string FriendsAlreadyFriend {
+            get {
+                return ResourceManager.GetString("FriendsAlreadyFriend", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Back.
+        /// </summary>
+        internal static string FriendsBack {
+            get {
+                return ResourceManager.GetString("FriendsBack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        internal static string FriendsCancelRequest {
+            get {
+                return ResourceManager.GetString("FriendsCancelRequest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ×.
+        /// </summary>
+        internal static string FriendsCloseButton {
+            get {
+                return ResourceManager.GetString("FriendsCloseButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copied.
+        /// </summary>
+        internal static string FriendsCodeCopied {
+            get {
+                return ResourceManager.GetString("FriendsCodeCopied", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Coming soon.
+        /// </summary>
+        internal static string FriendsComingSoon {
+            get {
+                return ResourceManager.GetString("FriendsComingSoon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} of {1} online.
+        /// </summary>
+        internal static string FriendsConnectedCountFormat {
+            get {
+                return ResourceManager.GetString("FriendsConnectedCountFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        internal static string FriendsCopyCode {
+            get {
+                return ResourceManager.GetString("FriendsCopyCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have no friends yet.
+        /// </summary>
+        internal static string FriendsEmptyTitle {
+            get {
+                return ResourceManager.GetString("FriendsEmptyTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expires in {0} days.
+        /// </summary>
+        internal static string FriendsExpiresInDaysFormat {
+            get {
+                return ResourceManager.GetString("FriendsExpiresInDaysFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expires tomorrow.
+        /// </summary>
+        internal static string FriendsExpiresTomorrow {
+            get {
+                return ResourceManager.GetString("FriendsExpiresTomorrow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search your friends.
+        /// </summary>
+        internal static string FriendsFilterPlaceholder {
+            get {
+                return ResourceManager.GetString("FriendsFilterPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to In the menu · {0}.
+        /// </summary>
+        internal static string FriendsGroupInMenuFormat {
+            get {
+                return ResourceManager.GetString("FriendsGroupInMenuFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Offline · {0}.
+        /// </summary>
+        internal static string FriendsGroupOfflineFormat {
+            get {
+                return ResourceManager.GetString("FriendsGroupOfflineFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to It's you.
+        /// </summary>
+        internal static string FriendsItsYou {
+            get {
+                return ResourceManager.GetString("FriendsItsYou", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Seen {0} d ago.
+        /// </summary>
+        internal static string FriendsLastSeenDaysFormat {
+            get {
+                return ResourceManager.GetString("FriendsLastSeenDaysFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Seen {0} h ago.
+        /// </summary>
+        internal static string FriendsLastSeenHoursFormat {
+            get {
+                return ResourceManager.GetString("FriendsLastSeenHoursFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Seen just now.
+        /// </summary>
+        internal static string FriendsLastSeenJustNow {
+            get {
+                return ResourceManager.GetString("FriendsLastSeenJustNow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Seen {0} min ago.
+        /// </summary>
+        internal static string FriendsLastSeenMinutesFormat {
+            get {
+                return ResourceManager.GetString("FriendsLastSeenMinutesFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your list could not be loaded..
+        /// </summary>
+        internal static string FriendsLoadFailed {
+            get {
+                return ResourceManager.GetString("FriendsLoadFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to More.
+        /// </summary>
+        internal static string FriendsMoreOptions {
+            get {
+                return ResourceManager.GetString("FriendsMoreOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No friend is called “{0}”.
+        /// </summary>
+        internal static string FriendsNoMatchFormat {
+            get {
+                return ResourceManager.GetString("FriendsNoMatchFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have no new requests.
+        /// </summary>
+        internal static string FriendsNoReceivedRequests {
+            get {
+                return ResourceManager.GetString("FriendsNoReceivedRequests", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have not sent any requests.
+        /// </summary>
+        internal static string FriendsNoSentRequests {
+            get {
+                return ResourceManager.GetString("FriendsNoSentRequests", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are now friends.
+        /// </summary>
+        internal static string FriendsNowFriends {
+            get {
+                return ResourceManager.GetString("FriendsNowFriends", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your friend code {0}.
+        /// </summary>
+        internal static string FriendsOwnCodeFormat {
+            get {
+                return ResourceManager.GetString("FriendsOwnCodeFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Received {0}.
+        /// </summary>
+        internal static string FriendsReceivedFormat {
+            get {
+                return ResourceManager.GetString("FriendsReceivedFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reject.
+        /// </summary>
+        internal static string FriendsReject {
+            get {
+                return ResourceManager.GetString("FriendsReject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You already sent a request..
+        /// </summary>
+        internal static string FriendsRejectedAlreadySent {
+            get {
+                return ResourceManager.GetString("FriendsRejectedAlreadySent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to That player could not be found..
+        /// </summary>
+        internal static string FriendsRejectedNotFound {
+            get {
+                return ResourceManager.GetString("FriendsRejectedNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You reached the limit of 100 friends..
+        /// </summary>
+        internal static string FriendsRejectedOwnLimit {
+            get {
+                return ResourceManager.GetString("FriendsRejectedOwnLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This request is no longer available..
+        /// </summary>
+        internal static string FriendsRejectedRequestNotFound {
+            get {
+                return ResourceManager.GetString("FriendsRejectedRequestNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to That player already has 100 friends..
+        /// </summary>
+        internal static string FriendsRejectedTheirLimit {
+            get {
+                return ResourceManager.GetString("FriendsRejectedTheirLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove.
+        /// </summary>
+        internal static string FriendsRemove {
+            get {
+                return ResourceManager.GetString("FriendsRemove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The friend could not be removed. Try again..
+        /// </summary>
+        internal static string FriendsRemoveFailed {
+            get {
+                return ResourceManager.GetString("FriendsRemoveFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove friend.
+        /// </summary>
+        internal static string FriendsRemoveFriend {
+            get {
+                return ResourceManager.GetString("FriendsRemoveFriend", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your matches together and the score between you are kept..
+        /// </summary>
+        internal static string FriendsRemoveKeepsHistory {
+            get {
+                return ResourceManager.GetString("FriendsRemoveKeepsHistory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You will both stop being friends. {0} will not be notified, and either of you can send a request again..
+        /// </summary>
+        internal static string FriendsRemoveMessageFormat {
+            get {
+                return ResourceManager.GetString("FriendsRemoveMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove {0}?.
+        /// </summary>
+        internal static string FriendsRemoveTitleFormat {
+            get {
+                return ResourceManager.GetString("FriendsRemoveTitleFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Request sent.
+        /// </summary>
+        internal static string FriendsRequestSent {
+            get {
+                return ResourceManager.GetString("FriendsRequestSent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your requests could not be loaded..
+        /// </summary>
+        internal static string FriendsRequestsFailed {
+            get {
+                return ResourceManager.GetString("FriendsRequestsFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} wants to be your friend.
+        /// </summary>
+        internal static string FriendsRequestToastFormat {
+            get {
+                return ResourceManager.GetString("FriendsRequestToastFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retry.
+        /// </summary>
+        internal static string FriendsRetry {
+            get {
+                return ResourceManager.GetString("FriendsRetry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search.
+        /// </summary>
+        internal static string FriendsSearch {
+            get {
+                return ResourceManager.GetString("FriendsSearch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The search failed. Try again..
+        /// </summary>
+        internal static string FriendsSearchFailed {
+            get {
+                return ResourceManager.GetString("FriendsSearchFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A nickname (3 to 30 characters) or a code like AV-4K92..
+        /// </summary>
+        internal static string FriendsSearchHint {
+            get {
+                return ResourceManager.GetString("FriendsSearchHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nobody is called “{0}”.
+        /// </summary>
+        internal static string FriendsSearchNoResultsFormat {
+            get {
+                return ResourceManager.GetString("FriendsSearchNoResultsFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nickname or friend code.
+        /// </summary>
+        internal static string FriendsSearchPlaceholder {
+            get {
+                return ResourceManager.GetString("FriendsSearchPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sent {0}.
+        /// </summary>
+        internal static string FriendsSentFormat {
+            get {
+                return ResourceManager.GetString("FriendsSentFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to In the menu.
+        /// </summary>
+        internal static string FriendsStatusInMenu {
+            get {
+                return ResourceManager.GetString("FriendsStatusInMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Offline.
+        /// </summary>
+        internal static string FriendsStatusOffline {
+            get {
+                return ResourceManager.GetString("FriendsStatusOffline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chat.
+        /// </summary>
+        internal static string FriendsTabChat {
+            get {
+                return ResourceManager.GetString("FriendsTabChat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Friends.
+        /// </summary>
+        internal static string FriendsTabFriends {
+            get {
+                return ResourceManager.GetString("FriendsTabFriends", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Requests.
+        /// </summary>
+        internal static string FriendsTabRequests {
+            get {
+                return ResourceManager.GetString("FriendsTabRequests", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to View profile.
+        /// </summary>
+        internal static string FriendsViewProfile {
+            get {
+                return ResourceManager.GetString("FriendsViewProfile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to English (US).
         /// </summary>
         internal static string LanguageNameEnglish {
@@ -337,6 +859,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chat.
+        /// </summary>
+        internal static string MainMenuChat {
+            get {
+                return ResourceManager.GetString("MainMenuChat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Messages must be 1 to 200 characters..
         /// </summary>
         internal static string MainMenuChatInvalid {
@@ -414,6 +945,15 @@ namespace Bastion.Client.Localization {
         internal static string MainMenuFindMatchDetail {
             get {
                 return ResourceManager.GetString("MainMenuFindMatchDetail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Friends.
+        /// </summary>
+        internal static string MainMenuFriends {
+            get {
+                return ResourceManager.GetString("MainMenuFriends", resourceCulture);
             }
         }
         

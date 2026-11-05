@@ -4,6 +4,7 @@ using Bastion.Domain.Auditing;
 using Bastion.Domain.Chat;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
+using Bastion.Domain.Friends;
 using Bastion.Domain.Sessions;
 using Bastion.Domain.Statistics;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,9 @@ public sealed class BastionDbContext : DbContext
     public DbSet<ModeStatistic> ModeStatistics => Set<ModeStatistic>();
 
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<Friendship> Friendships => Set<Friendship>();
+
+    public DbSet<FriendRequest> FriendRequests => Set<FriendRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

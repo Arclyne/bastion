@@ -1,5 +1,6 @@
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Auditing;
+using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Sessions;
 
 namespace Bastion.Server.Application.Common;
@@ -11,6 +12,10 @@ public interface IUnitOfWork
     ISessionRepository Sessions { get; }
 
     IAccessLogRepository AccessLogs { get; }
+
+    IFriendshipRepository Friendships { get; }
+
+    IFriendRequestRepository FriendRequests { get; }
 
     void SaveChanges();
 }

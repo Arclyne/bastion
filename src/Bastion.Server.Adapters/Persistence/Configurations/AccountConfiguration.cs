@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Bastion.Domain.Accounts;
+using Bastion.Domain.Friends;
 using Bastion.Server.Adapters.Persistence.Conversions;
 using Bastion.Server.Adapters.Security;
 
@@ -31,5 +32,9 @@ public sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(account => account.PasswordHash).HasMaxLength(PasswordHasher.HashLength);
         builder.Property(account => account.PasswordSalt).HasMaxLength(PasswordHasher.SaltLength);
         builder.Property(account => account.PreferredLanguage).HasMaxLength(LanguageLength).IsUnicode(false);
+        builder.Property(account => account.FriendCode)
+            .HasMaxLength(FriendCodeRules.Length)
+            .IsFixedLength()
+            .IsUnicode(false);
     }
 }

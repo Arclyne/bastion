@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.ServiceModel;
+using Bastion.Client.Networking.Friends;
 using Bastion.Client.Networking.Matchmaking;
 using Bastion.Contracts.Notifications;
 
@@ -19,10 +20,16 @@ public sealed class NotificationCallback : INotificationCallback
 
     public event EventHandler<SearchEndedEventArgs>? SearchEnded;
 
+    public event EventHandler<FriendPresenceChangedEventArgs>? FriendPresenceChanged;
+
+    public event EventHandler<FriendRequestReceivedEventArgs>? FriendRequestReceived;
+
+    public event EventHandler<FriendshipStartedEventArgs>? FriendshipStarted;
+
     public void ReceiveNotification(Notification notification)
     {
         // An exception here would fault the duplex channel and stop every notification, so any other type is ignored.
-        if (TryDispatchChatNotification(notification))
+        if (TryDispatchChatNotification(notification) || TryDispatchFriendNotification(notification))
         {
             return;
         }
@@ -77,6 +84,13 @@ public sealed class NotificationCallback : INotificationCallback
         return new SearchEndedEventArgs(ToReason(notification.Reason));
     }
 
+    private static FriendPresenceChangedEventArgs ToEventArgs(FriendPresenceNotification notification)
+    {
+        return new FriendPresenceChangedEventArgs(
+            FriendContractTranslator.ToListedFriend(notification),
+            notification.OccurredAt);
+    }
+
     private static SearchEndReason ToReason(SearchEndedReason reason)
     {
         switch (reason)
@@ -103,6 +117,31 @@ public sealed class NotificationCallback : INotificationCallback
         if (notification is MatchChatMessageNotification matchChatMessage)
         {
             OnMatchChatMessageReceived(ToEventArgs(matchChatMessage));
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryDispatchFriendNotification(Notification notification)
+    {
+        if (notification is FriendPresenceNotification friendPresence)
+        {
+            OnFriendPresenceChanged(ToEventArgs(friendPresence));
+            return true;
+        }
+
+        if (notification is FriendRequestNotification friendRequest)
+        {
+            PendingFriendRequest request = FriendContractTranslator.ToPendingRequest(friendRequest);
+            OnFriendRequestReceived(new FriendRequestReceivedEventArgs(request));
+            return true;
+        }
+
+        if (notification is FriendshipStartedNotification friendshipStarted)
+        {
+            var friend = FriendContractTranslator.ToPlayerTag(friendshipStarted);
+            OnFriendshipStarted(new FriendshipStartedEventArgs(friend));
             return true;
         }
 
@@ -152,5 +191,20 @@ public sealed class NotificationCallback : INotificationCallback
     private void OnSearchEnded(SearchEndedEventArgs e)
     {
         SearchEnded?.Invoke(this, e);
+    }
+
+    private void OnFriendPresenceChanged(FriendPresenceChangedEventArgs e)
+    {
+        FriendPresenceChanged?.Invoke(this, e);
+    }
+
+    private void OnFriendRequestReceived(FriendRequestReceivedEventArgs e)
+    {
+        FriendRequestReceived?.Invoke(this, e);
+    }
+
+    private void OnFriendshipStarted(FriendshipStartedEventArgs e)
+    {
+        FriendshipStarted?.Invoke(this, e);
     }
 }

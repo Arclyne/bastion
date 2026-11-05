@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
+using Bastion.Client.Networking.Friends;
 using Bastion.Client.Networking.Matchmaking;
 using Bastion.Client.Networking.Notifications;
+using Bastion.Contracts.Friends;
 using Bastion.Contracts.Notifications;
 using Xunit;
 
@@ -21,6 +23,7 @@ public class TestNotificationCallback
     private const short SecondEloRating = 1000;
     private const byte FirstTurnOrder = 1;
     private const byte SecondTurnOrder = 2;
+    private const string FriendCode = "MA3R7T";
 
     private static readonly DateTime _sentAt = new DateTime(2026, 11, 4, 18, 15, 0, DateTimeKind.Utc);
     private static readonly string[] _participantNicknames = new string[]
@@ -50,6 +53,9 @@ public class TestNotificationCallback
     private MatchFoundEventArgs? _matchFound;
     private PresenceRequestedEventArgs? _presenceRequested;
     private SearchEndedEventArgs? _searchEnded;
+    private FriendPresenceChangedEventArgs? _friendPresence;
+    private FriendRequestReceivedEventArgs? _friendRequest;
+    private FriendshipStartedEventArgs? _friendshipStarted;
 
     public TestNotificationCallback()
     {
@@ -58,6 +64,55 @@ public class TestNotificationCallback
         _notificationCallback.MatchFound += HandleMatchFound;
         _notificationCallback.PresenceRequested += HandlePresenceRequested;
         _notificationCallback.SearchEnded += HandleSearchEnded;
+        _notificationCallback.FriendPresenceChanged += HandleFriendPresenceChanged;
+        _notificationCallback.FriendRequestReceived += HandleFriendRequestReceived;
+        _notificationCallback.FriendshipStarted += HandleFriendshipStarted;
+    }
+
+    [Fact]
+    public void ReceiveNotification_FriendRequest_RaisesRequesterNickname()
+    {
+        var notification = new FriendRequestNotification
+        {
+            RequesterNickname = FirstNickname,
+            RequesterFriendCode = FriendCode,
+            OccurredAt = _sentAt,
+        };
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(FirstNickname, _friendRequest?.Request.Player.Nickname);
+    }
+
+    [Fact]
+    public void ReceiveNotification_FriendshipStarted_RaisesFriendCode()
+    {
+        var notification = new FriendshipStartedNotification
+        {
+            FriendNickname = FirstNickname,
+            FriendCode = FriendCode,
+            OccurredAt = _sentAt,
+        };
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(FriendCode, _friendshipStarted?.Friend.FriendCode);
+    }
+
+    [Fact]
+    public void ReceiveNotification_FriendPresence_RaisesFriendCode()
+    {
+        _notificationCallback.ReceiveNotification(CreateFriendPresenceNotification());
+
+        Assert.Equal(FriendCode, _friendPresence?.Friend.Friend.FriendCode);
+    }
+
+    [Fact]
+    public void ReceiveNotification_FriendPresence_RaisesConnectedPresence()
+    {
+        _notificationCallback.ReceiveNotification(CreateFriendPresenceNotification());
+
+        Assert.Equal(FriendPresence.Connected, _friendPresence?.Friend.Presence);
     }
 
     [Fact]
@@ -198,6 +253,32 @@ public class TestNotificationCallback
     private void HandleSearchEnded(object? sender, SearchEndedEventArgs e)
     {
         _searchEnded = e;
+    }
+
+    private void HandleFriendPresenceChanged(object? sender, FriendPresenceChangedEventArgs e)
+    {
+        _friendPresence = e;
+    }
+
+    private void HandleFriendRequestReceived(object? sender, FriendRequestReceivedEventArgs e)
+    {
+        _friendRequest = e;
+    }
+
+    private void HandleFriendshipStarted(object? sender, FriendshipStartedEventArgs e)
+    {
+        _friendshipStarted = e;
+    }
+
+    private static FriendPresenceNotification CreateFriendPresenceNotification()
+    {
+        return new FriendPresenceNotification
+        {
+            FriendNickname = FirstNickname,
+            FriendCode = FriendCode,
+            Presence = PresenceState.Connected,
+            OccurredAt = _sentAt,
+        };
     }
 
     private sealed class UnknownNotification : Notification

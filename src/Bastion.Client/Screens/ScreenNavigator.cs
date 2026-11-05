@@ -4,6 +4,7 @@ using Bastion.Client.Networking;
 using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Screens.Login;
 using Bastion.Client.Screens.MainMenu;
+using Bastion.Client.Screens.MainMenu.Friends;
 using Gum;
 using Gum.Forms.Controls;
 
@@ -38,10 +39,21 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         ArgumentNullException.ThrowIfNull(session);
 
         var mainMenuViewModel = new MainMenuViewModel(session, _connection.Notifications, _connection.Chat);
+        var friendsPanel = new FriendsPanelViewModel(session, _connection.Friends, _connection.Notifications);
         var matchSearchViewModel = new MatchSearchViewModel(session, _connection.Matchmaking, _timeProvider);
-        ShowScreen(new MainMenuView(mainMenuViewModel, matchSearchViewModel));
+        ShowScreen(new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel));
         _matchSearchViewModel = matchSearchViewModel;
         _ = mainMenuViewModel.ConnectChat();
+        _ = friendsPanel.LoadFriends();
+        _ = friendsPanel.Requests.LoadRequests();
+    }
+
+    public void ReceiveEscapeKey()
+    {
+        if (_currentScreen is IEscapeKeyReceiver receiver)
+        {
+            receiver.ReceiveEscapeKey();
+        }
     }
 
     public void Dispose()

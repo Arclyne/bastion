@@ -106,6 +106,16 @@ public class TestAccount
         Assert.Equal(0, remainingMinutes);
     }
 
+    [Fact]
+    public void RecordLastSeen_AnyMoment_StoresMoment()
+    {
+        Account account = CreateActiveAccount();
+
+        account.RecordLastSeen(_now);
+
+        Assert.Equal(_now, account.LastSeenAt);
+    }
+
     private static Account CreateActiveAccount()
     {
         var account = new Account(Nickname, Email);
