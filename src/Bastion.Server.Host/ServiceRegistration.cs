@@ -1,10 +1,12 @@
 using System;
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Chat;
+using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Matchmaking;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Accounts;
 using Bastion.Server.Host.Chat;
+using Bastion.Server.Host.Friends;
 using Bastion.Server.Host.Matchmaking;
 using Bastion.Server.Host.Sessions;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,11 +23,17 @@ public static class ServiceRegistration
         services.AddScoped<ISessionVerifier, SessionVerifier>();
         services.AddScoped<ILobbyChatService, LobbyChatService>();
         services.AddScoped<IMatchSearchService, MatchSearchService>();
+        services.AddScoped<IFriendListService, FriendListService>();
+        services.AddScoped<IFriendRequestService, FriendRequestService>();
+        services.AddScoped<IFriendPresenceService, FriendPresenceService>();
+        services.AddSingleton<FriendPresenceReporter>();
         services.AddSingleton<IMatchmakingQueue, MatchmakingQueue>();
         services.AddSingleton<MatchmakingDispatcher>();
         services.AddSingleton<NotificationChannelRegistry>();
         services.AddSingleton<IChatBroadcaster>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddSingleton<IMatchmakingNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
+        services.AddSingleton<IPlayerPresence>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
+        services.AddSingleton<IFriendNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddHostedService<MatchmakingBackgroundService>();
         return services;
     }
@@ -39,6 +47,7 @@ public static class ServiceRegistration
         services.AddTransient<SessionService>();
         services.AddTransient<ChatService>();
         services.AddTransient<MatchmakingService>();
+        services.AddTransient<FriendshipService>();
         return services;
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.ServiceModel;
+using Bastion.Client.Networking.Friends;
 using Bastion.Client.Networking.Matchmaking;
 using Bastion.Contracts.Notifications;
 
@@ -16,30 +17,18 @@ public sealed class NotificationCallback : INotificationCallback
 
     public event EventHandler<SearchEndedEventArgs>? SearchEnded;
 
+    public event EventHandler<FriendPresenceChangedEventArgs>? FriendPresenceChanged;
+
+    public event EventHandler<FriendRequestReceivedEventArgs>? FriendRequestReceived;
+
+    public event EventHandler<FriendshipStartedEventArgs>? FriendshipStarted;
+
     public void ReceiveNotification(Notification notification)
     {
         // An exception here would fault the duplex channel and stop every notification, so any other type is ignored.
-        if (notification is ChatMessageNotification chatMessage)
+        if (!RaiseSocialEvent(notification))
         {
-            ChatMessageReceived?.Invoke(this, ToEventArgs(chatMessage));
-            return;
-        }
-
-        if (notification is MatchFoundNotification matchFound)
-        {
-            MatchFound?.Invoke(this, ToEventArgs(matchFound));
-            return;
-        }
-
-        if (notification is PresenceRequestedNotification presenceRequested)
-        {
-            PresenceRequested?.Invoke(this, ToEventArgs(presenceRequested));
-            return;
-        }
-
-        if (notification is SearchEndedNotification searchEnded)
-        {
-            SearchEnded?.Invoke(this, ToEventArgs(searchEnded));
+            RaiseMatchmakingEvent(notification);
         }
     }
 
@@ -65,6 +54,69 @@ public sealed class NotificationCallback : INotificationCallback
     private static SearchEndedEventArgs ToEventArgs(SearchEndedNotification notification)
     {
         return new SearchEndedEventArgs(ToReason(notification.Reason));
+    }
+
+    private bool RaiseSocialEvent(Notification notification)
+    {
+        if (notification is ChatMessageNotification chatMessage)
+        {
+            ChatMessageReceived?.Invoke(this, ToEventArgs(chatMessage));
+            return true;
+        }
+
+        if (notification is FriendPresenceNotification friendPresence)
+        {
+            FriendPresenceChanged?.Invoke(this, ToEventArgs(friendPresence));
+            return true;
+        }
+
+        return RaiseFriendRequestEvent(notification);
+    }
+
+    private bool RaiseFriendRequestEvent(Notification notification)
+    {
+        if (notification is FriendRequestNotification friendRequest)
+        {
+            PendingFriendRequest request = FriendContractTranslator.ToPendingRequest(friendRequest);
+            FriendRequestReceived?.Invoke(this, new FriendRequestReceivedEventArgs(request));
+            return true;
+        }
+
+        if (notification is FriendshipStartedNotification friendshipStarted)
+        {
+            var friend = FriendContractTranslator.ToPlayerTag(friendshipStarted);
+            FriendshipStarted?.Invoke(this, new FriendshipStartedEventArgs(friend));
+            return true;
+        }
+
+        return false;
+    }
+
+    private void RaiseMatchmakingEvent(Notification notification)
+    {
+        if (notification is MatchFoundNotification matchFound)
+        {
+            MatchFound?.Invoke(this, ToEventArgs(matchFound));
+            return;
+        }
+
+        if (notification is PresenceRequestedNotification presenceRequested)
+        {
+            PresenceRequested?.Invoke(this, ToEventArgs(presenceRequested));
+            return;
+        }
+
+        if (notification is SearchEndedNotification searchEnded)
+        {
+            SearchEnded?.Invoke(this, ToEventArgs(searchEnded));
+        }
+    }
+
+    private static FriendPresenceChangedEventArgs ToEventArgs(FriendPresenceNotification notification)
+    {
+        return new FriendPresenceChangedEventArgs(
+            FriendContractTranslator.ToListedFriend(notification),
+            notification.OccurredAt);
     }
 
     private static SearchEndReason ToReason(SearchEndedReason reason)

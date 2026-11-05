@@ -129,4 +129,184 @@
   <data name="MainMenuChatUnavailable" xml:space="preserve">
     <value>El chat no está disponible por ahora.</value>
   </data>
+  <data name="MainMenuFriends" xml:space="preserve">
+    <value>Amigos</value>
+  </data>
+  <data name="MainMenuChat" xml:space="preserve">
+    <value>Chat</value>
+  </data>
+  <data name="FriendsTabFriends" xml:space="preserve">
+    <value>Amigos</value>
+  </data>
+  <data name="FriendsTabRequests" xml:space="preserve">
+    <value>Solicitudes</value>
+  </data>
+  <data name="FriendsTabChat" xml:space="preserve">
+    <value>Chat</value>
+  </data>
+  <data name="FriendsConnectedCountFormat" xml:space="preserve">
+    <value>{0} de {1} conectados</value>
+  </data>
+  <data name="FriendsFilterPlaceholder" xml:space="preserve">
+    <value>Buscar entre tus amigos</value>
+  </data>
+  <data name="FriendsGroupInMenuFormat" xml:space="preserve">
+    <value>En el menú · {0}</value>
+  </data>
+  <data name="FriendsGroupOfflineFormat" xml:space="preserve">
+    <value>Desconectados · {0}</value>
+  </data>
+  <data name="FriendsStatusInMenu" xml:space="preserve">
+    <value>En el menú</value>
+  </data>
+  <data name="FriendsStatusOffline" xml:space="preserve">
+    <value>Desconectado</value>
+  </data>
+  <data name="FriendsLastSeenJustNow" xml:space="preserve">
+    <value>Visto hace un momento</value>
+  </data>
+  <data name="FriendsLastSeenMinutesFormat" xml:space="preserve">
+    <value>Visto hace {0} min</value>
+  </data>
+  <data name="FriendsLastSeenHoursFormat" xml:space="preserve">
+    <value>Visto hace {0} h</value>
+  </data>
+  <data name="FriendsLastSeenDaysFormat" xml:space="preserve">
+    <value>Visto hace {0} d</value>
+  </data>
+  <data name="FriendsOwnCodeFormat" xml:space="preserve">
+    <value>Tu código de amigo {0}</value>
+  </data>
+  <data name="FriendsCopyCode" xml:space="preserve">
+    <value>Copiar</value>
+  </data>
+  <data name="FriendsCodeCopied" xml:space="preserve">
+    <value>Copiado</value>
+  </data>
+  <data name="FriendsEmptyTitle" xml:space="preserve">
+    <value>Aún no tienes amigos</value>
+  </data>
+  <data name="FriendsNoMatchFormat" xml:space="preserve">
+    <value>Ningún amigo se llama «{0}»</value>
+  </data>
+  <data name="FriendsLoadFailed" xml:space="preserve">
+    <value>No se pudo cargar tu lista.</value>
+  </data>
+  <data name="FriendsRetry" xml:space="preserve">
+    <value>Reintentar</value>
+  </data>
+  <data name="FriendsComingSoon" xml:space="preserve">
+    <value>Próximamente</value>
+  </data>
+  <data name="FriendsCloseButton" xml:space="preserve">
+    <value>×</value>
+  </data>
+  <data name="FriendsAddFriend" xml:space="preserve">
+    <value>Añadir amigo</value>
+  </data>
+  <data name="FriendsBack" xml:space="preserve">
+    <value>Volver</value>
+  </data>
+  <data name="FriendsSearchPlaceholder" xml:space="preserve">
+    <value>Nickname o código de amigo</value>
+  </data>
+  <data name="FriendsSearch" xml:space="preserve">
+    <value>Buscar</value>
+  </data>
+  <data name="FriendsSearchHint" xml:space="preserve">
+    <value>Un nickname (3 a 30 caracteres) o un código como AV-4K92.</value>
+  </data>
+  <data name="FriendsAdd" xml:space="preserve">
+    <value>Añadir</value>
+  </data>
+  <data name="FriendsRequestSent" xml:space="preserve">
+    <value>Solicitud enviada</value>
+  </data>
+  <data name="FriendsAlreadyFriend" xml:space="preserve">
+    <value>Ya es tu amigo</value>
+  </data>
+  <data name="FriendsItsYou" xml:space="preserve">
+    <value>Eres tú</value>
+  </data>
+  <data name="FriendsAccept" xml:space="preserve">
+    <value>Aceptar</value>
+  </data>
+  <data name="FriendsSearchNoResultsFormat" xml:space="preserve">
+    <value>Nadie se llama «{0}»</value>
+  </data>
+  <data name="FriendsSearchFailed" xml:space="preserve">
+    <value>No se pudo buscar. Vuelve a intentarlo.</value>
+  </data>
+  <data name="FriendsRejectedNotFound" xml:space="preserve">
+    <value>No encontramos a ese jugador.</value>
+  </data>
+  <data name="FriendsRejectedAlreadySent" xml:space="preserve">
+    <value>Ya le enviaste una solicitud.</value>
+  </data>
+  <data name="FriendsRejectedOwnLimit" xml:space="preserve">
+    <value>Llegaste al límite de 100 amigos.</value>
+  </data>
+  <data name="FriendsRejectedTheirLimit" xml:space="preserve">
+    <value>Esa persona ya tiene 100 amigos, el máximo.</value>
+  </data>
+  <data name="FriendsReceivedFormat" xml:space="preserve">
+    <value>Recibidas {0}</value>
+  </data>
+  <data name="FriendsSentFormat" xml:space="preserve">
+    <value>Enviadas {0}</value>
+  </data>
+  <data name="FriendsExpiresInDaysFormat" xml:space="preserve">
+    <value>Vence en {0} días</value>
+  </data>
+  <data name="FriendsExpiresTomorrow" xml:space="preserve">
+    <value>Vence mañana</value>
+  </data>
+  <data name="FriendsReject" xml:space="preserve">
+    <value>Rechazar</value>
+  </data>
+  <data name="FriendsCancelRequest" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="FriendsNoReceivedRequests" xml:space="preserve">
+    <value>No tienes solicitudes nuevas</value>
+  </data>
+  <data name="FriendsNoSentRequests" xml:space="preserve">
+    <value>No has enviado solicitudes</value>
+  </data>
+  <data name="FriendsRequestToastFormat" xml:space="preserve">
+    <value>{0} quiere ser tu amigo</value>
+  </data>
+  <data name="FriendsNowFriends" xml:space="preserve">
+    <value>Ahora son amigos</value>
+  </data>
+  <data name="FriendsRejectedRequestNotFound" xml:space="preserve">
+    <value>Esta solicitud ya no está disponible.</value>
+  </data>
+  <data name="FriendsRequestsFailed" xml:space="preserve">
+    <value>No se pudieron cargar tus solicitudes.</value>
+  </data>
+  <data name="FriendsMoreOptions" xml:space="preserve">
+    <value>Más</value>
+  </data>
+  <data name="FriendsViewProfile" xml:space="preserve">
+    <value>Ver perfil</value>
+  </data>
+  <data name="FriendsRemoveFriend" xml:space="preserve">
+    <value>Eliminar amigo</value>
+  </data>
+  <data name="FriendsRemoveTitleFormat" xml:space="preserve">
+    <value>¿Eliminar a {0}?</value>
+  </data>
+  <data name="FriendsRemoveMessageFormat" xml:space="preserve">
+    <value>Dejarán de ser amigos los dos. {0} no recibirá ningún aviso, y cualquiera de los dos puede volver a enviar una solicitud.</value>
+  </data>
+  <data name="FriendsRemoveKeepsHistory" xml:space="preserve">
+    <value>Sus partidas juntos y el marcador entre ustedes se conservan.</value>
+  </data>
+  <data name="FriendsRemove" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="FriendsRemoveFailed" xml:space="preserve">
+    <value>No se pudo eliminar. Vuelve a intentarlo.</value>
+  </data>
 </root>

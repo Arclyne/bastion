@@ -1,5 +1,7 @@
 using System;
+using Bastion.Client.Controls;
 using Bastion.Client.Localization;
+using Bastion.Client.Screens.MainMenu.Friends;
 using Bastion.Client.Theme;
 using Gum.Converters;
 using Gum.DataTypes;
@@ -11,7 +13,7 @@ using RenderingLibrary.Graphics;
 
 namespace Bastion.Client.Screens.MainMenu;
 
-public sealed class MainMenuView : Panel
+public sealed class MainMenuView : Panel, IEscapeKeyReceiver
 {
     private const float ScreenMarginX = 24;
     private const float TopMarginY = 22;
@@ -49,19 +51,41 @@ public sealed class MainMenuView : Panel
     private const float PrivateButtonHeight = 52;
     private const float PrivateButtonSpacing = 14;
     private const float ChatPanelY = 110;
+    private const float PillSpacing = 10;
+    private const float FriendsPillWidth = 112;
+    private const float ChatPillWidth = 92;
+    private const float FriendsPanelGapY = 12;
+    private const float BadgeSize = 22;
+    private const float BadgeOverlap = 8;
 
-    public MainMenuView(MainMenuViewModel viewModel)
+    private readonly FriendsPanelViewModel _friendsPanel;
+    private readonly ModalLayer _removeFriendLayer;
+
+    public MainMenuView(MainMenuViewModel viewModel, FriendsPanelViewModel friendsPanel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
+        ArgumentNullException.ThrowIfNull(friendsPanel);
 
+        _friendsPanel = friendsPanel;
+        _removeFriendLayer = CreateRemoveFriendLayer(friendsPanel.Actions);
         BindingContext = viewModel;
         Dock(Gum.Wireframe.Dock.Fill);
         AddChild(CreateIdentityChip());
         AddChild(CreateSettingsButton());
+        AddChild(CreateFriendsButton());
+        AddChild(CreatePendingBadge(friendsPanel.Requests));
+        AddChild(CreateChatButton());
         AddChild(CreateTablet());
         AddChild(CreateChatPanel(viewModel));
         AddChild(CreateHowToPlayButton());
         AddChild(ViewFactory.CreateVersionLabel());
+        AddChild(CreateFriendsPanel(friendsPanel));
+        AddChild(CreateRequestToast(friendsPanel.Requests));
+    }
+
+    public void ReceiveEscapeKey()
+    {
+        _friendsPanel.Close();
     }
 
     private static Panel CreateIdentityChip()
@@ -119,7 +143,7 @@ public sealed class MainMenuView : Panel
         var text = new StackPanel { Spacing = IdentitySpacing };
         text.AddChild(nickname);
         text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuClassicMode), TextStyles.IdentityDetail));
-        CenterVertically(text);
+        ViewFactory.CenterVertically(text);
         return text;
     }
 
@@ -140,6 +164,87 @@ public sealed class MainMenuView : Panel
         button.X = -ScreenMarginX;
         button.Y = TopMarginY + SettingsOffsetY;
         return button;
+    }
+
+    private static FriendsPanel CreateFriendsPanel(FriendsPanelViewModel friendsPanel)
+    {
+        var panel = new FriendsPanel(friendsPanel);
+        panel.Anchor(Gum.Wireframe.Anchor.TopRight);
+        panel.X = -ScreenMarginX;
+        panel.Y = TopMarginY + SettingsOffsetY + PillHeight + FriendsPanelGapY;
+        return panel;
+    }
+
+    private static Panel CreatePendingBadge(FriendRequestsViewModel requests)
+    {
+        Label count = ViewFactory.CreateLabel(string.Empty, TextStyles.PrimaryButton);
+        ((LabelVisual)count.Visual).LocalizeText = false;
+        count.SetBinding(nameof(Label.Text), nameof(FriendRequestsViewModel.PendingCountText));
+        count.XUnits = GeneralUnitType.PixelsFromMiddle;
+        count.XOrigin = HorizontalAlignment.Center;
+        ViewFactory.CenterVertically(count);
+
+        var badge = new Panel
+        {
+            Width = BadgeSize,
+            WidthUnits = DimensionUnitType.Absolute,
+            Height = BadgeSize,
+            HeightUnits = DimensionUnitType.Absolute,
+            BindingContext = requests,
+        };
+        Shapes.InsertBehindContent(badge.Visual, Shapes.CreateRounded(Palette.PlayerOne, BadgeSize / 2));
+        badge.AddChild(count);
+        badge.Anchor(Gum.Wireframe.Anchor.TopRight);
+        badge.X = -(ScreenMarginX + SettingsWidth + PillSpacing) + BadgeOverlap;
+        badge.Y = TopMarginY + SettingsOffsetY - BadgeOverlap;
+        badge.SetBinding(nameof(IsVisible), nameof(FriendRequestsViewModel.HasPending));
+        return badge;
+    }
+
+    private static ModalLayer CreateRemoveFriendLayer(FriendActionsViewModel actions)
+    {
+        var layer = new ModalLayer { BindingContext = actions };
+        layer.SetBinding(nameof(ModalLayer.IsOpen), nameof(FriendActionsViewModel.IsDialogOpen));
+        layer.AddChild(new RemoveFriendDialogView(actions));
+        return layer;
+    }
+
+    private static FriendRequestToast CreateRequestToast(FriendRequestsViewModel requests)
+    {
+        var toast = new FriendRequestToast(requests);
+        toast.Anchor(Gum.Wireframe.Anchor.Top);
+        toast.Y = TopMarginY;
+        return toast;
+    }
+
+    private Button CreateFriendsButton()
+    {
+        Button button = CreatePillButton(nameof(Strings.MainMenuFriends), FriendsPillWidth);
+        button.Anchor(Gum.Wireframe.Anchor.TopRight);
+        button.X = -(ScreenMarginX + SettingsWidth + PillSpacing);
+        button.Y = TopMarginY + SettingsOffsetY;
+        button.Click += HandleFriendsClick;
+        return button;
+    }
+
+    private Button CreateChatButton()
+    {
+        Button button = CreatePillButton(nameof(Strings.MainMenuChat), ChatPillWidth);
+        button.Anchor(Gum.Wireframe.Anchor.TopRight);
+        button.X = -(ScreenMarginX + SettingsWidth + PillSpacing + FriendsPillWidth + PillSpacing);
+        button.Y = TopMarginY + SettingsOffsetY;
+        button.Click += HandleChatClick;
+        return button;
+    }
+
+    private void HandleFriendsClick(object? sender, EventArgs e)
+    {
+        _friendsPanel.Open(FriendsTab.Friends);
+    }
+
+    private void HandleChatClick(object? sender, EventArgs e)
+    {
+        _friendsPanel.Open(FriendsTab.Chat);
     }
 
     private static Button CreateHowToPlayButton()
@@ -214,7 +319,7 @@ public sealed class MainMenuView : Panel
         var text = new StackPanel { X = HeroTextX, Spacing = HeroTextSpacing };
         text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatch), TextStyles.HeroTitle));
         text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatchDetail), TextStyles.HeroDetail));
-        CenterVertically(text);
+        ViewFactory.CenterVertically(text);
         button.AddChild(text);
         return button;
     }
@@ -248,12 +353,5 @@ public sealed class MainMenuView : Panel
         };
         row.AddChild(element);
         return row;
-    }
-
-    private static void CenterVertically(FrameworkElement element)
-    {
-        element.YUnits = GeneralUnitType.PixelsFromMiddle;
-        element.YOrigin = VerticalAlignment.Center;
-        element.Y = 0;
     }
 }

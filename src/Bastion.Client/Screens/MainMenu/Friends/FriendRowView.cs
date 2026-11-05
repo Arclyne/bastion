@@ -1,0 +1,98 @@
+using System;
+using Bastion.Client.Localization;
+using Bastion.Client.Theme;
+using Gum.DataTypes;
+using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals.V3;
+using Gum.GueDeriving;
+using Microsoft.Xna.Framework;
+
+namespace Bastion.Client.Screens.MainMenu.Friends;
+
+public sealed class FriendRowView : Panel
+{
+    private const float RowWidth = 360;
+    private const float RowHeight = 52;
+    private const float DotSize = 10;
+    private const float ContentPaddingX = 6;
+    private const float ContentSpacing = 12;
+    private const float TextSpacing = 2;
+    private const float MoreButtonWidth = 64;
+    private const float MoreButtonHeight = 32;
+
+    private readonly FriendRowViewModel _viewModel;
+    private readonly FriendActionsViewModel _actions;
+
+    public FriendRowView(FriendRowViewModel viewModel, FriendActionsViewModel actions)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        ArgumentNullException.ThrowIfNull(actions);
+
+        _viewModel = viewModel;
+        _actions = actions;
+        BindingContext = viewModel;
+        Width = RowWidth;
+        WidthUnits = DimensionUnitType.Absolute;
+        Height = RowHeight;
+        HeightUnits = DimensionUnitType.Absolute;
+
+        var content = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = ContentSpacing,
+        };
+        content.AddChild(CreatePresenceDot(viewModel.IsConnected));
+        content.AddChild(CreateText());
+        content.Anchor(Gum.Wireframe.Anchor.Left);
+        content.X = ContentPaddingX;
+        AddChild(content);
+        AddChild(CreateMoreButton());
+    }
+
+    private static Panel CreatePresenceDot(bool isConnected)
+    {
+        var dot = new Panel
+        {
+            Width = DotSize,
+            WidthUnits = DimensionUnitType.Absolute,
+            Height = DotSize,
+            HeightUnits = DimensionUnitType.Absolute,
+        };
+        Color color = isConnected ? Palette.Success : Palette.Muted;
+        RectangleRuntime circle = Shapes.CreateRounded(color, DotSize / 2);
+        Shapes.InsertBehindContent(dot.Visual, circle);
+        ViewFactory.CenterVertically(dot);
+        return dot;
+    }
+
+    private static StackPanel CreateText()
+    {
+        var text = new StackPanel { Spacing = TextSpacing };
+        text.AddChild(CreateBoundLabel(nameof(FriendRowViewModel.Nickname), TextStyles.IdentityName));
+        text.AddChild(CreateBoundLabel(nameof(FriendRowViewModel.StatusText), TextStyles.Hint));
+        ViewFactory.CenterVertically(text);
+        return text;
+    }
+
+    private static Label CreateBoundLabel(string propertyName, TextStyle style)
+    {
+        Label label = ViewFactory.CreateLabel(string.Empty, style);
+        ((LabelVisual)label.Visual).LocalizeText = false;
+        label.SetBinding(nameof(Label.Text), propertyName);
+        return label;
+    }
+
+    private Button CreateMoreButton()
+    {
+        Button more = ViewFactory.CreateButton(nameof(Strings.FriendsMoreOptions), MoreButtonWidth, MoreButtonHeight);
+        ButtonSkin.CreateAndAttach(more, ButtonLooks.Pill);
+        more.Anchor(Gum.Wireframe.Anchor.Right);
+        more.Click += HandleMoreClick;
+        return more;
+    }
+
+    private void HandleMoreClick(object? sender, EventArgs e)
+    {
+        _actions.OpenMenu(_viewModel);
+    }
+}
