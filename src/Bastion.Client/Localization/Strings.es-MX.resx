@@ -129,4 +129,40 @@
   <data name="MainMenuChatUnavailable" xml:space="preserve">
     <value>El chat no está disponible por ahora.</value>
   </data>
+  <data name="CommonCancelButton" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="MatchSearchSearchingTitle" xml:space="preserve">
+    <value>Buscando rival…</value>
+  </data>
+  <data name="MatchSearchFoundTitle" xml:space="preserve">
+    <value>¡Rival encontrado!</value>
+  </data>
+  <data name="MatchSearchFoundDetailFormat" xml:space="preserve">
+    <value>Jugarás contra {0}.</value>
+  </data>
+  <data name="MatchSearchPresenceTitle" xml:space="preserve">
+    <value>¿Sigues ahí?</value>
+  </data>
+  <data name="MatchSearchPresenceMessageFormat" xml:space="preserve">
+    <value>Confirma en {0} s o se cancelará la búsqueda.</value>
+  </data>
+  <data name="MatchSearchPresenceConfirmButton" xml:space="preserve">
+    <value>Sigo aquí</value>
+  </data>
+  <data name="MatchSearchPresenceExpired" xml:space="preserve">
+    <value>Se canceló la búsqueda porque no respondiste a tiempo.</value>
+  </data>
+  <data name="MatchSearchUnavailable" xml:space="preserve">
+    <value>La búsqueda de partida no está disponible en este momento.</value>
+  </data>
+  <data name="MatchSearchNotificationsUnavailable" xml:space="preserve">
+    <value>Los avisos no están conectados. Vuelve a iniciar sesión para buscar partida.</value>
+  </data>
+  <data name="MatchSearchSessionExpired" xml:space="preserve">
+    <value>Tu sesión terminó. Vuelve a iniciar sesión.</value>
+  </data>
+  <data name="MatchSearchConnectionLost" xml:space="preserve">
+    <value>Se perdió la conexión con el servidor.</value>
+  </data>
 </root>

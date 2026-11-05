@@ -9,19 +9,23 @@ using Gum.Forms.Controls;
 
 namespace Bastion.Client.Screens;
 
-public sealed class ScreenNavigator : INavigator
+public sealed class ScreenNavigator : INavigator, IDisposable
 {
     private readonly ILanguageService _languages;
     private readonly ServerConnection _connection;
+    private readonly TimeProvider _timeProvider;
     private FrameworkElement? _currentScreen;
+    private MatchSearchViewModel? _matchSearchViewModel;
 
-    public ScreenNavigator(ILanguageService languages, ServerConnection connection)
+    public ScreenNavigator(ILanguageService languages, ServerConnection connection, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(languages);
         ArgumentNullException.ThrowIfNull(connection);
+        ArgumentNullException.ThrowIfNull(timeProvider);
 
         _languages = languages;
         _connection = connection;
+        _timeProvider = timeProvider;
     }
 
     public void ShowLogin()
@@ -33,9 +37,16 @@ public sealed class ScreenNavigator : INavigator
     {
         ArgumentNullException.ThrowIfNull(session);
 
-        var viewModel = new MainMenuViewModel(session, _connection.Notifications, _connection.Chat);
-        ShowScreen(new MainMenuView(viewModel));
-        _ = viewModel.ConnectChat();
+        var mainMenuViewModel = new MainMenuViewModel(session, _connection.Notifications, _connection.Chat);
+        var matchSearchViewModel = new MatchSearchViewModel(session, _connection.Matchmaking, _timeProvider);
+        ShowScreen(new MainMenuView(mainMenuViewModel, matchSearchViewModel));
+        _matchSearchViewModel = matchSearchViewModel;
+        _ = mainMenuViewModel.ConnectChat();
+    }
+
+    public void Dispose()
+    {
+        DisposeMatchSearchViewModel();
     }
 
     private void ShowScreen(FrameworkElement screen)
@@ -45,7 +56,14 @@ public sealed class ScreenNavigator : INavigator
             GumService.Default.Root.Children.Remove(_currentScreen.Visual);
         }
 
+        DisposeMatchSearchViewModel();
         _currentScreen = screen;
         GumService.Default.Root.AddChild(screen);
+    }
+
+    private void DisposeMatchSearchViewModel()
+    {
+        _matchSearchViewModel?.Dispose();
+        _matchSearchViewModel = null;
     }
 }

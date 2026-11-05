@@ -60,4 +60,8 @@
         <ProjectReference Include="..\Bastion.Domain\Bastion.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="Bastion.Client.Tests" />
+    </ItemGroup>
+
 </Project>

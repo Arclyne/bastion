@@ -3,7 +3,6 @@ using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using log4net;
 
@@ -11,18 +10,11 @@ namespace Bastion.Client.Screens.Login;
 
 public sealed class LoginDialogView : Panel
 {
-    private const float DialogWidth = 420;
-    private const float PaddingX = 28;
-    private const float PaddingTop = 26;
-    private const float PaddingBottom = 24;
-    private const float SectionSpacing = 14;
     private const float ButtonSpacing = 12;
-    private const float ButtonHeight = 46;
     private const float Radius = 22;
     private const float BorderWidth = 1.5f;
     private const float ShadowOffsetY = 30;
     private const float ShadowBlur = 60;
-    private const int HorizontalSideCount = 2;
     private const int ButtonsPerRow = 2;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(LoginDialogView));
@@ -35,9 +27,9 @@ public sealed class LoginDialogView : Panel
 
         _viewModel = viewModel;
         Anchor(Gum.Wireframe.Anchor.Center);
-        Width = DialogWidth;
+        Width = DialogMetrics.Width;
         WidthUnits = DimensionUnitType.Absolute;
-        Height = PaddingBottom;
+        Height = DialogMetrics.PaddingBottom;
         HeightUnits = DimensionUnitType.RelativeToChildren;
         AddChild(CreateContent());
         Shapes.InsertBehindContent(Visual, CreateSurface());
@@ -45,14 +37,21 @@ public sealed class LoginDialogView : Panel
 
     private StackPanel CreateContent()
     {
-        float contentWidth = DialogWidth - (PaddingX * HorizontalSideCount);
-        var content = new StackPanel { X = PaddingX, Y = PaddingTop, Spacing = SectionSpacing };
-        content.AddChild(CreateBoundLabel(nameof(LoginViewModel.DialogTitleKey), TextStyles.DialogTitle, contentWidth));
-        content.AddChild(CreateBoundLabel(
+        var content = new StackPanel
+        {
+            X = DialogMetrics.PaddingX,
+            Y = DialogMetrics.PaddingTop,
+            Spacing = DialogMetrics.SectionSpacing,
+        };
+        content.AddChild(ViewFactory.CreateBoundLabel(
+            nameof(LoginViewModel.DialogTitleKey),
+            TextStyles.DialogTitle,
+            DialogMetrics.ContentWidth));
+        content.AddChild(ViewFactory.CreateBoundLabel(
             nameof(LoginViewModel.DialogMessageKey),
             TextStyles.DialogMessage,
-            contentWidth));
-        content.AddChild(CreateButtons(contentWidth));
+            DialogMetrics.ContentWidth));
+        content.AddChild(CreateButtons(DialogMetrics.ContentWidth));
         return content;
     }
 
@@ -73,21 +72,13 @@ public sealed class LoginDialogView : Panel
         return row;
     }
 
-    private static Label CreateBoundLabel(string viewModelProperty, TextStyle style, float width)
-    {
-        var label = new Label { Width = width, WidthUnits = DimensionUnitType.Absolute };
-        style.ApplyTo((LabelVisual)label.Visual);
-        label.SetBinding(nameof(Label.Text), viewModelProperty);
-        return label;
-    }
-
     private static Button CreateButton(string textKey, float width, ButtonLook look)
     {
         var button = new Button
         {
             Text = textKey,
             Width = width,
-            Height = ButtonHeight,
+            Height = DialogMetrics.ButtonHeight,
             HeightUnits = DimensionUnitType.Absolute,
         };
         ButtonSkin.CreateAndAttach(button, look);

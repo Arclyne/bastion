@@ -38,6 +38,7 @@ public sealed class MainMenuViewModel : ViewModel
         ChatDraft = string.Empty;
         ChatStatusKey = string.Empty;
         _notifications.ChatMessageReceived += HandleChatMessageReceived;
+        _notifications.Disconnected += HandleNotificationsDisconnected;
     }
 
     public string Nickname
@@ -169,13 +170,12 @@ public sealed class MainMenuViewModel : ViewModel
     private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)
     {
         string line = $"{e.SenderNickname}: {e.Text}";
-        if (_uiContext is null)
-        {
-            AddChatLine(line);
-            return;
-        }
+        UiThread.Run(_uiContext, () => AddChatLine(line));
+    }
 
-        _uiContext.Post(state => AddChatLine((string)state!), line);
+    private void HandleNotificationsDisconnected(object? sender, EventArgs e)
+    {
+        UiThread.Run(_uiContext, ShowChatUnavailable);
     }
 
     private void AddChatLine(string line)

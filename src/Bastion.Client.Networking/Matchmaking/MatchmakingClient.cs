@@ -1,6 +1,7 @@
 using System;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
+using Bastion.Client.Networking.Notifications;
 using Bastion.Contracts;
 using Bastion.Contracts.Matchmaking;
 
@@ -10,6 +11,38 @@ public sealed class MatchmakingClient : IMatchmakingClient, IDisposable
 {
     private readonly ServiceChannel<IMatchmakingService> _channel =
         new ServiceChannel<IMatchmakingService>(ServiceEndpoints.MatchmakingPath);
+    private readonly INotificationClient _notificationClient;
+
+    public MatchmakingClient(INotificationClient notificationClient)
+    {
+        ArgumentNullException.ThrowIfNull(notificationClient);
+
+        _notificationClient = notificationClient;
+    }
+
+    public event EventHandler<MatchFoundEventArgs>? MatchFound
+    {
+        add => _notificationClient.MatchFound += value;
+        remove => _notificationClient.MatchFound -= value;
+    }
+
+    public event EventHandler<PresenceRequestedEventArgs>? PresenceRequested
+    {
+        add => _notificationClient.PresenceRequested += value;
+        remove => _notificationClient.PresenceRequested -= value;
+    }
+
+    public event EventHandler<SearchEndedEventArgs>? SearchEnded
+    {
+        add => _notificationClient.SearchEnded += value;
+        remove => _notificationClient.SearchEnded -= value;
+    }
+
+    public event EventHandler? Disconnected
+    {
+        add => _notificationClient.Disconnected += value;
+        remove => _notificationClient.Disconnected -= value;
+    }
 
     public void StartSearch(string sessionToken)
     {

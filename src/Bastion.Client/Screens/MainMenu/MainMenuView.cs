@@ -1,4 +1,5 @@
 using System;
+using Bastion.Client.Controls;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.Converters;
@@ -7,6 +8,7 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+using log4net;
 using RenderingLibrary.Graphics;
 
 namespace Bastion.Client.Screens.MainMenu;
@@ -49,19 +51,29 @@ public sealed class MainMenuView : Panel
     private const float PrivateButtonHeight = 52;
     private const float PrivateButtonSpacing = 14;
     private const float ChatPanelY = 110;
+    private const float SearchPanelMarginY = 88;
 
-    public MainMenuView(MainMenuViewModel viewModel)
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(MainMenuView));
+
+    private readonly MatchSearchViewModel _matchSearchViewModel;
+    private readonly ModalLayer _presenceDialogLayer;
+
+    public MainMenuView(MainMenuViewModel viewModel, MatchSearchViewModel matchSearchViewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
+        ArgumentNullException.ThrowIfNull(matchSearchViewModel);
 
+        _matchSearchViewModel = matchSearchViewModel;
         BindingContext = viewModel;
         Dock(Gum.Wireframe.Dock.Fill);
         AddChild(CreateIdentityChip());
         AddChild(CreateSettingsButton());
         AddChild(CreateTablet());
         AddChild(CreateChatPanel(viewModel));
+        AddChild(CreateMatchSearchPanel());
         AddChild(CreateHowToPlayButton());
         AddChild(ViewFactory.CreateVersionLabel());
+        _presenceDialogLayer = CreatePresenceDialogLayer();
     }
 
     private static Panel CreateIdentityChip()
@@ -158,7 +170,7 @@ public sealed class MainMenuView : Panel
         return button;
     }
 
-    private static Panel CreateTablet()
+    private Panel CreateTablet()
     {
         var content = new StackPanel
         {
@@ -170,6 +182,7 @@ public sealed class MainMenuView : Panel
         };
         content.AddChild(CreateBrand());
         content.AddChild(CreateFindMatchButton());
+        content.AddChild(CreateMatchSearchStatus());
         content.AddChild(CreateCentered(ViewFactory.CreateLabel(
             nameof(Strings.MainMenuPrivateMatch),
             TextStyles.SectionLabel)));
@@ -197,10 +210,13 @@ public sealed class MainMenuView : Panel
         return CreateCentered(brand);
     }
 
-    private static Button CreateFindMatchButton()
+    private Button CreateFindMatchButton()
     {
         Button button = ViewFactory.CreateButton(string.Empty, TabletContentWidth, HeroHeight);
         ButtonSkin.CreateAndAttach(button, ButtonLooks.Hero);
+        button.BindingContext = _matchSearchViewModel;
+        button.SetBinding(nameof(IsEnabled), nameof(MatchSearchViewModel.CanStartSearch));
+        button.Click += HandleFindMatchClick;
 
         RectangleRuntime icon = Shapes.CreateRounded(Palette.HeroIconFill, HeroIconRadius);
         icon.Anchor(Gum.Wireframe.Anchor.Left);
@@ -255,5 +271,47 @@ public sealed class MainMenuView : Panel
         element.YUnits = GeneralUnitType.PixelsFromMiddle;
         element.YOrigin = VerticalAlignment.Center;
         element.Y = 0;
+    }
+
+    private Label CreateMatchSearchStatus()
+    {
+        Label status = ViewFactory.CreateBoundLabel(
+            nameof(MatchSearchViewModel.StatusKey),
+            TextStyles.FieldError,
+            TabletContentWidth);
+        status.BindingContext = _matchSearchViewModel;
+        status.SetBinding(nameof(IsVisible), nameof(MatchSearchViewModel.HasStatus));
+        return status;
+    }
+
+    private MatchSearchPanel CreateMatchSearchPanel()
+    {
+        var panel = new MatchSearchPanel(_matchSearchViewModel);
+        panel.Anchor(Gum.Wireframe.Anchor.Bottom);
+        panel.Y = -SearchPanelMarginY;
+        return panel;
+    }
+
+    private ModalLayer CreatePresenceDialogLayer()
+    {
+        var layer = new ModalLayer
+        {
+            BindingContext = _matchSearchViewModel,
+        };
+        layer.SetBinding(nameof(ModalLayer.IsOpen), nameof(MatchSearchViewModel.IsPresenceDialogOpen));
+        layer.AddChild(new PresenceDialogView(_matchSearchViewModel));
+        return layer;
+    }
+
+    private async void HandleFindMatchClick(object? sender, EventArgs e)
+    {
+        try
+        {
+            await _matchSearchViewModel.StartSearch();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The match search could not be started because the connection is closed.", ex);
+        }
     }
 }

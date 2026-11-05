@@ -85,6 +85,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        internal static string CommonCancelButton {
+            get {
+                return ResourceManager.GetString("CommonCancelButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exit.
         /// </summary>
         internal static string CommonExitButton {
@@ -441,6 +450,105 @@ namespace Bastion.Client.Localization {
         internal static string MainMenuSettings {
             get {
                 return ResourceManager.GetString("MainMenuSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The connection with the server was lost..
+        /// </summary>
+        internal static string MatchSearchConnectionLost {
+            get {
+                return ResourceManager.GetString("MatchSearchConnectionLost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You will play against {0}..
+        /// </summary>
+        internal static string MatchSearchFoundDetailFormat {
+            get {
+                return ResourceManager.GetString("MatchSearchFoundDetailFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rival found!.
+        /// </summary>
+        internal static string MatchSearchFoundTitle {
+            get {
+                return ResourceManager.GetString("MatchSearchFoundTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notices are not connected. Sign in again to search for a match..
+        /// </summary>
+        internal static string MatchSearchNotificationsUnavailable {
+            get {
+                return ResourceManager.GetString("MatchSearchNotificationsUnavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to I&apos;m here.
+        /// </summary>
+        internal static string MatchSearchPresenceConfirmButton {
+            get {
+                return ResourceManager.GetString("MatchSearchPresenceConfirmButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The search was cancelled because you did not answer in time..
+        /// </summary>
+        internal static string MatchSearchPresenceExpired {
+            get {
+                return ResourceManager.GetString("MatchSearchPresenceExpired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Confirm within {0} s or the match search will be cancelled..
+        /// </summary>
+        internal static string MatchSearchPresenceMessageFormat {
+            get {
+                return ResourceManager.GetString("MatchSearchPresenceMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you still there?.
+        /// </summary>
+        internal static string MatchSearchPresenceTitle {
+            get {
+                return ResourceManager.GetString("MatchSearchPresenceTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Looking for a rival….
+        /// </summary>
+        internal static string MatchSearchSearchingTitle {
+            get {
+                return ResourceManager.GetString("MatchSearchSearchingTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your session ended. Sign in again..
+        /// </summary>
+        internal static string MatchSearchSessionExpired {
+            get {
+                return ResourceManager.GetString("MatchSearchSessionExpired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The match search is not available right now..
+        /// </summary>
+        internal static string MatchSearchUnavailable {
+            get {
+                return ResourceManager.GetString("MatchSearchUnavailable", resourceCulture);
             }
         }
     }

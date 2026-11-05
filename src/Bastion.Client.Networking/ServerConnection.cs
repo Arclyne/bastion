@@ -11,13 +11,14 @@ public sealed class ServerConnection : IDisposable
     private readonly AccountClient _accounts = new AccountClient();
     private readonly NotificationClient _notifications;
     private readonly ChatClient _chat = new ChatClient();
-    private readonly MatchmakingClient _matchmaking = new MatchmakingClient();
+    private readonly MatchmakingClient _matchmaking;
 
     public ServerConnection(TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
 
         _notifications = new NotificationClient(timeProvider);
+        _matchmaking = new MatchmakingClient(_notifications);
         Accounts = _accounts;
         Notifications = _notifications;
         Chat = _chat;
