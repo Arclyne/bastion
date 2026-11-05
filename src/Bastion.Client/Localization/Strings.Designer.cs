@@ -364,6 +364,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to More.
+        /// </summary>
+        internal static string FriendsMoreOptions {
+            get {
+                return ResourceManager.GetString("FriendsMoreOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No friend is called “{0}”.
         /// </summary>
         internal static string FriendsNoMatchFormat {
@@ -468,6 +477,60 @@ namespace Bastion.Client.Localization {
         internal static string FriendsRejectedTheirLimit {
             get {
                 return ResourceManager.GetString("FriendsRejectedTheirLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove.
+        /// </summary>
+        internal static string FriendsRemove {
+            get {
+                return ResourceManager.GetString("FriendsRemove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The friend could not be removed. Try again..
+        /// </summary>
+        internal static string FriendsRemoveFailed {
+            get {
+                return ResourceManager.GetString("FriendsRemoveFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove friend.
+        /// </summary>
+        internal static string FriendsRemoveFriend {
+            get {
+                return ResourceManager.GetString("FriendsRemoveFriend", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your matches together and the score between you are kept..
+        /// </summary>
+        internal static string FriendsRemoveKeepsHistory {
+            get {
+                return ResourceManager.GetString("FriendsRemoveKeepsHistory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You will both stop being friends. {0} will not be notified, and either of you can send a request again..
+        /// </summary>
+        internal static string FriendsRemoveMessageFormat {
+            get {
+                return ResourceManager.GetString("FriendsRemoveMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove {0}?.
+        /// </summary>
+        internal static string FriendsRemoveTitleFormat {
+            get {
+                return ResourceManager.GetString("FriendsRemoveTitleFormat", resourceCulture);
             }
         }
         
@@ -603,6 +666,15 @@ namespace Bastion.Client.Localization {
         internal static string FriendsTabRequests {
             get {
                 return ResourceManager.GetString("FriendsTabRequests", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to View profile.
+        /// </summary>
+        internal static string FriendsViewProfile {
+            get {
+                return ResourceManager.GetString("FriendsViewProfile", resourceCulture);
             }
         }
         

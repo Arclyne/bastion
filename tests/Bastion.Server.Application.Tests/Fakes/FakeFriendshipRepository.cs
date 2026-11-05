@@ -13,6 +13,8 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
 
     public List<Friendship> AddedFriendships { get; } = new List<Friendship>();
 
+    public List<int> RemovedFriendAccountIds { get; } = new List<int>();
+
     public void Store(int accountId, FriendSummary friend)
     {
         ArgumentNullException.ThrowIfNull(friend);
@@ -50,8 +52,30 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
         Store(friendship.AccountBId, CreateSummary(friendship.AccountAId));
     }
 
+    public bool Remove(int firstAccountId, int secondAccountId)
+    {
+        bool removedFirst = RemoveSummary(firstAccountId, secondAccountId);
+        bool removedSecond = RemoveSummary(secondAccountId, firstAccountId);
+        if (removedFirst || removedSecond)
+        {
+            RemovedFriendAccountIds.Add(secondAccountId);
+        }
+
+        return removedFirst || removedSecond;
+    }
+
     private static FriendSummary CreateSummary(int friendAccountId)
     {
         return new FriendSummary(new PlayerIdentity(friendAccountId, string.Empty, string.Empty), null);
+    }
+
+    private bool RemoveSummary(int accountId, int friendAccountId)
+    {
+        if (!_friendsByAccountId.TryGetValue(accountId, out List<FriendSummary>? friends))
+        {
+            return false;
+        }
+
+        return friends.RemoveAll(friend => friend.Friend.AccountId == friendAccountId) > 0;
     }
 }

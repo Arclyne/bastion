@@ -17,4 +17,6 @@ public interface IFriendClient
     void RejectFriendRequest(string sessionToken, string requesterFriendCode);
 
     void CancelFriendRequest(string sessionToken, string recipientFriendCode);
+
+    void RemoveFriend(string sessionToken, string friendCode);
 }

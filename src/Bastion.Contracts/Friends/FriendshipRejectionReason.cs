@@ -25,4 +25,7 @@ public enum FriendshipRejectionReason
 
     [EnumMember]
     RequestNotFound,
+
+    [EnumMember]
+    NotFriends,
 }

@@ -70,6 +70,14 @@ public sealed class FriendClient : IFriendClient, IDisposable
         Call(service => service.CancelFriendRequest(sessionToken, recipientFriendCode));
     }
 
+    public void RemoveFriend(string sessionToken, string friendCode)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(friendCode);
+
+        Call(service => service.RemoveFriend(sessionToken, friendCode));
+    }
+
     public void Dispose()
     {
         _channel.Dispose();

@@ -37,4 +37,9 @@ public interface IFriendshipService
     [FaultContract(typeof(InvalidSessionFault))]
     [FaultContract(typeof(FriendshipRejectedFault))]
     void CancelFriendRequest(string? sessionToken, string? recipientFriendCode);
+
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    [FaultContract(typeof(FriendshipRejectedFault))]
+    void RemoveFriend(string? sessionToken, string? friendCode);
 }

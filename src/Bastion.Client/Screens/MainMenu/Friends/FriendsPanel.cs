@@ -54,6 +54,7 @@ public sealed class FriendsPanel : Panel
         content.AddChild(CreatePlaceholder());
         AddChild(content);
         AddChild(CreateFooter(viewModel));
+        AddChild(CreateActionsMenu(viewModel));
         Skins.ApplyCard(Visual);
     }
 
@@ -83,6 +84,15 @@ public sealed class FriendsPanel : Panel
         container.AddChild(new AddFriendView(viewModel));
         container.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsAddFriendVisible));
         return container;
+    }
+
+    private static FriendActionsMenu CreateActionsMenu(FriendsPanelViewModel viewModel)
+    {
+        var menu = new FriendActionsMenu(viewModel.Actions);
+        menu.Anchor(Gum.Wireframe.Anchor.BottomLeft);
+        menu.X = PaddingX;
+        menu.Y = -PaddingBottom;
+        return menu;
     }
 
     private static Panel CreateRequests(FriendsPanelViewModel viewModel)

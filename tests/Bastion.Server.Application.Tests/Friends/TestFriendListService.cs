@@ -16,6 +16,7 @@ public class TestFriendListService
     private const int FriendAccountId = 4;
     private const int SecondFriendAccountId = 5;
     private const int ThirdFriendAccountId = 6;
+    private const string StoredFriendCode = "AB2CD9";
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _lastSeenAt = new DateTime(2026, 11, 5, 16, 0, 0, DateTimeKind.Utc);
@@ -113,9 +114,35 @@ public class TestFriendListService
         Assert.Equal("marta_muros", roster.Friends[0].Summary.Friend.Nickname);
     }
 
+    [Fact]
+    public void RemoveFriend_InvalidSession_ThrowsInvalidSession()
+    {
+        Assert.Throws<InvalidSessionException>(
+            () => _friendListService.RemoveFriend(UnknownToken, StoredFriendCode, _now));
+    }
+
+    [Fact]
+    public void RemoveFriend_Stranger_RejectsNotFriends()
+    {
+        var rejection = Record.Exception(() => _friendListService.RemoveFriend(Token, StoredFriendCode, _now))
+            as FriendshipRejectedException;
+
+        Assert.Equal(FriendshipRejection.NotFriends, rejection?.Rejection);
+    }
+
+    [Fact]
+    public void RemoveFriend_HyphenatedCode_RemovesFriendship()
+    {
+        StoreFriend(FriendAccountId, "marta_muros");
+
+        _friendListService.RemoveFriend(Token, "ab-2cd9", _now);
+
+        Assert.Equal(new[] { FriendAccountId }, _unitOfWork.FriendshipStore.RemovedFriendAccountIds);
+    }
+
     private void StoreFriend(int friendAccountId, string friendNickname)
     {
-        var friend = new PlayerIdentity(friendAccountId, friendNickname, "AB2CD9");
+        var friend = new PlayerIdentity(friendAccountId, friendNickname, StoredFriendCode);
         _unitOfWork.FriendshipStore.Store(AccountId, new FriendSummary(friend, _lastSeenAt));
     }
 }

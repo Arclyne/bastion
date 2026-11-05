@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Bastion.Domain.Friends;
 using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Sessions;
 
@@ -38,6 +39,21 @@ public sealed class FriendListService : IFriendListService
             .OrderBy(friend => friend.Summary.Friend.Nickname, StringComparer.OrdinalIgnoreCase)
             .ToList();
         return new FriendRoster(ownIdentity.FriendCode, friends, now);
+    }
+
+    public void RemoveFriend(string sessionToken, string friendCode, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(friendCode);
+
+        ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
+        string normalizedCode = FriendCodeRules.NormalizeFriendCode(friendCode);
+        FriendSummary? friend = _unitOfWork.Friendships.ListFriends(player.AccountId)
+            .FirstOrDefault(summary => summary.Friend.FriendCode == normalizedCode);
+        if (friend is null || !_unitOfWork.Friendships.Remove(player.AccountId, friend.Friend.AccountId))
+        {
+            throw new FriendshipRejectedException(FriendshipRejection.NotFriends);
+        }
     }
 
     private FriendStatus ToFriendStatus(FriendSummary summary)

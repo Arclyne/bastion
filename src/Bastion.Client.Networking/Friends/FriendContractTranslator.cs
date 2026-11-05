@@ -92,6 +92,8 @@ public static class FriendContractTranslator
                 return FriendshipRejection.RecipientFriendLimitReached;
             case FriendshipRejectionReason.RequestNotFound:
                 return FriendshipRejection.RequestNotFound;
+            case FriendshipRejectionReason.NotFriends:
+                return FriendshipRejection.NotFriends;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported rejection reason.");
         }

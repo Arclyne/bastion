@@ -1,4 +1,5 @@
 using System;
+using Bastion.Client.Controls;
 using Bastion.Client.Localization;
 using Bastion.Client.Screens.MainMenu.Friends;
 using Bastion.Client.Theme;
@@ -58,6 +59,7 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
     private const float BadgeOverlap = 8;
 
     private readonly FriendsPanelViewModel _friendsPanel;
+    private readonly ModalLayer _removeFriendLayer;
 
     public MainMenuView(MainMenuViewModel viewModel, FriendsPanelViewModel friendsPanel)
     {
@@ -65,6 +67,7 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         ArgumentNullException.ThrowIfNull(friendsPanel);
 
         _friendsPanel = friendsPanel;
+        _removeFriendLayer = CreateRemoveFriendLayer(friendsPanel.Actions);
         BindingContext = viewModel;
         Dock(Gum.Wireframe.Dock.Fill);
         AddChild(CreateIdentityChip());
@@ -196,6 +199,14 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         badge.Y = TopMarginY + SettingsOffsetY - BadgeOverlap;
         badge.SetBinding(nameof(IsVisible), nameof(FriendRequestsViewModel.HasPending));
         return badge;
+    }
+
+    private static ModalLayer CreateRemoveFriendLayer(FriendActionsViewModel actions)
+    {
+        var layer = new ModalLayer { BindingContext = actions };
+        layer.SetBinding(nameof(ModalLayer.IsOpen), nameof(FriendActionsViewModel.IsDialogOpen));
+        layer.AddChild(new RemoveFriendDialogView(actions));
+        return layer;
     }
 
     private static FriendRequestToast CreateRequestToast(FriendRequestsViewModel requests)

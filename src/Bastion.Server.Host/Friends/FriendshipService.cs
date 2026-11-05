@@ -103,6 +103,21 @@ public sealed class FriendshipService : IFriendshipService
             requestService => requestService.CancelFriendRequest(token, code, GetUtcNow()));
     }
 
+    public void RemoveFriend(string? sessionToken, string? friendCode)
+    {
+        string token = RequireSessionToken(sessionToken);
+        if (friendCode is null)
+        {
+            throw FriendshipTranslator.ToFault(new FriendshipRejectedException(FriendshipRejection.NotFriends));
+        }
+
+        Run(nameof(RemoveFriend), services =>
+        {
+            services.GetRequiredService<IFriendListService>().RemoveFriend(token, friendCode, GetUtcNow());
+            return true;
+        });
+    }
+
     private static string RequireSessionToken(string? sessionToken)
     {
         return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());

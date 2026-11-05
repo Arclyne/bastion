@@ -1,4 +1,5 @@
 using System;
+using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
@@ -16,11 +17,19 @@ public sealed class FriendRowView : Panel
     private const float ContentPaddingX = 6;
     private const float ContentSpacing = 12;
     private const float TextSpacing = 2;
+    private const float MoreButtonWidth = 64;
+    private const float MoreButtonHeight = 32;
 
-    public FriendRowView(FriendRowViewModel viewModel)
+    private readonly FriendRowViewModel _viewModel;
+    private readonly FriendActionsViewModel _actions;
+
+    public FriendRowView(FriendRowViewModel viewModel, FriendActionsViewModel actions)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
+        ArgumentNullException.ThrowIfNull(actions);
 
+        _viewModel = viewModel;
+        _actions = actions;
         BindingContext = viewModel;
         Width = RowWidth;
         WidthUnits = DimensionUnitType.Absolute;
@@ -37,6 +46,7 @@ public sealed class FriendRowView : Panel
         content.Anchor(Gum.Wireframe.Anchor.Left);
         content.X = ContentPaddingX;
         AddChild(content);
+        AddChild(CreateMoreButton());
     }
 
     private static Panel CreatePresenceDot(bool isConnected)
@@ -70,5 +80,19 @@ public sealed class FriendRowView : Panel
         ((LabelVisual)label.Visual).LocalizeText = false;
         label.SetBinding(nameof(Label.Text), propertyName);
         return label;
+    }
+
+    private Button CreateMoreButton()
+    {
+        Button more = ViewFactory.CreateButton(nameof(Strings.FriendsMoreOptions), MoreButtonWidth, MoreButtonHeight);
+        ButtonSkin.CreateAndAttach(more, ButtonLooks.Pill);
+        more.Anchor(Gum.Wireframe.Anchor.Right);
+        more.Click += HandleMoreClick;
+        return more;
+    }
+
+    private void HandleMoreClick(object? sender, EventArgs e)
+    {
+        _actions.OpenMenu(_viewModel);
     }
 }

@@ -10,4 +10,6 @@ public interface IFriendshipRepository
     IReadOnlyList<int> ListFriendAccountIds(int accountId);
 
     void Add(Friendship friendship);
+
+    bool Remove(int firstAccountId, int secondAccountId);
 }

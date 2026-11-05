@@ -36,6 +36,8 @@ public sealed class FriendsPanelViewModel : ViewModel
         _uiContext = SynchronizationContext.Current;
         AddFriend = new AddFriendViewModel(session, friends);
         AddFriend.FriendshipStarted += HandleFriendshipStarted;
+        Actions = new FriendActionsViewModel(session, friends);
+        Actions.FriendRemoved += HandleFriendRemoved;
         Requests = new FriendRequestsViewModel(session, friends);
         Requests.FriendshipStarted += HandleFriendshipStarted;
         notifications.FriendPresenceChanged += HandleFriendPresenceChanged;
@@ -54,6 +56,8 @@ public sealed class FriendsPanelViewModel : ViewModel
     public AddFriendViewModel AddFriend { get; }
 
     public FriendRequestsViewModel Requests { get; }
+
+    public FriendActionsViewModel Actions { get; }
 
     public bool IsOpen
     {
@@ -199,6 +203,7 @@ public sealed class FriendsPanelViewModel : ViewModel
         IsOpen = false;
         IsCodeCopied = false;
         IsAddingFriend = false;
+        Actions.CloseAll();
     }
 
     public void OpenAddFriend()
@@ -267,6 +272,14 @@ public sealed class FriendsPanelViewModel : ViewModel
     {
         int connectedCount = _allRows.Count(row => row.IsConnected);
         HeaderText = FormatText(Strings.FriendsConnectedCountFormat, connectedCount, _allRows.Count);
+    }
+
+    private void HandleFriendRemoved(object? sender, FriendRemovedEventArgs e)
+    {
+        _allRows.RemoveAll(row => row.FriendCode == e.FriendCode);
+        IsEmpty = _allRows.Count == 0;
+        UpdateHeaderText();
+        ApplyFilter();
     }
 
     private void HandleFriendshipStarted(object? sender, EventArgs e)

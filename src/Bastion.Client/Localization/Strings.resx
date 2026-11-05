@@ -297,4 +297,28 @@
   <data name="FriendsRequestsFailed" xml:space="preserve">
     <value>Your requests could not be loaded.</value>
   </data>
+  <data name="FriendsMoreOptions" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="FriendsViewProfile" xml:space="preserve">
+    <value>View profile</value>
+  </data>
+  <data name="FriendsRemoveFriend" xml:space="preserve">
+    <value>Remove friend</value>
+  </data>
+  <data name="FriendsRemoveTitleFormat" xml:space="preserve">
+    <value>Remove {0}?</value>
+  </data>
+  <data name="FriendsRemoveMessageFormat" xml:space="preserve">
+    <value>You will both stop being friends. {0} will not be notified, and either of you can send a request again.</value>
+  </data>
+  <data name="FriendsRemoveKeepsHistory" xml:space="preserve">
+    <value>Your matches together and the score between you are kept.</value>
+  </data>
+  <data name="FriendsRemove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="FriendsRemoveFailed" xml:space="preserve">
+    <value>The friend could not be removed. Try again.</value>
+  </data>
 </root>

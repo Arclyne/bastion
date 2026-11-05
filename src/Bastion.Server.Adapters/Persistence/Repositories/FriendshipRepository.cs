@@ -4,6 +4,7 @@ using System.Linq;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Friends;
 using Bastion.Server.Application.Friends;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bastion.Server.Adapters.Persistence.Repositories;
 
@@ -41,6 +42,18 @@ public sealed class FriendshipRepository : IFriendshipRepository
         ArgumentNullException.ThrowIfNull(friendship);
 
         _context.Friendships.Add(friendship);
+    }
+
+    public bool Remove(int firstAccountId, int secondAccountId)
+    {
+        int accountAId = Math.Min(firstAccountId, secondAccountId);
+        int accountBId = Math.Max(firstAccountId, secondAccountId);
+        DeletedRowCount deleted = _context.Database
+            .SqlQuery<DeletedRowCount>(
+                $"EXEC dbo.usp_Friendship_Delete @AccountAId = {accountAId}, @AccountBId = {accountBId}")
+            .AsEnumerable()
+            .Single();
+        return deleted.DeletedRows > 0;
     }
 
     private IQueryable<int> SelectFriendAccountIds(int accountId)

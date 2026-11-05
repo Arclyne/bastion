@@ -9,4 +9,5 @@ public enum FriendshipRejection
     FriendLimitReached,
     RecipientFriendLimitReached,
     RequestNotFound,
+    NotFriends,
 }

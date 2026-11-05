@@ -98,7 +98,7 @@ public sealed class FriendListView : StackPanel
             TextStyles.NoticeTitle);
     }
 
-    private static void RebuildRows(StackPanel rows, IEnumerable<FriendRowViewModel> friends)
+    private void RebuildRows(StackPanel rows, IEnumerable<FriendRowViewModel> friends)
     {
         while (rows.Visual.Children.Count > 0)
         {
@@ -107,7 +107,7 @@ public sealed class FriendListView : StackPanel
 
         foreach (FriendRowViewModel friend in friends)
         {
-            rows.AddChild(new FriendRowView(friend));
+            rows.AddChild(new FriendRowView(friend, _viewModel.Actions));
         }
     }
 

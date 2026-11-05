@@ -285,4 +285,28 @@
   <data name="FriendsRequestsFailed" xml:space="preserve">
     <value>No se pudieron cargar tus solicitudes.</value>
   </data>
+  <data name="FriendsMoreOptions" xml:space="preserve">
+    <value>Más</value>
+  </data>
+  <data name="FriendsViewProfile" xml:space="preserve">
+    <value>Ver perfil</value>
+  </data>
+  <data name="FriendsRemoveFriend" xml:space="preserve">
+    <value>Eliminar amigo</value>
+  </data>
+  <data name="FriendsRemoveTitleFormat" xml:space="preserve">
+    <value>¿Eliminar a {0}?</value>
+  </data>
+  <data name="FriendsRemoveMessageFormat" xml:space="preserve">
+    <value>Dejarán de ser amigos los dos. {0} no recibirá ningún aviso, y cualquiera de los dos puede volver a enviar una solicitud.</value>
+  </data>
+  <data name="FriendsRemoveKeepsHistory" xml:space="preserve">
+    <value>Sus partidas juntos y el marcador entre ustedes se conservan.</value>
+  </data>
+  <data name="FriendsRemove" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="FriendsRemoveFailed" xml:space="preserve">
+    <value>No se pudo eliminar. Vuelve a intentarlo.</value>
+  </data>
 </root>
