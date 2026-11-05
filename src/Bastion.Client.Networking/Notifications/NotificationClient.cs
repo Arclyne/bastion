@@ -1,21 +1,31 @@
 using System;
 using System.ServiceModel;
-using Bastion.Client.Networking.Accounts;
+using System.Threading;
 using Bastion.Client.Networking.Channels;
-using Bastion.Client.Networking.Sessions;
 using Bastion.Contracts;
 using Bastion.Contracts.Sessions;
+using log4net;
 
 namespace Bastion.Client.Networking.Notifications;
 
 public sealed class NotificationClient : INotificationClient, IDisposable
 {
+    private const int KeepAliveSeconds = 60;
+
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationClient));
+    private static readonly TimeSpan _keepAliveInterval = TimeSpan.FromSeconds(KeepAliveSeconds);
+
     private readonly NotificationCallback _callback = new NotificationCallback();
     private readonly DuplexChannelFactory<ISessionService> _factory;
+    private readonly TimeProvider _timeProvider;
     private ISessionService? _channel;
+    private ITimer? _keepAliveTimer;
 
-    public NotificationClient()
+    public NotificationClient(TimeProvider timeProvider)
     {
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
+        _timeProvider = timeProvider;
         _factory = new DuplexChannelFactory<ISessionService>(
             new InstanceContext(_callback),
             ChannelSettings.CreateBinding(),
@@ -29,6 +39,26 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         remove => _callback.ChatMessageReceived -= value;
     }
 
+    public event EventHandler<MatchFoundEventArgs>? MatchFound
+    {
+        add => _callback.MatchFound += value;
+        remove => _callback.MatchFound -= value;
+    }
+
+    public event EventHandler<PresenceRequestedEventArgs>? PresenceRequested
+    {
+        add => _callback.PresenceRequested += value;
+        remove => _callback.PresenceRequested -= value;
+    }
+
+    public event EventHandler<SearchEndedEventArgs>? SearchEnded
+    {
+        add => _callback.SearchEnded += value;
+        remove => _callback.SearchEnded -= value;
+    }
+
+    public event EventHandler? Disconnected;
+
     public void Connect(string sessionToken)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
@@ -38,7 +68,6 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         try
         {
             channel.Subscribe(sessionToken);
-            _channel = channel;
         }
         catch (CommunicationException ex)
         {
@@ -48,16 +77,22 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         {
             throw AbortSubscription(channel, ex);
         }
+
+        ((ICommunicationObject)channel).Faulted += HandleChannelFaulted;
+        _channel = channel;
+        _keepAliveTimer = _timeProvider.CreateTimer(SendKeepAlive, null, _keepAliveInterval, _keepAliveInterval);
     }
 
     public void Disconnect()
     {
+        TryStopKeepAlive();
         if (_channel is null)
         {
             return;
         }
 
         var communicationObject = (ICommunicationObject)_channel;
+        communicationObject.Faulted -= HandleChannelFaulted;
         _channel = null;
         ChannelCloser.CloseOrAbort(communicationObject);
     }
@@ -71,24 +106,67 @@ public sealed class NotificationClient : INotificationClient, IDisposable
     private static Exception AbortSubscription(ISessionService channel, Exception ex)
     {
         ((ICommunicationObject)channel).Abort();
-        return ToClientException(ex);
+        return ServiceFailureTranslator.ToClientException(ex);
     }
 
-    private static Exception ToClientException(Exception ex)
+    private void SendKeepAlive(object? state)
     {
-        switch (ex)
+        ISessionService? channel = _channel;
+        if (channel is null)
         {
-            case EndpointNotFoundException:
-                return new ServerUnreachableException(ex);
-            case FaultException<InvalidSessionFault>:
-                return new InvalidSessionException(ex);
-            case FaultException:
-                return new ServerErrorException(ex);
-            case CommunicationException:
-            case TimeoutException:
-                return new ConnectionLostException(ex);
-            default:
-                throw new ArgumentOutOfRangeException(nameof(ex), ex.GetType(), "Unsupported exception type.");
+            return;
         }
+
+        try
+        {
+            channel.KeepAlive();
+        }
+        catch (CommunicationException ex)
+        {
+            ReportConnectionLost(ex);
+        }
+        catch (TimeoutException ex)
+        {
+            ReportConnectionLost(ex);
+        }
+        catch (ObjectDisposedException ex)
+        {
+            ReportConnectionLost(ex);
+        }
+    }
+
+    private void ReportConnectionLost(Exception cause)
+    {
+        _logger.Warn("The keep-alive could not reach the server.", cause);
+        RaiseDisconnected();
+    }
+
+    private void HandleChannelFaulted(object? sender, EventArgs e)
+    {
+        _logger.Warn("The notification channel faulted.");
+        RaiseDisconnected();
+    }
+
+    private void RaiseDisconnected()
+    {
+        // Stopping the keep-alive is the guard: only the first report after a connection raises the event.
+        if (!TryStopKeepAlive())
+        {
+            return;
+        }
+
+        Disconnected?.Invoke(this, EventArgs.Empty);
+    }
+
+    private bool TryStopKeepAlive()
+    {
+        ITimer? timer = Interlocked.Exchange(ref _keepAliveTimer, null);
+        if (timer is null)
+        {
+            return false;
+        }
+
+        timer.Dispose();
+        return true;
     }
 }

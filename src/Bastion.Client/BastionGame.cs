@@ -21,7 +21,7 @@ public sealed class BastionGame : Game
     private const float MaximumUiScale = 1.5f;
 
     private readonly GraphicsDeviceManager _graphics;
-    private readonly ServerConnection _serverConnection = new ServerConnection();
+    private readonly ServerConnection _serverConnection = new ServerConnection(TimeProvider.System);
 
     public BastionGame()
     {
