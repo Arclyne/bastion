@@ -17,6 +17,8 @@ public class TestBoardSceneLayout
     private const string QuickLastRowGoal = "Meta_Fila7";
     private const string FourPlayerGoal = "Meta4J_ColumnaA";
     private const string FirstCell = "Casilla_a1";
+    private const int TwoPlayers = 2;
+    private const int FourPlayers = 4;
 
     [Fact]
     public void GetCellCenter_FirstCell_SitsAtNearLeftCorner()
@@ -50,25 +52,41 @@ public class TestBoardSceneLayout
     }
 
     [Fact]
-    public void GetCameraPosition_UnrotatedBoard_LooksFromFirstRowSide()
+    public void GetCameraPosition_FirstTurnOrder_LooksFromFirstRowSide()
     {
-        Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(false);
+        Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(Match.FirstTurnOrder);
 
         Assert.True(cameraPosition.Z > 0f);
     }
 
     [Fact]
-    public void GetCameraPosition_RotatedBoard_LooksFromLastRowSide()
+    public void GetCameraPosition_SecondTurnOrder_LooksFromLastRowSide()
     {
-        Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(true);
+        Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(Match.SecondTurnOrder);
 
         Assert.True(cameraPosition.Z < 0f);
     }
 
     [Fact]
+    public void GetCameraPosition_ThirdTurnOrder_LooksFromFirstColumnSide()
+    {
+        Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(Match.ThirdTurnOrder);
+
+        Assert.True(cameraPosition.X < 0f);
+    }
+
+    [Fact]
+    public void GetCameraPosition_FourthTurnOrder_LooksFromLastColumnSide()
+    {
+        Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(Match.FourthTurnOrder);
+
+        Assert.True(cameraPosition.X > 0f);
+    }
+
+    [Fact]
     public void GetGoalMeshName_FirstTurnOrder_ReturnsLastRowGoal()
     {
-        string goalMeshName = BoardSceneLayout.GetGoalMeshName(ClassicBoardSize, Match.FirstTurnOrder);
+        string goalMeshName = BoardSceneLayout.GetGoalMeshName(ClassicBoardSize, Match.FirstTurnOrder, TwoPlayers);
 
         Assert.Equal(ClassicLastRowGoal, goalMeshName);
     }
@@ -76,7 +94,7 @@ public class TestBoardSceneLayout
     [Fact]
     public void GetGoalMeshName_SecondTurnOrder_ReturnsFirstRowGoal()
     {
-        string goalMeshName = BoardSceneLayout.GetGoalMeshName(ClassicBoardSize, Match.SecondTurnOrder);
+        string goalMeshName = BoardSceneLayout.GetGoalMeshName(ClassicBoardSize, Match.SecondTurnOrder, TwoPlayers);
 
         Assert.Equal(ClassicFirstRowGoal, goalMeshName);
     }
@@ -84,9 +102,21 @@ public class TestBoardSceneLayout
     [Fact]
     public void GetGoalMeshName_QuickBoardFirstTurnOrder_ReturnsLastRowGoal()
     {
-        string goalMeshName = BoardSceneLayout.GetGoalMeshName(QuickBoardSize, Match.FirstTurnOrder);
+        string goalMeshName = BoardSceneLayout.GetGoalMeshName(QuickBoardSize, Match.FirstTurnOrder, TwoPlayers);
 
         Assert.Equal(QuickLastRowGoal, goalMeshName);
+    }
+
+    [Theory]
+    [InlineData(Match.FirstTurnOrder, "Meta4J_Fila9")]
+    [InlineData(Match.SecondTurnOrder, "Meta4J_Fila1")]
+    [InlineData(Match.ThirdTurnOrder, "Meta4J_ColumnaI")]
+    [InlineData(Match.FourthTurnOrder, "Meta4J_ColumnaA")]
+    public void GetGoalMeshName_FourPlayers_ReturnsOppositeSideGoal(byte turnOrder, string expectedGoal)
+    {
+        string goalMeshName = BoardSceneLayout.GetGoalMeshName(ClassicBoardSize, turnOrder, FourPlayers);
+
+        Assert.Equal(expectedGoal, goalMeshName);
     }
 
     [Fact]

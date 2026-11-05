@@ -17,15 +17,16 @@ public static class MatchTranslator
 
     public static MatchAbandonedNotification ToAbandonedNotification(
         int matchId,
-        string abandoningNickname,
+        AbandonmentNotice notice,
         DateTime occurredAt)
     {
-        ArgumentNullException.ThrowIfNull(abandoningNickname);
+        ArgumentNullException.ThrowIfNull(notice);
 
         return new MatchAbandonedNotification
         {
             MatchId = matchId,
-            AbandoningNickname = abandoningNickname,
+            AbandoningNickname = notice.AbandoningNickname,
+            IsMatchOver = notice.IsMatchOver,
             OccurredAt = occurredAt,
         };
     }

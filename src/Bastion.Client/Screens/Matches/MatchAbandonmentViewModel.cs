@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +20,7 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
     private readonly JoinedMatch _joinedMatch;
     private readonly IMatchClient _matches;
     private readonly SynchronizationContext? _uiContext;
+    private readonly List<string> _leftNicknames = new List<string>();
 
     public MatchAbandonmentViewModel(JoinedMatch joinedMatch, IMatchClient matches)
     {
@@ -30,6 +32,7 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
         _uiContext = SynchronizationContext.Current;
         StatusText = string.Empty;
         RivalAbandonedText = string.Empty;
+        PlayerLeftText = string.Empty;
         _matches.MatchAbandoned += HandleMatchAbandoned;
     }
 
@@ -60,7 +63,20 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
     [DependsOn(nameof(RivalAbandonedText))]
     public bool HasRivalAbandoned => RivalAbandonedText.Length > 0;
 
+    public string PlayerLeftText
+    {
+        get => Get<string>();
+        private set => Set(value);
+    }
+
+    [DependsOn(nameof(PlayerLeftText))]
+    public bool HasPlayerLeft => PlayerLeftText.Length > 0;
+
+    public IReadOnlyList<string> LeftNicknames => _leftNicknames;
+
     public event EventHandler? ReturnToMenuRequested;
+
+    public event EventHandler<PlayerLeftEventArgs>? PlayerLeft;
 
     public async Task AbandonMatch()
     {
@@ -151,6 +167,24 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
             abandoningNickname);
     }
 
+    private void ReceiveAbandonment(string abandoningNickname, bool isMatchOver)
+    {
+        if (isMatchOver)
+        {
+            ShowRivalAbandoned(abandoningNickname);
+            return;
+        }
+
+        _leftNicknames.Add(abandoningNickname);
+        PlayerLeftText = string.Format(CultureInfo.CurrentCulture, Strings.MatchPlayerLeftFormat, abandoningNickname);
+        OnPlayerLeft(new PlayerLeftEventArgs(abandoningNickname));
+    }
+
+    private void OnPlayerLeft(PlayerLeftEventArgs e)
+    {
+        PlayerLeft?.Invoke(this, e);
+    }
+
     private void OnReturnToMenuRequested()
     {
         ReturnToMenuRequested?.Invoke(this, EventArgs.Empty);
@@ -163,6 +197,6 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
             return;
         }
 
-        UiThread.Run(_uiContext, () => ShowRivalAbandoned(e.AbandoningNickname));
+        UiThread.Run(_uiContext, () => ReceiveAbandonment(e.AbandoningNickname, e.IsMatchOver));
     }
 }

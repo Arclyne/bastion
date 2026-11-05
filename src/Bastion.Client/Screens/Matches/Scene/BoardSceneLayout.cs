@@ -9,6 +9,12 @@ public static class BoardSceneLayout
 {
     private const string GoalMeshPrefix = "Meta";
     private const string TwoPlayerGoalMeshPrefix = "Meta_Fila";
+    private const string FourPlayerGoalRowPrefix = "Meta4J_Fila";
+    private const string FourPlayerGoalColumnPrefix = "Meta4J_Columna";
+    private const char FirstColumnName = 'A';
+    private const int FirstRowNumber = 1;
+    private const int FirstIndex = 0;
+    private const int TwoPlayers = 2;
     private const float BoardHalves = 2f;
     private const float SurfaceHeight = 0f;
     private const float CameraHeight = 16f;
@@ -25,17 +31,52 @@ public static class BoardSceneLayout
             centerIndex - coordinates.RowIndex);
     }
 
-    public static Vector3 GetCameraPosition(bool isBoardRotated)
+    public static Vector3 GetCameraPosition(byte ownTurnOrder)
     {
-        float cameraSide = isBoardRotated ? -CameraDistance : CameraDistance;
-        return new Vector3(0f, CameraHeight, cameraSide);
+        switch (ownTurnOrder)
+        {
+            case Match.FirstTurnOrder:
+                return new Vector3(0f, CameraHeight, CameraDistance);
+            case Match.SecondTurnOrder:
+                return new Vector3(0f, CameraHeight, -CameraDistance);
+            case Match.ThirdTurnOrder:
+                return new Vector3(-CameraDistance, CameraHeight, 0f);
+            case Match.FourthTurnOrder:
+                return new Vector3(CameraDistance, CameraHeight, 0f);
+            default:
+                throw new ArgumentOutOfRangeException(nameof(ownTurnOrder), ownTurnOrder, "Unsupported turn order.");
+        }
     }
 
-    public static string GetGoalMeshName(byte boardSize, byte turnOrder)
+    public static string GetGoalMeshName(byte boardSize, byte turnOrder, int playerCount)
     {
         BoardCoordinates startingCoordinates = BoardLayout.GetStartingCoordinates(boardSize, turnOrder);
-        int goalRowNumber = boardSize - startingCoordinates.RowIndex;
-        return string.Create(CultureInfo.InvariantCulture, $"{TwoPlayerGoalMeshPrefix}{goalRowNumber}");
+        if (playerCount == TwoPlayers)
+        {
+            int goalRowNumber = boardSize - startingCoordinates.RowIndex;
+            return string.Create(CultureInfo.InvariantCulture, $"{TwoPlayerGoalMeshPrefix}{goalRowNumber}");
+        }
+
+        return GetFourPlayerGoalMeshName(boardSize, startingCoordinates);
+    }
+
+    private static string GetFourPlayerGoalMeshName(byte boardSize, BoardCoordinates startingCoordinates)
+    {
+        int lastIndex = boardSize - FirstRowNumber;
+        if (startingCoordinates.RowIndex == FirstIndex)
+        {
+            return string.Create(CultureInfo.InvariantCulture, $"{FourPlayerGoalRowPrefix}{boardSize}");
+        }
+
+        if (startingCoordinates.RowIndex == lastIndex)
+        {
+            return string.Create(CultureInfo.InvariantCulture, $"{FourPlayerGoalRowPrefix}{FirstRowNumber}");
+        }
+
+        char goalColumn = startingCoordinates.ColumnIndex == FirstIndex
+            ? (char)(FirstColumnName + lastIndex)
+            : FirstColumnName;
+        return string.Create(CultureInfo.InvariantCulture, $"{FourPlayerGoalColumnPrefix}{goalColumn}");
     }
 
     public static bool IsGoalMesh(string meshName)

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Globalization;
 using System.Threading;
 using Bastion.Client.Localization;
@@ -26,32 +28,22 @@ public sealed class VersusViewModel : ViewModel, IDisposable
         ArgumentNullException.ThrowIfNull(timeProvider);
 
         _uiContext = SynchronizationContext.Current;
-        FoundMatchParticipant own = joinedMatch.FindOwnParticipant();
-        FoundMatchParticipant rival = joinedMatch.FindRivalParticipant();
         FoundMatchFormat format = joinedMatch.FoundMatch.Format;
-        OwnNickname = own.Nickname;
-        OwnEloText = MatchScreenText.FormatElo(own.EloRating);
-        OwnPawnSymbol = Participation.GetPawnSymbol(own.TurnOrder);
-        RivalNickname = rival.Nickname;
-        RivalEloText = MatchScreenText.FormatElo(rival.EloRating);
-        RivalPawnSymbol = Participation.GetPawnSymbol(rival.TurnOrder);
+        Own = ToVersusPlayer(joinedMatch.FindOwnParticipant());
+        Rivals = joinedMatch.FoundMatch.Participants
+            .Where(participant => !joinedMatch.IsOwnParticipant(participant))
+            .OrderBy(participant => participant.TurnOrder)
+            .Select(ToVersusPlayer)
+            .ToList();
         ModeText = MatchScreenText.FormatMode(format.BoardSize, format.WallsPerPlayer);
         _secondsLeft = CountdownSeconds;
         CountdownText = FormatCountdown(_secondsLeft);
         _countdownTimer = timeProvider.CreateTimer(HandleCountdownTick, null, _countdownTick, _countdownTick);
     }
 
-    public string OwnNickname { get; }
+    public VersusPlayer Own { get; }
 
-    public string OwnEloText { get; }
-
-    public PawnSymbol OwnPawnSymbol { get; }
-
-    public string RivalNickname { get; }
-
-    public string RivalEloText { get; }
-
-    public PawnSymbol RivalPawnSymbol { get; }
+    public IReadOnlyList<VersusPlayer> Rivals { get; }
 
     public string ModeText { get; }
 
@@ -66,6 +58,14 @@ public sealed class VersusViewModel : ViewModel, IDisposable
     public void Dispose()
     {
         StopCountdown();
+    }
+
+    private static VersusPlayer ToVersusPlayer(FoundMatchParticipant participant)
+    {
+        return new VersusPlayer(
+            participant.Nickname,
+            MatchScreenText.FormatElo(participant.EloRating),
+            Participation.GetPawnSymbol(participant.TurnOrder));
     }
 
     private static string FormatCountdown(int secondsLeft)

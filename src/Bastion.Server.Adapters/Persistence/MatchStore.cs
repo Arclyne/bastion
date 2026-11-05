@@ -65,7 +65,7 @@ public sealed class MatchStore : IMatchStore
         return RunInNewContext(context => LoadMatch(context, matchId));
     }
 
-    public void SaveMatchEnd(Match match)
+    public void SaveAbandonment(Match match)
     {
         ArgumentNullException.ThrowIfNull(match);
 
@@ -132,7 +132,7 @@ public sealed class MatchStore : IMatchStore
     {
         // The match and its participations are written in one SaveChanges, so they cannot end apart (CU-18 RN-10).
         context.Matches.Update(match);
-        if (match.MatchType == MatchType.Private)
+        if (match.MatchType == MatchType.Private && match.Status == MatchStatus.Finished)
         {
             FinishRoomOfMatch(context, match);
         }

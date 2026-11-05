@@ -66,7 +66,10 @@ public sealed class NotificationCallback : INotificationCallback
 
     private static MatchAbandonedEventArgs ToEventArgs(MatchAbandonedNotification notification)
     {
-        return new MatchAbandonedEventArgs(notification.MatchId, notification.AbandoningNickname ?? string.Empty);
+        return new MatchAbandonedEventArgs(
+            notification.MatchId,
+            notification.AbandoningNickname ?? string.Empty,
+            notification.IsMatchOver);
     }
 
     private static MatchFoundEventArgs ToEventArgs(MatchFoundNotification notification)

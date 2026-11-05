@@ -47,6 +47,10 @@ public class Participation
 
     public ParticipationResult? Result { get; private set; }
 
+    public byte? Placement { get; private set; }
+
+    public MatchEndReason? EndReason { get; private set; }
+
     public bool IsConnected { get; private set; }
 
     public static PawnSymbol GetPawnSymbol(byte turnOrder)
@@ -65,5 +69,18 @@ public class Participation
         }
 
         Result = result;
+    }
+
+    internal void Leave(MatchEndReason endReason, byte placement)
+    {
+        Finish(ParticipationResult.Lost);
+        EndReason = endReason;
+        Placement = placement;
+    }
+
+    internal void Win(byte placement)
+    {
+        Finish(ParticipationResult.Won);
+        Placement = placement;
     }
 }

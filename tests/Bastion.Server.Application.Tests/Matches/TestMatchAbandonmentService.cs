@@ -27,6 +27,13 @@ public class TestMatchAbandonmentService
     private const byte ClassicPlayerCount = 2;
     private const byte ClassicWallsPerPlayer = 10;
     private const byte ClockMinutes = 5;
+    private const int FourPlayerMatchId = 17;
+    private const int ThirdAccountId = 14;
+    private const int FourthAccountId = 15;
+    private const string RivalNickname = "rival_uno";
+    private const string RivalToken = "rival-token";
+    private const byte FourPlayers = 4;
+    private const int RemainingAfterFirstLeaver = 3;
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 7, 0, DateTimeKind.Utc);
@@ -41,7 +48,36 @@ public class TestMatchAbandonmentService
         _abandonmentService = new MatchAbandonmentService(_sessionVerifier, _matchStore, _matchEndNotifier);
         _sessionVerifier.Add(AbandoningToken, new ConnectedPlayer(AbandoningAccountId, AbandoningNickname));
         _sessionVerifier.Add(OutsiderToken, new ConnectedPlayer(OutsiderAccountId, OutsiderNickname));
+        _sessionVerifier.Add(RivalToken, new ConnectedPlayer(RivalAccountId, RivalNickname));
         _matchStore.MatchesById[MatchId] = StartMatch();
+        _matchStore.MatchesById[FourPlayerMatchId] = StartFourPlayerMatch();
+    }
+
+    [Fact]
+    public void AbandonMatch_FourPlayers_TellsOthersMatchGoesOn()
+    {
+        _abandonmentService.AbandonMatch(AbandoningToken, FourPlayerMatchId, _now);
+
+        Assert.False(_matchEndNotifier.NotifiedAbandonments.Single().Notice.IsMatchOver);
+    }
+
+    [Fact]
+    public void AbandonMatch_FourPlayers_NotifiesRemainingPlayers()
+    {
+        _abandonmentService.AbandonMatch(AbandoningToken, FourPlayerMatchId, _now);
+
+        NotifiedMatchAbandonment notified = _matchEndNotifier.NotifiedAbandonments.Single();
+        Assert.Equal(RemainingAfterFirstLeaver, notified.RecipientAccountIds.Count);
+    }
+
+    [Fact]
+    public void AbandonMatch_FourPlayersSecondLeaver_SkipsEarlierLeaver()
+    {
+        _abandonmentService.AbandonMatch(AbandoningToken, FourPlayerMatchId, _now);
+
+        _abandonmentService.AbandonMatch(RivalToken, FourPlayerMatchId, _now);
+
+        Assert.DoesNotContain(AbandoningAccountId, _matchEndNotifier.NotifiedAbandonments.Last().RecipientAccountIds);
     }
 
     [Fact]
@@ -49,7 +85,7 @@ public class TestMatchAbandonmentService
     {
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Assert.Equal(MatchStatus.Finished, _matchStore.SavedMatchEnds.Single().Status);
+        Assert.Equal(MatchStatus.Finished, _matchStore.SavedAbandonments.Single().Status);
     }
 
     [Fact]
@@ -57,7 +93,7 @@ public class TestMatchAbandonmentService
     {
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Participation abandoning = _matchStore.SavedMatchEnds.Single().Participations
+        Participation abandoning = _matchStore.SavedAbandonments.Single().Participations
             .Single(participation => participation.AccountId == AbandoningAccountId);
         Assert.Equal(ParticipationResult.Lost, abandoning.Result);
     }
@@ -75,7 +111,7 @@ public class TestMatchAbandonmentService
     {
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Assert.Equal(AbandoningNickname, _matchEndNotifier.NotifiedAbandonments.Single().AbandoningNickname);
+        Assert.Equal(AbandoningNickname, _matchEndNotifier.NotifiedAbandonments.Single().Notice.AbandoningNickname);
     }
 
     [Fact]
@@ -103,6 +139,27 @@ public class TestMatchAbandonmentService
     public void AbandonMatch_UnknownSession_ThrowsInvalidSessionException()
     {
         Assert.Throws<InvalidSessionException>(() => _abandonmentService.AbandonMatch(UnknownToken, MatchId, _now));
+    }
+
+    private static Match StartFourPlayerMatch()
+    {
+        var gameMode = new GameMode
+        {
+            GameModeId = ClassicGameModeId,
+            Code = GameModeCode.FourPlayers,
+            BoardSize = ClassicBoardSize,
+            PlayerCount = FourPlayers,
+            WallsPerPlayer = ClassicWallsPerPlayer,
+            IsActive = true,
+        };
+        var entrants = new MatchEntrant[]
+        {
+            new MatchEntrant(AbandoningAccountId, null),
+            new MatchEntrant(RivalAccountId, null),
+            new MatchEntrant(ThirdAccountId, null),
+            new MatchEntrant(FourthAccountId, null),
+        };
+        return Match.StartPrivate(new MatchFormat(gameMode, ClockMinutes), entrants, _startedAt);
     }
 
     private static Match StartMatch()

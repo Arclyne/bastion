@@ -11,6 +11,10 @@ public class Match
     public const byte ThirdTurnOrder = 3;
     public const byte FourthTurnOrder = 4;
 
+    private const int TwoPlayers = 2;
+    private const int LastPlayerCount = 1;
+    private const byte FirstPlacement = 1;
+
     private readonly List<Participation> _participations = new List<Participation>();
 
     private Match(MatchType matchType, MatchFormat format, DateTime startedAt)
@@ -78,22 +82,78 @@ public class Match
         return Status == MatchStatus.InProgress && participation is not null && !participation.Result.HasValue;
     }
 
-    public void EndByAbandonment(int abandoningAccountId, DateTime endedAt)
+    public bool Abandon(int abandoningAccountId, DateTime abandonedAt)
     {
         if (!CanBeAbandonedBy(abandoningAccountId))
         {
             throw new InvalidOperationException("Only a player of a match in progress can abandon it.");
         }
 
+        if (_participations.Count == TwoPlayers)
+        {
+            EndTwoPlayerMatchByAbandonment(abandoningAccountId, abandonedAt);
+            return true;
+        }
+
+        return LeaveFourPlayerMatch(abandoningAccountId, abandonedAt);
+    }
+
+    private void EndTwoPlayerMatchByAbandonment(int abandoningAccountId, DateTime endedAt)
+    {
         foreach (Participation participation in _participations)
         {
             bool isAbandoning = participation.AccountId == abandoningAccountId;
             participation.Finish(isAbandoning ? ParticipationResult.Lost : ParticipationResult.Won);
         }
 
+        EndByAbandonment(endedAt);
+    }
+
+    private bool LeaveFourPlayerMatch(int abandoningAccountId, DateTime abandonedAt)
+    {
+        List<Participation> activeParticipations = ListActiveParticipations();
+        Participation abandoning =
+            activeParticipations.First(participation => participation.AccountId == abandoningAccountId);
+        abandoning.Leave(MatchEndReason.Abandonment, (byte)activeParticipations.Count);
+        activeParticipations.Remove(abandoning);
+        if (activeParticipations.Count > LastPlayerCount)
+        {
+            PassTurnFrom(abandoning.TurnOrder);
+            return false;
+        }
+
+        activeParticipations.Single().Win(FirstPlacement);
+        EndByAbandonment(abandonedAt);
+        return true;
+    }
+
+    private void EndByAbandonment(DateTime endedAt)
+    {
         Status = MatchStatus.Finished;
         EndedAt = endedAt;
         EndReason = MatchEndReason.Abandonment;
+    }
+
+    private void PassTurnFrom(byte leavingTurnOrder)
+    {
+        if (CurrentTurnOrder != leavingTurnOrder)
+        {
+            return;
+        }
+
+        List<Participation> activeParticipations = ListActiveParticipations();
+        Participation nextPlayer =
+            activeParticipations.FirstOrDefault(participation => participation.TurnOrder > leavingTurnOrder)
+            ?? activeParticipations.First();
+        CurrentTurnOrder = nextPlayer.TurnOrder;
+    }
+
+    private List<Participation> ListActiveParticipations()
+    {
+        return _participations
+            .Where(participation => !participation.Result.HasValue)
+            .OrderBy(participation => participation.TurnOrder)
+            .ToList();
     }
 
     private void SeatEntrants(IReadOnlyList<MatchEntrant> entrantsInTurnOrder, MatchFormat format)

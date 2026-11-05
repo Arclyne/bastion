@@ -10,11 +10,9 @@ namespace Bastion.Client.Screens.Matches;
 
 public sealed class VersusView : Panel
 {
-    private const float CardWidth = 560;
     private const float CardPaddingX = 40;
     private const float CardPaddingTop = 32;
     private const float CardPaddingBottom = 36;
-    private const float ContentWidth = 480;
     private const float SectionSpacing = 28;
     private const float PlayerWidth = 180;
     private const float PlayerSpacing = 8;
@@ -22,6 +20,8 @@ public sealed class VersusView : Panel
     private const float AvatarRingWidth = 3;
     private const float VersusWidth = 120;
     private const int AvatarHalves = 2;
+    private const int HorizontalSideCount = 2;
+    private const int OwnPlayerCount = 1;
 
     public VersusView(VersusViewModel viewModel)
     {
@@ -29,12 +29,13 @@ public sealed class VersusView : Panel
 
         BindingContext = viewModel;
         Dock(Gum.Wireframe.Dock.Fill);
+        float contentWidth = ((OwnPlayerCount + viewModel.Rivals.Count) * PlayerWidth) + VersusWidth;
 
         var content = new StackPanel
         {
             X = CardPaddingX,
             Y = CardPaddingTop,
-            Width = ContentWidth,
+            Width = contentWidth,
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = SectionSpacing,
         };
@@ -43,11 +44,11 @@ public sealed class VersusView : Panel
         content.AddChild(ViewFactory.CreateBoundUntranslatedLabel(
             nameof(VersusViewModel.CountdownText),
             TextStyles.DialogTitle,
-            ContentWidth));
+            contentWidth));
 
         var card = new Panel
         {
-            Width = CardWidth,
+            Width = contentWidth + (CardPaddingX * HorizontalSideCount),
             WidthUnits = DimensionUnitType.Absolute,
             Height = CardPaddingBottom,
             HeightUnits = DimensionUnitType.RelativeToChildren,
@@ -69,13 +70,17 @@ public sealed class VersusView : Panel
         {
             Orientation = Orientation.Horizontal,
         };
-        row.AddChild(CreatePlayerCard(viewModel.OwnNickname, viewModel.OwnEloText, viewModel.OwnPawnSymbol));
+        row.AddChild(CreatePlayerCard(viewModel.Own));
         row.AddChild(versus);
-        row.AddChild(CreatePlayerCard(viewModel.RivalNickname, viewModel.RivalEloText, viewModel.RivalPawnSymbol));
+        foreach (VersusPlayer rival in viewModel.Rivals)
+        {
+            row.AddChild(CreatePlayerCard(rival));
+        }
+
         return row;
     }
 
-    private static StackPanel CreatePlayerCard(string nickname, string eloText, PawnSymbol pawnSymbol)
+    private static StackPanel CreatePlayerCard(VersusPlayer versusPlayer)
     {
         var avatar = new Panel
         {
@@ -85,7 +90,7 @@ public sealed class VersusView : Panel
             HeightUnits = DimensionUnitType.Absolute,
         };
         RectangleRuntime circle = Shapes.CreateRounded(Palette.AvatarFill, AvatarSize / AvatarHalves);
-        circle.StrokeColor = Palette.GetPawnColor(pawnSymbol);
+        circle.StrokeColor = Palette.GetPawnColor(versusPlayer.PawnSymbol);
         circle.StrokeWidth = AvatarRingWidth;
         Shapes.InsertBehindContent(avatar.Visual, circle);
 
@@ -96,8 +101,8 @@ public sealed class VersusView : Panel
             Spacing = PlayerSpacing,
         };
         player.AddChild(avatar);
-        player.AddChild(ViewFactory.CreateUntranslatedLabel(nickname, TextStyles.IdentityName));
-        player.AddChild(ViewFactory.CreateUntranslatedLabel(eloText, TextStyles.IdentityDetail));
+        player.AddChild(ViewFactory.CreateUntranslatedLabel(versusPlayer.Nickname, TextStyles.IdentityName));
+        player.AddChild(ViewFactory.CreateUntranslatedLabel(versusPlayer.EloText, TextStyles.IdentityDetail));
         return player;
     }
 }

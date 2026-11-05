@@ -29,10 +29,10 @@ public sealed class FakeMatchClient : IMatchClient
         return MatchAbandoned is not null;
     }
 
-    public void RaiseMatchAbandoned(int matchId, string abandoningNickname)
+    public void RaiseMatchAbandoned(int matchId, string abandoningNickname, bool isMatchOver)
     {
         ArgumentNullException.ThrowIfNull(abandoningNickname);
 
-        MatchAbandoned?.Invoke(this, new MatchAbandonedEventArgs(matchId, abandoningNickname));
+        MatchAbandoned?.Invoke(this, new MatchAbandonedEventArgs(matchId, abandoningNickname, isMatchOver));
     }
 }

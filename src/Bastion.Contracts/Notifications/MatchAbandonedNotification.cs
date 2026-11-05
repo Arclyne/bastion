@@ -10,4 +10,7 @@ public sealed class MatchAbandonedNotification : Notification
 
     [DataMember]
     public string? AbandoningNickname { get; set; }
+
+    [DataMember]
+    public bool IsMatchOver { get; set; }
 }

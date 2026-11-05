@@ -123,13 +123,13 @@ public sealed class NotificationChannelRegistry
     public void NotifyMatchAbandoned(
         int matchId,
         IReadOnlyCollection<int> recipientAccountIds,
-        string abandoningNickname)
+        AbandonmentNotice notice)
     {
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
-        ArgumentNullException.ThrowIfNull(abandoningNickname);
+        ArgumentNullException.ThrowIfNull(notice);
 
         MatchAbandonedNotification notification =
-            MatchTranslator.ToAbandonedNotification(matchId, abandoningNickname, GetUtcNow());
+            MatchTranslator.ToAbandonedNotification(matchId, notice, GetUtcNow());
         NotifyPlayers(recipientAccountIds, notification);
     }
 

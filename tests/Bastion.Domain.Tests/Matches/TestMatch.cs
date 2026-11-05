@@ -24,6 +24,13 @@ public class TestMatch
     private const string QuickSecondSquare = "d7";
     private const int OutsiderAccountId = 9;
     private const byte RoomWallsPerPlayer = 3;
+    private const int ThirdAccountId = 7;
+    private const int FourthAccountId = 8;
+    private const byte FourPlayers = 4;
+    private const byte FourPlayerWallsPerPlayer = 5;
+    private const byte LastOfFourPlacement = 4;
+    private const byte ThirdPlacement = 3;
+    private const byte FirstPlacement = 1;
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _endedAt = new DateTime(2026, 11, 5, 18, 7, 0, DateTimeKind.Utc);
@@ -163,62 +170,62 @@ public class TestMatch
     }
 
     [Fact]
-    public void EndByAbandonment_FirstPlayerLeaves_FirstPlayerLoses()
+    public void Abandon_FirstPlayerLeaves_FirstPlayerLoses()
     {
         Match match = StartClassicMatch();
 
-        match.EndByAbandonment(FirstAccountId, _endedAt);
+        match.Abandon(FirstAccountId, _endedAt);
 
         Assert.Equal(ParticipationResult.Lost, FindParticipation(match, FirstAccountId).Result);
     }
 
     [Fact]
-    public void EndByAbandonment_FirstPlayerLeaves_RivalWins()
+    public void Abandon_FirstPlayerLeaves_RivalWins()
     {
         Match match = StartClassicMatch();
 
-        match.EndByAbandonment(FirstAccountId, _endedAt);
+        match.Abandon(FirstAccountId, _endedAt);
 
         Assert.Equal(ParticipationResult.Won, FindParticipation(match, SecondAccountId).Result);
     }
 
     [Fact]
-    public void EndByAbandonment_MatchInProgress_FinishesMatch()
+    public void Abandon_MatchInProgress_FinishesMatch()
     {
         Match match = StartClassicMatch();
 
-        match.EndByAbandonment(SecondAccountId, _endedAt);
+        match.Abandon(SecondAccountId, _endedAt);
 
         Assert.Equal(MatchStatus.Finished, match.Status);
     }
 
     [Fact]
-    public void EndByAbandonment_MatchInProgress_RecordsAbandonment()
+    public void Abandon_MatchInProgress_RecordsAbandonment()
     {
         Match match = StartClassicMatch();
 
-        match.EndByAbandonment(SecondAccountId, _endedAt);
+        match.Abandon(SecondAccountId, _endedAt);
 
         Assert.Equal(MatchEndReason.Abandonment, match.EndReason);
     }
 
     [Fact]
-    public void EndByAbandonment_MatchInProgress_RecordsEndTime()
+    public void Abandon_MatchInProgress_RecordsEndTime()
     {
         Match match = StartClassicMatch();
 
-        match.EndByAbandonment(SecondAccountId, _endedAt);
+        match.Abandon(SecondAccountId, _endedAt);
 
         Assert.Equal(_endedAt, match.EndedAt);
     }
 
     [Fact]
-    public void EndByAbandonment_FinishedMatch_ThrowsInvalidOperationException()
+    public void Abandon_FinishedMatch_ThrowsInvalidOperationException()
     {
         Match match = StartClassicMatch();
-        match.EndByAbandonment(FirstAccountId, _endedAt);
+        match.Abandon(FirstAccountId, _endedAt);
 
-        Assert.Throws<InvalidOperationException>(() => match.EndByAbandonment(SecondAccountId, _endedAt));
+        Assert.Throws<InvalidOperationException>(() => match.Abandon(SecondAccountId, _endedAt));
     }
 
     [Fact]
@@ -262,6 +269,95 @@ public class TestMatch
             IsActive = true,
         };
         return new MatchFormat(gameMode, ClockMinutes);
+    }
+
+    [Fact]
+    public void Abandon_FourPlayersFirstLeaves_KeepsMatchGoing()
+    {
+        Match match = StartFourPlayerMatch();
+
+        bool isMatchOver = match.Abandon(FirstAccountId, _endedAt);
+
+        Assert.False(isMatchOver);
+    }
+
+    [Fact]
+    public void Abandon_FourPlayersFirstLeaves_GivesLeaverLastPlace()
+    {
+        Match match = StartFourPlayerMatch();
+
+        match.Abandon(FirstAccountId, _endedAt);
+
+        Participation leaver = FindParticipation(match, FirstAccountId);
+        Assert.Equal(
+            (ParticipationResult.Lost, MatchEndReason.Abandonment, LastOfFourPlacement),
+            (leaver.Result, leaver.EndReason, leaver.Placement));
+    }
+
+    [Fact]
+    public void Abandon_FourPlayersSecondLeaver_GivesThirdPlace()
+    {
+        Match match = StartFourPlayerMatch();
+        match.Abandon(FirstAccountId, _endedAt);
+
+        match.Abandon(ThirdAccountId, _endedAt);
+
+        Assert.Equal(ThirdPlacement, FindParticipation(match, ThirdAccountId).Placement);
+    }
+
+    [Fact]
+    public void Abandon_FourPlayersLeaverHadTurn_PassesTurnToNextPlayer()
+    {
+        Match match = StartFourPlayerMatch();
+
+        match.Abandon(FirstAccountId, _endedAt);
+
+        Assert.Equal(Match.SecondTurnOrder, match.CurrentTurnOrder);
+    }
+
+    [Fact]
+    public void Abandon_FourPlayersLeaverWithoutTurn_KeepsTurn()
+    {
+        Match match = StartFourPlayerMatch();
+
+        match.Abandon(ThirdAccountId, _endedAt);
+
+        Assert.Equal(Match.FirstTurnOrder, match.CurrentTurnOrder);
+    }
+
+    [Fact]
+    public void Abandon_FourPlayersThreeLeave_LastPlayerWinsFirstPlace()
+    {
+        Match match = StartFourPlayerMatch();
+        match.Abandon(FirstAccountId, _endedAt);
+        match.Abandon(SecondAccountId, _endedAt);
+
+        match.Abandon(ThirdAccountId, _endedAt);
+
+        Participation winner = FindParticipation(match, FourthAccountId);
+        Assert.Equal(
+            (ParticipationResult.Won, FirstPlacement, MatchStatus.Finished),
+            (winner.Result, winner.Placement, match.Status));
+    }
+
+    private static Match StartFourPlayerMatch()
+    {
+        var gameMode = new GameMode
+        {
+            Code = GameModeCode.FourPlayers,
+            BoardSize = ClassicBoardSize,
+            PlayerCount = FourPlayers,
+            WallsPerPlayer = FourPlayerWallsPerPlayer,
+            IsActive = true,
+        };
+        var entrants = new MatchEntrant[]
+        {
+            new MatchEntrant(FirstAccountId, null),
+            new MatchEntrant(SecondAccountId, null),
+            new MatchEntrant(ThirdAccountId, null),
+            new MatchEntrant(FourthAccountId, null),
+        };
+        return Match.StartPrivate(new MatchFormat(gameMode, ClockMinutes), entrants, _startedAt);
     }
 
     private static MatchEntrant[] CreatePrivateEntrants()

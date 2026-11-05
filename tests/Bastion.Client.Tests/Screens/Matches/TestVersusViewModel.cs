@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using Bastion.Client.Localization;
 using Bastion.Client.Screens.Matches;
 using Bastion.Client.Tests.Fakes;
@@ -32,13 +33,13 @@ public class TestVersusViewModel : IDisposable
     [Fact]
     public void Constructor_RivalListedFirst_ShowsOwnNickname()
     {
-        Assert.Equal(JoinedMatchSamples.OwnNickname, _viewModel.OwnNickname);
+        Assert.Equal(JoinedMatchSamples.OwnNickname, _viewModel.Own.Nickname);
     }
 
     [Fact]
     public void Constructor_RivalListedFirst_ShowsRivalNickname()
     {
-        Assert.Equal(JoinedMatchSamples.RivalNickname, _viewModel.RivalNickname);
+        Assert.Equal(JoinedMatchSamples.RivalNickname, _viewModel.Rivals.Single().Nickname);
     }
 
     [Fact]
@@ -49,7 +50,7 @@ public class TestVersusViewModel : IDisposable
             Strings.MatchEloFormat,
             JoinedMatchSamples.RivalEloRating);
 
-        Assert.Equal(expectedText, _viewModel.RivalEloText);
+        Assert.Equal(expectedText, _viewModel.Rivals.Single().EloText);
     }
 
     [Fact]
@@ -69,7 +70,7 @@ public class TestVersusViewModel : IDisposable
     {
         using VersusViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
 
-        Assert.Equal(PawnSymbol.Red, viewModel.OwnPawnSymbol);
+        Assert.Equal(PawnSymbol.Red, viewModel.Own.PawnSymbol);
     }
 
     [Fact]
@@ -77,7 +78,22 @@ public class TestVersusViewModel : IDisposable
     {
         using VersusViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
 
-        Assert.Equal(PawnSymbol.Blue, viewModel.RivalPawnSymbol);
+        Assert.Equal(PawnSymbol.Blue, viewModel.Rivals.Single().PawnSymbol);
+    }
+
+    [Fact]
+    public void Constructor_FourPlayers_ShowsRivalsInTurnOrder()
+    {
+        string[] expectedNicknames = new string[]
+        {
+            JoinedMatchSamples.RivalNickname,
+            JoinedMatchSamples.ThirdNickname,
+            JoinedMatchSamples.FourthNickname,
+        };
+
+        using var viewModel = new VersusViewModel(JoinedMatchSamples.CreateFourPlayerWithOwnThirdTurn(), _timeProvider);
+
+        Assert.Equal(expectedNicknames, viewModel.Rivals.Select(rival => rival.Nickname));
     }
 
     [Fact]

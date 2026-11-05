@@ -110,11 +110,12 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         MatchChatViewModel matchChatViewModel,
         MatchAbandonmentViewModel matchAbandonmentViewModel)
     {
-        var matchViewModel = new MatchViewModel(joinedMatch);
+        var matchViewModel = new MatchViewModel(joinedMatch, matchAbandonmentViewModel);
         ShowScreen(
             () => new MatchView(matchViewModel, matchChatViewModel, matchAbandonmentViewModel),
             matchChatViewModel,
-            matchAbandonmentViewModel);
+            matchAbandonmentViewModel,
+            matchViewModel);
         ShownMatch = matchViewModel;
     }
 

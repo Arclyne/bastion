@@ -495,4 +495,13 @@
   <data name="MatchBackToMenuButton" xml:space="preserve">
     <value>Back to menu</value>
   </data>
+  <data name="MatchPlayerTurnFormat" xml:space="preserve">
+    <value>{0}'s turn</value>
+  </data>
+  <data name="MatchPlayerLeftFormat" xml:space="preserve">
+    <value>{0} left the match.</value>
+  </data>
+  <data name="MatchPlayerLeft" xml:space="preserve">
+    <value>Left the match</value>
+  </data>
 </root>
