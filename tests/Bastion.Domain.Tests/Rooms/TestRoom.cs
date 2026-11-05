@@ -8,6 +8,7 @@ public class TestRoom
 {
     private const string InvalidCode = "K7MTO3";
     private const byte ChangedWalls = 4;
+    private const int MatchId = 41;
 
     private static readonly DateTime _openedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _changedAt = _openedAt.AddMinutes(2);
@@ -57,6 +58,35 @@ public class TestRoom
 
         Assert.Throws<InvalidOperationException>(
             () => room.ChangeSettings(RoomSamples.CreateTwoPlayerSettings(), _changedAt));
+    }
+
+    [Fact]
+    public void StartMatch_OpenRoom_KeepsMatchInRoom()
+    {
+        Room room = OpenRoom();
+
+        room.StartMatch(MatchId, _changedAt);
+
+        Assert.Equal((RoomStatus.InMatch, MatchId), (room.Status, room.MatchId));
+    }
+
+    [Fact]
+    public void FinishMatch_RoomInMatch_ClosesRoom()
+    {
+        Room room = OpenRoom();
+        room.StartMatch(MatchId, _changedAt);
+
+        room.FinishMatch(_changedAt);
+
+        Assert.Equal(RoomStatus.Closed, room.Status);
+    }
+
+    [Fact]
+    public void FinishMatch_OpenRoom_ThrowsInvalidOperation()
+    {
+        Room room = OpenRoom();
+
+        Assert.Throws<InvalidOperationException>(() => room.FinishMatch(_changedAt));
     }
 
     private static Room OpenRoom()

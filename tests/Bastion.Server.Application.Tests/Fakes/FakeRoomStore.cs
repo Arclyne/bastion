@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Bastion.Domain.Matches;
 using Bastion.Domain.Rooms;
 using Bastion.Server.Application.Rooms;
 
@@ -19,9 +20,35 @@ public sealed class FakeRoomStore : IRoomStore
 
     public int OpenRoomCount { get; set; }
 
+    public HashSet<string> CodesInMatch { get; } = new HashSet<string>();
+
+    public Dictionary<int, Match> SavedMatchesByRoomId { get; } = new Dictionary<int, Match>();
+
+    public int NextMatchId { get; set; } = 100;
+
+    public RoomStoreException? MatchSaveFailure { get; set; }
+
     public bool IsCodeTaken(string code)
     {
         return TakenCodes.Contains(code);
+    }
+
+    public bool IsRoomInMatch(string code)
+    {
+        return CodesInMatch.Contains(code);
+    }
+
+    public int SaveRoomMatch(int roomId, Match match)
+    {
+        if (MatchSaveFailure is not null)
+        {
+            throw MatchSaveFailure;
+        }
+
+        SavedMatchesByRoomId[roomId] = match;
+        int matchId = NextMatchId;
+        NextMatchId++;
+        return matchId;
     }
 
     public int AddRoom(Room room)

@@ -71,6 +71,13 @@ public sealed class RoomClient : IRoomClient, IDisposable
         return CallForRoom(service => service.ChangeOptions(sessionToken, contractOptions));
     }
 
+    public void StartMatch(string sessionToken)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
+        Call(service => service.StartMatch(sessionToken));
+    }
+
     public void LeaveRoom(string sessionToken)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);

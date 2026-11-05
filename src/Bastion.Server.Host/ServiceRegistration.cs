@@ -41,10 +41,13 @@ public static class ServiceRegistration
         services.AddScoped<IPrivateRoomService, PrivateRoomService>();
         services.AddScoped<IRoomPlayerVerifier, RoomPlayerVerifier>();
         services.AddScoped<IRoomSettingsValidator, RoomSettingsValidator>();
+        services.AddScoped<IRoomMatchService, RoomMatchService>();
         services.AddSingleton<FriendPresenceReporter>();
         services.AddSingleton<IMatchmakingQueue, MatchmakingQueue>();
         services.AddSingleton<IRoomRegistry, RoomRegistry>();
         services.AddSingleton<IRoomKeeper, RoomKeeper>();
+        services.AddSingleton<IRoomMatchStarter, RoomMatchStarter>();
+        services.AddSingleton<IPrivateMatchCreator, PrivateMatchCreator>();
         services.AddSingleton<IPlayerActivity, PlayerActivity>();
         services.AddSingleton<IRankedMatchCreator, RankedMatchCreator>();
         services.AddSingleton<ILobbyChatRoom, LobbyChatRoom>();
@@ -62,7 +65,8 @@ public static class ServiceRegistration
         services.AddSingleton<IFriendNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddSingleton<IPrivateMessageNotifier>(
             provider => provider.GetRequiredService<NotificationChannelRegistry>());
-        services.AddSingleton<IRoomNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
+        services.AddSingleton<IRoomNotifier>(
+            provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddHostedService<MatchmakingBackgroundService>();
         services.AddHostedService<RoomBackgroundService>();
         return services;

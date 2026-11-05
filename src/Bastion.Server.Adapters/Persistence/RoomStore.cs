@@ -1,9 +1,11 @@
 using System;
 using System.Data.Common;
 using System.Linq;
+using Bastion.Domain.Matches;
 using Bastion.Domain.Rooms;
 using Bastion.Server.Application.Rooms;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Bastion.Server.Adapters.Persistence;
 
@@ -23,6 +25,13 @@ public sealed class RoomStore : IRoomStore
         ArgumentNullException.ThrowIfNull(code);
 
         return RunInNewContext(context => IsCodeTakenInContext(context, code));
+    }
+
+    public bool IsRoomInMatch(string code)
+    {
+        ArgumentNullException.ThrowIfNull(code);
+
+        return RunInNewContext(context => IsRoomInMatchInContext(context, code));
     }
 
     public int AddRoom(Room room)
@@ -47,6 +56,30 @@ public sealed class RoomStore : IRoomStore
     public int CloseOpenRooms(DateTime closedAt)
     {
         return RunInNewContext(context => CloseOpenRoomsInContext(context, closedAt));
+    }
+
+    public int SaveRoomMatch(int roomId, Match match)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+
+        return RunInNewContext(context => AddRoomMatch(context, roomId, match));
+    }
+
+    private static bool IsRoomInMatchInContext(BastionDbContext context, string code)
+    {
+        return context.Rooms.Any(room => room.Code == code && room.Status == RoomStatus.InMatch);
+    }
+
+    private static int AddRoomMatch(BastionDbContext context, int roomId, Match match)
+    {
+        using IDbContextTransaction transaction = context.Database.BeginTransaction();
+        context.Matches.Add(match);
+        context.SaveChanges();
+        Room room = context.Rooms.First(candidate => candidate.RoomId == roomId);
+        room.StartMatch(match.MatchId, match.StartedAt);
+        context.SaveChanges();
+        transaction.Commit();
+        return match.MatchId;
     }
 
     private static bool IsCodeTakenInContext(BastionDbContext context, string code)

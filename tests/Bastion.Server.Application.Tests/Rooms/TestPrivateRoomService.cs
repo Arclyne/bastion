@@ -52,7 +52,8 @@ public class TestPrivateRoomService
         var playerActivity = new PlayerActivity(_matchmakingNotifier, _matchmakingQueue, _roomRegistry);
         var playerVerifier = new RoomPlayerVerifier(_sessionVerifier, _matchStore, playerActivity);
         var roomKeeper = new RoomKeeper(_roomRegistry, _roomStore, _roomNotifier);
-        _privateRoomService = new PrivateRoomService(playerVerifier, new RoomSettingsValidator(_matchStore), roomKeeper);
+        var settingsValidator = new RoomSettingsValidator(_matchStore);
+        _privateRoomService = new PrivateRoomService(playerVerifier, settingsValidator, roomKeeper);
         AddPlayer(HostToken, HostAccountId, HostNickname);
         AddPlayer(GuestToken, GuestAccountId, GuestNickname);
         AddPlayer(ThirdToken, ThirdAccountId, ThirdNickname);

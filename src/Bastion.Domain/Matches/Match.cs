@@ -8,6 +8,8 @@ public class Match
 {
     public const byte FirstTurnOrder = 1;
     public const byte SecondTurnOrder = 2;
+    public const byte ThirdTurnOrder = 3;
+    public const byte FourthTurnOrder = 4;
 
     private readonly List<Participation> _participations = new List<Participation>();
 
@@ -52,21 +54,21 @@ public class Match
         DateTime startedAt)
     {
         ArgumentNullException.ThrowIfNull(format);
-        ArgumentNullException.ThrowIfNull(entrantsInTurnOrder);
-        if (entrantsInTurnOrder.Count != format.GameMode.PlayerCount)
-        {
-            throw new ArgumentException(
-                "The number of entrants differs from the player count of the game mode.",
-                nameof(entrantsInTurnOrder));
-        }
 
         var match = new Match(MatchType.Ranked, format, startedAt);
-        for (int entrantIndex = 0; entrantIndex < entrantsInTurnOrder.Count; entrantIndex++)
-        {
-            byte turnOrder = (byte)(FirstTurnOrder + entrantIndex);
-            match._participations.Add(new Participation(entrantsInTurnOrder[entrantIndex], turnOrder, format));
-        }
+        match.SeatEntrants(entrantsInTurnOrder, format);
+        return match;
+    }
 
+    public static Match StartPrivate(
+        MatchFormat format,
+        IReadOnlyList<MatchEntrant> entrantsInTurnOrder,
+        DateTime startedAt)
+    {
+        ArgumentNullException.ThrowIfNull(format);
+
+        var match = new Match(MatchType.Private, format, startedAt);
+        match.SeatEntrants(entrantsInTurnOrder, format);
         return match;
     }
 
@@ -92,6 +94,23 @@ public class Match
         Status = MatchStatus.Finished;
         EndedAt = endedAt;
         EndReason = MatchEndReason.Abandonment;
+    }
+
+    private void SeatEntrants(IReadOnlyList<MatchEntrant> entrantsInTurnOrder, MatchFormat format)
+    {
+        ArgumentNullException.ThrowIfNull(entrantsInTurnOrder);
+        if (entrantsInTurnOrder.Count != format.GameMode.PlayerCount)
+        {
+            throw new ArgumentException(
+                "The number of entrants differs from the player count of the game mode.",
+                nameof(entrantsInTurnOrder));
+        }
+
+        for (int entrantIndex = 0; entrantIndex < entrantsInTurnOrder.Count; entrantIndex++)
+        {
+            byte turnOrder = (byte)(FirstTurnOrder + entrantIndex);
+            _participations.Add(new Participation(entrantsInTurnOrder[entrantIndex], turnOrder, format));
+        }
     }
 
     private Participation? FindParticipation(int accountId)

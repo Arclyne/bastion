@@ -40,4 +40,10 @@ public enum RoomRejectionReason
 
     [EnumMember]
     NotHost,
+
+    [EnumMember]
+    NotReadyToStart,
+
+    [EnumMember]
+    MatchStarted,
 }

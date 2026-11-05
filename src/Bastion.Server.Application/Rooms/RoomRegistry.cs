@@ -138,6 +138,24 @@ public sealed class RoomRegistry : IRoomRegistry
         }
     }
 
+    public TResult StartMatch<TResult>(int hostAccountId, Func<RoomSnapshot, TResult> startMatch)
+    {
+        ArgumentNullException.ThrowIfNull(startMatch);
+
+        lock (_roomsLock)
+        {
+            WaitingRoom room = GetHostedRoom(hostAccountId);
+            if (!room.IsReadyToStart())
+            {
+                throw new RoomRejectedException(RoomRejection.NotReadyToStart);
+            }
+
+            TResult result = startMatch(RoomSnapshot.Capture(room));
+            RemoveRoom(room);
+            return result;
+        }
+    }
+
     private WaitingRoom FindRoomToJoin(string code, int accountId, DateTime now)
     {
         if (_roomsByAccountId.ContainsKey(accountId))

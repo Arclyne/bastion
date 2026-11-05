@@ -16,8 +16,12 @@ public interface IRoomService
     /// <param name="sessionToken">The token of the host's open session.</param>
     /// <param name="options">The game mode, walls per player and clock chosen by the host.</param>
     /// <returns>The opened room, with its code and the host in the first seat.</returns>
-    /// <exception cref="FaultException{TDetail}">With <see cref="InvalidSessionFault"/>: the session is not open.</exception>
-    /// <exception cref="FaultException{TDetail}">With <see cref="RoomRejectedFault"/>: the room cannot open; the detail says why.</exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="InvalidSessionFault"/>: the session is not open.
+    /// </exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="RoomRejectedFault"/>: the room cannot open; the detail says why.
+    /// </exception>
     /// <exception cref="FaultException">The server could not reach the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
@@ -30,8 +34,12 @@ public interface IRoomService
     /// <param name="sessionToken">The token of the player's open session.</param>
     /// <param name="code">The six-character code of the room.</param>
     /// <returns>The room after the player took a seat.</returns>
-    /// <exception cref="FaultException{TDetail}">With <see cref="InvalidSessionFault"/>: the session is not open.</exception>
-    /// <exception cref="FaultException{TDetail}">With <see cref="RoomRejectedFault"/>: the player cannot join; the detail says why.</exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="InvalidSessionFault"/>: the session is not open.
+    /// </exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="RoomRejectedFault"/>: the player cannot join; the detail says why.
+    /// </exception>
     /// <exception cref="FaultException">The server could not reach the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
@@ -44,8 +52,12 @@ public interface IRoomService
     /// <param name="sessionToken">The token of the player's open session.</param>
     /// <param name="isReady">Whether the player is ready to play.</param>
     /// <returns>The room after the change.</returns>
-    /// <exception cref="FaultException{TDetail}">With <see cref="InvalidSessionFault"/>: the session is not open.</exception>
-    /// <exception cref="FaultException{TDetail}">With <see cref="RoomRejectedFault"/>: the player is not in a room.</exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="InvalidSessionFault"/>: the session is not open.
+    /// </exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="RoomRejectedFault"/>: the player is not in a room.
+    /// </exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     [FaultContract(typeof(RoomRejectedFault))]
@@ -57,13 +69,34 @@ public interface IRoomService
     /// <param name="sessionToken">The token of the host's open session.</param>
     /// <param name="options">The new game mode, walls per player and clock.</param>
     /// <returns>The room after the change.</returns>
-    /// <exception cref="FaultException{TDetail}">With <see cref="InvalidSessionFault"/>: the session is not open.</exception>
-    /// <exception cref="FaultException{TDetail}">With <see cref="RoomRejectedFault"/>: the settings cannot change; the detail says why.</exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="InvalidSessionFault"/>: the session is not open.
+    /// </exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="RoomRejectedFault"/>: the settings cannot change; the detail says why.
+    /// </exception>
     /// <exception cref="FaultException">The server could not reach the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     [FaultContract(typeof(RoomRejectedFault))]
     RoomState ChangeOptions(string? sessionToken, RoomOptions? options);
+
+    /// <summary>
+    /// Starts the private match of the room hosted by the player of the session. Every member, the host included,
+    /// receives the match-found notification; the room leaves the waiting state.
+    /// </summary>
+    /// <param name="sessionToken">The token of the host's open session.</param>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="InvalidSessionFault"/>: the session is not open.
+    /// </exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="RoomRejectedFault"/>: the match cannot start; the detail says why.
+    /// </exception>
+    /// <exception cref="FaultException">The server could not save the match; the room stays open.</exception>
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    [FaultContract(typeof(RoomRejectedFault))]
+    void StartMatch(string? sessionToken);
 
     /// <summary>
     /// Takes the player of the session out of their room. When the host leaves, the room closes for everyone.
@@ -77,7 +110,9 @@ public interface IRoomService
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
     /// <returns>The room of the player, or null if the player is not in a room.</returns>
-    /// <exception cref="FaultException{TDetail}">With <see cref="InvalidSessionFault"/>: the session is not open.</exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="InvalidSessionFault"/>: the session is not open.
+    /// </exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     RoomState? FindOwnRoom(string? sessionToken);

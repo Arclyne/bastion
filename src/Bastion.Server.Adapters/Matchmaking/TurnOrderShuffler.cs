@@ -1,18 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Bastion.Domain.Matchmaking;
 using Bastion.Server.Application.Matchmaking;
 
 namespace Bastion.Server.Adapters.Matchmaking;
 
 public sealed class TurnOrderShuffler : ITurnOrderShuffler
 {
-    public IReadOnlyList<MatchSearch> ShuffleTurnOrder(IReadOnlyList<MatchSearch> players)
+    public IReadOnlyList<TPlayer> ShuffleTurnOrder<TPlayer>(IReadOnlyList<TPlayer> players)
     {
         ArgumentNullException.ThrowIfNull(players);
 
-        MatchSearch[] shuffledPlayers = players.ToArray();
+        TPlayer[] shuffledPlayers = players.ToArray();
         Random.Shared.Shuffle(shuffledPlayers);
         return shuffledPlayers;
     }

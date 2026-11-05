@@ -49,7 +49,7 @@ public sealed class RoomKeeper : IRoomKeeper
         ArgumentNullException.ThrowIfNull(player);
         ArgumentNullException.ThrowIfNull(code);
 
-        RoomSnapshot room = _roomRegistry.Admit(code, new RoomMember(player.AccountId, player.Nickname), now);
+        RoomSnapshot room = AdmitToOpenRoom(new RoomMember(player.AccountId, player.Nickname), code, now);
         _roomNotifier.NotifyRoomUpdated(room, player.AccountId);
         return room;
     }
@@ -103,6 +103,23 @@ public sealed class RoomKeeper : IRoomKeeper
     public int CloseRoomsLeftOpen(DateTime now)
     {
         return _roomStore.CloseOpenRooms(now);
+    }
+
+    private RoomSnapshot AdmitToOpenRoom(RoomMember member, string code, DateTime now)
+    {
+        try
+        {
+            return _roomRegistry.Admit(code, member, now);
+        }
+        catch (RoomRejectedException ex) when (IsCodeOfStartedRoom(ex, code))
+        {
+            throw new RoomRejectedException(RoomRejection.MatchStarted);
+        }
+    }
+
+    private bool IsCodeOfStartedRoom(RoomRejectedException rejection, string code)
+    {
+        return rejection.Rejection == RoomRejection.RoomNotFound && _roomStore.IsRoomInMatch(code);
     }
 
     private string CreateFreeCode()

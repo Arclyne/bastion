@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Bastion.Domain.Matchmaking;
 using Bastion.Server.Application.Matchmaking;
 
 namespace Bastion.Server.Application.Tests.Fakes;
@@ -10,7 +9,7 @@ public sealed class FakeTurnOrderShuffler : ITurnOrderShuffler
 {
     public bool ShouldReverseOrder { get; set; }
 
-    public IReadOnlyList<MatchSearch> ShuffleTurnOrder(IReadOnlyList<MatchSearch> players)
+    public IReadOnlyList<TPlayer> ShuffleTurnOrder<TPlayer>(IReadOnlyList<TPlayer> players)
     {
         ArgumentNullException.ThrowIfNull(players);
 
