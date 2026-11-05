@@ -28,7 +28,7 @@ public sealed class MatchSearchService : IMatchSearchService
         ArgumentNullException.ThrowIfNull(sessionToken);
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        if (!_notifier.CanNotify(player.AccountId))
+        if (!_notifier.HasNotificationChannel(player.AccountId))
         {
             throw new SearchRejectedException(SearchRejection.NotificationsUnavailable);
         }

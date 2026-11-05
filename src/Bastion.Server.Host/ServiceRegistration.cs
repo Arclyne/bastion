@@ -23,9 +23,9 @@ public static class ServiceRegistration
         services.AddScoped<IMatchSearchService, MatchSearchService>();
         services.AddSingleton<IMatchmakingQueue, MatchmakingQueue>();
         services.AddSingleton<MatchmakingDispatcher>();
-        services.AddSingleton<ConnectedPlayerRegistry>();
-        services.AddSingleton<IChatBroadcaster>(provider => provider.GetRequiredService<ConnectedPlayerRegistry>());
-        services.AddSingleton<IMatchmakingNotifier>(provider => provider.GetRequiredService<ConnectedPlayerRegistry>());
+        services.AddSingleton<NotificationChannelRegistry>();
+        services.AddSingleton<IChatBroadcaster>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
+        services.AddSingleton<IMatchmakingNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddHostedService<MatchmakingBackgroundService>();
         return services;
     }

@@ -14,7 +14,7 @@ public sealed class FakeMatchmakingNotifier : IMatchmakingNotifier
 
     public Dictionary<int, SearchEndReason> EndReasons { get; } = new Dictionary<int, SearchEndReason>();
 
-    public bool CanNotify(int accountId)
+    public bool HasNotificationChannel(int accountId)
     {
         return SubscribedAccountIds.Contains(accountId);
     }

@@ -2,7 +2,7 @@ namespace Bastion.Server.Application.Matchmaking;
 
 public interface IMatchmakingNotifier
 {
-    bool CanNotify(int accountId);
+    bool HasNotificationChannel(int accountId);
 
     void NotifyMatchFound(MatchPairing pairing);
 
