@@ -42,7 +42,6 @@ public sealed class MatchmakingPlayerVerifier : IMatchmakingPlayerVerifier
             throw new SearchRejectedException(SearchRejection.NotificationsUnavailable);
         }
 
-        // A player takes part in one unfinished match at most (CU-09 RN-01, D-01).
         if (_matchStore.HasUnfinishedParticipation(player.AccountId))
         {
             throw new SearchRejectedException(SearchRejection.UnfinishedMatch);

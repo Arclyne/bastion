@@ -88,8 +88,6 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 
     private void ShowVersus(JoinedMatch joinedMatch)
     {
-        // The match chat and the rival's abandonment are heard from the VS screen on, so nothing sent meanwhile is
-        // missed.
         var matchChatViewModel = new MatchChatViewModel(joinedMatch, _connection.Chat, _timeProvider);
         var matchAbandonmentViewModel = new MatchAbandonmentViewModel(joinedMatch, _connection.Matches);
         matchAbandonmentViewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
@@ -127,8 +125,6 @@ public sealed class ScreenNavigator : INavigator, IDisposable
             GumService.Default.Root.Children.Remove(_currentScreen.Visual);
         }
 
-        // A dialog or a text field of the screen being left must not keep the input of the next one. The next screen
-        // is built only afterwards, so a dialog it opens at once, such as the rival's abandonment, is kept.
         GumService.Default.ModalRoot.Children.Clear();
         InteractiveGue.CurrentInputReceiver = null;
         DisposeViewModelsExcept(nextScreenViewModels);
@@ -175,7 +171,6 @@ public sealed class ScreenNavigator : INavigator, IDisposable
             return;
         }
 
-        // The notification channel stays open during the match, so going back to the menu does not reconnect it.
         OpenMainMenu(_signedInSession);
     }
 }

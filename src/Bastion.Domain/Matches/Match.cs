@@ -49,7 +49,6 @@ public class Match
 
     public byte CurrentTurnOrder { get; private set; }
 
-    // Entity Framework Core defines the navigation by this property (rule 2.11.4).
     public IReadOnlyCollection<Participation> Participations => _participations;
 
     public static Match StartRanked(

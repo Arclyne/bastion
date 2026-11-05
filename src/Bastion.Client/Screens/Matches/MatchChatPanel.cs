@@ -64,7 +64,6 @@ public sealed class MatchChatPanel : Panel
         AddChild(content);
         Skins.ApplyCard(Visual);
 
-        // The match chat listens from the VS screen on, so messages may arrive before this panel exists.
         AddMessageRows(_viewModel.Messages);
         _viewModel.Messages.CollectionChanged += HandleMessagesCollectionChanged;
     }

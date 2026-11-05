@@ -94,7 +94,6 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         var entrants = new List<MatchEntrant>();
         foreach (int accountId in accountIds)
         {
-            // Registration gives each account a row per active mode (CU-02 RN-06); a mode activated later has none.
             short eloRating = eloRatingsByAccountId.GetValueOrDefault(accountId, ModeStatistic.DefaultEloRating);
             entrants.Add(new MatchEntrant(accountId, eloRating));
         }

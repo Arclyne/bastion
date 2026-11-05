@@ -35,7 +35,6 @@ public sealed class MatchChatRelay : IMatchChatRelay
         ArgumentNullException.ThrowIfNull(line);
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
 
-        // The message is saved before it is delivered, so a failed save reaches nobody (CU-20 EX-01).
         var submission = new MatchChatSubmission(matchId, line.Text);
         var message = Message.CreateForMatch(submission, line.Sender.AccountId, line.SentAt);
         long messageId = _matchStore.SaveMatchChatMessage(message);

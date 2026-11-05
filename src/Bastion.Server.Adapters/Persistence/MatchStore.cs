@@ -98,7 +98,6 @@ public sealed class MatchStore : IMatchStore
 
     private static int AddMatch(BastionDbContext context, Match match)
     {
-        // One SaveChanges writes the match and its participations in a single transaction (CU-09 RN-08).
         context.Matches.Add(match);
         context.SaveChanges();
         return match.MatchId;
@@ -130,7 +129,6 @@ public sealed class MatchStore : IMatchStore
 
     private static int UpdateMatch(BastionDbContext context, Match match)
     {
-        // The match and its participations are written in one SaveChanges, so they cannot end apart (CU-18 RN-10).
         context.Matches.Update(match);
         if (match.MatchType == MatchType.Private && match.Status == MatchStatus.Finished)
         {

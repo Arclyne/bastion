@@ -35,7 +35,6 @@ public sealed class SessionService : ISessionService
     /// <inheritdoc/>
     public void KeepAlive()
     {
-        // Receiving the message is enough: it restarts the receive timeout of the duplex session.
     }
 
     /// <inheritdoc/>

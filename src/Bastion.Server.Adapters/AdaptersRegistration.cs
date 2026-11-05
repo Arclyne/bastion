@@ -20,7 +20,6 @@ public static class AdaptersRegistration
         ArgumentNullException.ThrowIfNull(services);
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
 
-        // The factory also registers the scoped context; the singleton match store opens its own contexts with it.
         services.AddDbContextFactory<BastionDbContext>(options => options.UseSqlServer(connectionString));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddSingleton<IMatchStore, MatchStore>();

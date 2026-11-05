@@ -247,7 +247,6 @@ public sealed class NotificationChannelRegistry
         _logger.Info($"Player left notifications. AccountId={accountId}");
         _presenceReporter.ReportDisconnected(accountId);
 
-        // A player without a notification channel would never hear about the match (CU-09 EX-04).
         if (_matchmakingQueue.TryRemove(accountId))
         {
             _logger.Info($"Match search ended because the player disconnected. AccountId={accountId}");
