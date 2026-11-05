@@ -28,6 +28,7 @@ public static class ServiceRegistration
         services.AddScoped<IFriendPresenceService, FriendPresenceService>();
         services.AddSingleton<FriendPresenceReporter>();
         services.AddSingleton<IMatchmakingQueue, MatchmakingQueue>();
+        services.AddSingleton<ILobbyChatRoom, LobbyChatRoom>();
         services.AddSingleton<MatchmakingDispatcher>();
         services.AddSingleton<NotificationChannelRegistry>();
         services.AddSingleton<IChatBroadcaster>(provider => provider.GetRequiredService<NotificationChannelRegistry>());

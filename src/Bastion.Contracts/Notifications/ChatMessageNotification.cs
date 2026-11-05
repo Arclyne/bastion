@@ -6,6 +6,9 @@ namespace Bastion.Contracts.Notifications;
 public sealed class ChatMessageNotification : Notification
 {
     [DataMember]
+    public long MessageId { get; set; }
+
+    [DataMember]
     public string? SenderNickname { get; set; }
 
     [DataMember]

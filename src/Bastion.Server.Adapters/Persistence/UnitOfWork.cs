@@ -4,6 +4,7 @@ using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Auditing;
 using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Friends;
+using Bastion.Server.Application.Moderation;
 using Bastion.Server.Application.Sessions;
 
 namespace Bastion.Server.Adapters.Persistence;
@@ -22,6 +23,8 @@ public sealed class UnitOfWork : IUnitOfWork
         AccessLogs = new AccessLogRepository(context);
         Friendships = new FriendshipRepository(context);
         FriendRequests = new FriendRequestRepository(context);
+        Sanctions = new SanctionRepository(context);
+        BannedWords = new BannedWordRepository(context);
     }
 
     public IAccountRepository Accounts { get; }
@@ -33,6 +36,10 @@ public sealed class UnitOfWork : IUnitOfWork
     public IFriendshipRepository Friendships { get; }
 
     public IFriendRequestRepository FriendRequests { get; }
+
+    public ISanctionRepository Sanctions { get; }
+
+    public IBannedWordRepository BannedWords { get; }
 
     public void SaveChanges()
     {

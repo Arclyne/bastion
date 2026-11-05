@@ -1,5 +1,6 @@
 using System;
 using System.ServiceModel;
+using Bastion.Client.Networking.Chat;
 using Bastion.Client.Networking.Friends;
 using Bastion.Client.Networking.Matchmaking;
 using Bastion.Contracts.Notifications;
@@ -34,10 +35,7 @@ public sealed class NotificationCallback : INotificationCallback
 
     private static ChatMessageReceivedEventArgs ToEventArgs(ChatMessageNotification notification)
     {
-        return new ChatMessageReceivedEventArgs(
-            notification.SenderNickname ?? string.Empty,
-            notification.Text ?? string.Empty,
-            notification.OccurredAt);
+        return new ChatMessageReceivedEventArgs(ChatContractTranslator.ToChatMessage(notification));
     }
 
     private static MatchFoundEventArgs ToEventArgs(MatchFoundNotification notification)

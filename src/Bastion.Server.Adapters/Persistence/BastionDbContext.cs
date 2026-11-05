@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Auditing;
 using Bastion.Domain.Friends;
+using Bastion.Domain.Moderation;
 using Bastion.Domain.Sessions;
 
 namespace Bastion.Server.Adapters.Persistence;
@@ -23,6 +24,10 @@ public sealed class BastionDbContext : DbContext
     public DbSet<Friendship> Friendships => Set<Friendship>();
 
     public DbSet<FriendRequest> FriendRequests => Set<FriendRequest>();
+
+    public DbSet<Sanction> Sanctions => Set<Sanction>();
+
+    public DbSet<BannedWord> BannedWords => Set<BannedWord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

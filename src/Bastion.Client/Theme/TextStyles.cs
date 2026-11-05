@@ -48,5 +48,9 @@ public static class TextStyles
 
     public static TextStyle SectionLabel { get; } = new TextStyle(FontFamilies.ExtraBold, 13, Palette.Muted);
 
+    public static TextStyle ChatAuthor { get; } = new TextStyle(FontFamilies.ExtraBold, 13, Palette.Ink);
+
+    public static TextStyle ChatOwnAuthor { get; } = new TextStyle(FontFamilies.ExtraBold, 13, Palette.Accent);
+
     public static TextStyle Version { get; } = new TextStyle(FontFamilies.Bold, 12, Palette.Muted);
 }
