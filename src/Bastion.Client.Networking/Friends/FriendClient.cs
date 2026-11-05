@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
 using Bastion.Contracts;
@@ -19,9 +20,37 @@ public sealed class FriendClient : IFriendClient, IDisposable
         return FriendContractTranslator.ToFriendListing(list);
     }
 
+    public IReadOnlyList<FoundPlayer> SearchPlayers(string sessionToken, string text)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(text);
+
+        PlayerSearchEntry[] entries = Call(service => service.SearchPlayers(sessionToken, text));
+        return FriendContractTranslator.ToFoundPlayers(entries);
+    }
+
+    public FriendRequestOutcome SendFriendRequest(string sessionToken, string friendCode)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(friendCode);
+
+        FriendRequestResult result = Call(service => service.SendFriendRequest(sessionToken, friendCode));
+        return FriendContractTranslator.ToOutcome(result);
+    }
+
     public void Dispose()
     {
         _channel.Dispose();
+    }
+
+    private static Exception ToClientException(Exception ex)
+    {
+        if (ex is FaultException<FriendshipRejectedFault> rejected)
+        {
+            return new FriendshipRejectedException(FriendContractTranslator.ToRejection(rejected.Detail.Reason), ex);
+        }
+
+        return ServiceFailureTranslator.ToClientException(ex);
     }
 
     private TResult Call<TResult>(Func<IFriendshipService, TResult> operation)
@@ -32,11 +61,11 @@ public sealed class FriendClient : IFriendClient, IDisposable
         }
         catch (CommunicationException ex)
         {
-            throw ServiceFailureTranslator.ToClientException(ex);
+            throw ToClientException(ex);
         }
         catch (TimeoutException ex)
         {
-            throw ServiceFailureTranslator.ToClientException(ex);
+            throw ToClientException(ex);
         }
     }
 }

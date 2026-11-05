@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Bastion.Contracts.Friends;
 using Bastion.Contracts.Notifications;
 using Bastion.Server.Application.Friends;
+using CoreWCF;
 
 namespace Bastion.Server.Host.Friends;
 
@@ -32,6 +34,87 @@ public static class FriendshipTranslator
             Presence = ToState(change.Presence),
             LastSeenAt = change.LastSeenAt,
         };
+    }
+
+    public static PlayerSearchEntry[] ToSearchEntries(IReadOnlyList<PlayerSearchResult> results)
+    {
+        ArgumentNullException.ThrowIfNull(results);
+
+        return results.Select(ToSearchEntry).ToArray();
+    }
+
+    public static FriendRequestResult ToResult(FriendRequestOutcome outcome)
+    {
+        switch (outcome)
+        {
+            case FriendRequestOutcome.RequestSent:
+                return FriendRequestResult.RequestSent;
+            case FriendRequestOutcome.FriendshipStarted:
+                return FriendRequestResult.FriendshipStarted;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(outcome), outcome, "Unsupported friend request outcome.");
+        }
+    }
+
+    public static FaultException<FriendshipRejectedFault> ToFault(FriendshipRejectedException rejection)
+    {
+        ArgumentNullException.ThrowIfNull(rejection);
+
+        var fault = new FriendshipRejectedFault
+        {
+            Reason = ToReason(rejection.Rejection),
+        };
+        return new FaultException<FriendshipRejectedFault>(fault, new FaultReason(rejection.Message));
+    }
+
+    private static PlayerSearchEntry ToSearchEntry(PlayerSearchResult result)
+    {
+        return new PlayerSearchEntry
+        {
+            Nickname = result.Player.Nickname,
+            FriendCode = result.Player.FriendCode,
+            Relationship = ToRelationship(result.Relationship),
+        };
+    }
+
+    private static PlayerRelationship ToRelationship(FriendRelationship relationship)
+    {
+        switch (relationship)
+        {
+            case FriendRelationship.None:
+                return PlayerRelationship.NotRelated;
+            case FriendRelationship.RequestSent:
+                return PlayerRelationship.RequestSent;
+            case FriendRelationship.RequestReceived:
+                return PlayerRelationship.RequestReceived;
+            case FriendRelationship.AlreadyFriends:
+                return PlayerRelationship.Friends;
+            case FriendRelationship.OwnAccount:
+                return PlayerRelationship.Self;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(relationship), relationship, "Unsupported relationship.");
+        }
+    }
+
+    private static FriendshipRejectionReason ToReason(FriendshipRejection rejection)
+    {
+        switch (rejection)
+        {
+            case FriendshipRejection.PlayerNotFound:
+                return FriendshipRejectionReason.PlayerNotFound;
+            case FriendshipRejection.OwnAccount:
+                return FriendshipRejectionReason.OwnAccount;
+            case FriendshipRejection.AlreadyFriends:
+                return FriendshipRejectionReason.AlreadyFriends;
+            case FriendshipRejection.RequestAlreadySent:
+                return FriendshipRejectionReason.RequestAlreadySent;
+            case FriendshipRejection.FriendLimitReached:
+                return FriendshipRejectionReason.FriendLimitReached;
+            case FriendshipRejection.RecipientFriendLimitReached:
+                return FriendshipRejectionReason.RecipientFriendLimitReached;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported rejection.");
+        }
     }
 
     private static FriendListEntry ToEntry(FriendStatus status)

@@ -24,6 +24,7 @@ public static class ServiceRegistration
         services.AddScoped<ILobbyChatService, LobbyChatService>();
         services.AddScoped<IMatchSearchService, MatchSearchService>();
         services.AddScoped<IFriendListService, FriendListService>();
+        services.AddScoped<IFriendRequestService, FriendRequestService>();
         services.AddScoped<IFriendPresenceService, FriendPresenceService>();
         services.AddSingleton<FriendPresenceReporter>();
         services.AddSingleton<IMatchmakingQueue, MatchmakingQueue>();

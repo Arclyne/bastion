@@ -15,5 +15,7 @@ public interface IUnitOfWork
 
     IFriendshipRepository Friendships { get; }
 
+    IFriendRequestRepository FriendRequests { get; }
+
     void SaveChanges();
 }

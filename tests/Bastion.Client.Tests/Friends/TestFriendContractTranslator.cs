@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Bastion.Client.Networking.Friends;
 using Bastion.Contracts.Friends;
 using Xunit;
@@ -55,6 +56,41 @@ public class TestFriendContractTranslator
         var listing = FriendContractTranslator.ToFriendListing(list);
 
         Assert.Equal(_listedAt, listing.ListedAt);
+    }
+
+    [Fact]
+    public void ToFoundPlayers_SelfEntry_MapsOwnAccount()
+    {
+        var entries = new PlayerSearchEntry[]
+        {
+            new PlayerSearchEntry
+            {
+                Nickname = FriendNickname,
+                FriendCode = FriendCode,
+                Relationship = PlayerRelationship.Self,
+            },
+        };
+
+        IReadOnlyList<FoundPlayer> foundPlayers = FriendContractTranslator.ToFoundPlayers(entries);
+
+        Assert.Equal(FriendRelationship.OwnAccount, foundPlayers[0].Relationship);
+    }
+
+    [Fact]
+    public void ToFoundPlayers_NullEntries_ReturnsEmptyList()
+    {
+        IReadOnlyList<FoundPlayer> foundPlayers = FriendContractTranslator.ToFoundPlayers(null);
+
+        Assert.Empty(foundPlayers);
+    }
+
+    [Fact]
+    public void ToRejection_FriendLimitReached_MapsFriendLimitReached()
+    {
+        FriendshipRejection rejection =
+            FriendContractTranslator.ToRejection(FriendshipRejectionReason.FriendLimitReached);
+
+        Assert.Equal(FriendshipRejection.FriendLimitReached, rejection);
     }
 
     private static FriendList CreateList(FriendListEntry entry)

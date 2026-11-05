@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Bastion.Domain.Accounts;
 using Bastion.Server.Application.Friends;
 
@@ -10,4 +11,8 @@ public interface IAccountRepository
     Account? FindById(int accountId);
 
     PlayerIdentity? FindPlayerIdentity(int accountId);
+
+    PlayerIdentity? FindPlayerIdentityByFriendCode(string friendCode);
+
+    IReadOnlyList<PlayerIdentity> SearchPlayerIdentities(string nicknamePrefix, int limit);
 }

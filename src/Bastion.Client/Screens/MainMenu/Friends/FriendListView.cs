@@ -15,6 +15,7 @@ public sealed class FriendListView : StackPanel
 {
     private const float ListWidth = 360;
     private const float FilterHeight = 44;
+    private const float AddFriendButtonWidth = 150;
     private const float ScrollHeight = 460;
     private const float ListSpacing = 10;
     private const float RetryButtonWidth = 140;
@@ -35,7 +36,7 @@ public sealed class FriendListView : StackPanel
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = ListSpacing;
 
-        AddChild(CreateFilter());
+        AddChild(CreateFilterRow());
         AddChild(CreateGroups());
         AddChild(CreateVisibleLabel(nameof(Strings.FriendsEmptyTitle), nameof(FriendsPanelViewModel.IsEmpty)));
         AddChild(CreateNoMatchLabel());
@@ -45,16 +46,32 @@ public sealed class FriendListView : StackPanel
         _viewModel.OfflineFriends.CollectionChanged += HandleOfflineFriendsChanged;
     }
 
-    private static TextField CreateFilter()
+    private StackPanel CreateFilterRow()
     {
         var filter = new TextField
         {
             Placeholder = nameof(Strings.FriendsFilterPlaceholder),
-            Width = ListWidth,
+            Width = ListWidth - AddFriendButtonWidth - ListSpacing,
             Height = FilterHeight,
         };
         filter.SetBinding(nameof(TextField.Text), nameof(FriendsPanelViewModel.FilterText));
-        return filter;
+
+        Button addFriend = ViewFactory.CreateButton(
+            nameof(Strings.FriendsAddFriend),
+            AddFriendButtonWidth,
+            FilterHeight);
+        ButtonSkin.CreateAndAttach(addFriend, ButtonLooks.Secondary);
+        addFriend.Click += HandleAddFriendClick;
+
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = ListSpacing };
+        row.AddChild(filter);
+        row.AddChild(addFriend);
+        return row;
+    }
+
+    private void HandleAddFriendClick(object? sender, EventArgs e)
+    {
+        _viewModel.OpenAddFriend();
     }
 
     private static Label CreateVisibleLabel(string textKey, string visibilityProperty)

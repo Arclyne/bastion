@@ -22,6 +22,8 @@ public sealed class BastionDbContext : DbContext
 
     public DbSet<Friendship> Friendships => Set<Friendship>();
 
+    public DbSet<FriendRequest> FriendRequests => Set<FriendRequest>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);

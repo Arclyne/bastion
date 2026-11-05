@@ -21,6 +21,7 @@ public sealed class UnitOfWork : IUnitOfWork
         Sessions = new SessionRepository(context);
         AccessLogs = new AccessLogRepository(context);
         Friendships = new FriendshipRepository(context);
+        FriendRequests = new FriendRequestRepository(context);
     }
 
     public IAccountRepository Accounts { get; }
@@ -30,6 +31,8 @@ public sealed class UnitOfWork : IUnitOfWork
     public IAccessLogRepository AccessLogs { get; }
 
     public IFriendshipRepository Friendships { get; }
+
+    public IFriendRequestRepository FriendRequests { get; }
 
     public void SaveChanges()
     {

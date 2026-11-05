@@ -49,6 +49,7 @@ public sealed class FriendsPanel : Panel
         content.AddChild(CreateTabRow());
         content.AddChild(CreateHeader());
         content.AddChild(CreateFriendList(viewModel));
+        content.AddChild(CreateAddFriend(viewModel));
         content.AddChild(CreatePlaceholder());
         AddChild(content);
         AddChild(CreateFooter(viewModel));
@@ -60,15 +61,27 @@ public sealed class FriendsPanel : Panel
         Label header = ViewFactory.CreateLabel(string.Empty, TextStyles.SectionLabel);
         ((LabelVisual)header.Visual).LocalizeText = false;
         header.SetBinding(nameof(Label.Text), nameof(FriendsPanelViewModel.HeaderText));
-        header.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsFriendsTab));
+        header.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsFriendListVisible));
         return header;
     }
 
     private static FriendListView CreateFriendList(FriendsPanelViewModel viewModel)
     {
         var friendList = new FriendListView(viewModel);
-        friendList.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsFriendsTab));
+        friendList.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsFriendListVisible));
         return friendList;
+    }
+
+    private static Panel CreateAddFriend(FriendsPanelViewModel viewModel)
+    {
+        var container = new Panel
+        {
+            WidthUnits = DimensionUnitType.RelativeToChildren,
+            HeightUnits = DimensionUnitType.RelativeToChildren,
+        };
+        container.AddChild(new AddFriendView(viewModel));
+        container.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsAddFriendVisible));
+        return container;
     }
 
     private static Label CreatePlaceholder()

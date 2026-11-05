@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Bastion.Domain.Accounts;
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
@@ -44,5 +45,20 @@ public sealed class FakeAccountRepository : IAccountRepository
     public PlayerIdentity? FindPlayerIdentity(int accountId)
     {
         return _playerIdentities.Find(playerIdentity => playerIdentity.AccountId == accountId);
+    }
+
+    public PlayerIdentity? FindPlayerIdentityByFriendCode(string friendCode)
+    {
+        return _playerIdentities.Find(playerIdentity => playerIdentity.FriendCode == friendCode);
+    }
+
+    public IReadOnlyList<PlayerIdentity> SearchPlayerIdentities(string nicknamePrefix, int limit)
+    {
+        return _playerIdentities
+            .Where(playerIdentity =>
+                playerIdentity.Nickname.StartsWith(nicknamePrefix, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(playerIdentity => playerIdentity.Nickname, StringComparer.OrdinalIgnoreCase)
+            .Take(limit)
+            .ToList();
     }
 }

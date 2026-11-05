@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Accounts;
+using Bastion.Domain.Friends;
 using Bastion.Server.Application.Friends;
 
 namespace Bastion.Server.Adapters.Persistence.Repositories;
@@ -33,6 +34,13 @@ public sealed class FriendshipRepository : IFriendshipRepository
     public IReadOnlyList<int> ListFriendAccountIds(int accountId)
     {
         return SelectFriendAccountIds(accountId).ToList();
+    }
+
+    public void Add(Friendship friendship)
+    {
+        ArgumentNullException.ThrowIfNull(friendship);
+
+        _context.Friendships.Add(friendship);
     }
 
     private IQueryable<int> SelectFriendAccountIds(int accountId)

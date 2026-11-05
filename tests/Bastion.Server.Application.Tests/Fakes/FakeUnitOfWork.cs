@@ -16,6 +16,8 @@ public sealed class FakeUnitOfWork : IUnitOfWork
 
     public FakeFriendshipRepository FriendshipStore { get; } = new FakeFriendshipRepository();
 
+    public FakeFriendRequestRepository FriendRequestStore { get; } = new FakeFriendRequestRepository();
+
     public int SaveCount { get; private set; }
 
     public IAccountRepository Accounts => AccountStore;
@@ -25,6 +27,8 @@ public sealed class FakeUnitOfWork : IUnitOfWork
     public IAccessLogRepository AccessLogs => AccessLogStore;
 
     public IFriendshipRepository Friendships => FriendshipStore;
+
+    public IFriendRequestRepository FriendRequests => FriendRequestStore;
 
     public void SaveChanges()
     {

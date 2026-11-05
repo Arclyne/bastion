@@ -9,4 +9,13 @@ public interface IFriendshipService
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     FriendList ListFriends(string? sessionToken);
+
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    PlayerSearchEntry[] SearchPlayers(string? sessionToken, string? text);
+
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    [FaultContract(typeof(FriendshipRejectedFault))]
+    FriendRequestResult SendFriendRequest(string? sessionToken, string? friendCode);
 }

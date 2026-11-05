@@ -34,6 +34,8 @@ public sealed class FriendsPanelViewModel : ViewModel
         _session = session;
         _friends = friends;
         _uiContext = SynchronizationContext.Current;
+        AddFriend = new AddFriendViewModel(session, friends);
+        AddFriend.FriendshipStarted += HandleFriendshipStarted;
         notifications.FriendPresenceChanged += HandleFriendPresenceChanged;
         SelectedTab = FriendsTab.Friends;
         FilterText = string.Empty;
@@ -45,7 +47,15 @@ public sealed class FriendsPanelViewModel : ViewModel
         NoMatchText = string.Empty;
     }
 
+    public AddFriendViewModel AddFriend { get; }
+
     public bool IsOpen
+    {
+        get => Get<bool>();
+        private set => Set(value);
+    }
+
+    public bool IsAddingFriend
     {
         get => Get<bool>();
         private set => Set(value);
@@ -68,6 +78,14 @@ public sealed class FriendsPanelViewModel : ViewModel
 
     [DependsOn(nameof(SelectedTab))]
     public bool IsPlaceholderTab => SelectedTab != FriendsTab.Friends;
+
+    [DependsOn(nameof(SelectedTab))]
+    [DependsOn(nameof(IsAddingFriend))]
+    public bool IsFriendListVisible => IsFriendsTab && !IsAddingFriend;
+
+    [DependsOn(nameof(SelectedTab))]
+    [DependsOn(nameof(IsAddingFriend))]
+    public bool IsAddFriendVisible => IsFriendsTab && IsAddingFriend;
 
     public string FilterText
     {
@@ -174,6 +192,18 @@ public sealed class FriendsPanelViewModel : ViewModel
     {
         IsOpen = false;
         IsCodeCopied = false;
+        IsAddingFriend = false;
+    }
+
+    public void OpenAddFriend()
+    {
+        AddFriend.Reset();
+        IsAddingFriend = true;
+    }
+
+    public void CloseAddFriend()
+    {
+        IsAddingFriend = false;
     }
 
     public void MarkCodeCopied()
@@ -231,6 +261,11 @@ public sealed class FriendsPanelViewModel : ViewModel
     {
         int connectedCount = _allRows.Count(row => row.IsConnected);
         HeaderText = FormatText(Strings.FriendsConnectedCountFormat, connectedCount, _allRows.Count);
+    }
+
+    private void HandleFriendshipStarted(object? sender, EventArgs e)
+    {
+        _ = LoadFriends();
     }
 
     private void HandleFriendPresenceChanged(object? sender, FriendPresenceChangedEventArgs e)
