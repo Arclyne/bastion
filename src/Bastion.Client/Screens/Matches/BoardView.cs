@@ -4,12 +4,13 @@ using Bastion.Domain.Matches;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
+using Microsoft.Xna.Framework;
 
 namespace Bastion.Client.Screens.Matches;
 
 public sealed class BoardView : Panel
 {
-    private const float CellSize = 48;
+    private const float CellSize = 44;
     private const float CellGap = 6;
     private const float CellRadius = 8;
     private const float CellBorderWidth = 1.5f;
@@ -69,28 +70,33 @@ public sealed class BoardView : Panel
 
     private static RectangleRuntime CreateCell(BoardCoordinates displayCoordinates)
     {
-        RectangleRuntime cell = Shapes.CreateRounded(Palette.Background, CellRadius);
+        RectangleRuntime cell = CreateFixedSizeShape(Palette.Background, CellRadius, CellSize);
         cell.StrokeColor = Palette.Border;
         cell.StrokeWidth = CellBorderWidth;
         cell.X = ToCellOffset(displayCoordinates.ColumnIndex);
         cell.Y = ToCellOffset(displayCoordinates.RowIndex);
-        cell.Width = CellSize;
-        cell.WidthUnits = DimensionUnitType.Absolute;
-        cell.Height = CellSize;
-        cell.HeightUnits = DimensionUnitType.Absolute;
         return cell;
     }
 
     private static RectangleRuntime CreatePawn(PawnSymbol symbol, BoardCoordinates displayCoordinates)
     {
         float inset = (CellSize - PawnSize) / PawnHalves;
-        RectangleRuntime piece = Shapes.CreateRounded(Palette.GetPawnColor(symbol), PawnSize / PawnHalves);
+        RectangleRuntime piece = CreateFixedSizeShape(Palette.GetPawnColor(symbol), PawnSize / PawnHalves, PawnSize);
         piece.X = ToCellOffset(displayCoordinates.ColumnIndex) + inset;
         piece.Y = ToCellOffset(displayCoordinates.RowIndex) + inset;
-        piece.Width = PawnSize;
-        piece.WidthUnits = DimensionUnitType.Absolute;
-        piece.Height = PawnSize;
-        piece.HeightUnits = DimensionUnitType.Absolute;
         return piece;
+    }
+
+    private static RectangleRuntime CreateFixedSizeShape(Color fill, float cornerRadius, float size)
+    {
+        RectangleRuntime shape = Shapes.CreateRounded(fill, cornerRadius);
+
+        // CreateRounded docks the shape to fill its parent; board pieces are placed from the top-left corner.
+        shape.Anchor(Gum.Wireframe.Anchor.TopLeft);
+        shape.Width = size;
+        shape.WidthUnits = DimensionUnitType.Absolute;
+        shape.Height = size;
+        shape.HeightUnits = DimensionUnitType.Absolute;
+        return shape;
     }
 }

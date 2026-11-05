@@ -318,6 +318,8 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         button.SetBinding(nameof(IsEnabled), nameof(MatchSearchViewModel.CanStartSearch));
         button.Click += HandleFindMatchClick;
 
+        // The icon and the texts are decoration; a click anywhere on the hero must reach the button.
+        button.Visual.ExposeChildrenEvents = false;
         RectangleRuntime icon = Shapes.CreateRounded(Palette.HeroIconFill, HeroIconRadius);
         icon.Anchor(Gum.Wireframe.Anchor.Left);
         icon.X = HeroPaddingX;

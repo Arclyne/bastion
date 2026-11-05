@@ -8,7 +8,6 @@ namespace Bastion.Client.Screens.Matches;
 public sealed class MatchView : Panel
 {
     private const float TurnPillWidth = 160;
-    private const float BoardOffsetX = -120;
 
     public MatchView(MatchViewModel matchViewModel, MatchChatViewModel chatViewModel)
     {
@@ -26,7 +25,6 @@ public sealed class MatchView : Panel
     {
         var board = new BoardView(matchViewModel);
         board.Anchor(Gum.Wireframe.Anchor.Center);
-        board.X = BoardOffsetX;
         return board;
     }
 

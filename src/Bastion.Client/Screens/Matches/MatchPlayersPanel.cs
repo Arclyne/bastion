@@ -8,7 +8,7 @@ namespace Bastion.Client.Screens.Matches;
 
 public sealed class MatchPlayersPanel : Panel
 {
-    private const float PanelWidth = 300;
+    private const float PanelWidth = 360;
     private const float PaddingX = 16;
     private const float PaddingTop = 14;
     private const float PaddingBottom = 14;

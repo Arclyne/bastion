@@ -47,6 +47,7 @@ public sealed class MatchChatPanel : Panel
             Height = MessagesHeight,
             HeightUnits = DimensionUnitType.Absolute,
         };
+        Shapes.HideDefaultParts(_messageScroller);
 
         var content = new StackPanel
         {
