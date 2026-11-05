@@ -1,6 +1,7 @@
 using System;
 using Gum;
 using Gum.Forms;
+using Gum.Forms.Input;
 using Microsoft.Xna.Framework;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking;
@@ -22,6 +23,7 @@ public sealed class BastionGame : Game
 
     private readonly GraphicsDeviceManager _graphics;
     private readonly ServerConnection _serverConnection = new ServerConnection(TimeProvider.System);
+    private ScreenNavigator? _navigator;
 
     public BastionGame()
     {
@@ -42,7 +44,8 @@ public sealed class BastionGame : Game
         ThemeInitializer.Initialize(this);
         var languages = new LanguageService(new LanguagePreferenceStore(), GumService.Default.LocalizationService);
         languages.LoadInitialLanguage();
-        new ScreenNavigator(languages, _serverConnection).ShowLogin();
+        _navigator = new ScreenNavigator(languages, _serverConnection);
+        _navigator.ShowLogin();
         Window.ClientSizeChanged += OnClientSizeChanged;
         ApplyUiScale();
         base.Initialize();
@@ -51,6 +54,11 @@ public sealed class BastionGame : Game
     protected override void Update(GameTime gameTime)
     {
         GumService.Default.Update(gameTime);
+        if (GumService.Default.Keyboard.KeyPushed(Keys.Escape))
+        {
+            _navigator?.ReceiveEscapeKey();
+        }
+
         base.Update(gameTime);
     }
 

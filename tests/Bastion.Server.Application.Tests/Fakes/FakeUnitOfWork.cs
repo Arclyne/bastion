@@ -1,6 +1,7 @@
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Auditing;
 using Bastion.Server.Application.Common;
+using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Sessions;
 
 namespace Bastion.Server.Application.Tests.Fakes;
@@ -13,6 +14,8 @@ public sealed class FakeUnitOfWork : IUnitOfWork
 
     public FakeAccessLogRepository AccessLogStore { get; } = new FakeAccessLogRepository();
 
+    public FakeFriendshipRepository FriendshipStore { get; } = new FakeFriendshipRepository();
+
     public int SaveCount { get; private set; }
 
     public IAccountRepository Accounts => AccountStore;
@@ -20,6 +23,8 @@ public sealed class FakeUnitOfWork : IUnitOfWork
     public ISessionRepository Sessions => SessionStore;
 
     public IAccessLogRepository AccessLogs => AccessLogStore;
+
+    public IFriendshipRepository Friendships => FriendshipStore;
 
     public void SaveChanges()
     {

@@ -2,16 +2,23 @@ using System;
 using System.Collections.Generic;
 using Bastion.Domain.Accounts;
 using Bastion.Server.Application.Accounts;
+using Bastion.Server.Application.Friends;
 
 namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeAccountRepository : IAccountRepository
 {
     private readonly List<Account> _accounts = new List<Account>();
+    private readonly List<PlayerIdentity> _playerIdentities = new List<PlayerIdentity>();
 
     public void Store(Account account)
     {
         _accounts.Add(account);
+    }
+
+    public void StorePlayerIdentity(PlayerIdentity playerIdentity)
+    {
+        _playerIdentities.Add(playerIdentity);
     }
 
     public Account? FindByIdentifier(string identifier)
@@ -32,5 +39,10 @@ public sealed class FakeAccountRepository : IAccountRepository
     public Account? FindById(int accountId)
     {
         return _accounts.Find(account => account.AccountId == accountId);
+    }
+
+    public PlayerIdentity? FindPlayerIdentity(int accountId)
+    {
+        return _playerIdentities.Find(playerIdentity => playerIdentity.AccountId == accountId);
     }
 }

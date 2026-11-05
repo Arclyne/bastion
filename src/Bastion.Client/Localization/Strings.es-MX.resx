@@ -129,4 +129,76 @@
   <data name="MainMenuChatUnavailable" xml:space="preserve">
     <value>El chat no está disponible por ahora.</value>
   </data>
+  <data name="MainMenuFriends" xml:space="preserve">
+    <value>Amigos</value>
+  </data>
+  <data name="MainMenuChat" xml:space="preserve">
+    <value>Chat</value>
+  </data>
+  <data name="FriendsTabFriends" xml:space="preserve">
+    <value>Amigos</value>
+  </data>
+  <data name="FriendsTabRequests" xml:space="preserve">
+    <value>Solicitudes</value>
+  </data>
+  <data name="FriendsTabChat" xml:space="preserve">
+    <value>Chat</value>
+  </data>
+  <data name="FriendsConnectedCountFormat" xml:space="preserve">
+    <value>{0} de {1} conectados</value>
+  </data>
+  <data name="FriendsFilterPlaceholder" xml:space="preserve">
+    <value>Buscar entre tus amigos</value>
+  </data>
+  <data name="FriendsGroupInMenuFormat" xml:space="preserve">
+    <value>En el menú · {0}</value>
+  </data>
+  <data name="FriendsGroupOfflineFormat" xml:space="preserve">
+    <value>Desconectados · {0}</value>
+  </data>
+  <data name="FriendsStatusInMenu" xml:space="preserve">
+    <value>En el menú</value>
+  </data>
+  <data name="FriendsStatusOffline" xml:space="preserve">
+    <value>Desconectado</value>
+  </data>
+  <data name="FriendsLastSeenJustNow" xml:space="preserve">
+    <value>Visto hace un momento</value>
+  </data>
+  <data name="FriendsLastSeenMinutesFormat" xml:space="preserve">
+    <value>Visto hace {0} min</value>
+  </data>
+  <data name="FriendsLastSeenHoursFormat" xml:space="preserve">
+    <value>Visto hace {0} h</value>
+  </data>
+  <data name="FriendsLastSeenDaysFormat" xml:space="preserve">
+    <value>Visto hace {0} d</value>
+  </data>
+  <data name="FriendsOwnCodeFormat" xml:space="preserve">
+    <value>Tu código de amigo {0}</value>
+  </data>
+  <data name="FriendsCopyCode" xml:space="preserve">
+    <value>Copiar</value>
+  </data>
+  <data name="FriendsCodeCopied" xml:space="preserve">
+    <value>Copiado</value>
+  </data>
+  <data name="FriendsEmptyTitle" xml:space="preserve">
+    <value>Aún no tienes amigos</value>
+  </data>
+  <data name="FriendsNoMatchFormat" xml:space="preserve">
+    <value>Ningún amigo se llama «{0}»</value>
+  </data>
+  <data name="FriendsLoadFailed" xml:space="preserve">
+    <value>No se pudo cargar tu lista.</value>
+  </data>
+  <data name="FriendsRetry" xml:space="preserve">
+    <value>Reintentar</value>
+  </data>
+  <data name="FriendsComingSoon" xml:space="preserve">
+    <value>Próximamente</value>
+  </data>
+  <data name="FriendsCloseButton" xml:space="preserve">
+    <value>×</value>
+  </data>
 </root>

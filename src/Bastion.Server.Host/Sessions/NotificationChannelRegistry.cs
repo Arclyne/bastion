@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Bastion.Contracts.Notifications;
 using Bastion.Domain.Matchmaking;
 using Bastion.Server.Application.Chat;
+using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Matchmaking;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Chat;
@@ -13,7 +14,7 @@ using log4net;
 
 namespace Bastion.Server.Host.Sessions;
 
-public sealed class NotificationChannelRegistry : IChatBroadcaster, IMatchmakingNotifier
+public sealed class NotificationChannelRegistry : IChatBroadcaster, IMatchmakingNotifier, IPlayerPresence
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationChannelRegistry));
 
@@ -57,6 +58,11 @@ public sealed class NotificationChannelRegistry : IChatBroadcaster, IMatchmaking
     public bool HasNotificationChannel(int accountId)
     {
         return _callbacksByAccountId.ContainsKey(accountId);
+    }
+
+    public bool IsPlayerConnected(int accountId)
+    {
+        return HasNotificationChannel(accountId);
     }
 
     public void NotifyMatchFound(MatchPairing pairing)

@@ -1,9 +1,11 @@
 using System.Globalization;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
+using RenderingLibrary.Graphics;
 
 namespace Bastion.Client.Screens;
 
@@ -29,6 +31,13 @@ public static class ViewFactory
             Height = height,
             HeightUnits = DimensionUnitType.Absolute,
         };
+    }
+
+    public static void CenterVertically(FrameworkElement element)
+    {
+        element.YUnits = GeneralUnitType.PixelsFromMiddle;
+        element.YOrigin = VerticalAlignment.Center;
+        element.Y = 0;
     }
 
     public static Label CreateVersionLabel()

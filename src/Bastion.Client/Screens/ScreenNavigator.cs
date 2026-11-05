@@ -4,6 +4,7 @@ using Bastion.Client.Networking;
 using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Screens.Login;
 using Bastion.Client.Screens.MainMenu;
+using Bastion.Client.Screens.MainMenu.Friends;
 using Gum;
 using Gum.Forms.Controls;
 
@@ -34,8 +35,18 @@ public sealed class ScreenNavigator : INavigator
         ArgumentNullException.ThrowIfNull(session);
 
         var viewModel = new MainMenuViewModel(session, _connection.Notifications, _connection.Chat);
-        ShowScreen(new MainMenuView(viewModel));
+        var friendsPanel = new FriendsPanelViewModel(session, _connection.Friends);
+        ShowScreen(new MainMenuView(viewModel, friendsPanel));
         _ = viewModel.ConnectChat();
+        _ = friendsPanel.LoadFriends();
+    }
+
+    public void ReceiveEscapeKey()
+    {
+        if (_currentScreen is IEscapeKeyReceiver receiver)
+        {
+            receiver.ReceiveEscapeKey();
+        }
     }
 
     private void ShowScreen(FrameworkElement screen)
