@@ -21,7 +21,9 @@ public static class ServiceRegistration
         services.AddScoped<ISessionVerifier, SessionVerifier>();
         services.AddScoped<ILobbyChatService, LobbyChatService>();
         services.AddScoped<IMatchSearchService, MatchSearchService>();
+        services.AddScoped<IMatchmakingPlayerVerifier, MatchmakingPlayerVerifier>();
         services.AddSingleton<IMatchmakingQueue, MatchmakingQueue>();
+        services.AddSingleton<IRankedMatchCreator, RankedMatchCreator>();
         services.AddSingleton<MatchmakingDispatcher>();
         services.AddSingleton<NotificationChannelRegistry>();
         services.AddSingleton<IChatBroadcaster>(provider => provider.GetRequiredService<NotificationChannelRegistry>());

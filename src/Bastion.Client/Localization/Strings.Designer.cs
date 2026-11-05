@@ -481,6 +481,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The match could not be created. Search again..
+        /// </summary>
+        internal static string MatchSearchMatchCreationFailed {
+            get {
+                return ResourceManager.GetString("MatchSearchMatchCreationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Notices are not connected. Sign in again to search for a match..
         /// </summary>
         internal static string MatchSearchNotificationsUnavailable {
@@ -549,6 +558,15 @@ namespace Bastion.Client.Localization {
         internal static string MatchSearchUnavailable {
             get {
                 return ResourceManager.GetString("MatchSearchUnavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You already have a match in progress..
+        /// </summary>
+        internal static string MatchSearchUnfinishedMatch {
+            get {
+                return ResourceManager.GetString("MatchSearchUnfinishedMatch", resourceCulture);
             }
         }
     }

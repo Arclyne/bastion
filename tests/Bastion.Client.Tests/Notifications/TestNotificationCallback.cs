@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Bastion.Client.Networking.Matchmaking;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Contracts.Notifications;
@@ -12,12 +13,32 @@ public class TestNotificationCallback
     private const string SecondNickname = "leo_peon";
     private const string MessageText = "hello";
     private const int ResponseSeconds = 60;
+    private const int FoundMatchId = 12;
+    private const short FirstEloRating = 1210;
+    private const short SecondEloRating = 1000;
+    private const byte FirstTurnOrder = 1;
+    private const byte SecondTurnOrder = 2;
 
     private static readonly DateTime _sentAt = new DateTime(2026, 11, 4, 18, 15, 0, DateTimeKind.Utc);
     private static readonly string[] _participantNicknames = new string[]
     {
         FirstNickname,
         SecondNickname,
+    };
+    private static readonly MatchFoundParticipant[] _participants = new MatchFoundParticipant[]
+    {
+        new MatchFoundParticipant
+        {
+            Nickname = FirstNickname,
+            EloRating = FirstEloRating,
+            TurnOrder = FirstTurnOrder,
+        },
+        new MatchFoundParticipant
+        {
+            Nickname = SecondNickname,
+            EloRating = SecondEloRating,
+            TurnOrder = SecondTurnOrder,
+        },
     };
 
     private readonly NotificationCallback _notificationCallback = new NotificationCallback();
@@ -52,15 +73,21 @@ public class TestNotificationCallback
     [Fact]
     public void ReceiveNotification_MatchFound_RaisesBothNicknames()
     {
-        var notification = new MatchFoundNotification
-        {
-            ParticipantNicknames = _participantNicknames,
-            OccurredAt = _sentAt,
-        };
+        MatchFoundNotification notification = CreateMatchFoundNotification();
 
         _notificationCallback.ReceiveNotification(notification);
 
-        Assert.Equal(_participantNicknames, _matchFound?.ParticipantNicknames);
+        Assert.Equal(_participantNicknames, _matchFound?.Players.Select(player => player.Nickname));
+    }
+
+    [Fact]
+    public void ReceiveNotification_MatchFound_RaisesMatchId()
+    {
+        MatchFoundNotification notification = CreateMatchFoundNotification();
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(FoundMatchId, _matchFound?.MatchId);
     }
 
     [Fact]
@@ -102,6 +129,16 @@ public class TestNotificationCallback
         Exception? exception = Record.Exception(() => _notificationCallback.ReceiveNotification(notification));
 
         Assert.Null(exception);
+    }
+
+    private static MatchFoundNotification CreateMatchFoundNotification()
+    {
+        return new MatchFoundNotification
+        {
+            MatchId = FoundMatchId,
+            Participants = _participants,
+            OccurredAt = _sentAt,
+        };
     }
 
     private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)

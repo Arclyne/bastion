@@ -20,14 +20,15 @@ public static class MatchmakingTranslator
         return new FaultException<SearchRejectedFault>(fault, new FaultReason(rejection.Message));
     }
 
-    public static MatchFoundNotification ToNotification(MatchPairing pairing, DateTime now)
+    public static MatchFoundNotification ToNotification(CreatedMatch createdMatch, DateTime now)
     {
-        ArgumentNullException.ThrowIfNull(pairing);
+        ArgumentNullException.ThrowIfNull(createdMatch);
 
         return new MatchFoundNotification
         {
             OccurredAt = now,
-            ParticipantNicknames = pairing.Players.Select(player => player.Nickname).ToArray(),
+            MatchId = createdMatch.MatchId,
+            Participants = createdMatch.Participants.Select(ToMatchFoundParticipant).ToArray(),
         };
     }
 
@@ -51,12 +52,24 @@ public static class MatchmakingTranslator
         };
     }
 
+    private static MatchFoundParticipant ToMatchFoundParticipant(CreatedMatchParticipant participant)
+    {
+        return new MatchFoundParticipant
+        {
+            Nickname = participant.Player.Nickname,
+            EloRating = participant.EloRating,
+            TurnOrder = participant.TurnOrder,
+        };
+    }
+
     private static SearchRejectionReason ToReason(SearchRejection rejection)
     {
         switch (rejection)
         {
             case SearchRejection.NotificationsUnavailable:
                 return SearchRejectionReason.NotificationsUnavailable;
+            case SearchRejection.UnfinishedMatch:
+                return SearchRejectionReason.UnfinishedMatch;
             default:
                 throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported search rejection.");
         }
@@ -70,6 +83,8 @@ public static class MatchmakingTranslator
                 return SearchEndedReason.Cancelled;
             case SearchEndReason.PresenceExpired:
                 return SearchEndedReason.PresenceExpired;
+            case SearchEndReason.MatchCreationFailed:
+                return SearchEndedReason.MatchCreationFailed;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported search end reason.");
         }

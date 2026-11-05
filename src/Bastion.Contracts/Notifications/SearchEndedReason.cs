@@ -10,4 +10,7 @@ public enum SearchEndedReason
 
     [EnumMember]
     PresenceExpired,
+
+    [EnumMember]
+    MatchCreationFailed,
 }

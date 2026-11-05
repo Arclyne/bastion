@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Networking.Matchmaking;
+using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Screens.MainMenu;
 using Bastion.Client.Tests.Fakes;
 using Xunit;
@@ -16,8 +17,13 @@ public class TestMatchSearchViewModel : IDisposable
     private const string SessionToken = "session-token";
     private const string OwnNickname = "marta_muros";
     private const string RivalNickname = "leo_peon";
+    private const short OwnEloRating = 1210;
+    private const short RivalEloRating = 1000;
+    private const byte OwnTurnOrder = 1;
+    private const byte RivalTurnOrder = 2;
     private const string PreferredLanguage = "es-MX";
     private const string RejectionMessage = "The server has no callback channel for this session.";
+    private const string UnfinishedMatchMessage = "The player already takes part in an unfinished match.";
     private const string ExpectedElapsedText = "00:18";
     private const int ElapsedSeconds = 18;
     private const int PresenceWindowSeconds = 60;
@@ -25,10 +31,10 @@ public class TestMatchSearchViewModel : IDisposable
     private const int ExpectedSecondsLeft = 55;
 
     private static readonly DateTimeOffset _searchStartedAt = new DateTimeOffset(2026, 11, 5, 18, 0, 0, TimeSpan.Zero);
-    private static readonly string[] _participantNicknames = new string[]
+    private static readonly PairedPlayer[] _pairedPlayers = new PairedPlayer[]
     {
-        OwnNickname,
-        RivalNickname,
+        new PairedPlayer(OwnNickname, OwnEloRating, OwnTurnOrder),
+        new PairedPlayer(RivalNickname, RivalEloRating, RivalTurnOrder),
     };
 
     private readonly FakeMatchmakingClient _matchmakingClient = new FakeMatchmakingClient();
@@ -66,6 +72,18 @@ public class TestMatchSearchViewModel : IDisposable
     }
 
     [Fact]
+    public async Task StartSearch_UnfinishedMatch_ShowsUnfinishedMatchStatus()
+    {
+        _matchmakingClient.StartSearchFailure = new SearchRejectedException(
+            SearchRejection.UnfinishedMatch,
+            new InvalidOperationException(UnfinishedMatchMessage));
+
+        await _viewModel.StartSearch();
+
+        Assert.Equal(nameof(Strings.MatchSearchUnfinishedMatch), _viewModel.StatusKey);
+    }
+
+    [Fact]
     public async Task StartSearch_ServerUnreachable_ShowsUnavailableStatus()
     {
         _matchmakingClient.StartSearchFailure = new ServerUnreachableException();
@@ -78,7 +96,7 @@ public class TestMatchSearchViewModel : IDisposable
     [Fact]
     public async Task StartSearch_MatchFoundBeforeReply_KeepsMatchFound()
     {
-        _matchmakingClient.MatchFoundDuringStart = _participantNicknames;
+        _matchmakingClient.MatchFoundDuringStart = _pairedPlayers;
 
         await _viewModel.StartSearch();
 
@@ -94,7 +112,7 @@ public class TestMatchSearchViewModel : IDisposable
             RivalNickname);
         await _viewModel.StartSearch();
 
-        _matchmakingClient.RaiseMatchFound(_participantNicknames);
+        _matchmakingClient.RaiseMatchFound(_pairedPlayers);
 
         Assert.Equal(expectedText, _viewModel.RivalText);
     }
@@ -157,6 +175,16 @@ public class TestMatchSearchViewModel : IDisposable
     }
 
     [Fact]
+    public async Task SearchEnded_MatchCreationFailed_ShowsCreationFailedStatus()
+    {
+        await _viewModel.StartSearch();
+
+        _matchmakingClient.RaiseSearchEnded(SearchEndReason.MatchCreationFailed);
+
+        Assert.Equal(nameof(Strings.MatchSearchMatchCreationFailed), _viewModel.StatusKey);
+    }
+
+    [Fact]
     public async Task Disconnected_WhileSearching_ShowsConnectionLostStatus()
     {
         await _viewModel.StartSearch();
@@ -170,7 +198,7 @@ public class TestMatchSearchViewModel : IDisposable
     public async Task Disconnected_AfterMatchFound_KeepsMatchFound()
     {
         await _viewModel.StartSearch();
-        _matchmakingClient.RaiseMatchFound(_participantNicknames);
+        _matchmakingClient.RaiseMatchFound(_pairedPlayers);
 
         _matchmakingClient.RaiseDisconnected();
 
@@ -201,7 +229,7 @@ public class TestMatchSearchViewModel : IDisposable
     public async Task DismissMatchFound_MatchFound_HidesPanel()
     {
         await _viewModel.StartSearch();
-        _matchmakingClient.RaiseMatchFound(_participantNicknames);
+        _matchmakingClient.RaiseMatchFound(_pairedPlayers);
 
         _viewModel.DismissMatchFound();
 

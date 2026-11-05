@@ -4,7 +4,7 @@ public interface IMatchmakingNotifier
 {
     bool HasNotificationChannel(int accountId);
 
-    void NotifyMatchFound(MatchPairing pairing);
+    void NotifyMatchFound(CreatedMatch createdMatch);
 
     void NotifyPresenceRequested(PresenceRequest request);
 

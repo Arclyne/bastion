@@ -8,7 +8,7 @@ public sealed class FakeMatchmakingNotifier : IMatchmakingNotifier
 {
     public HashSet<int> SubscribedAccountIds { get; } = new HashSet<int>();
 
-    public List<MatchPairing> Pairings { get; } = new List<MatchPairing>();
+    public List<CreatedMatch> CreatedMatches { get; } = new List<CreatedMatch>();
 
     public List<PresenceRequest> PresenceRequests { get; } = new List<PresenceRequest>();
 
@@ -19,11 +19,11 @@ public sealed class FakeMatchmakingNotifier : IMatchmakingNotifier
         return SubscribedAccountIds.Contains(accountId);
     }
 
-    public void NotifyMatchFound(MatchPairing pairing)
+    public void NotifyMatchFound(CreatedMatch createdMatch)
     {
-        ArgumentNullException.ThrowIfNull(pairing);
+        ArgumentNullException.ThrowIfNull(createdMatch);
 
-        Pairings.Add(pairing);
+        CreatedMatches.Add(createdMatch);
     }
 
     public void NotifyPresenceRequested(PresenceRequest request)

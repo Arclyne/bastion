@@ -165,4 +165,10 @@
   <data name="MatchSearchConnectionLost" xml:space="preserve">
     <value>Se perdió la conexión con el servidor.</value>
   </data>
+  <data name="MatchSearchUnfinishedMatch" xml:space="preserve">
+    <value>Ya tienes una partida en curso.</value>
+  </data>
+  <data name="MatchSearchMatchCreationFailed" xml:space="preserve">
+    <value>No se pudo crear la partida. Vuelve a buscar.</value>
+  </data>
 </root>

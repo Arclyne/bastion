@@ -6,5 +6,8 @@ namespace Bastion.Contracts.Notifications;
 public sealed class MatchFoundNotification : Notification
 {
     [DataMember]
-    public string[]? ParticipantNicknames { get; set; }
+    public int MatchId { get; set; }
+
+    [DataMember]
+    public MatchFoundParticipant[]? Participants { get; set; }
 }

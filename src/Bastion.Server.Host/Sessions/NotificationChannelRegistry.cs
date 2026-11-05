@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Bastion.Contracts.Notifications;
-using Bastion.Domain.Matchmaking;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.Matchmaking;
 using Bastion.Server.Application.Sessions;
@@ -59,14 +58,14 @@ public sealed class NotificationChannelRegistry : IChatBroadcaster, IMatchmaking
         return _callbacksByAccountId.ContainsKey(accountId);
     }
 
-    public void NotifyMatchFound(MatchPairing pairing)
+    public void NotifyMatchFound(CreatedMatch createdMatch)
     {
-        ArgumentNullException.ThrowIfNull(pairing);
+        ArgumentNullException.ThrowIfNull(createdMatch);
 
-        MatchFoundNotification notification = MatchmakingTranslator.ToNotification(pairing, GetUtcNow());
-        foreach (MatchSearch search in pairing.Players)
+        MatchFoundNotification notification = MatchmakingTranslator.ToNotification(createdMatch, GetUtcNow());
+        foreach (CreatedMatchParticipant participant in createdMatch.Participants)
         {
-            NotifyPlayer(search.AccountId, notification);
+            NotifyPlayer(participant.Player.AccountId, notification);
         }
     }
 

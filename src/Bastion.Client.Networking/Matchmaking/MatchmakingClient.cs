@@ -86,6 +86,8 @@ public sealed class MatchmakingClient : IMatchmakingClient, IDisposable
         {
             case SearchRejectionReason.NotificationsUnavailable:
                 return SearchRejection.NotificationsUnavailable;
+            case SearchRejectionReason.UnfinishedMatch:
+                return SearchRejection.UnfinishedMatch;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported search rejection reason.");
         }

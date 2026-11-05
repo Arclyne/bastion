@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.ServiceModel;
 using Bastion.Client.Networking.Matchmaking;
 using Bastion.Contracts.Notifications;
@@ -53,7 +54,14 @@ public sealed class NotificationCallback : INotificationCallback
 
     private static MatchFoundEventArgs ToEventArgs(MatchFoundNotification notification)
     {
-        return new MatchFoundEventArgs(notification.ParticipantNicknames ?? Array.Empty<string>());
+        MatchFoundParticipant[] participants = notification.Participants ?? Array.Empty<MatchFoundParticipant>();
+        PairedPlayer[] players = participants.Select(ToPairedPlayer).ToArray();
+        return new MatchFoundEventArgs(notification.MatchId, players);
+    }
+
+    private static PairedPlayer ToPairedPlayer(MatchFoundParticipant participant)
+    {
+        return new PairedPlayer(participant.Nickname ?? string.Empty, participant.EloRating, participant.TurnOrder);
     }
 
     private static PresenceRequestedEventArgs ToEventArgs(PresenceRequestedNotification notification)
@@ -75,6 +83,8 @@ public sealed class NotificationCallback : INotificationCallback
                 return SearchEndReason.Cancelled;
             case SearchEndedReason.PresenceExpired:
                 return SearchEndReason.PresenceExpired;
+            case SearchEndedReason.MatchCreationFailed:
+                return SearchEndReason.MatchCreationFailed;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported search end reason.");
         }

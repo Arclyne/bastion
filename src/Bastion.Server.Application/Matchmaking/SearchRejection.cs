@@ -2,5 +2,6 @@ namespace Bastion.Server.Application.Matchmaking;
 
 public enum SearchRejection
 {
-    NotificationsUnavailable
+    NotificationsUnavailable,
+    UnfinishedMatch
 }

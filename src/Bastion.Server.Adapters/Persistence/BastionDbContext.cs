@@ -1,8 +1,11 @@
 using System;
-using Microsoft.EntityFrameworkCore;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Auditing;
+using Bastion.Domain.GameModes;
+using Bastion.Domain.Matches;
 using Bastion.Domain.Sessions;
+using Bastion.Domain.Statistics;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bastion.Server.Adapters.Persistence;
 
@@ -18,6 +21,14 @@ public sealed class BastionDbContext : DbContext
     public DbSet<Session> Sessions => Set<Session>();
 
     public DbSet<AccessLog> AccessLogs => Set<AccessLog>();
+
+    public DbSet<GameMode> GameModes => Set<GameMode>();
+
+    public DbSet<Match> Matches => Set<Match>();
+
+    public DbSet<Participation> Participations => Set<Participation>();
+
+    public DbSet<ModeStatistic> ModeStatistics => Set<ModeStatistic>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

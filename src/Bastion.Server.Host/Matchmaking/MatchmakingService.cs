@@ -1,6 +1,7 @@
 using System;
 using System.Data.Common;
 using Bastion.Contracts.Matchmaking;
+using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Matchmaking;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Sessions;
@@ -49,6 +50,11 @@ public sealed class MatchmakingService : IMatchmakingService
         catch (SearchRejectedException ex)
         {
             throw MatchmakingTranslator.ToFault(ex);
+        }
+        catch (MatchStoreException ex)
+        {
+            _logger.Error("The match store could not be read while starting a match search.", ex);
+            throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)
         {

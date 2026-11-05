@@ -208,6 +208,8 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         {
             case SearchRejection.NotificationsUnavailable:
                 return nameof(Strings.MatchSearchNotificationsUnavailable);
+            case SearchRejection.UnfinishedMatch:
+                return nameof(Strings.MatchSearchUnfinishedMatch);
             default:
                 throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported search rejection.");
         }
@@ -263,7 +265,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         _clockTimer = _timeProvider.CreateTimer(HandleClockTick, null, _clockTick, _clockTick);
     }
 
-    private void ShowMatchFound(IReadOnlyList<string> participantNicknames)
+    private void ShowMatchFound(IReadOnlyList<PairedPlayer> players)
     {
         if (Stage == MatchSearchStage.MatchFound)
         {
@@ -272,7 +274,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
 
         StopClock();
         IsPresenceDialogOpen = false;
-        string rivals = string.Join(NicknameSeparator, participantNicknames.Where(IsRivalNickname));
+        string rivals = string.Join(NicknameSeparator, players.Where(IsRival).Select(player => player.Nickname));
         RivalText = string.Format(CultureInfo.CurrentCulture, Strings.MatchSearchFoundDetailFormat, rivals);
         Stage = MatchSearchStage.MatchFound;
     }
@@ -298,6 +300,9 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
                 break;
             case SearchEndReason.PresenceExpired:
                 EndActiveSearch(nameof(Strings.MatchSearchPresenceExpired));
+                break;
+            case SearchEndReason.MatchCreationFailed:
+                EndActiveSearch(nameof(Strings.MatchSearchMatchCreationFailed));
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported search end reason.");
@@ -348,9 +353,9 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         Interlocked.Exchange(ref _clockTimer, null)?.Dispose();
     }
 
-    private bool IsRivalNickname(string nickname)
+    private bool IsRival(PairedPlayer player)
     {
-        return !string.Equals(nickname, _session.Nickname, StringComparison.Ordinal);
+        return !string.Equals(player.Nickname, _session.Nickname, StringComparison.Ordinal);
     }
 
     private void HandleClockTick(object? state)
@@ -360,7 +365,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
 
     private void HandleMatchFound(object? sender, MatchFoundEventArgs e)
     {
-        UiThread.Run(_uiContext, () => ShowMatchFound(e.ParticipantNicknames));
+        UiThread.Run(_uiContext, () => ShowMatchFound(e.Players));
     }
 
     private void HandlePresenceRequested(object? sender, PresenceRequestedEventArgs e)
