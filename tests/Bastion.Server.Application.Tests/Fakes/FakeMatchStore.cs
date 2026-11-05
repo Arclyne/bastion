@@ -35,7 +35,7 @@ public sealed class FakeMatchStore : IMatchStore
 
     public Dictionary<int, Match> MatchesById { get; } = new Dictionary<int, Match>();
 
-    public List<Match> SavedMatchEnds { get; } = new List<Match>();
+    public List<Match> SavedAbandonments { get; } = new List<Match>();
 
     public bool HasUnfinishedParticipation(int accountId)
     {
@@ -92,11 +92,11 @@ public sealed class FakeMatchStore : IMatchStore
         return MatchesById.GetValueOrDefault(matchId);
     }
 
-    public void SaveMatchEnd(Match match)
+    public void SaveAbandonment(Match match)
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        SavedMatchEnds.Add(match);
+        SavedAbandonments.Add(match);
     }
 
     private static GameMode CreateClassicGameMode()

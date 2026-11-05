@@ -11,6 +11,7 @@ public sealed class ParticipationConfiguration : IEntityTypeConfiguration<Partic
     private const int PawnSymbolLength = 10;
     private const int SquareLength = 3;
     private const int ResultLength = 10;
+    private const int EndReasonLength = 15;
     private const string RemainingClockColumn = "RemainingClock";
 
     public void Configure(EntityTypeBuilder<Participation> builder)
@@ -28,6 +29,10 @@ public sealed class ParticipationConfiguration : IEntityTypeConfiguration<Partic
         builder.Property(participation => participation.Result)
             .HasConversion(new UpperSnakeCaseEnumConverter<ParticipationResult>())
             .HasMaxLength(ResultLength)
+            .IsUnicode(false);
+        builder.Property(participation => participation.EndReason)
+            .HasConversion(new UpperSnakeCaseEnumConverter<MatchEndReason>())
+            .HasMaxLength(EndReasonLength)
             .IsUnicode(false);
     }
 }

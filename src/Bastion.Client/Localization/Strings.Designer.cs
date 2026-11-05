@@ -1505,5 +1505,32 @@ namespace Bastion.Client.Localization {
                 return ResourceManager.GetString("VersusStartsInFormat", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}'s turn.
+        /// </summary>
+        internal static string MatchPlayerTurnFormat {
+            get {
+                return ResourceManager.GetString("MatchPlayerTurnFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} left the match..
+        /// </summary>
+        internal static string MatchPlayerLeftFormat {
+            get {
+                return ResourceManager.GetString("MatchPlayerLeftFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Left the match.
+        /// </summary>
+        internal static string MatchPlayerLeft {
+            get {
+                return ResourceManager.GetString("MatchPlayerLeft", resourceCulture);
+            }
+        }
     }
 }

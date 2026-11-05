@@ -10,9 +10,11 @@ namespace Bastion.Client.Screens.Matches;
 
 public sealed class MatchView : Panel
 {
-    private const float TurnPillWidth = 160;
+    private const float TurnPillPaddingX = 24;
+    private const int HorizontalSideCount = 2;
     private const float AbandonButtonWidth = 210;
     private const float AbandonStatusGap = 8;
+    private const float PlayerLeftNoticeWidth = 420;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchView));
 
@@ -35,6 +37,7 @@ public sealed class MatchView : Panel
         AddChild(CreateChatPanel(chatViewModel));
         AddChild(CreateAbandonButton());
         AddChild(CreateAbandonStatus());
+        AddChild(CreatePlayerLeftNotice());
         _rivalAbandonedLayer = CreateRivalAbandonedLayer(abandonmentViewModel);
     }
 
@@ -51,16 +54,17 @@ public sealed class MatchView : Panel
     {
         var pill = new Panel
         {
-            Width = TurnPillWidth,
-            WidthUnits = DimensionUnitType.Absolute,
+            Width = TurnPillPaddingX * HorizontalSideCount,
+            WidthUnits = DimensionUnitType.RelativeToChildren,
             Height = ScreenMetrics.MenuPillHeight,
             HeightUnits = DimensionUnitType.Absolute,
         };
         pill.Anchor(Gum.Wireframe.Anchor.TopRight);
         pill.X = -ScreenMetrics.MarginX;
         pill.Y = ScreenMetrics.MarginY;
-        Label text = ViewFactory.CreateLabel(matchViewModel.TurnTextKey, TextStyles.IdentityName);
-        text.Anchor(Gum.Wireframe.Anchor.Center);
+        Label text = ViewFactory.CreateUntranslatedLabel(matchViewModel.TurnText, TextStyles.IdentityName);
+        text.X = TurnPillPaddingX;
+        ViewFactory.CenterVertically(text);
         pill.AddChild(text);
         Skins.ApplyCard(pill.Visual);
         return pill;
@@ -114,6 +118,19 @@ public sealed class MatchView : Panel
         status.X = ScreenMetrics.MarginX;
         status.Y = -(ScreenMetrics.MarginY + ScreenMetrics.MenuPillHeight + AbandonStatusGap);
         return status;
+    }
+
+    private Label CreatePlayerLeftNotice()
+    {
+        Label notice = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(MatchAbandonmentViewModel.PlayerLeftText),
+            TextStyles.IdentityName,
+            PlayerLeftNoticeWidth);
+        notice.BindingContext = _abandonmentViewModel;
+        notice.SetBinding(nameof(IsVisible), nameof(MatchAbandonmentViewModel.HasPlayerLeft));
+        notice.Anchor(Gum.Wireframe.Anchor.Top);
+        notice.Y = ScreenMetrics.MarginY;
+        return notice;
     }
 
     private async void HandleAbandonClick(object? sender, EventArgs e)

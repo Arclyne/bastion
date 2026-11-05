@@ -54,7 +54,12 @@ public sealed class MatchPlayersPanel : Panel
             WidthUnits = DimensionUnitType.Absolute,
         };
         nameColumn.AddChild(ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyles.IdentityName));
-        nameColumn.AddChild(ViewFactory.CreateUntranslatedLabel(player.EloText, TextStyles.IdentityDetail));
+        Label detail = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(MatchPlayerViewModel.DetailText),
+            TextStyles.IdentityDetail,
+            NameWidth);
+        detail.BindingContext = player;
+        nameColumn.AddChild(detail);
 
         var content = new StackPanel
         {

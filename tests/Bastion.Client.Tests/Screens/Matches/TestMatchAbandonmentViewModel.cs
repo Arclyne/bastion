@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
@@ -93,9 +94,9 @@ public class TestMatchAbandonmentViewModel : IDisposable
         string expectedText = string.Format(
             CultureInfo.CurrentCulture,
             Strings.MatchRivalAbandonedFormat,
-            JoinedMatchSamples.RivalNickname);
+            JoinedMatchSamples.RivalNickname, true);
 
-        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.RivalNickname);
+        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.RivalNickname, true);
 
         Assert.Equal(expectedText, _viewModel.RivalAbandonedText);
     }
@@ -103,15 +104,44 @@ public class TestMatchAbandonmentViewModel : IDisposable
     [Fact]
     public void MatchAbandoned_OtherMatch_IgnoresNotice()
     {
-        _matchClient.RaiseMatchAbandoned(OtherMatchId, JoinedMatchSamples.RivalNickname);
+        _matchClient.RaiseMatchAbandoned(OtherMatchId, JoinedMatchSamples.RivalNickname, true);
 
         Assert.False(_viewModel.HasRivalAbandoned);
     }
 
     [Fact]
+    public void MatchAbandoned_MatchGoesOn_ShowsPlayerLeftNotice()
+    {
+        string expectedText = string.Format(
+            CultureInfo.CurrentCulture,
+            Strings.MatchPlayerLeftFormat,
+            JoinedMatchSamples.RivalNickname);
+
+        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.RivalNickname, false);
+
+        Assert.Equal(expectedText, _viewModel.PlayerLeftText);
+    }
+
+    [Fact]
+    public void MatchAbandoned_MatchGoesOn_KeepsMatchOpen()
+    {
+        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.RivalNickname, false);
+
+        Assert.False(_viewModel.HasRivalAbandoned);
+    }
+
+    [Fact]
+    public void MatchAbandoned_MatchGoesOn_RemembersLeftPlayer()
+    {
+        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.RivalNickname, false);
+
+        Assert.Equal(JoinedMatchSamples.RivalNickname, _viewModel.LeftNicknames.Single());
+    }
+
+    [Fact]
     public void RequestReturnToMenu_RivalAbandoned_RequestsReturnToMenu()
     {
-        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.RivalNickname);
+        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.RivalNickname, true);
 
         _viewModel.RequestReturnToMenu();
 

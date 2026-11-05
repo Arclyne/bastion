@@ -1,10 +1,12 @@
 using System;
+using Bastion.Client.Localization;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Domain.Matches;
+using Gum.Mvvm;
 
 namespace Bastion.Client.Screens.Matches;
 
-public sealed class MatchPlayerViewModel
+public sealed class MatchPlayerViewModel : ViewModel
 {
     public MatchPlayerViewModel(FoundMatchParticipant participant, FoundMatchFormat format, bool isOwn)
     {
@@ -34,8 +36,22 @@ public sealed class MatchPlayerViewModel
 
     public bool IsOwn { get; }
 
+    public bool HasLeft
+    {
+        get => Get<bool>();
+        private set => Set(value);
+    }
+
+    [DependsOn(nameof(HasLeft))]
+    public string DetailText => HasLeft ? Strings.MatchPlayerLeft : EloText;
+
     public bool HasFirstTurn()
     {
         return TurnOrder == Match.FirstTurnOrder;
+    }
+
+    public void MarkLeft()
+    {
+        HasLeft = true;
     }
 }

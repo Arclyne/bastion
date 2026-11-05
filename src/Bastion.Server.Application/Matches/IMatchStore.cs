@@ -21,5 +21,5 @@ public interface IMatchStore
 
     Match? FindMatch(int matchId);
 
-    void SaveMatchEnd(Match match);
+    void SaveAbandonment(Match match);
 }

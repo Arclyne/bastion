@@ -11,11 +11,11 @@ public sealed class FakeMatchEndNotifier : IMatchEndNotifier
     public void NotifyMatchAbandoned(
         int matchId,
         IReadOnlyCollection<int> recipientAccountIds,
-        string abandoningNickname)
+        AbandonmentNotice notice)
     {
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
-        ArgumentNullException.ThrowIfNull(abandoningNickname);
+        ArgumentNullException.ThrowIfNull(notice);
 
-        NotifiedAbandonments.Add(new NotifiedMatchAbandonment(matchId, recipientAccountIds, abandoningNickname));
+        NotifiedAbandonments.Add(new NotifiedMatchAbandonment(matchId, recipientAccountIds, notice));
     }
 }

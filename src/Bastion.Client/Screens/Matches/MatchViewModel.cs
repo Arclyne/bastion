@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Notifications;
@@ -7,36 +8,50 @@ using Bastion.Domain.Matches;
 
 namespace Bastion.Client.Screens.Matches;
 
-public sealed class MatchViewModel
+public sealed class MatchViewModel : IDisposable
 {
-    public MatchViewModel(JoinedMatch joinedMatch)
+    private const int TwoPlayers = 2;
+
+    private readonly MatchAbandonmentViewModel _abandonmentViewModel;
+    private List<BoardPawn> _pawns = new List<BoardPawn>();
+
+    public MatchViewModel(JoinedMatch joinedMatch, MatchAbandonmentViewModel abandonmentViewModel)
     {
         ArgumentNullException.ThrowIfNull(joinedMatch);
+        ArgumentNullException.ThrowIfNull(abandonmentViewModel);
 
+        _abandonmentViewModel = abandonmentViewModel;
         FoundMatchFormat format = joinedMatch.FoundMatch.Format;
         IEnumerable<MatchPlayerViewModel> playerQuery = joinedMatch.FoundMatch.Participants
             .OrderBy(participant => participant.TurnOrder)
             .Select(participant => CreatePlayerViewModel(joinedMatch, participant, format));
         Players = new List<MatchPlayerViewModel>(playerQuery);
-
-        IEnumerable<BoardPawn> pawnQuery = Players.Select(player => CreatePawn(format.BoardSize, player));
-        Pawns = new List<BoardPawn>(pawnQuery);
-
-        MatchPlayerViewModel own = Players.First(player => player.IsOwn);
         BoardSize = format.BoardSize;
-        IsBoardRotated = !own.HasFirstTurn();
-        TurnTextKey = own.HasFirstTurn() ? nameof(Strings.MatchYourTurn) : nameof(Strings.MatchRivalTurn);
+        OwnTurnOrder = Players.First(player => player.IsOwn).TurnOrder;
+        TurnText = FormatTurn(Players.First(player => player.HasFirstTurn()), Players.Count);
+        foreach (string nickname in abandonmentViewModel.LeftNicknames)
+        {
+            MarkPlayerLeft(nickname);
+        }
+
+        RebuildPawns();
+        _abandonmentViewModel.PlayerLeft += HandlePlayerLeft;
     }
 
     public IReadOnlyList<MatchPlayerViewModel> Players { get; }
 
-    public IReadOnlyList<BoardPawn> Pawns { get; }
+    public IReadOnlyList<BoardPawn> Pawns => _pawns;
 
     public byte BoardSize { get; }
 
-    public bool IsBoardRotated { get; }
+    public byte OwnTurnOrder { get; }
 
-    public string TurnTextKey { get; }
+    public string TurnText { get; }
+
+    public void Dispose()
+    {
+        _abandonmentViewModel.PlayerLeft -= HandlePlayerLeft;
+    }
 
     private static MatchPlayerViewModel CreatePlayerViewModel(
         JoinedMatch joinedMatch,
@@ -46,9 +61,41 @@ public sealed class MatchViewModel
         return new MatchPlayerViewModel(participant, format, joinedMatch.IsOwnParticipant(participant));
     }
 
-    private static BoardPawn CreatePawn(byte boardSize, MatchPlayerViewModel player)
+    private static string FormatTurn(MatchPlayerViewModel firstPlayer, int playerCount)
     {
-        BoardCoordinates coordinates = BoardLayout.GetStartingCoordinates(boardSize, player.TurnOrder);
+        if (firstPlayer.IsOwn)
+        {
+            return Strings.MatchYourTurn;
+        }
+
+        if (playerCount == TwoPlayers)
+        {
+            return Strings.MatchRivalTurn;
+        }
+
+        return string.Format(CultureInfo.CurrentCulture, Strings.MatchPlayerTurnFormat, firstPlayer.Nickname);
+    }
+
+    private BoardPawn CreatePawn(MatchPlayerViewModel player)
+    {
+        BoardCoordinates coordinates = BoardLayout.GetStartingCoordinates(BoardSize, player.TurnOrder);
         return new BoardPawn(coordinates, player.PawnSymbol);
+    }
+
+    private void MarkPlayerLeft(string nickname)
+    {
+        MatchPlayerViewModel? player = Players.FirstOrDefault(candidate => candidate.Nickname == nickname);
+        player?.MarkLeft();
+    }
+
+    private void RebuildPawns()
+    {
+        _pawns = Players.Where(player => !player.HasLeft).Select(CreatePawn).ToList();
+    }
+
+    private void HandlePlayerLeft(object? sender, PlayerLeftEventArgs e)
+    {
+        MarkPlayerLeft(e.Nickname);
+        RebuildPawns();
     }
 }

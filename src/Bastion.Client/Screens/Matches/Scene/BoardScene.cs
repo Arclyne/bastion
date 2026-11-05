@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Bastion.Client.Theme;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -24,6 +25,7 @@ public sealed class BoardScene
     private readonly SceneModel _pawnModel;
     private readonly Dictionary<string, Color> _goalColorsByMeshName = new Dictionary<string, Color>();
     private MatchViewModel? _preparedMatch;
+    private int _preparedPawnCount;
 
     public BoardScene(GraphicsDevice graphicsDevice, ContentManager content)
     {
@@ -41,7 +43,7 @@ public sealed class BoardScene
         ArgumentNullException.ThrowIfNull(match);
 
         PrepareGoalColors(match);
-        SceneCamera camera = CreateCamera(match.IsBoardRotated);
+        SceneCamera camera = CreateCamera(match.OwnTurnOrder);
         ApplyDeviceStates();
         DrawBoard(GetBoardModel(match.BoardSize), camera);
         foreach (BoardPawn pawn in match.Pawns)
@@ -52,24 +54,26 @@ public sealed class BoardScene
 
     private void PrepareGoalColors(MatchViewModel match)
     {
-        if (ReferenceEquals(_preparedMatch, match))
+        if (ReferenceEquals(_preparedMatch, match) && _preparedPawnCount == match.Pawns.Count)
         {
             return;
         }
 
         _goalColorsByMeshName.Clear();
-        foreach (MatchPlayerViewModel player in match.Players)
+        foreach (MatchPlayerViewModel player in match.Players.Where(candidate => !candidate.HasLeft))
         {
-            string goalMeshName = BoardSceneLayout.GetGoalMeshName(match.BoardSize, player.TurnOrder);
+            string goalMeshName =
+                BoardSceneLayout.GetGoalMeshName(match.BoardSize, player.TurnOrder, match.Players.Count);
             _goalColorsByMeshName[goalMeshName] = Palette.GetPawnColor(player.PawnSymbol);
         }
 
         _preparedMatch = match;
+        _preparedPawnCount = match.Pawns.Count;
     }
 
-    private SceneCamera CreateCamera(bool isBoardRotated)
+    private SceneCamera CreateCamera(byte ownTurnOrder)
     {
-        Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(isBoardRotated);
+        Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(ownTurnOrder);
         var view = Matrix.CreateLookAt(cameraPosition, Vector3.Zero, Vector3.Up);
         var projection = Matrix.CreatePerspectiveFieldOfView(
             MathHelper.ToRadians(FieldOfViewDegrees),
