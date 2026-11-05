@@ -25,7 +25,7 @@ public sealed class MatchSearchPanel : Panel
         WidthUnits = DimensionUnitType.Absolute;
         Height = DialogMetrics.PaddingBottom;
         HeightUnits = DimensionUnitType.RelativeToChildren;
-        SetBinding(nameof(IsVisible), nameof(MatchSearchViewModel.IsPanelVisible));
+        SetBinding(nameof(IsVisible), nameof(MatchSearchViewModel.IsSearching));
 
         var content = new StackPanel
         {
@@ -33,59 +33,26 @@ public sealed class MatchSearchPanel : Panel
             Y = DialogMetrics.PaddingTop,
             Spacing = DialogMetrics.SectionSpacing,
         };
-        content.AddChild(CreateSearchingSection());
-        content.AddChild(CreateMatchFoundSection());
+        content.AddChild(ViewFactory.CreateLabel(nameof(Strings.MatchSearchSearchingTitle), TextStyles.DialogTitle));
+        content.AddChild(ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(MatchSearchViewModel.SearchDetail),
+            TextStyles.DialogMessage,
+            DialogMetrics.ContentWidth));
+        content.AddChild(CreateCancelButton());
         AddChild(content);
         Skins.ApplyCard(Visual);
     }
 
-    private static StackPanel CreateSection(string titleKey, string detailProperty, Button button)
+    private Button CreateCancelButton()
     {
-        var section = new StackPanel
-        {
-            Spacing = DialogMetrics.SectionSpacing,
-        };
-        section.AddChild(ViewFactory.CreateLabel(titleKey, TextStyles.DialogTitle));
-        section.AddChild(ViewFactory.CreateBoundUntranslatedLabel(
-            detailProperty,
-            TextStyles.DialogMessage,
-            DialogMetrics.ContentWidth));
-        section.AddChild(button);
-        return section;
-    }
-
-    private static Button CreateButton(string textKey, ButtonLook look)
-    {
-        Button button = ViewFactory.CreateButton(textKey, ButtonWidth, DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(button, look);
-        return button;
-    }
-
-    private StackPanel CreateSearchingSection()
-    {
-        Button cancelButton = CreateButton(nameof(Strings.CommonCancelButton), ButtonLooks.Secondary);
+        Button cancelButton = ViewFactory.CreateButton(
+            nameof(Strings.CommonCancelButton),
+            ButtonWidth,
+            DialogMetrics.ButtonHeight);
+        ButtonSkin.CreateAndAttach(cancelButton, ButtonLooks.Secondary);
         cancelButton.SetBinding(nameof(IsEnabled), nameof(MatchSearchViewModel.CanCancelSearch));
         cancelButton.Click += HandleCancelClick;
-
-        StackPanel section = CreateSection(
-            nameof(Strings.MatchSearchSearchingTitle),
-            nameof(MatchSearchViewModel.SearchDetail),
-            cancelButton);
-        section.SetBinding(nameof(IsVisible), nameof(MatchSearchViewModel.IsSearching));
-        return section;
-    }
-
-    private StackPanel CreateMatchFoundSection()
-    {
-        Button acceptButton = CreateButton(nameof(Strings.CommonAcceptButton), ButtonLooks.Primary);
-        acceptButton.Click += HandleAcceptClick;
-
-        StackPanel section = CreateSection(
-            nameof(Strings.MatchSearchFoundTitle),
-            nameof(MatchSearchViewModel.RivalText),
-            acceptButton);
-        section.SetBinding(nameof(IsVisible), nameof(MatchSearchViewModel.IsMatchFound));
-        return section;
+        return cancelButton;
     }
 
     private async void HandleCancelClick(object? sender, EventArgs e)
@@ -98,10 +65,5 @@ public sealed class MatchSearchPanel : Panel
         {
             _logger.Warn("The match search could not be cancelled because the connection is closed.", ex);
         }
-    }
-
-    private void HandleAcceptClick(object? sender, EventArgs e)
-    {
-        _viewModel.DismissMatchFound();
     }
 }

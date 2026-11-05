@@ -9,11 +9,18 @@ public static class BoardLayout
     private const int FirstRow = 1;
     private const int BoardHalves = 2;
 
+    public static BoardCoordinates GetStartingCoordinates(byte boardSize, byte turnOrder)
+    {
+        int centerColumnIndex = boardSize / BoardHalves;
+        int startingRowIndex = GetStartingRow(boardSize, turnOrder) - FirstRow;
+        return new BoardCoordinates(centerColumnIndex, startingRowIndex);
+    }
+
     public static string GetStartingSquare(byte boardSize, byte turnOrder)
     {
-        char centerColumn = (char)(FirstColumn + (boardSize / BoardHalves));
-        int startingRow = GetStartingRow(boardSize, turnOrder);
-        return string.Create(CultureInfo.InvariantCulture, $"{centerColumn}{startingRow}");
+        BoardCoordinates coordinates = GetStartingCoordinates(boardSize, turnOrder);
+        char column = (char)(FirstColumn + coordinates.ColumnIndex);
+        return string.Create(CultureInfo.InvariantCulture, $"{column}{coordinates.RowIndex + FirstRow}");
     }
 
     private static int GetStartingRow(byte boardSize, byte turnOrder)

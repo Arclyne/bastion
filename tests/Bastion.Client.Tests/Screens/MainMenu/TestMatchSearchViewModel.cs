@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using System.Threading;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
@@ -40,10 +39,14 @@ public class TestMatchSearchViewModel : IDisposable
     private readonly FakeMatchmakingClient _matchmakingClient = new FakeMatchmakingClient();
     private readonly ManualTimeProvider _timeProvider = new ManualTimeProvider(_searchStartedAt);
     private readonly MatchSearchViewModel _viewModel;
+    private int _matchFoundCount;
 
     public TestMatchSearchViewModel()
     {
-        _viewModel = CreateViewModel();
+        var session = new SignedInSession(SessionToken, OwnNickname, PreferredLanguage);
+        _viewModel = InlineUiContext.CreateViewModel(
+            () => new MatchSearchViewModel(session, _matchmakingClient, _timeProvider));
+        _viewModel.MatchFound += HandleMatchFound;
     }
 
     public void Dispose()
@@ -104,17 +107,34 @@ public class TestMatchSearchViewModel : IDisposable
     }
 
     [Fact]
-    public async Task MatchFound_WhileSearching_ShowsOnlyRival()
+    public async Task MatchFound_WhileSearching_RaisesMatchFound()
     {
-        string expectedText = string.Format(
-            CultureInfo.CurrentCulture,
-            Strings.MatchSearchFoundDetailFormat,
-            RivalNickname);
         await _viewModel.StartSearch();
 
         _matchmakingClient.RaiseMatchFound(_foundMatchParticipants);
 
-        Assert.Equal(expectedText, _viewModel.RivalText);
+        Assert.Equal(1, _matchFoundCount);
+    }
+
+    [Fact]
+    public async Task MatchFound_Twice_RaisesMatchFoundOnce()
+    {
+        await _viewModel.StartSearch();
+        _matchmakingClient.RaiseMatchFound(_foundMatchParticipants);
+
+        _matchmakingClient.RaiseMatchFound(_foundMatchParticipants);
+
+        Assert.Equal(1, _matchFoundCount);
+    }
+
+    [Fact]
+    public async Task MatchFound_WhileSearching_StopsSearching()
+    {
+        await _viewModel.StartSearch();
+
+        _matchmakingClient.RaiseMatchFound(_foundMatchParticipants);
+
+        Assert.False(_viewModel.IsSearching);
     }
 
     [Fact]
@@ -206,13 +226,13 @@ public class TestMatchSearchViewModel : IDisposable
     }
 
     [Fact]
-    public async Task CancelSearch_WhileSearching_HidesPanel()
+    public async Task CancelSearch_WhileSearching_StopsSearching()
     {
         await _viewModel.StartSearch();
 
         await _viewModel.CancelSearch();
 
-        Assert.False(_viewModel.IsPanelVisible);
+        Assert.False(_viewModel.IsSearching);
     }
 
     [Fact]
@@ -223,17 +243,6 @@ public class TestMatchSearchViewModel : IDisposable
         _timeProvider.Advance(TimeSpan.FromSeconds(ElapsedSeconds));
 
         Assert.EndsWith(ExpectedElapsedText, _viewModel.SearchDetail, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public async Task DismissMatchFound_MatchFound_HidesPanel()
-    {
-        await _viewModel.StartSearch();
-        _matchmakingClient.RaiseMatchFound(_foundMatchParticipants);
-
-        _viewModel.DismissMatchFound();
-
-        Assert.False(_viewModel.IsPanelVisible);
     }
 
     [Fact]
@@ -254,19 +263,8 @@ public class TestMatchSearchViewModel : IDisposable
         Assert.False(_matchmakingClient.HasSubscribers());
     }
 
-    private MatchSearchViewModel CreateViewModel()
+    private void HandleMatchFound(object? sender, MatchFoundEventArgs e)
     {
-        // The view model posts its notices to the context it is created on; without one they run inline.
-        SynchronizationContext? previousContext = SynchronizationContext.Current;
-        SynchronizationContext.SetSynchronizationContext(null);
-        try
-        {
-            var session = new SignedInSession(SessionToken, OwnNickname, PreferredLanguage);
-            return new MatchSearchViewModel(session, _matchmakingClient, _timeProvider);
-        }
-        finally
-        {
-            SynchronizationContext.SetSynchronizationContext(previousContext);
-        }
+        _matchFoundCount++;
     }
 }

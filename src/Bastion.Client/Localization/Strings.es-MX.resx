@@ -408,12 +408,6 @@
   <data name="MatchSearchSearchingTitle" xml:space="preserve">
     <value>Buscando rival…</value>
   </data>
-  <data name="MatchSearchFoundTitle" xml:space="preserve">
-    <value>¡Rival encontrado!</value>
-  </data>
-  <data name="MatchSearchFoundDetailFormat" xml:space="preserve">
-    <value>Jugarás contra {0}.</value>
-  </data>
   <data name="MatchSearchPresenceTitle" xml:space="preserve">
     <value>¿Sigues ahí?</value>
   </data>
@@ -443,5 +437,32 @@
   </data>
   <data name="MatchSearchMatchCreationFailed" xml:space="preserve">
     <value>No se pudo crear la partida. Vuelve a buscar.</value>
+  </data>
+  <data name="VersusLabel" xml:space="preserve">
+    <value>VS</value>
+  </data>
+  <data name="VersusModeFormat" xml:space="preserve">
+    <value>Clásico {0}×{0} · {1} muros</value>
+  </data>
+  <data name="VersusStartsInFormat" xml:space="preserve">
+    <value>Empieza en {0}…</value>
+  </data>
+  <data name="MatchEloFormat" xml:space="preserve">
+    <value>Elo {0}</value>
+  </data>
+  <data name="MatchWallsFormat" xml:space="preserve">
+    <value>{0} muros</value>
+  </data>
+  <data name="MatchYourTurn" xml:space="preserve">
+    <value>Tu turno</value>
+  </data>
+  <data name="MatchRivalTurn" xml:space="preserve">
+    <value>Turno del rival</value>
+  </data>
+  <data name="MatchChatTitle" xml:space="preserve">
+    <value>Chat de la partida</value>
+  </data>
+  <data name="MatchChatUnavailable" xml:space="preserve">
+    <value>El chat de la partida no está disponible en este momento.</value>
   </data>
 </root>

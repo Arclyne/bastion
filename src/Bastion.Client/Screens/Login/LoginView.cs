@@ -29,8 +29,6 @@ public sealed class LoginView : Panel
     private const float SecondaryButtonHeight = 48;
     private const float ExitButtonWidth = 96;
     private const float ExitButtonHeight = 42;
-    private const float ScreenMarginX = 24;
-    private const float ExitButtonMarginY = 22;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(LoginView));
 
@@ -243,8 +241,8 @@ public sealed class LoginView : Panel
         Button button = ViewFactory.CreateButton(nameof(Strings.CommonExitButton), ExitButtonWidth, ExitButtonHeight);
         ButtonSkin.CreateAndAttach(button, ButtonLooks.Pill);
         button.Anchor(Gum.Wireframe.Anchor.TopRight);
-        button.X = -ScreenMarginX;
-        button.Y = ExitButtonMarginY;
+        button.X = -ScreenMetrics.MarginX;
+        button.Y = ScreenMetrics.MarginY;
         return button;
     }
 
