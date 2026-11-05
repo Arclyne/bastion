@@ -52,11 +52,11 @@ public sealed class MatchStore : IMatchStore
         return RunInNewContext(context => LoadAccountIdsWithUnfinishedParticipation(context, matchId));
     }
 
-    public long SaveChatMessage(ChatMessage message)
+    public long SaveMatchChatMessage(Message message)
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        return RunInNewContext(context => AddChatMessage(context, message));
+        return RunInNewContext(context => AddMatchChatMessage(context, message));
     }
 
     private static bool HasUnfinishedParticipationInContext(BastionDbContext context, int accountId)
@@ -100,9 +100,9 @@ public sealed class MatchStore : IMatchStore
             .ToList();
     }
 
-    private static long AddChatMessage(BastionDbContext context, ChatMessage message)
+    private static long AddMatchChatMessage(BastionDbContext context, Message message)
     {
-        context.ChatMessages.Add(message);
+        context.Messages.Add(message);
         context.SaveChanges();
         return message.MessageId;
     }

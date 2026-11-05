@@ -1,5 +1,6 @@
 using System;
+using Bastion.Server.Application.Sessions;
 
 namespace Bastion.Server.Application.Chat;
 
-public sealed record ChatLine(string SenderNickname, string Text, DateTime SentAt);
+public sealed record ChatLine(ConnectedPlayer Sender, string Text, DateTime SentAt);

@@ -1,5 +1,6 @@
 using System;
 using Bastion.Client.Localization;
+using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
@@ -51,7 +52,7 @@ public sealed class FriendsPanel : Panel
         content.AddChild(CreateFriendList(viewModel));
         content.AddChild(CreateAddFriend(viewModel));
         content.AddChild(CreateRequests(viewModel));
-        content.AddChild(CreatePlaceholder());
+        content.AddChild(CreateChat(viewModel));
         AddChild(content);
         AddChild(CreateFooter(viewModel));
         AddChild(CreateActionsMenu(viewModel));
@@ -107,11 +108,16 @@ public sealed class FriendsPanel : Panel
         return container;
     }
 
-    private static Label CreatePlaceholder()
+    private static Panel CreateChat(FriendsPanelViewModel viewModel)
     {
-        Label placeholder = ViewFactory.CreateLabel(nameof(Strings.FriendsComingSoon), TextStyles.NoticeTitle);
-        placeholder.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsPlaceholderTab));
-        return placeholder;
+        var container = new Panel
+        {
+            WidthUnits = DimensionUnitType.RelativeToChildren,
+            HeightUnits = DimensionUnitType.RelativeToChildren,
+        };
+        container.AddChild(new ChatTabView(viewModel.Chat));
+        container.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsChatTab));
+        return container;
     }
 
     private static FriendCodeFooter CreateFooter(FriendsPanelViewModel viewModel)
@@ -120,6 +126,7 @@ public sealed class FriendsPanel : Panel
         footer.Anchor(Gum.Wireframe.Anchor.BottomLeft);
         footer.X = PaddingX;
         footer.Y = -PaddingBottom;
+        footer.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.ShowsFriendCode));
         return footer;
     }
 

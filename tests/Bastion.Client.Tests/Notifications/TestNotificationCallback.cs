@@ -15,7 +15,9 @@ public class TestNotificationCallback
     private const string SecondNickname = "leo_peon";
     private const string MessageText = "hello";
     private const int ResponseSeconds = 60;
+    private const string FriendCode = "MA3R7T";
     private const int FoundMatchId = 12;
+    private const int ChatMatchId = 21;
     private const byte ClassicBoardSize = 9;
     private const byte ClassicWallsPerPlayer = 10;
     private const byte ClockMinutes = 5;
@@ -23,7 +25,6 @@ public class TestNotificationCallback
     private const short SecondEloRating = 1000;
     private const byte FirstTurnOrder = 1;
     private const byte SecondTurnOrder = 2;
-    private const string FriendCode = "MA3R7T";
 
     private static readonly DateTime _sentAt = new DateTime(2026, 11, 4, 18, 15, 0, DateTimeKind.Utc);
     private static readonly string[] _participantNicknames = new string[]
@@ -31,6 +32,7 @@ public class TestNotificationCallback
         FirstNickname,
         SecondNickname,
     };
+
     private static readonly MatchFoundParticipant[] _participants = new MatchFoundParticipant[]
     {
         new MatchFoundParticipant
@@ -48,7 +50,7 @@ public class TestNotificationCallback
     };
 
     private readonly NotificationCallback _notificationCallback = new NotificationCallback();
-    private LobbyChatMessageReceivedEventArgs? _lobbyChatMessage;
+    private ChatMessageReceivedEventArgs? _chatMessage;
     private MatchChatMessageReceivedEventArgs? _matchChatMessage;
     private MatchFoundEventArgs? _matchFound;
     private PresenceRequestedEventArgs? _presenceRequested;
@@ -56,10 +58,11 @@ public class TestNotificationCallback
     private FriendPresenceChangedEventArgs? _friendPresence;
     private FriendRequestReceivedEventArgs? _friendRequest;
     private FriendshipStartedEventArgs? _friendshipStarted;
+    private PrivateMessageReceivedEventArgs? _privateMessage;
 
     public TestNotificationCallback()
     {
-        _notificationCallback.LobbyChatMessageReceived += HandleLobbyChatMessageReceived;
+        _notificationCallback.ChatMessageReceived += HandleChatMessageReceived;
         _notificationCallback.MatchChatMessageReceived += HandleMatchChatMessageReceived;
         _notificationCallback.MatchFound += HandleMatchFound;
         _notificationCallback.PresenceRequested += HandlePresenceRequested;
@@ -67,6 +70,7 @@ public class TestNotificationCallback
         _notificationCallback.FriendPresenceChanged += HandleFriendPresenceChanged;
         _notificationCallback.FriendRequestReceived += HandleFriendRequestReceived;
         _notificationCallback.FriendshipStarted += HandleFriendshipStarted;
+        _notificationCallback.PrivateMessageReceived += HandlePrivateMessageReceived;
     }
 
     [Fact]
@@ -116,9 +120,25 @@ public class TestNotificationCallback
     }
 
     [Fact]
-    public void ReceiveNotification_LobbyChatMessage_RaisesSenderNickname()
+    public void ReceiveNotification_PrivateMessage_RaisesText()
     {
-        var notification = new LobbyChatMessageNotification
+        var notification = new PrivateMessageNotification
+        {
+            SenderNickname = FirstNickname,
+            SenderFriendCode = "QU7K2P",
+            Text = MessageText,
+            OccurredAt = _sentAt,
+        };
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(MessageText, _privateMessage?.Message.Text);
+    }
+
+    [Fact]
+    public void ReceiveNotification_ChatMessage_RaisesSenderNickname()
+    {
+        var notification = new ChatMessageNotification
         {
             SenderNickname = FirstNickname,
             Text = MessageText,
@@ -127,7 +147,7 @@ public class TestNotificationCallback
 
         _notificationCallback.ReceiveNotification(notification);
 
-        Assert.Equal(FirstNickname, _lobbyChatMessage?.SenderNickname);
+        Assert.Equal(FirstNickname, _chatMessage?.Message.Author.Nickname);
     }
 
     [Fact]
@@ -135,7 +155,7 @@ public class TestNotificationCallback
     {
         var notification = new MatchChatMessageNotification
         {
-            MatchId = FoundMatchId,
+            MatchId = ChatMatchId,
             SenderNickname = FirstNickname,
             Text = MessageText,
             OccurredAt = _sentAt,
@@ -143,7 +163,7 @@ public class TestNotificationCallback
 
         _notificationCallback.ReceiveNotification(notification);
 
-        Assert.Equal(FoundMatchId, _matchChatMessage?.MatchId);
+        Assert.Equal(ChatMatchId, _matchChatMessage?.MatchId);
     }
 
     [Fact]
@@ -230,14 +250,19 @@ public class TestNotificationCallback
         };
     }
 
-    private void HandleLobbyChatMessageReceived(object? sender, LobbyChatMessageReceivedEventArgs e)
-    {
-        _lobbyChatMessage = e;
-    }
-
     private void HandleMatchChatMessageReceived(object? sender, MatchChatMessageReceivedEventArgs e)
     {
         _matchChatMessage = e;
+    }
+
+    private void HandlePrivateMessageReceived(object? sender, PrivateMessageReceivedEventArgs e)
+    {
+        _privateMessage = e;
+    }
+
+    private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)
+    {
+        _chatMessage = e;
     }
 
     private void HandleMatchFound(object? sender, MatchFoundEventArgs e)

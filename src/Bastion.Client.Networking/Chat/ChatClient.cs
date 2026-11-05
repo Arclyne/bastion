@@ -26,20 +26,30 @@ public sealed class ChatClient : IChatClient, IDisposable
         remove => _notificationClient.MatchChatMessageReceived -= value;
     }
 
-    public void SendLobbyChatMessage(string sessionToken, string text)
+    public DateTime SendMessage(string sessionToken, string text)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(text);
 
-        Call(service => service.SendLobbyChatMessage(sessionToken, text));
+        ChatMessageReceipt receipt = Call(service => service.SendChatMessage(sessionToken, text));
+        return receipt.SentAt;
     }
 
-    public void SendMatchChatMessage(string sessionToken, int matchId, string text)
+    public DateTime SendMatchChatMessage(string sessionToken, int matchId, string text)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(text);
 
-        Call(service => service.SendMatchChatMessage(sessionToken, matchId, text));
+        ChatMessageReceipt receipt = Call(service => service.SendMatchChatMessage(sessionToken, matchId, text));
+        return receipt.SentAt;
+    }
+
+    public LobbyChatTranscript OpenLobbyChat(string sessionToken)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
+        LobbyChatLog log = Call(service => service.OpenLobbyChat(sessionToken));
+        return ChatContractTranslator.ToTranscript(log);
     }
 
     public void Dispose()
@@ -49,9 +59,12 @@ public sealed class ChatClient : IChatClient, IDisposable
 
     private static Exception ToClientException(Exception ex)
     {
-        if (ex is FaultException<InvalidChatMessageFault>)
+        if (ex is FaultException<ChatMessageRejectedFault> rejected)
         {
-            return new InvalidChatMessageException(ex);
+            return new ChatMessageRejectedException(
+                ChatContractTranslator.ToRejection(rejected.Detail.Reason),
+                rejected.Detail.MutedUntil,
+                ex);
         }
 
         if (ex is FaultException<ChatChannelForbiddenFault>)
@@ -62,11 +75,11 @@ public sealed class ChatClient : IChatClient, IDisposable
         return ServiceFailureTranslator.ToClientException(ex);
     }
 
-    private void Call(Action<IChatService> operation)
+    private TResult Call<TResult>(Func<IChatService, TResult> operation)
     {
         try
         {
-            _channel.Call(operation);
+            return _channel.Call(operation);
         }
         catch (CommunicationException ex)
         {

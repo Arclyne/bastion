@@ -1,8 +1,10 @@
 using System;
 using System.Linq;
 using System.ServiceModel;
+using Bastion.Client.Networking.Chat;
 using Bastion.Client.Networking.Friends;
 using Bastion.Client.Networking.Matchmaking;
+using Bastion.Client.Networking.PrivateChat;
 using Bastion.Contracts.Notifications;
 
 namespace Bastion.Client.Networking.Notifications;
@@ -10,7 +12,7 @@ namespace Bastion.Client.Networking.Notifications;
 [CallbackBehavior(UseSynchronizationContext = false, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class NotificationCallback : INotificationCallback
 {
-    public event EventHandler<LobbyChatMessageReceivedEventArgs>? LobbyChatMessageReceived;
+    public event EventHandler<ChatMessageReceivedEventArgs>? ChatMessageReceived;
 
     public event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
 
@@ -26,10 +28,14 @@ public sealed class NotificationCallback : INotificationCallback
 
     public event EventHandler<FriendshipStartedEventArgs>? FriendshipStarted;
 
+    public event EventHandler<PrivateMessageReceivedEventArgs>? PrivateMessageReceived;
+
     public void ReceiveNotification(Notification notification)
     {
         // An exception here would fault the duplex channel and stop every notification, so any other type is ignored.
-        if (TryDispatchChatNotification(notification) || TryDispatchFriendNotification(notification))
+        if (TryDispatchChatNotification(notification)
+            || TryDispatchFriendNotification(notification)
+            || TryDispatchPrivateMessageNotification(notification))
         {
             return;
         }
@@ -37,20 +43,16 @@ public sealed class NotificationCallback : INotificationCallback
         DispatchMatchmakingNotification(notification);
     }
 
-    private static LobbyChatMessageReceivedEventArgs ToEventArgs(LobbyChatMessageNotification notification)
+    private static ChatMessageReceivedEventArgs ToEventArgs(ChatMessageNotification notification)
     {
-        return new LobbyChatMessageReceivedEventArgs(
-            notification.SenderNickname ?? string.Empty,
-            notification.Text ?? string.Empty,
-            notification.OccurredAt);
+        return new ChatMessageReceivedEventArgs(ChatContractTranslator.ToChatMessage(notification));
     }
 
     private static MatchChatMessageReceivedEventArgs ToEventArgs(MatchChatMessageNotification notification)
     {
         return new MatchChatMessageReceivedEventArgs(
             notification.MatchId,
-            notification.SenderNickname ?? string.Empty,
-            notification.Text ?? string.Empty);
+            ChatContractTranslator.ToChatMessage(notification));
     }
 
     private static MatchFoundEventArgs ToEventArgs(MatchFoundNotification notification)
@@ -84,6 +86,13 @@ public sealed class NotificationCallback : INotificationCallback
         return new SearchEndedEventArgs(ToReason(notification.Reason));
     }
 
+    private static PrivateMessageReceivedEventArgs ToEventArgs(PrivateMessageNotification notification)
+    {
+        return new PrivateMessageReceivedEventArgs(
+            ConversationContractTranslator.ToSender(notification),
+            ConversationContractTranslator.ToPrivateMessage(notification));
+    }
+
     private static FriendPresenceChangedEventArgs ToEventArgs(FriendPresenceNotification notification)
     {
         return new FriendPresenceChangedEventArgs(
@@ -108,9 +117,9 @@ public sealed class NotificationCallback : INotificationCallback
 
     private bool TryDispatchChatNotification(Notification notification)
     {
-        if (notification is LobbyChatMessageNotification lobbyChatMessage)
+        if (notification is ChatMessageNotification chatMessage)
         {
-            OnLobbyChatMessageReceived(ToEventArgs(lobbyChatMessage));
+            OnChatMessageReceived(ToEventArgs(chatMessage));
             return true;
         }
 
@@ -148,6 +157,17 @@ public sealed class NotificationCallback : INotificationCallback
         return false;
     }
 
+    private bool TryDispatchPrivateMessageNotification(Notification notification)
+    {
+        if (notification is not PrivateMessageNotification privateMessageNotification)
+        {
+            return false;
+        }
+
+        OnPrivateMessageReceived(ToEventArgs(privateMessageNotification));
+        return true;
+    }
+
     private void DispatchMatchmakingNotification(Notification notification)
     {
         if (notification is MatchFoundNotification matchFound)
@@ -168,9 +188,9 @@ public sealed class NotificationCallback : INotificationCallback
         }
     }
 
-    private void OnLobbyChatMessageReceived(LobbyChatMessageReceivedEventArgs e)
+    private void OnChatMessageReceived(ChatMessageReceivedEventArgs e)
     {
-        LobbyChatMessageReceived?.Invoke(this, e);
+        ChatMessageReceived?.Invoke(this, e);
     }
 
     private void OnMatchChatMessageReceived(MatchChatMessageReceivedEventArgs e)
@@ -206,5 +226,10 @@ public sealed class NotificationCallback : INotificationCallback
     private void OnFriendshipStarted(FriendshipStartedEventArgs e)
     {
         FriendshipStarted?.Invoke(this, e);
+    }
+
+    private void OnPrivateMessageReceived(PrivateMessageReceivedEventArgs e)
+    {
+        PrivateMessageReceived?.Invoke(this, e);
     }
 }

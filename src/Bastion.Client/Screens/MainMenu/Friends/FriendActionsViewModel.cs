@@ -33,6 +33,8 @@ public sealed class FriendActionsViewModel : ViewModel
 
     public event EventHandler<FriendRemovedEventArgs>? FriendRemoved;
 
+    public event EventHandler<MessageRequestedEventArgs>? MessageRequested;
+
     public string Nickname
     {
         get => Get<string>();
@@ -89,6 +91,12 @@ public sealed class FriendActionsViewModel : ViewModel
         Nickname = row.Nickname;
         IsDialogOpen = false;
         IsMenuOpen = true;
+    }
+
+    public void RequestMessage()
+    {
+        IsMenuOpen = false;
+        MessageRequested?.Invoke(this, new MessageRequestedEventArgs(new PlayerTag(Nickname, _friendCode)));
     }
 
     public void AskRemoval()

@@ -4,5 +4,7 @@ namespace Bastion.Server.Application.Chat;
 
 public interface ILobbyChatService
 {
-    void SendMessage(string sessionToken, string text, DateTime now);
+    PostedChatLine SendMessage(string sessionToken, string text, DateTime now);
+
+    LobbyChatHistory OpenLobbyChat(string sessionToken, DateTime now);
 }

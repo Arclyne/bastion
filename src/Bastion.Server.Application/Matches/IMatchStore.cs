@@ -17,5 +17,5 @@ public interface IMatchStore
 
     IReadOnlyList<int> FindAccountIdsWithUnfinishedParticipation(int matchId);
 
-    long SaveChatMessage(ChatMessage message);
+    long SaveMatchChatMessage(Message message);
 }

@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using Bastion.Domain.Chat;
+using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Sessions;
 
 namespace Bastion.Server.Application.Chat;
@@ -7,28 +9,43 @@ namespace Bastion.Server.Application.Chat;
 public sealed class LobbyChatService : ILobbyChatService
 {
     private readonly ISessionVerifier _sessionVerifier;
-    private readonly IChatBroadcaster _broadcaster;
+    private readonly ChatModerator _moderator;
+    private readonly ILobbyChatRoom _chatRoom;
 
-    public LobbyChatService(ISessionVerifier sessionVerifier, IChatBroadcaster broadcaster)
+    public LobbyChatService(ISessionVerifier sessionVerifier, IUnitOfWork unitOfWork, ILobbyChatRoom chatRoom)
     {
         ArgumentNullException.ThrowIfNull(sessionVerifier);
-        ArgumentNullException.ThrowIfNull(broadcaster);
+        ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(chatRoom);
 
         _sessionVerifier = sessionVerifier;
-        _broadcaster = broadcaster;
+        _moderator = new ChatModerator(unitOfWork);
+        _chatRoom = chatRoom;
     }
 
-    public void SendMessage(string sessionToken, string text, DateTime now)
+    public PostedChatLine SendMessage(string sessionToken, string text, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(text);
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        if (!ChatRules.IsValidMessage(text))
+        string screenedText = _moderator.Screen(player.AccountId, text, now);
+        if (!_chatRoom.TryClaimTurn(player.AccountId, now))
         {
-            throw new InvalidChatMessageException();
+            throw new ChatMessageRejectedException(ChatRejection.TooFast);
         }
 
-        _broadcaster.Broadcast(new ChatLine(player.Nickname, text.Trim(), now));
+        return _chatRoom.Post(new ChatLine(player, screenedText, now));
+    }
+
+    public LobbyChatHistory OpenLobbyChat(string sessionToken, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
+        ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
+        var entries = _chatRoom.ListRecent(ChatRules.RecentMessageCount)
+            .Select(line => new ChatHistoryEntry(line, line.Line.Sender.AccountId == player.AccountId))
+            .ToList();
+        return new LobbyChatHistory(entries, _chatRoom.CountListeners(), _moderator.FindMute(player.AccountId, now));
     }
 }

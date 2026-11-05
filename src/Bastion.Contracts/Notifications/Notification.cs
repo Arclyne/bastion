@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Bastion.Contracts.Notifications;
 
 [DataContract]
-[KnownType(typeof(LobbyChatMessageNotification))]
+[KnownType(typeof(ChatMessageNotification))]
 [KnownType(typeof(MatchFoundNotification))]
 [KnownType(typeof(MatchChatMessageNotification))]
 [KnownType(typeof(PresenceRequestedNotification))]
@@ -12,6 +12,7 @@ namespace Bastion.Contracts.Notifications;
 [KnownType(typeof(FriendPresenceNotification))]
 [KnownType(typeof(FriendRequestNotification))]
 [KnownType(typeof(FriendshipStartedNotification))]
+[KnownType(typeof(PrivateMessageNotification))]
 public abstract class Notification
 {
     [DataMember]

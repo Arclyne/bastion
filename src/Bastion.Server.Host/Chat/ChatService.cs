@@ -16,7 +16,7 @@ namespace Bastion.Server.Host.Chat;
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class ChatService : IChatService
 {
-    private const string ServerFailureReason = "The server could not deliver the chat message.";
+    private const string ServerFailureReason = "The server could not complete the chat operation.";
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(ChatService));
 
@@ -33,48 +33,51 @@ public sealed class ChatService : IChatService
     }
 
     /// <inheritdoc/>
-    public void SendLobbyChatMessage(string? sessionToken, string? text)
+    public ChatMessageReceipt SendChatMessage(string? sessionToken, string? text)
     {
-        RunChatRequest(sessionToken, text, CallLobbyChatService);
+        string token = RequireSessionToken(sessionToken);
+        string checkedText = RequireText(text);
+        return Run<ILobbyChatService, ChatMessageReceipt>(
+            nameof(SendChatMessage),
+            chat => ChatTranslator.ToReceipt(chat.SendMessage(token, checkedText, GetUtcNow())));
     }
 
     /// <inheritdoc/>
-    public void SendMatchChatMessage(string? sessionToken, int matchId, string? text)
+    public LobbyChatLog OpenLobbyChat(string? sessionToken)
     {
-        RunChatRequest(sessionToken, text, CreateMatchChatServiceCall(matchId));
+        string token = RequireSessionToken(sessionToken);
+        return Run<ILobbyChatService, LobbyChatLog>(
+            nameof(OpenLobbyChat),
+            chat => ChatTranslator.ToChatLog(chat.OpenLobbyChat(token, GetUtcNow())));
     }
 
-    private Action<IServiceProvider, string, string> CreateMatchChatServiceCall(int matchId)
+    /// <inheritdoc/>
+    public ChatMessageReceipt SendMatchChatMessage(string? sessionToken, int matchId, string? text)
     {
-        return (provider, token, text) => CallMatchChatService(provider, token, new MatchChatSubmission(matchId, text));
+        string token = RequireSessionToken(sessionToken);
+        var submission = new MatchChatSubmission(matchId, RequireText(text));
+        return Run<IMatchChatService, ChatMessageReceipt>(
+            nameof(SendMatchChatMessage),
+            chat => ChatTranslator.ToReceipt(chat.SendMessage(token, submission, GetUtcNow())));
     }
 
-    private void CallLobbyChatService(IServiceProvider provider, string sessionToken, string text)
+    private static string RequireSessionToken(string? sessionToken)
     {
-        provider.GetRequiredService<ILobbyChatService>().SendMessage(sessionToken, text, GetUtcNow());
+        return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());
     }
 
-    private void CallMatchChatService(IServiceProvider provider, string sessionToken, MatchChatSubmission submission)
+    private static string RequireText(string? text)
     {
-        provider.GetRequiredService<IMatchChatService>().SendMessage(sessionToken, submission, GetUtcNow());
+        return text ?? throw ChatTranslator.ToFault(new ChatMessageRejectedException(ChatRejection.InvalidMessage));
     }
 
-    private void RunChatRequest(string? sessionToken, string? text, Action<IServiceProvider, string, string> send)
+    private TResult Run<TChatService, TResult>(string operationName, Func<TChatService, TResult> operation)
+        where TChatService : notnull
     {
-        if (sessionToken is null)
-        {
-            throw SessionTranslator.ToFault(new InvalidSessionException());
-        }
-
-        if (text is null)
-        {
-            throw ChatTranslator.ToFault(new InvalidChatMessageException());
-        }
-
         try
         {
             using IServiceScope scope = _scopeFactory.CreateScope();
-            send(scope.ServiceProvider, sessionToken, text);
+            return operation(scope.ServiceProvider.GetRequiredService<TChatService>());
         }
         catch (InvalidSessionException ex)
         {
@@ -84,18 +87,18 @@ public sealed class ChatService : IChatService
         {
             throw ChatTranslator.ToFault(ex);
         }
-        catch (InvalidChatMessageException ex)
+        catch (ChatMessageRejectedException ex)
         {
             throw ChatTranslator.ToFault(ex);
         }
         catch (MatchStoreException ex)
         {
-            _logger.Error("The match store could not be used while sending a chat message.", ex);
+            _logger.Error($"The match store could not be used. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)
         {
-            _logger.Error("The database could not be reached while sending a chat message.", ex);
+            _logger.Error($"The database could not be reached. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
     }

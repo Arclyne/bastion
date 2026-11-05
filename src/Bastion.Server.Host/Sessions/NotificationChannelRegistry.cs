@@ -5,17 +5,24 @@ using Bastion.Contracts.Notifications;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Matchmaking;
+using Bastion.Server.Application.PrivateChat;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Chat;
 using Bastion.Server.Host.Friends;
 using Bastion.Server.Host.Matchmaking;
+using Bastion.Server.Host.PrivateChat;
 using CoreWCF;
 using log4net;
 
 namespace Bastion.Server.Host.Sessions;
 
 public sealed class NotificationChannelRegistry
-    : IChatBroadcaster, IMatchChatNotifier, IMatchmakingNotifier, IPlayerPresence, IFriendNotifier
+    : IChatBroadcaster,
+    IMatchChatNotifier,
+    IMatchmakingNotifier,
+    IPlayerPresence,
+    IFriendNotifier,
+    IPrivateMessageNotifier
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationChannelRegistry));
 
@@ -52,27 +59,24 @@ public sealed class NotificationChannelRegistry
         _presenceReporter.ReportConnected(player.AccountId);
     }
 
-    public void Broadcast(ChatLine line)
+    public void Broadcast(PostedChatLine line)
     {
         ArgumentNullException.ThrowIfNull(line);
 
-        LobbyChatMessageNotification notification = ChatTranslator.ToLobbyChatNotification(line);
+        ChatMessageNotification notification = ChatTranslator.ToNotification(line);
+        int senderAccountId = line.Line.Sender.AccountId;
         foreach (KeyValuePair<int, INotificationCallback> subscription in _callbacksByAccountId)
         {
-            DeliverNotification(subscription.Key, subscription.Value, notification);
+            if (subscription.Key != senderAccountId)
+            {
+                DeliverNotification(subscription.Key, subscription.Value, notification);
+            }
         }
     }
 
-    public void NotifyMatchChatMessage(int matchId, IReadOnlyCollection<int> recipientAccountIds, ChatLine line)
+    public int CountListeners()
     {
-        ArgumentNullException.ThrowIfNull(recipientAccountIds);
-        ArgumentNullException.ThrowIfNull(line);
-
-        MatchChatMessageNotification notification = ChatTranslator.ToMatchChatNotification(matchId, line);
-        foreach (int accountId in recipientAccountIds)
-        {
-            NotifyPlayer(accountId, notification);
-        }
+        return _callbacksByAccountId.Count;
     }
 
     public bool HasNotificationChannel(int accountId)
@@ -96,6 +100,18 @@ public sealed class NotificationChannelRegistry
         }
     }
 
+    public void NotifyMatchChatMessage(
+        int matchId,
+        IReadOnlyCollection<int> recipientAccountIds,
+        PostedChatLine postedLine)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+        ArgumentNullException.ThrowIfNull(postedLine);
+
+        MatchChatMessageNotification notification = ChatTranslator.ToMatchChatNotification(matchId, postedLine);
+        NotifyPlayers(recipientAccountIds, notification);
+    }
+
     public void NotifyPresenceRequested(PresenceRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -114,10 +130,7 @@ public sealed class NotificationChannelRegistry
         ArgumentNullException.ThrowIfNull(change);
 
         FriendPresenceNotification notification = FriendshipTranslator.ToNotification(change, GetUtcNow());
-        foreach (int accountId in recipientAccountIds)
-        {
-            NotifyPlayer(accountId, notification);
-        }
+        NotifyPlayers(recipientAccountIds, notification);
     }
 
     public void NotifyFriendRequestReceived(int recipientAccountId, FriendRequestSummary request)
@@ -134,9 +147,24 @@ public sealed class NotificationChannelRegistry
         NotifyPlayer(accountId, FriendshipTranslator.ToFriendshipStartedNotification(friend, GetUtcNow()));
     }
 
+    public void NotifyPrivateMessage(PrivateMessageDelivery delivery)
+    {
+        ArgumentNullException.ThrowIfNull(delivery);
+
+        NotifyPlayer(delivery.Message.RecipientId.GetValueOrDefault(), PrivateChatTranslator.ToNotification(delivery));
+    }
+
     private DateTime GetUtcNow()
     {
         return _timeProvider.GetUtcNow().UtcDateTime;
+    }
+
+    private void NotifyPlayers(IEnumerable<int> accountIds, Notification notification)
+    {
+        foreach (int accountId in accountIds)
+        {
+            NotifyPlayer(accountId, notification);
+        }
     }
 
     private void NotifyPlayer(int accountId, Notification notification)

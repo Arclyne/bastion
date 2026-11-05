@@ -38,8 +38,6 @@ SET NOCOUNT ON;
 SET XACT_ABORT ON;
 GO
 
--- 1. Account columns for friends
-
 IF COL_LENGTH(N'dbo.Account', N'FriendCode') IS NULL
     ALTER TABLE dbo.Account ADD FriendCode CHAR(6) COLLATE Latin1_General_100_BIN2 NULL;  -- Public code to find a player without their nickname, six letters and digits without 0, O, 1, I or L, shown as XX-XXXX (CU-22 RN-05).
 GO
@@ -126,8 +124,6 @@ IF OBJECT_ID(N'dbo.CK_Account_FriendCode', N'C') IS NULL
         LEN(FriendCode) = 6 AND FriendCode NOT LIKE '%[^ABCDEFGHJKMNPQRSTUVWXYZ23456789]%');  -- Only the characters that cannot be mistaken for one another.
 GO
 
--- 2. Relationships between players
-
 -- @entity Friendship | Mutual friendship between two registered players; one row per pair (CU-22, CU-23, CU-25).
 -- @normalization Composite key on the ordered pair; `BefriendedAt` depends on the whole pair. Storing the smaller identifier first makes (1,2) and (2,1) the same row (CU-23 RN-03).
 IF OBJECT_ID(N'dbo.Friendship', N'U') IS NULL
@@ -167,7 +163,6 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_FriendRequest_Recipie
     CREATE INDEX IX_FriendRequest_Recipient ON dbo.FriendRequest (RecipientId) INCLUDE (RequestedAt);
 GO
 
--- 3. Procedures for physical deletes
 -- The connection user has no DELETE permission (01_create_database.sql);
 -- the EXECUTE permission granted at database scope covers these.
 
@@ -195,7 +190,6 @@ BEGIN
 END;
 GO
 
--- 4. Test data
 -- luis_quo has six friends and marta_muros four; marta_muros and
 -- pedro_peon are not friends. Request dates are relative to the moment
 -- the script runs: hugo_block's request expires one day later and
@@ -247,7 +241,6 @@ WHERE NOT EXISTS (
 COMMIT TRANSACTION;
 GO
 
--- 5. Checks
 -- Each query must return the value its comment states.
 
 -- 5.1 Every account has a friend code, and none repeats: 0 rows.

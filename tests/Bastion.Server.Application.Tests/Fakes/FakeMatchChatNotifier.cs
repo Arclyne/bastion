@@ -8,11 +8,14 @@ public sealed class FakeMatchChatNotifier : IMatchChatNotifier
 {
     public List<NotifiedMatchChatMessage> NotifiedMessages { get; } = new List<NotifiedMatchChatMessage>();
 
-    public void NotifyMatchChatMessage(int matchId, IReadOnlyCollection<int> recipientAccountIds, ChatLine line)
+    public void NotifyMatchChatMessage(
+        int matchId,
+        IReadOnlyCollection<int> recipientAccountIds,
+        PostedChatLine postedLine)
     {
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
-        ArgumentNullException.ThrowIfNull(line);
+        ArgumentNullException.ThrowIfNull(postedLine);
 
-        NotifiedMessages.Add(new NotifiedMatchChatMessage(matchId, recipientAccountIds, line));
+        NotifiedMessages.Add(new NotifiedMatchChatMessage(matchId, recipientAccountIds, postedLine));
     }
 }

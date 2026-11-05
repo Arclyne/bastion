@@ -29,9 +29,9 @@ public sealed class FakeMatchStore : IMatchStore
     public Dictionary<int, List<int>> UnfinishedParticipantAccountIdsByMatchId { get; } =
         new Dictionary<int, List<int>>();
 
-    public List<ChatMessage> SavedChatMessages { get; } = new List<ChatMessage>();
+    public List<Message> SavedMatchChatMessages { get; } = new List<Message>();
 
-    public MatchStoreException? ChatMessageSaveFailure { get; set; }
+    public MatchStoreException? MatchChatMessageSaveFailure { get; set; }
 
     public bool HasUnfinishedParticipation(int accountId)
     {
@@ -70,17 +70,17 @@ public sealed class FakeMatchStore : IMatchStore
         return UnfinishedParticipantAccountIdsByMatchId.GetValueOrDefault(matchId) ?? new List<int>();
     }
 
-    public long SaveChatMessage(ChatMessage message)
+    public long SaveMatchChatMessage(Message message)
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        if (ChatMessageSaveFailure is not null)
+        if (MatchChatMessageSaveFailure is not null)
         {
-            throw ChatMessageSaveFailure;
+            throw MatchChatMessageSaveFailure;
         }
 
-        SavedChatMessages.Add(message);
-        return SavedChatMessages.Count;
+        SavedMatchChatMessages.Add(message);
+        return SavedMatchChatMessages.Count;
     }
 
     private static GameMode CreateClassicGameMode()

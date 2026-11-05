@@ -1,22 +1,19 @@
 using System;
+using Bastion.Client.Networking.Chat;
 
 namespace Bastion.Client.Networking.Notifications;
 
 public sealed class MatchChatMessageReceivedEventArgs : EventArgs
 {
-    public MatchChatMessageReceivedEventArgs(int matchId, string senderNickname, string text)
+    public MatchChatMessageReceivedEventArgs(int matchId, ChatMessage message)
     {
-        ArgumentNullException.ThrowIfNull(senderNickname);
-        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(message);
 
         MatchId = matchId;
-        SenderNickname = senderNickname;
-        Text = text;
+        Message = message;
     }
 
     public int MatchId { get; }
 
-    public string SenderNickname { get; }
-
-    public string Text { get; }
+    public ChatMessage Message { get; }
 }

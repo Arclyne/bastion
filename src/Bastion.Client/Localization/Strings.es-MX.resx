@@ -114,21 +114,6 @@
   <data name="MainMenuClassicMode" xml:space="preserve">
     <value>Clásico 9×9</value>
   </data>
-  <data name="MainMenuChatInvalid" xml:space="preserve">
-    <value>El mensaje debe tener de 1 a 200 caracteres.</value>
-  </data>
-  <data name="MainMenuChatPlaceholder" xml:space="preserve">
-    <value>Escribe un mensaje…</value>
-  </data>
-  <data name="MainMenuChatSend" xml:space="preserve">
-    <value>Enviar</value>
-  </data>
-  <data name="MainMenuChatTitle" xml:space="preserve">
-    <value>Chat del lobby</value>
-  </data>
-  <data name="MainMenuChatUnavailable" xml:space="preserve">
-    <value>El chat no está disponible por ahora.</value>
-  </data>
   <data name="MainMenuFriends" xml:space="preserve">
     <value>Amigos</value>
   </data>
@@ -194,9 +179,6 @@
   </data>
   <data name="FriendsRetry" xml:space="preserve">
     <value>Reintentar</value>
-  </data>
-  <data name="FriendsComingSoon" xml:space="preserve">
-    <value>Próximamente</value>
   </data>
   <data name="FriendsCloseButton" xml:space="preserve">
     <value>×</value>
@@ -308,6 +290,117 @@
   </data>
   <data name="FriendsRemoveFailed" xml:space="preserve">
     <value>No se pudo eliminar. Vuelve a intentarlo.</value>
+  </data>
+  <data name="ChatGlobalChannel" xml:space="preserve">
+    <value>Chat global</value>
+  </data>
+  <data name="ChatConnectedCountFormat" xml:space="preserve">
+    <value>{0} conectados</value>
+  </data>
+  <data name="ChatBack" xml:space="preserve">
+    <value>Volver</value>
+  </data>
+  <data name="ChatSystemNotice" xml:space="preserve">
+    <value>Sé respetuoso: los mensajes con palabras prohibidas no se envían.</value>
+  </data>
+  <data name="ChatOwnAuthor" xml:space="preserve">
+    <value>tú</value>
+  </data>
+  <data name="ChatSending" xml:space="preserve">
+    <value>Enviando…</value>
+  </data>
+  <data name="ChatPlaceholder" xml:space="preserve">
+    <value>Escribe un mensaje</value>
+  </data>
+  <data name="ChatSend" xml:space="preserve">
+    <value>Enviar</value>
+  </data>
+  <data name="ChatCounterFormat" xml:space="preserve">
+    <value>{0}/{1}</value>
+  </data>
+  <data name="ChatNewMessagesFormat" xml:space="preserve">
+    <value>{0} mensajes nuevos</value>
+  </data>
+  <data name="ChatNewMessage" xml:space="preserve">
+    <value>1 mensaje nuevo</value>
+  </data>
+  <data name="ChatEmpty" xml:space="preserve">
+    <value>Aún no hay mensajes. ¡Saluda!</value>
+  </data>
+  <data name="ChatMutedUntilFormat" xml:space="preserve">
+    <value>Estás silenciado en el chat hasta el {0}.</value>
+  </data>
+  <data name="ChatMutedPermanently" xml:space="preserve">
+    <value>Estás silenciado en el chat de forma permanente.</value>
+  </data>
+  <data name="ChatRejectedInvalidFormat" xml:space="preserve">
+    <value>No se envió: escribe entre 1 y {0} caracteres.</value>
+  </data>
+  <data name="ChatRejectedBannedTerm" xml:space="preserve">
+    <value>No se envió: tiene una palabra no permitida.</value>
+  </data>
+  <data name="ChatRejectedTooFast" xml:space="preserve">
+    <value>No se envió: espera unos segundos entre mensajes.</value>
+  </data>
+  <data name="ChatRejectedMuted" xml:space="preserve">
+    <value>No se envió: estás silenciado en el chat.</value>
+  </data>
+  <data name="ChatSendFailed" xml:space="preserve">
+    <value>No se envió: el servidor no respondió. Inténtalo de nuevo.</value>
+  </data>
+  <data name="ChatLoadFailed" xml:space="preserve">
+    <value>No se pudo cargar el chat.</value>
+  </data>
+  <data name="ChatRetry" xml:space="preserve">
+    <value>Reintentar</value>
+  </data>
+  <data name="ChatOpen" xml:space="preserve">
+    <value>Abrir</value>
+  </data>
+  <data name="FriendsSendMessage" xml:space="preserve">
+    <value>Enviar mensaje</value>
+  </data>
+  <data name="ChatWithFriendsTitle" xml:space="preserve">
+    <value>Con tus amigos</value>
+  </data>
+  <data name="ChatNoConversationsTitle" xml:space="preserve">
+    <value>Todavía no le escribes a nadie</value>
+  </data>
+  <data name="ChatNoConversationsHint" xml:space="preserve">
+    <value>Abre un amigo en la pestaña Amigos y elige «Enviar mensaje».</value>
+  </data>
+  <data name="ChatOwnPreviewFormat" xml:space="preserve">
+    <value>Tú: {0}</value>
+  </data>
+  <data name="ChatToday" xml:space="preserve">
+    <value>Hoy</value>
+  </data>
+  <data name="ChatYesterday" xml:space="preserve">
+    <value>Ayer</value>
+  </data>
+  <data name="ChatLoading" xml:space="preserve">
+    <value>Cargando…</value>
+  </data>
+  <data name="PrivateGreetingFormat" xml:space="preserve">
+    <value>Saluda a {0}</value>
+  </data>
+  <data name="PrivateGreetingHint" xml:space="preserve">
+    <value>Aquí aparecen sus mensajes. Los ven solo ustedes dos.</value>
+  </data>
+  <data name="PrivateOfflineFormat" xml:space="preserve">
+    <value>{0} no está conectado. Leerá tus mensajes cuando entre.</value>
+  </data>
+  <data name="PrivateNotFriends" xml:space="preserve">
+    <value>Ya no son amigos. Solo puedes escribir a tus amigos.</value>
+  </data>
+  <data name="PrivateStatusNotFriend" xml:space="preserve">
+    <value>Ya no es tu amigo</value>
+  </data>
+  <data name="ChatRejectedNotFriends" xml:space="preserve">
+    <value>No se envió: solo puedes escribir a tus amigos.</value>
+  </data>
+  <data name="ChatRejectedPlayerNotFound" xml:space="preserve">
+    <value>No se envió: ese jugador no existe.</value>
   </data>
   <data name="CommonCancelButton" xml:space="preserve">
     <value>Cancelar</value>

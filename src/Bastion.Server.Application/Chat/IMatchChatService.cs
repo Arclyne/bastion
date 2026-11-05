@@ -11,11 +11,13 @@ namespace Bastion.Server.Application.Chat;
 public interface IMatchChatService
 {
     /// <summary>
-    /// Saves the message in the match chat and delivers it to the other participants of the match.
+    /// Moderates the message like the lobby chat, saves it in the match chat and delivers it to the other
+    /// participants of the match.
     /// </summary>
     /// <param name="sessionToken">The token of the author's open session.</param>
     /// <param name="submission">The match and the text that the author wrote.</param>
     /// <param name="now">The current UTC time, saved as the moment the message was sent.</param>
+    /// <returns>The saved message with its id.</returns>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="sessionToken"/> or <paramref name="submission"/> is null.
     /// </exception>
@@ -23,7 +25,9 @@ public interface IMatchChatService
     /// <exception cref="ChatChannelForbiddenException">
     /// The author does not take part in the unfinished match.
     /// </exception>
-    /// <exception cref="InvalidChatMessageException">The text is empty or too long.</exception>
+    /// <exception cref="ChatMessageRejectedException">
+    /// The text is invalid or has a banned term, the author is muted, or the author writes too fast.
+    /// </exception>
     /// <exception cref="MatchStoreException">The match store could not be read or written.</exception>
-    void SendMessage(string sessionToken, MatchChatSubmission submission, DateTime now);
+    PostedChatLine SendMessage(string sessionToken, MatchChatSubmission submission, DateTime now);
 }

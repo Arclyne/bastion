@@ -9,6 +9,9 @@ public sealed class MatchChatMessageNotification : Notification
     public int MatchId { get; set; }
 
     [DataMember]
+    public long MessageId { get; set; }
+
+    [DataMember]
     public string? SenderNickname { get; set; }
 
     [DataMember]
