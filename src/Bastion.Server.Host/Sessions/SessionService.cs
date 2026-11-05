@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Host.Sessions;
 
+/// <inheritdoc/>
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class SessionService : ISessionService
 {
@@ -31,6 +32,13 @@ public sealed class SessionService : ISessionService
         _timeProvider = timeProvider;
     }
 
+    /// <inheritdoc/>
+    public void KeepAlive()
+    {
+        // Receiving the message is enough: it restarts the receive timeout of the duplex session.
+    }
+
+    /// <inheritdoc/>
     public void Subscribe(string? sessionToken)
     {
         if (sessionToken is null)

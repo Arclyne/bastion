@@ -9,6 +9,7 @@ public static class ServiceEndpoints
     public const string AccountsPath = "accounts";
     public const string SessionsPath = "sessions";
     public const string ChatPath = "chat";
+    public const string MatchmakingPath = "matchmaking";
 
     private const string Scheme = "net.tcp";
 
