@@ -26,7 +26,7 @@ public sealed class ScreenNavigator : INavigator
 
     public void ShowLogin()
     {
-        Show(new LoginView(new LoginViewModel(_languages, _connection.Accounts, this)));
+        ShowScreen(new LoginView(new LoginViewModel(_languages, _connection.Accounts, this)));
     }
 
     public void ShowMainMenu(SignedInSession session)
@@ -34,11 +34,11 @@ public sealed class ScreenNavigator : INavigator
         ArgumentNullException.ThrowIfNull(session);
 
         var viewModel = new MainMenuViewModel(session, _connection.Notifications, _connection.Chat);
-        Show(new MainMenuView(viewModel));
+        ShowScreen(new MainMenuView(viewModel));
         _ = viewModel.ConnectChat();
     }
 
-    private void Show(FrameworkElement screen)
+    private void ShowScreen(FrameworkElement screen)
     {
         if (_currentScreen is not null)
         {

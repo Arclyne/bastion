@@ -1,44 +1,73 @@
 using System;
 using System.ServiceModel;
-using Bastion.Client.Networking.Accounts;
+using System.Threading;
 using Bastion.Client.Networking.Channels;
-using Bastion.Client.Networking.Sessions;
 using Bastion.Contracts;
 using Bastion.Contracts.Sessions;
+using log4net;
 
 namespace Bastion.Client.Networking.Notifications;
 
 public sealed class NotificationClient : INotificationClient, IDisposable
 {
-    private readonly NotificationCallback _callback = new NotificationCallback();
-    private readonly DuplexChannelFactory<ISessionService> _factory;
-    private ISessionService? _channel;
+    private const int KeepAliveSeconds = 60;
 
-    public NotificationClient()
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationClient));
+    private static readonly TimeSpan _keepAliveInterval = TimeSpan.FromSeconds(KeepAliveSeconds);
+
+    private readonly NotificationCallback _notificationCallback = new NotificationCallback();
+    private readonly DuplexChannelFactory<ISessionService> _sessionChannelFactory;
+    private readonly TimeProvider _timeProvider;
+    private ISessionService? _sessionChannel;
+    private ITimer? _keepAliveTimer;
+
+    public NotificationClient(TimeProvider timeProvider)
     {
-        _factory = new DuplexChannelFactory<ISessionService>(
-            new InstanceContext(_callback),
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
+        _timeProvider = timeProvider;
+        _sessionChannelFactory = new DuplexChannelFactory<ISessionService>(
+            new InstanceContext(_notificationCallback),
             ChannelSettings.CreateBinding(),
             ChannelSettings.CreateAddress(ServiceEndpoints.SessionsPath));
-        ChannelSettings.ApplyCertificateValidation(_factory);
+        ChannelSettings.ApplyCertificateValidation(_sessionChannelFactory);
     }
 
     public event EventHandler<ChatMessageReceivedEventArgs>? ChatMessageReceived
     {
-        add => _callback.ChatMessageReceived += value;
-        remove => _callback.ChatMessageReceived -= value;
+        add => _notificationCallback.ChatMessageReceived += value;
+        remove => _notificationCallback.ChatMessageReceived -= value;
     }
+
+    public event EventHandler<MatchFoundEventArgs>? MatchFound
+    {
+        add => _notificationCallback.MatchFound += value;
+        remove => _notificationCallback.MatchFound -= value;
+    }
+
+    public event EventHandler<PresenceRequestedEventArgs>? PresenceRequested
+    {
+        add => _notificationCallback.PresenceRequested += value;
+        remove => _notificationCallback.PresenceRequested -= value;
+    }
+
+    public event EventHandler<SearchEndedEventArgs>? SearchEnded
+    {
+        add => _notificationCallback.SearchEnded += value;
+        remove => _notificationCallback.SearchEnded -= value;
+    }
+
+    public event EventHandler? Disconnected;
 
     public void Connect(string sessionToken)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
         Disconnect();
-        ISessionService channel = _factory.CreateChannel();
+        ISessionService channel = _sessionChannelFactory.CreateChannel();
         try
         {
             channel.Subscribe(sessionToken);
-            _channel = channel;
         }
         catch (CommunicationException ex)
         {
@@ -48,47 +77,96 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         {
             throw AbortSubscription(channel, ex);
         }
+
+        ((ICommunicationObject)channel).Faulted += HandleChannelFaulted;
+        _sessionChannel = channel;
+        _keepAliveTimer = _timeProvider.CreateTimer(SendKeepAlive, null, _keepAliveInterval, _keepAliveInterval);
     }
 
     public void Disconnect()
     {
-        if (_channel is null)
+        TryStopKeepAlive();
+        if (_sessionChannel is null)
         {
             return;
         }
 
-        var communicationObject = (ICommunicationObject)_channel;
-        _channel = null;
+        var communicationObject = (ICommunicationObject)_sessionChannel;
+        communicationObject.Faulted -= HandleChannelFaulted;
+        _sessionChannel = null;
         ChannelCloser.CloseOrAbort(communicationObject);
     }
 
     public void Dispose()
     {
         Disconnect();
-        ChannelCloser.CloseOrAbort(_factory);
+        ChannelCloser.CloseOrAbort(_sessionChannelFactory);
     }
 
     private static Exception AbortSubscription(ISessionService channel, Exception ex)
     {
         ((ICommunicationObject)channel).Abort();
-        return ToClientException(ex);
+        return ServiceFailureTranslator.ToClientException(ex);
     }
 
-    private static Exception ToClientException(Exception ex)
+    private void SendKeepAlive(object? state)
     {
-        switch (ex)
+        ISessionService? channel = _sessionChannel;
+        if (channel is null)
         {
-            case EndpointNotFoundException:
-                return new ServerUnreachableException(ex);
-            case FaultException<InvalidSessionFault>:
-                return new InvalidSessionException(ex);
-            case FaultException:
-                return new ServerErrorException(ex);
-            case CommunicationException:
-            case TimeoutException:
-                return new ConnectionLostException(ex);
-            default:
-                throw new ArgumentOutOfRangeException(nameof(ex), ex.GetType(), "Unsupported exception type.");
+            return;
         }
+
+        try
+        {
+            channel.KeepAlive();
+        }
+        catch (CommunicationException ex)
+        {
+            ReportConnectionLost(ex);
+        }
+        catch (TimeoutException ex)
+        {
+            ReportConnectionLost(ex);
+        }
+        catch (ObjectDisposedException ex)
+        {
+            ReportConnectionLost(ex);
+        }
+    }
+
+    private void ReportConnectionLost(Exception cause)
+    {
+        _logger.Warn("The keep-alive could not reach the server.", cause);
+        RaiseDisconnected();
+    }
+
+    private void HandleChannelFaulted(object? sender, EventArgs e)
+    {
+        _logger.Warn("The notification channel faulted.");
+        RaiseDisconnected();
+    }
+
+    private void RaiseDisconnected()
+    {
+        // Stopping the keep-alive is the guard: only the first report after a connection raises the event.
+        if (!TryStopKeepAlive())
+        {
+            return;
+        }
+
+        Disconnected?.Invoke(this, EventArgs.Empty);
+    }
+
+    private bool TryStopKeepAlive()
+    {
+        ITimer? timer = Interlocked.Exchange(ref _keepAliveTimer, null);
+        if (timer is null)
+        {
+            return false;
+        }
+
+        timer.Dispose();
+        return true;
     }
 }

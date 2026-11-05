@@ -43,7 +43,7 @@ public sealed class PickerSkin : InteractiveSkin
         StyleList(picker.ListBox);
     }
 
-    public static PickerSkin Apply(ComboBox picker)
+    public static PickerSkin CreateAndAttach(ComboBox picker)
     {
         ArgumentNullException.ThrowIfNull(picker);
 
@@ -52,7 +52,7 @@ public sealed class PickerSkin : InteractiveSkin
         return skin;
     }
 
-    public override void Show(InteractionFlags flags)
+    public override void ShowState(InteractionFlags flags)
     {
         bool isActive = flags.HasFlag(InteractionFlags.Hovered) || flags.HasFlag(InteractionFlags.Pressed);
 

@@ -8,41 +8,41 @@ public class TestChatRules
     [Theory]
     [InlineData("hola")]
     [InlineData("  hola  ")]
-    public void IsMessage_ValidMessage_ReturnsTrue(string text)
+    public void IsValidMessage_ValidMessage_ReturnsTrue(string text)
     {
-        bool isMessage = ChatRules.IsMessage(text);
+        bool isValidMessage = ChatRules.IsValidMessage(text);
 
-        Assert.True(isMessage);
+        Assert.True(isValidMessage);
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void IsMessage_InvalidMessage_ReturnsFalse(string? text)
+    public void IsValidMessage_InvalidMessage_ReturnsFalse(string? text)
     {
-        bool isMessage = ChatRules.IsMessage(text);
+        bool isValidMessage = ChatRules.IsValidMessage(text);
 
-        Assert.False(isMessage);
+        Assert.False(isValidMessage);
     }
 
     [Fact]
-    public void IsMessage_MaximumLength_ReturnsTrue()
+    public void IsValidMessage_MaximumLength_ReturnsTrue()
     {
         string text = new string('a', ChatRules.MaximumMessageLength);
 
-        bool isMessage = ChatRules.IsMessage(text);
+        bool isValidMessage = ChatRules.IsValidMessage(text);
 
-        Assert.True(isMessage);
+        Assert.True(isValidMessage);
     }
 
     [Fact]
-    public void IsMessage_AboveMaximumLength_ReturnsFalse()
+    public void IsValidMessage_AboveMaximumLength_ReturnsFalse()
     {
         string text = new string('a', ChatRules.MaximumMessageLength + 1);
 
-        bool isMessage = ChatRules.IsMessage(text);
+        bool isValidMessage = ChatRules.IsValidMessage(text);
 
-        Assert.False(isMessage);
+        Assert.False(isValidMessage);
     }
 }

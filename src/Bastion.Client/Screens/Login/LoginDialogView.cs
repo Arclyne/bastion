@@ -90,7 +90,7 @@ public sealed class LoginDialogView : Panel
             Height = ButtonHeight,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        ButtonSkin.Apply(button, look);
+        ButtonSkin.CreateAndAttach(button, look);
         return button;
     }
 
@@ -110,7 +110,7 @@ public sealed class LoginDialogView : Panel
     {
         try
         {
-            await _viewModel.Retry();
+            await _viewModel.RetryLogIn();
         }
         catch (ObjectDisposedException ex)
         {

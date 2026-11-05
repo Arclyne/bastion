@@ -9,7 +9,7 @@ public sealed class PasswordField : PasswordBox
 
     public PasswordField()
     {
-        _skin = FieldSkin.Apply(this);
+        _skin = FieldSkin.CreateAndAttach(this);
     }
 
     public bool HasError

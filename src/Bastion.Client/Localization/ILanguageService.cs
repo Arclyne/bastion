@@ -6,9 +6,9 @@ public interface ILanguageService
 {
     IReadOnlyList<SupportedLanguage> Languages { get; }
 
-    SupportedLanguage Current { get; }
+    SupportedLanguage CurrentLanguage { get; }
 
-    void Start();
+    void LoadInitialLanguage();
 
-    void Change(SupportedLanguage language);
+    void ChangeLanguage(SupportedLanguage language);
 }

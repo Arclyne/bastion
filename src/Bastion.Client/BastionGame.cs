@@ -21,7 +21,7 @@ public sealed class BastionGame : Game
     private const float MaximumUiScale = 1.5f;
 
     private readonly GraphicsDeviceManager _graphics;
-    private readonly ServerConnection _serverConnection = new ServerConnection();
+    private readonly ServerConnection _serverConnection = new ServerConnection(TimeProvider.System);
 
     public BastionGame()
     {
@@ -41,7 +41,7 @@ public sealed class BastionGame : Game
         GumService.Default.UseSingleThreadedAsync();
         ThemeInitializer.Initialize(this);
         var languages = new LanguageService(new LanguagePreferenceStore(), GumService.Default.LocalizationService);
-        languages.Start();
+        languages.LoadInitialLanguage();
         new ScreenNavigator(languages, _serverConnection).ShowLogin();
         Window.ClientSizeChanged += OnClientSizeChanged;
         ApplyUiScale();

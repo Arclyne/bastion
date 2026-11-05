@@ -161,7 +161,7 @@ public sealed class LoginView : Panel
             HeightUnits = DimensionUnitType.Absolute,
         };
         revealButton.SetBinding(nameof(ToggleButton.IsChecked), nameof(LoginViewModel.IsPasswordVisible));
-        ButtonSkin.Apply(revealButton, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(revealButton, ButtonLooks.Secondary);
         BindEnabledToIdle(revealButton);
 
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = RevealButtonSpacing };
@@ -190,7 +190,7 @@ public sealed class LoginView : Panel
     private Button CreateLogInButton()
     {
         Button button = ViewFactory.CreateButton(nameof(Strings.LoginButton), ContentWidth, PrimaryButtonHeight);
-        ButtonSkin.Apply(button, ButtonLooks.Primary);
+        ButtonSkin.CreateAndAttach(button, ButtonLooks.Primary);
         button.SetBinding(nameof(Button.Text), nameof(LoginViewModel.LogInButtonTextKey));
         button.Click += HandleLogInClick;
         return button;
@@ -202,7 +202,7 @@ public sealed class LoginView : Panel
             nameof(Strings.LoginCreateAccountButton),
             ContentWidth,
             SecondaryButtonHeight);
-        ButtonSkin.Apply(button, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(button, ButtonLooks.Secondary);
         BindEnabledToIdle(button);
         return button;
     }
@@ -241,7 +241,7 @@ public sealed class LoginView : Panel
     private static Button CreateExitButton()
     {
         Button button = ViewFactory.CreateButton(nameof(Strings.CommonExitButton), ExitButtonWidth, ExitButtonHeight);
-        ButtonSkin.Apply(button, ButtonLooks.Pill);
+        ButtonSkin.CreateAndAttach(button, ButtonLooks.Pill);
         button.Anchor(Gum.Wireframe.Anchor.TopRight);
         button.X = -ScreenMarginX;
         button.Y = ExitButtonMarginY;

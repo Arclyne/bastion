@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Host.Sessions;
 
+/// <inheritdoc/>
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class SessionService : ISessionService
 {
@@ -17,20 +18,27 @@ public sealed class SessionService : ISessionService
     private static readonly ILog _logger = LogManager.GetLogger(typeof(SessionService));
 
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ConnectedPlayerRegistry _registry;
+    private readonly NotificationChannelRegistry _channelRegistry;
     private readonly TimeProvider _timeProvider;
 
-    public SessionService(IServiceScopeFactory scopeFactory, ConnectedPlayerRegistry registry, TimeProvider timeProvider)
+    public SessionService(IServiceScopeFactory scopeFactory, NotificationChannelRegistry channelRegistry, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(scopeFactory);
-        ArgumentNullException.ThrowIfNull(registry);
+        ArgumentNullException.ThrowIfNull(channelRegistry);
         ArgumentNullException.ThrowIfNull(timeProvider);
 
         _scopeFactory = scopeFactory;
-        _registry = registry;
+        _channelRegistry = channelRegistry;
         _timeProvider = timeProvider;
     }
 
+    /// <inheritdoc/>
+    public void KeepAlive()
+    {
+        // Receiving the message is enough: it restarts the receive timeout of the duplex session.
+    }
+
+    /// <inheritdoc/>
     public void Subscribe(string? sessionToken)
     {
         if (sessionToken is null)
@@ -43,7 +51,7 @@ public sealed class SessionService : ISessionService
             using IServiceScope scope = _scopeFactory.CreateScope();
             ISessionVerifier verifier = scope.ServiceProvider.GetRequiredService<ISessionVerifier>();
             ConnectedPlayer player = verifier.Verify(sessionToken, _timeProvider.GetUtcNow().UtcDateTime);
-            _registry.Register(player, OperationContext.Current.GetCallbackChannel<INotificationCallback>());
+            _channelRegistry.RegisterChannel(player, OperationContext.Current.GetCallbackChannel<INotificationCallback>());
         }
         catch (InvalidSessionException ex)
         {

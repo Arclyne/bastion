@@ -9,7 +9,7 @@ public sealed class TextField : TextBox
 
     public TextField()
     {
-        _skin = FieldSkin.Apply(this);
+        _skin = FieldSkin.CreateAndAttach(this);
     }
 
     public bool HasError

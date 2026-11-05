@@ -6,28 +6,28 @@ namespace Bastion.Client.Networking.Channels;
 public sealed class ServiceChannel<TContract> : IDisposable
     where TContract : class
 {
-    private readonly ChannelFactory<TContract> _factory;
+    private readonly ChannelFactory<TContract> _channelFactory;
 
     public ServiceChannel(string path)
     {
         ArgumentNullException.ThrowIfNull(path);
 
-        _factory = new ChannelFactory<TContract>(ChannelSettings.CreateBinding(), ChannelSettings.CreateAddress(path));
-        ChannelSettings.ApplyCertificateValidation(_factory);
+        _channelFactory = new ChannelFactory<TContract>(ChannelSettings.CreateBinding(), ChannelSettings.CreateAddress(path));
+        ChannelSettings.ApplyCertificateValidation(_channelFactory);
     }
 
     public void Call(Action<TContract> operation)
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        Call(channel => Invoke(operation, channel));
+        Call(channel => InvokeAndReturnTrue(operation, channel));
     }
 
     public TResult Call<TResult>(Func<TContract, TResult> operation)
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        TContract channel = _factory.CreateChannel();
+        TContract channel = _channelFactory.CreateChannel();
         var communicationObject = (ICommunicationObject)channel;
         try
         {
@@ -49,10 +49,10 @@ public sealed class ServiceChannel<TContract> : IDisposable
 
     public void Dispose()
     {
-        ChannelCloser.CloseOrAbort(_factory);
+        ChannelCloser.CloseOrAbort(_channelFactory);
     }
 
-    private static bool Invoke(Action<TContract> operation, TContract channel)
+    private static bool InvokeAndReturnTrue(Action<TContract> operation, TContract channel)
     {
         operation(channel);
         return true;

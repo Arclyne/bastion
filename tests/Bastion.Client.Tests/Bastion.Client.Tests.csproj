@@ -2,6 +2,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\Bastion.Client.Networking\Bastion.Client.Networking.csproj" />
+        <ProjectReference Include="..\..\src\Bastion.Contracts\Bastion.Contracts.csproj" />
     </ItemGroup>
 
 </Project>

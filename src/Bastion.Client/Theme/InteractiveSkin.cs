@@ -13,7 +13,7 @@ public abstract class InteractiveSkin
     private const string DisabledMarker = "Disabled";
     private const string CheckedSuffix = "On";
 
-    public abstract void Show(InteractionFlags flags);
+    public abstract void ShowState(InteractionFlags flags);
 
     protected void Attach(FrameworkElement control)
     {
@@ -27,7 +27,7 @@ public abstract class InteractiveSkin
             }
         }
 
-        Show(InteractionFlags.None);
+        ShowState(InteractionFlags.None);
     }
 
     private void ReplaceStates(StateSaveCategory category)
@@ -35,7 +35,7 @@ public abstract class InteractiveSkin
         foreach (StateSave state in category.States)
         {
             var handler = new StateHandler(this, ReadFlags(state.Name));
-            state.Apply = handler.Apply;
+            state.Apply = handler.ApplyState;
         }
     }
 

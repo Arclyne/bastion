@@ -110,7 +110,7 @@ public sealed class MainMenuViewModel : ViewModel
         }
 
         string text = ChatDraft;
-        if (!ChatRules.IsMessage(text))
+        if (!ChatRules.IsValidMessage(text))
         {
             ChatStatusKey = nameof(Strings.MainMenuChatInvalid);
             return;
@@ -119,7 +119,7 @@ public sealed class MainMenuViewModel : ViewModel
         IsSending = true;
         try
         {
-            await Task.Run(() => _chat.Send(_session.Token, text));
+            await Task.Run(() => _chat.SendMessage(_session.Token, text));
             ChatDraft = string.Empty;
         }
         catch (InvalidChatMessageException ex)

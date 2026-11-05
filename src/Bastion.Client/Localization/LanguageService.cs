@@ -9,45 +9,45 @@ namespace Bastion.Client.Localization;
 
 public sealed class LanguageService : ILanguageService
 {
-    private readonly ILanguagePreferenceStore _preferences;
+    private readonly ILanguagePreferenceStore _languagePreferenceStore;
     private readonly ILocalizationService _textDatabase;
 
-    public LanguageService(ILanguagePreferenceStore preferences, ILocalizationService textDatabase)
+    public LanguageService(ILanguagePreferenceStore languagePreferenceStore, ILocalizationService textDatabase)
     {
-        ArgumentNullException.ThrowIfNull(preferences);
+        ArgumentNullException.ThrowIfNull(languagePreferenceStore);
         ArgumentNullException.ThrowIfNull(textDatabase);
 
-        _preferences = preferences;
+        _languagePreferenceStore = languagePreferenceStore;
         _textDatabase = textDatabase;
-        Current = SupportedLanguages.Default;
+        CurrentLanguage = SupportedLanguages.Default;
     }
 
     public IReadOnlyList<SupportedLanguage> Languages => SupportedLanguages.All;
 
-    public SupportedLanguage Current { get; private set; }
+    public SupportedLanguage CurrentLanguage { get; private set; }
 
-    public void Start()
+    public void LoadInitialLanguage()
     {
         LoadTextDatabase();
-        Apply(ResolveInitialLanguage());
+        ApplyLanguage(ResolveInitialLanguage());
     }
 
-    public void Change(SupportedLanguage language)
+    public void ChangeLanguage(SupportedLanguage language)
     {
         ArgumentNullException.ThrowIfNull(language);
 
-        Apply(language);
-        _preferences.Save(language.CultureName);
+        ApplyLanguage(language);
+        _languagePreferenceStore.SaveCultureName(language.CultureName);
     }
 
     private SupportedLanguage ResolveInitialLanguage()
     {
-        SupportedLanguage? savedLanguage = SupportedLanguages.FindByCultureName(_preferences.Load());
+        SupportedLanguage? savedLanguage = SupportedLanguages.FindByCultureName(_languagePreferenceStore.LoadCultureName());
         SupportedLanguage? systemLanguage = SupportedLanguages.FindClosest(CultureInfo.CurrentUICulture);
         return savedLanguage ?? systemLanguage ?? SupportedLanguages.Default;
     }
 
-    private void Apply(SupportedLanguage language)
+    private void ApplyLanguage(SupportedLanguage language)
     {
         var culture = new CultureInfo(language.CultureName);
         CultureInfo.CurrentCulture = culture;
@@ -55,7 +55,7 @@ public sealed class LanguageService : ILanguageService
         CultureInfo.DefaultThreadCurrentCulture = culture;
         CultureInfo.DefaultThreadCurrentUICulture = culture;
 
-        Current = language;
+        CurrentLanguage = language;
         _textDatabase.CurrentLanguage = IndexOf(language);
     }
 

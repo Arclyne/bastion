@@ -11,8 +11,8 @@ public sealed class StateHandler
         _flags = flags;
     }
 
-    public void Apply()
+    public void ApplyState()
     {
-        _skin.Show(_flags);
+        _skin.ShowState(_flags);
     }
 }

@@ -24,15 +24,15 @@ public static class ChannelCloser
         }
         catch (CommunicationException ex)
         {
-            Abort(channel, ex);
+            LogAndAbort(channel, ex);
         }
         catch (TimeoutException ex)
         {
-            Abort(channel, ex);
+            LogAndAbort(channel, ex);
         }
     }
 
-    private static void Abort(ICommunicationObject channel, Exception ex)
+    private static void LogAndAbort(ICommunicationObject channel, Exception ex)
     {
         _logger.Warn($"The channel could not be closed and was aborted. Channel={channel.GetType().Name}", ex);
         channel.Abort();

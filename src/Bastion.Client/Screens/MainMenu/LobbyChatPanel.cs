@@ -84,7 +84,7 @@ public sealed class LobbyChatPanel : Panel
         input.SetBinding(nameof(TextField.Text), nameof(MainMenuViewModel.ChatDraft));
 
         Button send = ViewFactory.CreateButton(nameof(Strings.MainMenuChatSend), SendButtonWidth, InputHeight);
-        ButtonSkin.Apply(send, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(send, ButtonLooks.Secondary);
         send.SetBinding(nameof(IsEnabled), nameof(MainMenuViewModel.CanSend));
         send.Click += HandleSendClick;
 

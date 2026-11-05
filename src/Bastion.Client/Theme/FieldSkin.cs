@@ -35,11 +35,11 @@ public sealed class FieldSkin : InteractiveSkin
         set
         {
             _hasError = value;
-            Show(_flags);
+            ShowState(_flags);
         }
     }
 
-    public static FieldSkin Apply(TextBoxBase field)
+    public static FieldSkin CreateAndAttach(TextBoxBase field)
     {
         ArgumentNullException.ThrowIfNull(field);
 
@@ -48,7 +48,7 @@ public sealed class FieldSkin : InteractiveSkin
         return skin;
     }
 
-    public override void Show(InteractionFlags flags)
+    public override void ShowState(InteractionFlags flags)
     {
         _flags = flags;
         bool isFocused = flags.HasFlag(InteractionFlags.Focused);

@@ -16,7 +16,7 @@ public sealed class LanguagePicker : ComboBox
         Height = height;
         HeightUnits = DimensionUnitType.Absolute;
         DisplayMemberPath = nameof(SupportedLanguage.DisplayName);
-        PickerSkin.Apply(this);
+        PickerSkin.CreateAndAttach(this);
         GumService.Default.LocalizationService.CurrentLanguageChanged += HandleCurrentLanguageChanged;
     }
 

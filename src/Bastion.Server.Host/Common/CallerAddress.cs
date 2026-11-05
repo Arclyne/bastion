@@ -11,8 +11,8 @@ public static class CallerAddress
     {
         MessageProperties? properties = OperationContext.Current?.IncomingMessageProperties;
         if (properties is null
-            || !properties.TryGetValue(RemoteEndpointMessageProperty.Name, out object? value)
-            || value is not RemoteEndpointMessageProperty endpoint)
+            || !properties.TryGetValue(RemoteEndpointMessageProperty.Name, out object? propertyValue)
+            || propertyValue is not RemoteEndpointMessageProperty endpoint)
         {
             return UnknownAddress;
         }

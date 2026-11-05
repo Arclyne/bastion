@@ -6,6 +6,14 @@ public interface INotificationClient
 {
     event EventHandler<ChatMessageReceivedEventArgs>? ChatMessageReceived;
 
+    event EventHandler<MatchFoundEventArgs>? MatchFound;
+
+    event EventHandler<PresenceRequestedEventArgs>? PresenceRequested;
+
+    event EventHandler<SearchEndedEventArgs>? SearchEnded;
+
+    event EventHandler? Disconnected;
+
     void Connect(string sessionToken);
 
     void Disconnect();

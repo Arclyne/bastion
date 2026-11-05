@@ -154,7 +154,7 @@ public sealed class MainMenuView : Panel
     private static Button CreatePillButton(string textKey, float width)
     {
         Button button = ViewFactory.CreateButton(textKey, width, PillHeight);
-        ButtonSkin.Apply(button, ButtonLooks.Pill);
+        ButtonSkin.CreateAndAttach(button, ButtonLooks.Pill);
         return button;
     }
 
@@ -200,7 +200,7 @@ public sealed class MainMenuView : Panel
     private static Button CreateFindMatchButton()
     {
         Button button = ViewFactory.CreateButton(string.Empty, TabletContentWidth, HeroHeight);
-        ButtonSkin.Apply(button, ButtonLooks.Hero);
+        ButtonSkin.CreateAndAttach(button, ButtonLooks.Hero);
 
         RectangleRuntime icon = Shapes.CreateRounded(Palette.HeroIconFill, HeroIconRadius);
         icon.Anchor(Gum.Wireframe.Anchor.Left);
@@ -230,7 +230,7 @@ public sealed class MainMenuView : Panel
     private static Button CreateSecondaryButton(string textKey)
     {
         Button button = ViewFactory.CreateButton(textKey, PrivateButtonWidth, PrivateButtonHeight);
-        ButtonSkin.Apply(button, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(button, ButtonLooks.Secondary);
         return button;
     }
 
