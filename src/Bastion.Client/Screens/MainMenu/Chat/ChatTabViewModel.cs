@@ -16,7 +16,7 @@ using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
-public sealed class ChatTabViewModel : ViewModel
+public sealed class ChatTabViewModel : ViewModel, IDisposable
 {
     private const int FirstPosition = 0;
     private const int NoUnread = 0;
@@ -27,6 +27,7 @@ public sealed class ChatTabViewModel : ViewModel
     private readonly SignedInSession _session;
     private readonly IConversationClient _conversations;
     private readonly IFriendDirectory _friends;
+    private readonly INotificationClient _notifications;
     private readonly SynchronizationContext? _uiContext;
 
     public ChatTabViewModel(SignedInSession session, ChatClients clients, IFriendDirectory friends)
@@ -38,13 +39,14 @@ public sealed class ChatTabViewModel : ViewModel
         _session = session;
         _conversations = clients.Conversations;
         _friends = friends;
+        _notifications = clients.Notifications;
         _uiContext = SynchronizationContext.Current;
         Lobby = new LobbyChatViewModel(session, clients.Lobby, clients.Notifications);
         Lobby.PropertyChanged += HandleLobbyPropertyChanged;
         Private = new PrivateConversationViewModel(session, clients.Conversations);
         Private.MessageSent += HandlePrivateMessageSent;
         Private.Closed += HandlePrivateClosed;
-        clients.Notifications.PrivateMessageReceived += HandlePrivateMessageReceived;
+        _notifications.PrivateMessageReceived += HandlePrivateMessageReceived;
         UnreadText = string.Empty;
         Pane = ChatPane.List;
     }
@@ -162,6 +164,12 @@ public sealed class ChatTabViewModel : ViewModel
         }
 
         Pane = ChatPane.List;
+    }
+
+    public void Dispose()
+    {
+        _notifications.PrivateMessageReceived -= HandlePrivateMessageReceived;
+        Lobby.Dispose();
     }
 
     private void ShowPreviews(IEnumerable<ConversationRowViewModel> rows)

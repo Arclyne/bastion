@@ -17,12 +17,13 @@ using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Friends;
 
-public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory
+public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDisposable
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(FriendsPanelViewModel));
 
     private readonly SignedInSession _session;
     private readonly IFriendClient _friends;
+    private readonly INotificationClient _notifications;
     private readonly SynchronizationContext? _uiContext;
     private readonly List<FriendRowViewModel> _allRows = new List<FriendRowViewModel>();
 
@@ -33,6 +34,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory
 
         _session = session;
         _friends = clients.Friends;
+        _notifications = clients.Notifications;
         _uiContext = SynchronizationContext.Current;
         AddFriend = new AddFriendViewModel(session, clients.Friends);
         AddFriend.FriendshipStarted += HandleFriendshipStarted;
@@ -42,9 +44,9 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory
         Requests.FriendshipStarted += HandleFriendshipStarted;
         Actions.MessageRequested += HandleMessageRequested;
         Chat = new ChatTabViewModel(session, clients.Chat, this);
-        clients.Notifications.FriendPresenceChanged += HandleFriendPresenceChanged;
-        clients.Notifications.FriendRequestReceived += HandleFriendRequestReceived;
-        clients.Notifications.FriendshipStarted += HandleRemoteFriendshipStarted;
+        _notifications.FriendPresenceChanged += HandleFriendPresenceChanged;
+        _notifications.FriendRequestReceived += HandleFriendRequestReceived;
+        _notifications.FriendshipStarted += HandleRemoteFriendshipStarted;
         SelectedTab = FriendsTab.Friends;
         FilterText = string.Empty;
         HeaderText = string.Empty;
@@ -260,6 +262,14 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory
     {
         FriendRowViewModel? row = _allRows.Find(friend => friend.FriendCode == friendCode);
         return row is null ? null : new ConversationPresence(row.IsConnected, row.StatusText);
+    }
+
+    public void Dispose()
+    {
+        _notifications.FriendPresenceChanged -= HandleFriendPresenceChanged;
+        _notifications.FriendRequestReceived -= HandleFriendRequestReceived;
+        _notifications.FriendshipStarted -= HandleRemoteFriendshipStarted;
+        Chat.Dispose();
     }
 
     private static string FormatText(string format, params object[] arguments)

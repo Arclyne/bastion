@@ -12,7 +12,6 @@ namespace Bastion.Client.Screens;
 
 public static class ViewFactory
 {
-    private const float ScreenMarginX = 24;
     private const float VersionMarginY = 16;
     private const int VersionFieldCount = 3;
 
@@ -45,6 +44,17 @@ public static class ViewFactory
         return label;
     }
 
+    public static Label CreateUntranslatedLabel(string text, TextStyle style)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(style);
+
+        Label label = CreateLabel(string.Empty, style);
+        ((LabelVisual)label.Visual).LocalizeText = false;
+        label.Text = text;
+        return label;
+    }
+
     public static Button CreateButton(string textKey, float width, float height)
     {
         return new Button
@@ -71,7 +81,7 @@ public static class ViewFactory
         Label label = CreateLabel(string.Empty, TextStyles.Version);
         label.SetTextNoTranslate(text);
         label.Anchor(Gum.Wireframe.Anchor.BottomRight);
-        label.X = -ScreenMarginX;
+        label.X = -ScreenMetrics.MarginX;
         label.Y = -VersionMarginY;
         return label;
     }

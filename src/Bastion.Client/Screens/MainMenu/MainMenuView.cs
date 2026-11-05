@@ -17,10 +17,6 @@ namespace Bastion.Client.Screens.MainMenu;
 
 public sealed class MainMenuView : Panel, IEscapeKeyReceiver
 {
-    private const float ScreenMarginX = 24;
-    private const float TopMarginY = 22;
-    private const float BottomMarginY = 22;
-    private const float PillHeight = 44;
     private const float SettingsWidth = 116;
     private const float HowToPlayWidth = 140;
     private const float SettingsOffsetY = 9;
@@ -90,11 +86,11 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
             new BadgeBinding(
                 nameof(FriendRequestsViewModel.PendingCountText),
                 nameof(FriendRequestsViewModel.HasPending)),
-            ScreenMarginX + SettingsWidth + PillSpacing));
+            ScreenMetrics.MarginX + SettingsWidth + PillSpacing));
         AddChild(CreateCountBadge(
             friendsPanel.Chat,
             new BadgeBinding(nameof(ChatTabViewModel.UnreadText), nameof(ChatTabViewModel.HasUnread)),
-            ScreenMarginX + SettingsWidth + PillSpacing + FriendsPillWidth + PillSpacing));
+            ScreenMetrics.MarginX + SettingsWidth + PillSpacing + FriendsPillWidth + PillSpacing));
         AddChild(CreateTablet());
         AddChild(CreateMatchSearchPanel());
         AddChild(CreateHowToPlayButton());
@@ -119,8 +115,8 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
 
         var chip = new Panel
         {
-            X = ScreenMarginX,
-            Y = TopMarginY,
+            X = ScreenMetrics.MarginX,
+            Y = ScreenMetrics.MarginY,
             Width = ChipPaddingRight,
             WidthUnits = DimensionUnitType.RelativeToChildren,
             Height = ChipHeight,
@@ -172,8 +168,8 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
     {
         Button button = CreatePillButton(nameof(Strings.MainMenuSettings), SettingsWidth);
         button.Anchor(Gum.Wireframe.Anchor.TopRight);
-        button.X = -ScreenMarginX;
-        button.Y = TopMarginY + SettingsOffsetY;
+        button.X = -ScreenMetrics.MarginX;
+        button.Y = ScreenMetrics.MarginY + SettingsOffsetY;
         return button;
     }
 
@@ -181,8 +177,8 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
     {
         var panel = new FriendsPanel(friendsPanel);
         panel.Anchor(Gum.Wireframe.Anchor.TopRight);
-        panel.X = -ScreenMarginX;
-        panel.Y = TopMarginY + SettingsOffsetY + PillHeight + FriendsPanelGapY;
+        panel.X = -ScreenMetrics.MarginX;
+        panel.Y = ScreenMetrics.MarginY + SettingsOffsetY + ScreenMetrics.MenuPillHeight + FriendsPanelGapY;
         return panel;
     }
 
@@ -207,7 +203,7 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         badge.AddChild(count);
         badge.Anchor(Gum.Wireframe.Anchor.TopRight);
         badge.X = -pillRightOffset + BadgeOverlap;
-        badge.Y = TopMarginY + SettingsOffsetY - BadgeOverlap;
+        badge.Y = ScreenMetrics.MarginY + SettingsOffsetY - BadgeOverlap;
         badge.SetBinding(nameof(IsVisible), binding.VisibilityProperty);
         return badge;
     }
@@ -224,7 +220,7 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
     {
         var toast = new FriendRequestToast(requests);
         toast.Anchor(Gum.Wireframe.Anchor.Top);
-        toast.Y = TopMarginY;
+        toast.Y = ScreenMetrics.MarginY;
         return toast;
     }
 
@@ -232,8 +228,8 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
     {
         Button button = CreatePillButton(nameof(Strings.MainMenuFriends), FriendsPillWidth);
         button.Anchor(Gum.Wireframe.Anchor.TopRight);
-        button.X = -(ScreenMarginX + SettingsWidth + PillSpacing);
-        button.Y = TopMarginY + SettingsOffsetY;
+        button.X = -(ScreenMetrics.MarginX + SettingsWidth + PillSpacing);
+        button.Y = ScreenMetrics.MarginY + SettingsOffsetY;
         button.Click += HandleFriendsClick;
         return button;
     }
@@ -242,8 +238,8 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
     {
         Button button = CreatePillButton(nameof(Strings.MainMenuChat), ChatPillWidth);
         button.Anchor(Gum.Wireframe.Anchor.TopRight);
-        button.X = -(ScreenMarginX + SettingsWidth + PillSpacing + FriendsPillWidth + PillSpacing);
-        button.Y = TopMarginY + SettingsOffsetY;
+        button.X = -(ScreenMetrics.MarginX + SettingsWidth + PillSpacing + FriendsPillWidth + PillSpacing);
+        button.Y = ScreenMetrics.MarginY + SettingsOffsetY;
         button.Click += HandleChatClick;
         return button;
     }
@@ -262,14 +258,14 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
     {
         Button button = CreatePillButton(nameof(Strings.MainMenuHowToPlay), HowToPlayWidth);
         button.Anchor(Gum.Wireframe.Anchor.BottomLeft);
-        button.X = ScreenMarginX;
-        button.Y = -BottomMarginY;
+        button.X = ScreenMetrics.MarginX;
+        button.Y = -ScreenMetrics.MarginY;
         return button;
     }
 
     private static Button CreatePillButton(string textKey, float width)
     {
-        Button button = ViewFactory.CreateButton(textKey, width, PillHeight);
+        Button button = ViewFactory.CreateButton(textKey, width, ScreenMetrics.MenuPillHeight);
         ButtonSkin.CreateAndAttach(button, ButtonLooks.Pill);
         return button;
     }

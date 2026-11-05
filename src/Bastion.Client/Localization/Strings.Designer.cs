@@ -1228,29 +1228,47 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Match chat.
+        /// </summary>
+        internal static string MatchChatTitle {
+            get {
+                return ResourceManager.GetString("MatchChatTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The match chat is not available right now..
+        /// </summary>
+        internal static string MatchChatUnavailable {
+            get {
+                return ResourceManager.GetString("MatchChatUnavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Elo {0}.
+        /// </summary>
+        internal static string MatchEloFormat {
+            get {
+                return ResourceManager.GetString("MatchEloFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rival's turn.
+        /// </summary>
+        internal static string MatchRivalTurn {
+            get {
+                return ResourceManager.GetString("MatchRivalTurn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The connection with the server was lost..
         /// </summary>
         internal static string MatchSearchConnectionLost {
             get {
                 return ResourceManager.GetString("MatchSearchConnectionLost", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to You will play against {0}..
-        /// </summary>
-        internal static string MatchSearchFoundDetailFormat {
-            get {
-                return ResourceManager.GetString("MatchSearchFoundDetailFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Rival found!.
-        /// </summary>
-        internal static string MatchSearchFoundTitle {
-            get {
-                return ResourceManager.GetString("MatchSearchFoundTitle", resourceCulture);
             }
         }
         
@@ -1345,6 +1363,24 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} walls.
+        /// </summary>
+        internal static string MatchWallsFormat {
+            get {
+                return ResourceManager.GetString("MatchWallsFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your turn.
+        /// </summary>
+        internal static string MatchYourTurn {
+            get {
+                return ResourceManager.GetString("MatchYourTurn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Say hi to {0}.
         /// </summary>
         internal static string PrivateGreetingFormat {
@@ -1386,6 +1422,33 @@ namespace Bastion.Client.Localization {
         internal static string PrivateStatusNotFriend {
             get {
                 return ResourceManager.GetString("PrivateStatusNotFriend", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to VS.
+        /// </summary>
+        internal static string VersusLabel {
+            get {
+                return ResourceManager.GetString("VersusLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Classic {0}×{0} · {1} walls.
+        /// </summary>
+        internal static string VersusModeFormat {
+            get {
+                return ResourceManager.GetString("VersusModeFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starts in {0}….
+        /// </summary>
+        internal static string VersusStartsInFormat {
+            get {
+                return ResourceManager.GetString("VersusStartsInFormat", resourceCulture);
             }
         }
     }

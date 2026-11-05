@@ -14,12 +14,9 @@ public class Participation
 
     internal Participation(MatchEntrant entrant, byte turnOrder, MatchFormat format)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(turnOrder, Match.FirstTurnOrder);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(turnOrder, _pawnSymbolsInTurnOrder.Length);
-
         AccountId = entrant.AccountId;
         TurnOrder = turnOrder;
-        PawnSymbol = _pawnSymbolsInTurnOrder[turnOrder - Match.FirstTurnOrder];
+        PawnSymbol = GetPawnSymbol(turnOrder);
         CurrentSquare = BoardLayout.GetStartingSquare(format.GameMode.BoardSize, turnOrder);
         RemainingWalls = format.GameMode.WallsPerPlayer;
         RemainingClockMilliseconds = (int)TimeSpan.FromMinutes(format.ClockMinutes).TotalMilliseconds;
@@ -51,4 +48,12 @@ public class Participation
     public ParticipationResult? Result { get; private set; }
 
     public bool IsConnected { get; private set; }
+
+    public static PawnSymbol GetPawnSymbol(byte turnOrder)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(turnOrder, Match.FirstTurnOrder);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(turnOrder, _pawnSymbolsInTurnOrder.Length);
+
+        return _pawnSymbolsInTurnOrder[turnOrder - Match.FirstTurnOrder];
+    }
 }

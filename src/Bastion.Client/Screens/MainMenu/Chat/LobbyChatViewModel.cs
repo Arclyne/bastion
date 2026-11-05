@@ -14,7 +14,7 @@ using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
-public sealed class LobbyChatViewModel : ViewModel
+public sealed class LobbyChatViewModel : ViewModel, IDisposable
 {
     private const int CounterVisibleFromLength = 180;
     private const int SingleMessage = 1;
@@ -23,6 +23,7 @@ public sealed class LobbyChatViewModel : ViewModel
 
     private readonly SignedInSession _session;
     private readonly IChatClient _chat;
+    private readonly INotificationClient _notifications;
     private readonly SynchronizationContext? _uiContext;
     private int _unreadCount;
 
@@ -35,7 +36,8 @@ public sealed class LobbyChatViewModel : ViewModel
         _session = session;
         _chat = chat;
         _uiContext = SynchronizationContext.Current;
-        notifications.ChatMessageReceived += HandleChatMessageReceived;
+        _notifications = notifications;
+        _notifications.ChatMessageReceived += HandleChatMessageReceived;
         Draft = string.Empty;
         ChannelDetail = string.Empty;
         CounterText = string.Empty;
@@ -242,6 +244,11 @@ public sealed class LobbyChatViewModel : ViewModel
         {
             IsSending = false;
         }
+    }
+
+    public void Dispose()
+    {
+        _notifications.ChatMessageReceived -= HandleChatMessageReceived;
     }
 
     private static string FormatText(string format, params object[] arguments)

@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
@@ -19,7 +17,6 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
     private const int ClockTickSeconds = 1;
     private const string ElapsedFormat = "{0:00}:{1:00}";
     private const string DetailSeparator = " · ";
-    private const string NicknameSeparator = ", ";
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchSearchViewModel));
     private static readonly TimeSpan _clockTick = TimeSpan.FromSeconds(ClockTickSeconds);
@@ -47,7 +44,6 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         _uiContext = SynchronizationContext.Current;
         Stage = MatchSearchStage.Idle;
         SearchDetail = string.Empty;
-        RivalText = string.Empty;
         PresenceMessage = string.Empty;
         StatusKey = string.Empty;
         _matchmakingClient.MatchFound += HandleMatchFound;
@@ -65,12 +61,6 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
     [DependsOn(nameof(Stage))]
     public bool IsSearching => Stage == MatchSearchStage.Searching;
 
-    [DependsOn(nameof(Stage))]
-    public bool IsMatchFound => Stage == MatchSearchStage.MatchFound;
-
-    [DependsOn(nameof(Stage))]
-    public bool IsPanelVisible => Stage != MatchSearchStage.Idle;
-
     public bool IsBusy
     {
         get => Get<bool>();
@@ -86,12 +76,6 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
     public bool CanCancelSearch => Stage == MatchSearchStage.Searching && !IsBusy;
 
     public string SearchDetail
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
-
-    public string RivalText
     {
         get => Get<string>();
         private set => Set(value);
@@ -117,6 +101,8 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
 
     [DependsOn(nameof(StatusKey))]
     public bool HasStatus => StatusKey.Length > 0;
+
+    public event EventHandler<MatchFoundEventArgs>? MatchFound;
 
     public async Task StartSearch()
     {
@@ -181,16 +167,6 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         {
             EndActiveSearch(failureKey);
         }
-    }
-
-    public void DismissMatchFound()
-    {
-        if (Stage != MatchSearchStage.MatchFound)
-        {
-            return;
-        }
-
-        Stage = MatchSearchStage.Idle;
     }
 
     public void Dispose()
@@ -265,7 +241,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         _clockTimer = _timeProvider.CreateTimer(HandleClockTick, null, _clockTick, _clockTick);
     }
 
-    private void ShowMatchFound(IReadOnlyList<FoundMatchParticipant> participants)
+    private void EndSearchWithMatch(MatchFoundEventArgs foundMatch)
     {
         if (Stage == MatchSearchStage.MatchFound)
         {
@@ -274,10 +250,13 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
 
         StopClock();
         IsPresenceDialogOpen = false;
-        IEnumerable<string> rivalNicknames = participants.Where(IsRival).Select(participant => participant.Nickname);
-        string rivals = string.Join(NicknameSeparator, rivalNicknames);
-        RivalText = string.Format(CultureInfo.CurrentCulture, Strings.MatchSearchFoundDetailFormat, rivals);
         Stage = MatchSearchStage.MatchFound;
+        OnMatchFound(foundMatch);
+    }
+
+    private void OnMatchFound(MatchFoundEventArgs foundMatch)
+    {
+        MatchFound?.Invoke(this, foundMatch);
     }
 
     private void ShowPresenceCheck(TimeSpan responseWindow)
@@ -354,11 +333,6 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         Interlocked.Exchange(ref _clockTimer, null)?.Dispose();
     }
 
-    private bool IsRival(FoundMatchParticipant participant)
-    {
-        return !string.Equals(participant.Nickname, _session.Nickname, StringComparison.Ordinal);
-    }
-
     private void HandleClockTick(object? state)
     {
         UiThread.Run(_uiContext, UpdateClock);
@@ -366,7 +340,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
 
     private void HandleMatchFound(object? sender, MatchFoundEventArgs e)
     {
-        UiThread.Run(_uiContext, () => ShowMatchFound(e.Participants));
+        UiThread.Run(_uiContext, () => EndSearchWithMatch(e));
     }
 
     private void HandlePresenceRequested(object? sender, PresenceRequestedEventArgs e)
