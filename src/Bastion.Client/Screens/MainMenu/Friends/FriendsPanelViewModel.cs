@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Networking.Friends;
+using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.Sessions;
 using Bastion.Domain.Friends;
 using Gum.Mvvm;
@@ -20,15 +22,19 @@ public sealed class FriendsPanelViewModel : ViewModel
 
     private readonly SignedInSession _session;
     private readonly IFriendClient _friends;
+    private readonly SynchronizationContext? _uiContext;
     private readonly List<FriendRowViewModel> _allRows = new List<FriendRowViewModel>();
 
-    public FriendsPanelViewModel(SignedInSession session, IFriendClient friends)
+    public FriendsPanelViewModel(SignedInSession session, IFriendClient friends, INotificationClient notifications)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(friends);
+        ArgumentNullException.ThrowIfNull(notifications);
 
         _session = session;
         _friends = friends;
+        _uiContext = SynchronizationContext.Current;
+        notifications.FriendPresenceChanged += HandleFriendPresenceChanged;
         SelectedTab = FriendsTab.Friends;
         FilterText = string.Empty;
         HeaderText = string.Empty;
@@ -214,11 +220,40 @@ public sealed class FriendsPanelViewModel : ViewModel
             _allRows.Add(new FriendRowViewModel(friend, listing.ListedAt));
         }
 
-        int connectedCount = _allRows.Count(row => row.IsConnected);
-        HeaderText = FormatText(Strings.FriendsConnectedCountFormat, connectedCount, _allRows.Count);
         FormattedFriendCode = FriendCodeRules.FormatFriendCode(listing.OwnFriendCode);
         OwnFriendCodeText = FormatText(Strings.FriendsOwnCodeFormat, FormattedFriendCode);
         IsEmpty = _allRows.Count == 0;
+        UpdateHeaderText();
+        ApplyFilter();
+    }
+
+    private void UpdateHeaderText()
+    {
+        int connectedCount = _allRows.Count(row => row.IsConnected);
+        HeaderText = FormatText(Strings.FriendsConnectedCountFormat, connectedCount, _allRows.Count);
+    }
+
+    private void HandleFriendPresenceChanged(object? sender, FriendPresenceChangedEventArgs e)
+    {
+        if (_uiContext is null)
+        {
+            UpdateFriendPresence(e);
+            return;
+        }
+
+        _uiContext.Post(state => UpdateFriendPresence((FriendPresenceChangedEventArgs)state!), e);
+    }
+
+    private void UpdateFriendPresence(FriendPresenceChangedEventArgs change)
+    {
+        int index = _allRows.FindIndex(row => row.FriendCode == change.Friend.Friend.FriendCode);
+        if (index < 0)
+        {
+            return;
+        }
+
+        _allRows[index] = new FriendRowViewModel(change.Friend, change.OccurredAt);
+        UpdateHeaderText();
         ApplyFilter();
     }
 

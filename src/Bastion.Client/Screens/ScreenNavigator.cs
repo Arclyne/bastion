@@ -35,7 +35,7 @@ public sealed class ScreenNavigator : INavigator
         ArgumentNullException.ThrowIfNull(session);
 
         var viewModel = new MainMenuViewModel(session, _connection.Notifications, _connection.Chat);
-        var friendsPanel = new FriendsPanelViewModel(session, _connection.Friends);
+        var friendsPanel = new FriendsPanelViewModel(session, _connection.Friends, _connection.Notifications);
         ShowScreen(new MainMenuView(viewModel, friendsPanel));
         _ = viewModel.ConnectChat();
         _ = friendsPanel.LoadFriends();

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Bastion.Contracts.Friends;
+using Bastion.Contracts.Notifications;
 using Bastion.Server.Application.Friends;
 
 namespace Bastion.Server.Host.Friends;
@@ -16,6 +17,20 @@ public static class FriendshipTranslator
             OwnFriendCode = roster.OwnFriendCode,
             Friends = roster.Friends.Select(ToEntry).ToArray(),
             ListedAt = roster.ListedAt,
+        };
+    }
+
+    public static FriendPresenceNotification ToNotification(FriendPresenceChange change, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(change);
+
+        return new FriendPresenceNotification
+        {
+            OccurredAt = now,
+            FriendNickname = change.Friend.Nickname,
+            FriendCode = change.Friend.FriendCode,
+            Presence = ToState(change.Presence),
+            LastSeenAt = change.LastSeenAt,
         };
     }
 

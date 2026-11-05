@@ -124,4 +124,9 @@ public class Account
         LastFailedAttemptAt = null;
         LockedUntil = null;
     }
+
+    public void RecordLastSeen(DateTime now)
+    {
+        LastSeenAt = now;
+    }
 }

@@ -12,6 +12,8 @@ public interface INotificationClient
 
     event EventHandler<SearchEndedEventArgs>? SearchEnded;
 
+    event EventHandler<FriendPresenceChangedEventArgs>? FriendPresenceChanged;
+
     event EventHandler? Disconnected;
 
     void Connect(string sessionToken);

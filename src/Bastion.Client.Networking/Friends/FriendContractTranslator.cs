@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Bastion.Contracts.Friends;
+using Bastion.Contracts.Notifications;
 
 namespace Bastion.Client.Networking.Friends;
 
@@ -15,6 +16,16 @@ public static class FriendContractTranslator
             list.OwnFriendCode ?? string.Empty,
             entries.Select(ToListedFriend).ToList(),
             list.ListedAt);
+    }
+
+    public static ListedFriend ToListedFriend(FriendPresenceNotification notification)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+
+        var friend = new PlayerTag(
+            notification.FriendNickname ?? string.Empty,
+            notification.FriendCode ?? string.Empty);
+        return new ListedFriend(friend, ToPresence(notification.Presence), notification.LastSeenAt);
     }
 
     private static ListedFriend ToListedFriend(FriendListEntry entry)

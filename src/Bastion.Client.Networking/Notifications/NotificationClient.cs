@@ -57,6 +57,12 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         remove => _notificationCallback.SearchEnded -= value;
     }
 
+    public event EventHandler<FriendPresenceChangedEventArgs>? FriendPresenceChanged
+    {
+        add => _notificationCallback.FriendPresenceChanged += value;
+        remove => _notificationCallback.FriendPresenceChanged -= value;
+    }
+
     public event EventHandler? Disconnected;
 
     public void Connect(string sessionToken)

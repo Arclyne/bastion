@@ -19,12 +19,7 @@ public sealed class FriendshipRepository : IFriendshipRepository
 
     public IReadOnlyList<FriendSummary> ListFriends(int accountId)
     {
-        IQueryable<int> friendAccountIds = _context.Friendships
-            .Where(friendship => friendship.AccountAId == accountId)
-            .Select(friendship => friendship.AccountBId)
-            .Concat(_context.Friendships
-                .Where(friendship => friendship.AccountBId == accountId)
-                .Select(friendship => friendship.AccountAId));
+        IQueryable<int> friendAccountIds = SelectFriendAccountIds(accountId);
 
         return _context.Accounts
             .Where(account => friendAccountIds.Contains(account.AccountId)
@@ -33,5 +28,20 @@ public sealed class FriendshipRepository : IFriendshipRepository
                 new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode),
                 account.LastSeenAt))
             .ToList();
+    }
+
+    public IReadOnlyList<int> ListFriendAccountIds(int accountId)
+    {
+        return SelectFriendAccountIds(accountId).ToList();
+    }
+
+    private IQueryable<int> SelectFriendAccountIds(int accountId)
+    {
+        return _context.Friendships
+            .Where(friendship => friendship.AccountAId == accountId)
+            .Select(friendship => friendship.AccountBId)
+            .Concat(_context.Friendships
+                .Where(friendship => friendship.AccountBId == accountId)
+                .Select(friendship => friendship.AccountAId));
     }
 }

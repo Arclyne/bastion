@@ -24,12 +24,15 @@ public static class ServiceRegistration
         services.AddScoped<ILobbyChatService, LobbyChatService>();
         services.AddScoped<IMatchSearchService, MatchSearchService>();
         services.AddScoped<IFriendListService, FriendListService>();
+        services.AddScoped<IFriendPresenceService, FriendPresenceService>();
+        services.AddSingleton<FriendPresenceReporter>();
         services.AddSingleton<IMatchmakingQueue, MatchmakingQueue>();
         services.AddSingleton<MatchmakingDispatcher>();
         services.AddSingleton<NotificationChannelRegistry>();
         services.AddSingleton<IChatBroadcaster>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddSingleton<IMatchmakingNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddSingleton<IPlayerPresence>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
+        services.AddSingleton<IFriendNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddHostedService<MatchmakingBackgroundService>();
         return services;
     }
