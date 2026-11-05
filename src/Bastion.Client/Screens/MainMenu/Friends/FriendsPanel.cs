@@ -115,7 +115,7 @@ public sealed class FriendsPanel : Panel
             WidthUnits = DimensionUnitType.RelativeToChildren,
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
-        container.AddChild(new LobbyChatView(viewModel.Chat));
+        container.AddChild(new ChatTabView(viewModel.Chat));
         container.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsChatTab));
         return container;
     }

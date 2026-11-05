@@ -130,6 +130,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading….
+        /// </summary>
+        internal static string ChatLoading {
+            get {
+                return ResourceManager.GetString("ChatLoading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You are muted in the chat permanently..
         /// </summary>
         internal static string ChatMutedPermanently {
@@ -166,6 +175,24 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open a friend in the Friends tab and choose «Send message»..
+        /// </summary>
+        internal static string ChatNoConversationsHint {
+            get {
+                return ResourceManager.GetString("ChatNoConversationsHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have not written to anyone yet.
+        /// </summary>
+        internal static string ChatNoConversationsTitle {
+            get {
+                return ResourceManager.GetString("ChatNoConversationsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open.
         /// </summary>
         internal static string ChatOpen {
@@ -180,6 +207,15 @@ namespace Bastion.Client.Localization {
         internal static string ChatOwnAuthor {
             get {
                 return ResourceManager.GetString("ChatOwnAuthor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You: {0}.
+        /// </summary>
+        internal static string ChatOwnPreviewFormat {
+            get {
+                return ResourceManager.GetString("ChatOwnPreviewFormat", resourceCulture);
             }
         }
         
@@ -216,6 +252,24 @@ namespace Bastion.Client.Localization {
         internal static string ChatRejectedMuted {
             get {
                 return ResourceManager.GetString("ChatRejectedMuted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not sent: you can only write to your friends..
+        /// </summary>
+        internal static string ChatRejectedNotFriends {
+            get {
+                return ResourceManager.GetString("ChatRejectedNotFriends", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not sent: that player does not exist..
+        /// </summary>
+        internal static string ChatRejectedPlayerNotFound {
+            get {
+                return ResourceManager.GetString("ChatRejectedPlayerNotFound", resourceCulture);
             }
         }
         
@@ -270,6 +324,33 @@ namespace Bastion.Client.Localization {
         internal static string ChatSystemNotice {
             get {
                 return ResourceManager.GetString("ChatSystemNotice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Today.
+        /// </summary>
+        internal static string ChatToday {
+            get {
+                return ResourceManager.GetString("ChatToday", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With your friends.
+        /// </summary>
+        internal static string ChatWithFriendsTitle {
+            get {
+                return ResourceManager.GetString("ChatWithFriendsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Yesterday.
+        /// </summary>
+        internal static string ChatYesterday {
+            get {
+                return ResourceManager.GetString("ChatYesterday", resourceCulture);
             }
         }
         
@@ -805,6 +886,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Send message.
+        /// </summary>
+        internal static string FriendsSendMessage {
+            get {
+                return ResourceManager.GetString("FriendsSendMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sent {0}.
         /// </summary>
         internal static string FriendsSentFormat {
@@ -1125,6 +1215,51 @@ namespace Bastion.Client.Localization {
         internal static string MainMenuSettings {
             get {
                 return ResourceManager.GetString("MainMenuSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Say hi to {0}.
+        /// </summary>
+        internal static string PrivateGreetingFormat {
+            get {
+                return ResourceManager.GetString("PrivateGreetingFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Their messages show up here. Only the two of you see them..
+        /// </summary>
+        internal static string PrivateGreetingHint {
+            get {
+                return ResourceManager.GetString("PrivateGreetingHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are no longer friends. You can only write to your friends..
+        /// </summary>
+        internal static string PrivateNotFriends {
+            get {
+                return ResourceManager.GetString("PrivateNotFriends", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not connected. They will read your messages when they come back..
+        /// </summary>
+        internal static string PrivateOfflineFormat {
+            get {
+                return ResourceManager.GetString("PrivateOfflineFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No longer your friend.
+        /// </summary>
+        internal static string PrivateStatusNotFriend {
+            get {
+                return ResourceManager.GetString("PrivateStatusNotFriend", resourceCulture);
             }
         }
     }

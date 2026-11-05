@@ -357,4 +357,49 @@
   <data name="ChatOpen" xml:space="preserve">
     <value>Abrir</value>
   </data>
+  <data name="FriendsSendMessage" xml:space="preserve">
+    <value>Enviar mensaje</value>
+  </data>
+  <data name="ChatWithFriendsTitle" xml:space="preserve">
+    <value>Con tus amigos</value>
+  </data>
+  <data name="ChatNoConversationsTitle" xml:space="preserve">
+    <value>Todavía no le escribes a nadie</value>
+  </data>
+  <data name="ChatNoConversationsHint" xml:space="preserve">
+    <value>Abre un amigo en la pestaña Amigos y elige «Enviar mensaje».</value>
+  </data>
+  <data name="ChatOwnPreviewFormat" xml:space="preserve">
+    <value>Tú: {0}</value>
+  </data>
+  <data name="ChatToday" xml:space="preserve">
+    <value>Hoy</value>
+  </data>
+  <data name="ChatYesterday" xml:space="preserve">
+    <value>Ayer</value>
+  </data>
+  <data name="ChatLoading" xml:space="preserve">
+    <value>Cargando…</value>
+  </data>
+  <data name="PrivateGreetingFormat" xml:space="preserve">
+    <value>Saluda a {0}</value>
+  </data>
+  <data name="PrivateGreetingHint" xml:space="preserve">
+    <value>Aquí aparecen sus mensajes. Los ven solo ustedes dos.</value>
+  </data>
+  <data name="PrivateOfflineFormat" xml:space="preserve">
+    <value>{0} no está conectado. Leerá tus mensajes cuando entre.</value>
+  </data>
+  <data name="PrivateNotFriends" xml:space="preserve">
+    <value>Ya no son amigos. Solo puedes escribir a tus amigos.</value>
+  </data>
+  <data name="PrivateStatusNotFriend" xml:space="preserve">
+    <value>Ya no es tu amigo</value>
+  </data>
+  <data name="ChatRejectedNotFriends" xml:space="preserve">
+    <value>No se envió: solo puedes escribir a tus amigos.</value>
+  </data>
+  <data name="ChatRejectedPlayerNotFound" xml:space="preserve">
+    <value>No se envió: ese jugador no existe.</value>
+  </data>
 </root>

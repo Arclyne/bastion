@@ -31,6 +31,7 @@ public class TestNotificationCallback
     private FriendPresenceChangedEventArgs? _friendPresence;
     private FriendRequestReceivedEventArgs? _friendRequest;
     private FriendshipStartedEventArgs? _friendshipStarted;
+    private PrivateMessageReceivedEventArgs? _privateMessage;
 
     public TestNotificationCallback()
     {
@@ -41,6 +42,7 @@ public class TestNotificationCallback
         _notificationCallback.FriendPresenceChanged += HandleFriendPresenceChanged;
         _notificationCallback.FriendRequestReceived += HandleFriendRequestReceived;
         _notificationCallback.FriendshipStarted += HandleFriendshipStarted;
+        _notificationCallback.PrivateMessageReceived += HandlePrivateMessageReceived;
     }
 
     [Fact]
@@ -87,6 +89,22 @@ public class TestNotificationCallback
         _notificationCallback.ReceiveNotification(CreateFriendPresenceNotification());
 
         Assert.Equal(FriendPresence.Connected, _friendPresence?.Friend.Presence);
+    }
+
+    [Fact]
+    public void ReceiveNotification_PrivateMessage_RaisesText()
+    {
+        var notification = new PrivateMessageNotification
+        {
+            SenderNickname = FirstNickname,
+            SenderFriendCode = "QU7K2P",
+            Text = MessageText,
+            OccurredAt = _sentAt,
+        };
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(MessageText, _privateMessage?.Message.Text);
     }
 
     [Fact]
@@ -157,6 +175,11 @@ public class TestNotificationCallback
         Exception? exception = Record.Exception(() => _notificationCallback.ReceiveNotification(notification));
 
         Assert.Null(exception);
+    }
+
+    private void HandlePrivateMessageReceived(object? sender, PrivateMessageReceivedEventArgs e)
+    {
+        _privateMessage = e;
     }
 
     private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)

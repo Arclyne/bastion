@@ -82,6 +82,10 @@ public static class ChatTranslator
                 return ChatRejectionReason.BannedTerm;
             case ChatRejection.TooFast:
                 return ChatRejectionReason.TooFast;
+            case ChatRejection.NotFriends:
+                return ChatRejectionReason.NotFriends;
+            case ChatRejection.PlayerNotFound:
+                return ChatRejectionReason.PlayerNotFound;
             default:
                 throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported chat rejection.");
         }

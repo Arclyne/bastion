@@ -40,6 +40,16 @@ public sealed class AccountRepository : IAccountRepository
             .FirstOrDefault();
     }
 
+    public IReadOnlyList<PlayerIdentity> ListPlayerIdentities(IReadOnlyCollection<int> accountIds)
+    {
+        ArgumentNullException.ThrowIfNull(accountIds);
+
+        return _context.Accounts
+            .Where(account => accountIds.Contains(account.AccountId))
+            .Select(account => new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode))
+            .ToList();
+    }
+
     public PlayerIdentity? FindPlayerIdentityByFriendCode(string friendCode)
     {
         ArgumentNullException.ThrowIfNull(friendCode);

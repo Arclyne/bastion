@@ -3,6 +3,7 @@ using Bastion.Server.Application.Auditing;
 using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Moderation;
+using Bastion.Server.Application.PrivateChat;
 using Bastion.Server.Application.Sessions;
 
 namespace Bastion.Server.Application.Tests.Fakes;
@@ -23,6 +24,8 @@ public sealed class FakeUnitOfWork : IUnitOfWork
 
     public FakeBannedWordRepository BannedWordStore { get; } = new FakeBannedWordRepository();
 
+    public FakeMessageRepository MessageStore { get; } = new FakeMessageRepository();
+
     public int SaveCount { get; private set; }
 
     public IAccountRepository Accounts => AccountStore;
@@ -38,6 +41,8 @@ public sealed class FakeUnitOfWork : IUnitOfWork
     public ISanctionRepository Sanctions => SanctionStore;
 
     public IBannedWordRepository BannedWords => BannedWordStore;
+
+    public IMessageRepository Messages => MessageStore;
 
     public void SaveChanges()
     {

@@ -9,7 +9,7 @@ public sealed class LobbyChatRoom : ILobbyChatRoom
 {
     private readonly object _roomLock = new object();
     private readonly Queue<PostedChatLine> _history = new Queue<PostedChatLine>();
-    private readonly Dictionary<int, DateTime> _lastTurnByAccountId = new Dictionary<int, DateTime>();
+    private readonly ChatCooldown _cooldown = new ChatCooldown();
     private readonly IChatBroadcaster _broadcaster;
     private long _lastMessageId;
 
@@ -22,17 +22,7 @@ public sealed class LobbyChatRoom : ILobbyChatRoom
 
     public bool TryClaimTurn(int accountId, DateTime now)
     {
-        lock (_roomLock)
-        {
-            if (_lastTurnByAccountId.TryGetValue(accountId, out DateTime lastTurn)
-                && now < lastTurn.AddSeconds(ChatRules.CooldownSeconds))
-            {
-                return false;
-            }
-
-            _lastTurnByAccountId[accountId] = now;
-            return true;
-        }
+        return _cooldown.TryClaimTurn(accountId, now);
     }
 
     public PostedChatLine Post(ChatLine line)

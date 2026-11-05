@@ -17,7 +17,7 @@ using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Friends;
 
-public sealed class FriendsPanelViewModel : ViewModel
+public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(FriendsPanelViewModel));
 
@@ -40,7 +40,8 @@ public sealed class FriendsPanelViewModel : ViewModel
         Actions.FriendRemoved += HandleFriendRemoved;
         Requests = new FriendRequestsViewModel(session, clients.Friends);
         Requests.FriendshipStarted += HandleFriendshipStarted;
-        Chat = new LobbyChatViewModel(session, clients.Chat, clients.Notifications);
+        Actions.MessageRequested += HandleMessageRequested;
+        Chat = new ChatTabViewModel(session, clients.Chat, this);
         clients.Notifications.FriendPresenceChanged += HandleFriendPresenceChanged;
         clients.Notifications.FriendRequestReceived += HandleFriendRequestReceived;
         clients.Notifications.FriendshipStarted += HandleRemoteFriendshipStarted;
@@ -60,7 +61,7 @@ public sealed class FriendsPanelViewModel : ViewModel
 
     public FriendActionsViewModel Actions { get; }
 
-    public LobbyChatViewModel Chat { get; }
+    public ChatTabViewModel Chat { get; }
 
     public bool IsOpen
     {
@@ -201,7 +202,7 @@ public sealed class FriendsPanelViewModel : ViewModel
         SelectedTab = tab;
         if (tab == FriendsTab.Chat)
         {
-            _ = Chat.LoadChannel();
+            _ = Chat.Load();
         }
     }
 
@@ -255,6 +256,12 @@ public sealed class FriendsPanelViewModel : ViewModel
         }
     }
 
+    public ConversationPresence? FindPresence(string friendCode)
+    {
+        FriendRowViewModel? row = _allRows.Find(friend => friend.FriendCode == friendCode);
+        return row is null ? null : new ConversationPresence(row.IsConnected, row.StatusText);
+    }
+
     private static string FormatText(string format, params object[] arguments)
     {
         return string.Format(CultureInfo.CurrentCulture, format, arguments);
@@ -287,6 +294,13 @@ public sealed class FriendsPanelViewModel : ViewModel
         IsEmpty = _allRows.Count == 0;
         UpdateHeaderText();
         ApplyFilter();
+    }
+
+    private void HandleMessageRequested(object? sender, MessageRequestedEventArgs e)
+    {
+        Actions.CloseAll();
+        SelectTab(FriendsTab.Chat);
+        Chat.OpenPrivate(e.Friend);
     }
 
     private void HandleFriendshipStarted(object? sender, EventArgs e)
@@ -335,6 +349,7 @@ public sealed class FriendsPanelViewModel : ViewModel
         _allRows[index] = new FriendRowViewModel(change.Friend, change.OccurredAt);
         UpdateHeaderText();
         ApplyFilter();
+        Chat.RefreshPresence(change.Friend.Friend.FriendCode);
     }
 
     private void ApplyFilter()

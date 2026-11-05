@@ -3,6 +3,7 @@ using System.ServiceModel;
 using Bastion.Client.Networking.Chat;
 using Bastion.Client.Networking.Friends;
 using Bastion.Client.Networking.Matchmaking;
+using Bastion.Client.Networking.PrivateChat;
 using Bastion.Contracts.Notifications;
 
 namespace Bastion.Client.Networking.Notifications;
@@ -23,6 +24,8 @@ public sealed class NotificationCallback : INotificationCallback
     public event EventHandler<FriendRequestReceivedEventArgs>? FriendRequestReceived;
 
     public event EventHandler<FriendshipStartedEventArgs>? FriendshipStarted;
+
+    public event EventHandler<PrivateMessageReceivedEventArgs>? PrivateMessageReceived;
 
     public void ReceiveNotification(Notification notification)
     {
@@ -68,7 +71,7 @@ public sealed class NotificationCallback : INotificationCallback
             return true;
         }
 
-        return RaiseFriendRequestEvent(notification);
+        return RaiseFriendRequestEvent(notification) || RaisePrivateMessageEvent(notification);
     }
 
     private bool RaiseFriendRequestEvent(Notification notification)
@@ -88,6 +91,21 @@ public sealed class NotificationCallback : INotificationCallback
         }
 
         return false;
+    }
+
+    private bool RaisePrivateMessageEvent(Notification notification)
+    {
+        if (notification is not PrivateMessageNotification privateMessage)
+        {
+            return false;
+        }
+
+        PrivateMessageReceived?.Invoke(
+            this,
+            new PrivateMessageReceivedEventArgs(
+                ConversationContractTranslator.ToSender(privateMessage),
+                ConversationContractTranslator.ToPrivateMessage(privateMessage)));
+        return true;
     }
 
     private void RaiseMatchmakingEvent(Notification notification)

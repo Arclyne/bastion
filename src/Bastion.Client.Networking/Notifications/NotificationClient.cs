@@ -75,6 +75,12 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         remove => _notificationCallback.FriendshipStarted -= value;
     }
 
+    public event EventHandler<PrivateMessageReceivedEventArgs>? PrivateMessageReceived
+    {
+        add => _notificationCallback.PrivateMessageReceived += value;
+        remove => _notificationCallback.PrivateMessageReceived -= value;
+    }
+
     public event EventHandler? Disconnected;
 
     public void Connect(string sessionToken)

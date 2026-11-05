@@ -2,6 +2,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Auditing;
+using Bastion.Domain.Chat;
 using Bastion.Domain.Friends;
 using Bastion.Domain.Moderation;
 using Bastion.Domain.Sessions;
@@ -28,6 +29,8 @@ public sealed class BastionDbContext : DbContext
     public DbSet<Sanction> Sanctions => Set<Sanction>();
 
     public DbSet<BannedWord> BannedWords => Set<BannedWord>();
+
+    public DbSet<Message> Messages => Set<Message>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

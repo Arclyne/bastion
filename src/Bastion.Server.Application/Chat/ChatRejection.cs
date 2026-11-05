@@ -6,4 +6,6 @@ public enum ChatRejection
     Muted,
     BannedTerm,
     TooFast,
+    NotFriends,
+    PlayerNotFound,
 }

@@ -1,0 +1,58 @@
+using System;
+
+namespace Bastion.Domain.Chat;
+
+public class Message
+{
+    private const string SameAccountMessage = "A player cannot send a private message to themselves.";
+
+    public Message(MessageParticipants participants, string text, DateTime sentAt)
+    {
+        ArgumentNullException.ThrowIfNull(participants);
+        ArgumentNullException.ThrowIfNull(text);
+        if (participants.AuthorId == participants.RecipientId)
+        {
+            throw new ArgumentException(SameAccountMessage, nameof(participants));
+        }
+
+        AuthorId = participants.AuthorId;
+        RecipientId = participants.RecipientId;
+        Channel = MessageChannel.Friends;
+        Text = text;
+        SentAt = sentAt;
+    }
+
+    private Message()
+    {
+        Text = string.Empty;
+    }
+
+    public long MessageId { get; private set; }
+
+    public int AuthorId { get; private set; }
+
+    public MessageChannel Channel { get; private set; }
+
+    public int? RecipientId { get; private set; }
+
+    public string Text { get; private set; }
+
+    public DateTime SentAt { get; private set; }
+
+    public DateTime? ReadAt { get; private set; }
+
+    public bool IsSentBy(int accountId)
+    {
+        return AuthorId == accountId;
+    }
+
+    public int GetPartnerId(int accountId)
+    {
+        return IsSentBy(accountId) ? RecipientId.GetValueOrDefault() : AuthorId;
+    }
+
+    public void MarkRead(DateTime readAt)
+    {
+        ReadAt ??= readAt;
+    }
+}

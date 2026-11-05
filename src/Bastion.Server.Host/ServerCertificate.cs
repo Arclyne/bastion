@@ -4,6 +4,7 @@ using Bastion.Server.Host.Accounts;
 using Bastion.Server.Host.Chat;
 using Bastion.Server.Host.Friends;
 using Bastion.Server.Host.Matchmaking;
+using Bastion.Server.Host.PrivateChat;
 using Bastion.Server.Host.Sessions;
 using CoreWCF;
 using CoreWCF.Configuration;
@@ -46,6 +47,7 @@ public sealed class ServerCertificate : IDisposable
         serviceBuilder.AddService<ChatService>();
         serviceBuilder.AddService<MatchmakingService>();
         serviceBuilder.AddService<FriendshipService>();
+        serviceBuilder.AddService<ConversationService>();
         serviceBuilder.ConfigureAllServiceHostBase(ApplyCertificateTo);
     }
 

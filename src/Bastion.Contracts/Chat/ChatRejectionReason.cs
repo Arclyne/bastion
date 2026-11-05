@@ -16,4 +16,10 @@ public enum ChatRejectionReason
 
     [EnumMember]
     TooFast,
+
+    [EnumMember]
+    NotFriends,
+
+    [EnumMember]
+    PlayerNotFound,
 }

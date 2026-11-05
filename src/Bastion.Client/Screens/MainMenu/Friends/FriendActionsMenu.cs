@@ -49,6 +49,8 @@ public sealed class FriendActionsMenu : Panel
 
         Button viewProfile = CreateItem(nameof(Strings.FriendsViewProfile), ButtonLooks.Secondary);
         viewProfile.IsEnabled = false;
+        Button sendMessage = CreateItem(nameof(Strings.FriendsSendMessage), ButtonLooks.Secondary);
+        sendMessage.Click += HandleSendMessageClick;
         Button remove = CreateItem(nameof(Strings.FriendsRemoveFriend), ButtonLooks.Secondary);
         remove.Click += HandleRemoveClick;
         Button cancel = CreateItem(nameof(Strings.FriendsCancelRequest), ButtonLooks.Pill);
@@ -57,9 +59,15 @@ public sealed class FriendActionsMenu : Panel
         var content = new StackPanel { X = PaddingX, Y = PaddingTop, Spacing = ItemSpacing };
         content.AddChild(nickname);
         content.AddChild(viewProfile);
+        content.AddChild(sendMessage);
         content.AddChild(remove);
         content.AddChild(cancel);
         return content;
+    }
+
+    private void HandleSendMessageClick(object? sender, EventArgs e)
+    {
+        _actions.RequestMessage();
     }
 
     private void HandleRemoveClick(object? sender, EventArgs e)

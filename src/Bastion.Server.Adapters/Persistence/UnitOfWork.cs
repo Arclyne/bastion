@@ -5,6 +5,7 @@ using Bastion.Server.Application.Auditing;
 using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Moderation;
+using Bastion.Server.Application.PrivateChat;
 using Bastion.Server.Application.Sessions;
 
 namespace Bastion.Server.Adapters.Persistence;
@@ -25,6 +26,7 @@ public sealed class UnitOfWork : IUnitOfWork
         FriendRequests = new FriendRequestRepository(context);
         Sanctions = new SanctionRepository(context);
         BannedWords = new BannedWordRepository(context);
+        Messages = new MessageRepository(context);
     }
 
     public IAccountRepository Accounts { get; }
@@ -40,6 +42,8 @@ public sealed class UnitOfWork : IUnitOfWork
     public ISanctionRepository Sanctions { get; }
 
     public IBannedWordRepository BannedWords { get; }
+
+    public IMessageRepository Messages { get; }
 
     public void SaveChanges()
     {
