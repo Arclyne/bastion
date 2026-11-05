@@ -3,8 +3,11 @@ using System.Runtime.Serialization;
 namespace Bastion.Contracts.Notifications;
 
 [DataContract]
-public sealed class ChatMessageNotification : Notification
+public sealed class MatchChatMessageNotification : Notification
 {
+    [DataMember]
+    public int MatchId { get; set; }
+
     [DataMember]
     public string? SenderNickname { get; set; }
 

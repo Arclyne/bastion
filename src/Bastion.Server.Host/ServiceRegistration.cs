@@ -20,6 +20,7 @@ public static class ServiceRegistration
         services.AddScoped<ILoginService, LoginService>();
         services.AddScoped<ISessionVerifier, SessionVerifier>();
         services.AddScoped<ILobbyChatService, LobbyChatService>();
+        services.AddScoped<IMatchChatService, MatchChatService>();
         services.AddScoped<IMatchSearchService, MatchSearchService>();
         services.AddScoped<IMatchmakingPlayerVerifier, MatchmakingPlayerVerifier>();
         services.AddSingleton<IMatchmakingQueue, MatchmakingQueue>();
@@ -27,6 +28,8 @@ public static class ServiceRegistration
         services.AddSingleton<MatchmakingDispatcher>();
         services.AddSingleton<NotificationChannelRegistry>();
         services.AddSingleton<IChatBroadcaster>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
+        services.AddSingleton<IMatchChatNotifier>(
+            provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddSingleton<IMatchmakingNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddHostedService<MatchmakingBackgroundService>();
         return services;

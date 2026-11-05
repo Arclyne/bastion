@@ -8,10 +8,16 @@ namespace Bastion.Client.Tests.Fakes;
 public sealed class FakeMatchmakingClient : IMatchmakingClient
 {
     private const int FoundMatchId = 12;
+    private const byte ClassicBoardSize = 9;
+    private const byte ClassicWallsPerPlayer = 10;
+    private const byte ClockMinutes = 5;
+
+    private static readonly FoundMatchFormat _classicFormat =
+        new FoundMatchFormat(ClassicBoardSize, ClassicWallsPerPlayer, ClockMinutes);
 
     public Exception? StartSearchFailure { get; set; }
 
-    public IReadOnlyList<PairedPlayer>? MatchFoundDuringStart { get; set; }
+    public IReadOnlyList<FoundMatchParticipant>? MatchFoundDuringStart { get; set; }
 
     public int CancelSearchCount { get; private set; }
 
@@ -62,11 +68,11 @@ public sealed class FakeMatchmakingClient : IMatchmakingClient
             || Disconnected is not null;
     }
 
-    public void RaiseMatchFound(IReadOnlyList<PairedPlayer> players)
+    public void RaiseMatchFound(IReadOnlyList<FoundMatchParticipant> participants)
     {
-        ArgumentNullException.ThrowIfNull(players);
+        ArgumentNullException.ThrowIfNull(participants);
 
-        MatchFound?.Invoke(this, new MatchFoundEventArgs(FoundMatchId, players));
+        MatchFound?.Invoke(this, new MatchFoundEventArgs(FoundMatchId, _classicFormat, participants));
     }
 
     public void RaisePresenceRequested(TimeSpan responseWindow)

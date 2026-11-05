@@ -1,6 +1,7 @@
 using System;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Auditing;
+using Bastion.Domain.Chat;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
 using Bastion.Domain.Sessions;
@@ -29,6 +30,8 @@ public sealed class BastionDbContext : DbContext
     public DbSet<Participation> Participations => Set<Participation>();
 
     public DbSet<ModeStatistic> ModeStatistics => Set<ModeStatistic>();
+
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

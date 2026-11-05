@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using Bastion.Domain.Chat;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
 using Bastion.Server.Application.Matches;
@@ -46,6 +47,18 @@ public sealed class MatchStore : IMatchStore
         return RunInNewContext(context => AddMatch(context, match));
     }
 
+    public IReadOnlyList<int> FindAccountIdsWithUnfinishedParticipation(int matchId)
+    {
+        return RunInNewContext(context => LoadAccountIdsWithUnfinishedParticipation(context, matchId));
+    }
+
+    public long SaveChatMessage(ChatMessage message)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+
+        return RunInNewContext(context => AddChatMessage(context, message));
+    }
+
     private static bool HasUnfinishedParticipationInContext(BastionDbContext context, int accountId)
     {
         return context.Participations.Any(
@@ -76,6 +89,22 @@ public sealed class MatchStore : IMatchStore
         context.Matches.Add(match);
         context.SaveChanges();
         return match.MatchId;
+    }
+
+    private static List<int> LoadAccountIdsWithUnfinishedParticipation(BastionDbContext context, int matchId)
+    {
+        return context.Participations
+            .AsNoTracking()
+            .Where(participation => participation.MatchId == matchId && !participation.Result.HasValue)
+            .Select(participation => participation.AccountId)
+            .ToList();
+    }
+
+    private static long AddChatMessage(BastionDbContext context, ChatMessage message)
+    {
+        context.ChatMessages.Add(message);
+        context.SaveChanges();
+        return message.MessageId;
     }
 
     private TResult RunInNewContext<TResult>(Func<BastionDbContext, TResult> operation)

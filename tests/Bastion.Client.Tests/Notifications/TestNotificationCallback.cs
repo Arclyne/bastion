@@ -14,6 +14,9 @@ public class TestNotificationCallback
     private const string MessageText = "hello";
     private const int ResponseSeconds = 60;
     private const int FoundMatchId = 12;
+    private const byte ClassicBoardSize = 9;
+    private const byte ClassicWallsPerPlayer = 10;
+    private const byte ClockMinutes = 5;
     private const short FirstEloRating = 1210;
     private const short SecondEloRating = 1000;
     private const byte FirstTurnOrder = 1;
@@ -42,23 +45,25 @@ public class TestNotificationCallback
     };
 
     private readonly NotificationCallback _notificationCallback = new NotificationCallback();
-    private ChatMessageReceivedEventArgs? _chatMessage;
+    private LobbyChatMessageReceivedEventArgs? _lobbyChatMessage;
+    private MatchChatMessageReceivedEventArgs? _matchChatMessage;
     private MatchFoundEventArgs? _matchFound;
     private PresenceRequestedEventArgs? _presenceRequested;
     private SearchEndedEventArgs? _searchEnded;
 
     public TestNotificationCallback()
     {
-        _notificationCallback.ChatMessageReceived += HandleChatMessageReceived;
+        _notificationCallback.LobbyChatMessageReceived += HandleLobbyChatMessageReceived;
+        _notificationCallback.MatchChatMessageReceived += HandleMatchChatMessageReceived;
         _notificationCallback.MatchFound += HandleMatchFound;
         _notificationCallback.PresenceRequested += HandlePresenceRequested;
         _notificationCallback.SearchEnded += HandleSearchEnded;
     }
 
     [Fact]
-    public void ReceiveNotification_ChatMessage_RaisesSenderNickname()
+    public void ReceiveNotification_LobbyChatMessage_RaisesSenderNickname()
     {
-        var notification = new ChatMessageNotification
+        var notification = new LobbyChatMessageNotification
         {
             SenderNickname = FirstNickname,
             Text = MessageText,
@@ -67,7 +72,33 @@ public class TestNotificationCallback
 
         _notificationCallback.ReceiveNotification(notification);
 
-        Assert.Equal(FirstNickname, _chatMessage?.SenderNickname);
+        Assert.Equal(FirstNickname, _lobbyChatMessage?.SenderNickname);
+    }
+
+    [Fact]
+    public void ReceiveNotification_MatchChatMessage_RaisesMatchId()
+    {
+        var notification = new MatchChatMessageNotification
+        {
+            MatchId = FoundMatchId,
+            SenderNickname = FirstNickname,
+            Text = MessageText,
+            OccurredAt = _sentAt,
+        };
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(FoundMatchId, _matchChatMessage?.MatchId);
+    }
+
+    [Fact]
+    public void ReceiveNotification_MatchFound_RaisesMatchFormat()
+    {
+        MatchFoundNotification notification = CreateMatchFoundNotification();
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(new FoundMatchFormat(ClassicBoardSize, ClassicWallsPerPlayer, ClockMinutes), _matchFound?.Format);
     }
 
     [Fact]
@@ -77,7 +108,7 @@ public class TestNotificationCallback
 
         _notificationCallback.ReceiveNotification(notification);
 
-        Assert.Equal(_participantNicknames, _matchFound?.Players.Select(player => player.Nickname));
+        Assert.Equal(_participantNicknames, _matchFound?.Participants.Select(participant => participant.Nickname));
     }
 
     [Fact]
@@ -136,14 +167,22 @@ public class TestNotificationCallback
         return new MatchFoundNotification
         {
             MatchId = FoundMatchId,
+            BoardSize = ClassicBoardSize,
+            WallsPerPlayer = ClassicWallsPerPlayer,
+            ClockMinutes = ClockMinutes,
             Participants = _participants,
             OccurredAt = _sentAt,
         };
     }
 
-    private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)
+    private void HandleLobbyChatMessageReceived(object? sender, LobbyChatMessageReceivedEventArgs e)
     {
-        _chatMessage = e;
+        _lobbyChatMessage = e;
+    }
+
+    private void HandleMatchChatMessageReceived(object? sender, MatchChatMessageReceivedEventArgs e)
+    {
+        _matchChatMessage = e;
     }
 
     private void HandleMatchFound(object? sender, MatchFoundEventArgs e)

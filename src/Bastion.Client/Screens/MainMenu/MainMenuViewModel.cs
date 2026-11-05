@@ -37,7 +37,7 @@ public sealed class MainMenuViewModel : ViewModel
         Nickname = session.Nickname;
         ChatDraft = string.Empty;
         ChatStatusKey = string.Empty;
-        _notifications.ChatMessageReceived += HandleChatMessageReceived;
+        _notifications.LobbyChatMessageReceived += HandleLobbyChatMessageReceived;
         _notifications.Disconnected += HandleNotificationsDisconnected;
     }
 
@@ -103,7 +103,7 @@ public sealed class MainMenuViewModel : ViewModel
         }
     }
 
-    public async Task SendChatMessage()
+    public async Task SendLobbyChatMessage()
     {
         if (IsSending)
         {
@@ -120,7 +120,7 @@ public sealed class MainMenuViewModel : ViewModel
         IsSending = true;
         try
         {
-            await Task.Run(() => _chat.SendMessage(_session.Token, text));
+            await Task.Run(() => _chat.SendLobbyChatMessage(_session.Token, text));
             ChatDraft = string.Empty;
         }
         catch (InvalidChatMessageException ex)
@@ -167,7 +167,7 @@ public sealed class MainMenuViewModel : ViewModel
         ChatStatusKey = nameof(Strings.MainMenuChatUnavailable);
     }
 
-    private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)
+    private void HandleLobbyChatMessageReceived(object? sender, LobbyChatMessageReceivedEventArgs e)
     {
         string line = $"{e.SenderNickname}: {e.Text}";
         UiThread.Run(_uiContext, () => AddChatLine(line));

@@ -31,10 +31,10 @@ public class TestMatchSearchViewModel : IDisposable
     private const int ExpectedSecondsLeft = 55;
 
     private static readonly DateTimeOffset _searchStartedAt = new DateTimeOffset(2026, 11, 5, 18, 0, 0, TimeSpan.Zero);
-    private static readonly PairedPlayer[] _pairedPlayers = new PairedPlayer[]
+    private static readonly FoundMatchParticipant[] _foundMatchParticipants = new FoundMatchParticipant[]
     {
-        new PairedPlayer(OwnNickname, OwnEloRating, OwnTurnOrder),
-        new PairedPlayer(RivalNickname, RivalEloRating, RivalTurnOrder),
+        new FoundMatchParticipant(OwnNickname, OwnEloRating, OwnTurnOrder),
+        new FoundMatchParticipant(RivalNickname, RivalEloRating, RivalTurnOrder),
     };
 
     private readonly FakeMatchmakingClient _matchmakingClient = new FakeMatchmakingClient();
@@ -96,7 +96,7 @@ public class TestMatchSearchViewModel : IDisposable
     [Fact]
     public async Task StartSearch_MatchFoundBeforeReply_KeepsMatchFound()
     {
-        _matchmakingClient.MatchFoundDuringStart = _pairedPlayers;
+        _matchmakingClient.MatchFoundDuringStart = _foundMatchParticipants;
 
         await _viewModel.StartSearch();
 
@@ -112,7 +112,7 @@ public class TestMatchSearchViewModel : IDisposable
             RivalNickname);
         await _viewModel.StartSearch();
 
-        _matchmakingClient.RaiseMatchFound(_pairedPlayers);
+        _matchmakingClient.RaiseMatchFound(_foundMatchParticipants);
 
         Assert.Equal(expectedText, _viewModel.RivalText);
     }
@@ -198,7 +198,7 @@ public class TestMatchSearchViewModel : IDisposable
     public async Task Disconnected_AfterMatchFound_KeepsMatchFound()
     {
         await _viewModel.StartSearch();
-        _matchmakingClient.RaiseMatchFound(_pairedPlayers);
+        _matchmakingClient.RaiseMatchFound(_foundMatchParticipants);
 
         _matchmakingClient.RaiseDisconnected();
 
@@ -229,7 +229,7 @@ public class TestMatchSearchViewModel : IDisposable
     public async Task DismissMatchFound_MatchFound_HidesPanel()
     {
         await _viewModel.StartSearch();
-        _matchmakingClient.RaiseMatchFound(_pairedPlayers);
+        _matchmakingClient.RaiseMatchFound(_foundMatchParticipants);
 
         _viewModel.DismissMatchFound();
 

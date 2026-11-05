@@ -1,7 +1,9 @@
 using System;
 using System.Data.Common;
 using Bastion.Contracts.Chat;
+using Bastion.Domain.Chat;
 using Bastion.Server.Application.Chat;
+using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Sessions;
 using CoreWCF;
@@ -10,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Host.Chat;
 
+/// <inheritdoc/>
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class ChatService : IChatService
 {
@@ -29,7 +32,34 @@ public sealed class ChatService : IChatService
         _timeProvider = timeProvider;
     }
 
-    public void SendChatMessage(string? sessionToken, string? text)
+    /// <inheritdoc/>
+    public void SendLobbyChatMessage(string? sessionToken, string? text)
+    {
+        RunChatRequest(sessionToken, text, CallLobbyChatService);
+    }
+
+    /// <inheritdoc/>
+    public void SendMatchChatMessage(string? sessionToken, int matchId, string? text)
+    {
+        RunChatRequest(sessionToken, text, CreateMatchChatServiceCall(matchId));
+    }
+
+    private Action<IServiceProvider, string, string> CreateMatchChatServiceCall(int matchId)
+    {
+        return (provider, token, text) => CallMatchChatService(provider, token, new MatchChatSubmission(matchId, text));
+    }
+
+    private void CallLobbyChatService(IServiceProvider provider, string sessionToken, string text)
+    {
+        provider.GetRequiredService<ILobbyChatService>().SendMessage(sessionToken, text, GetUtcNow());
+    }
+
+    private void CallMatchChatService(IServiceProvider provider, string sessionToken, MatchChatSubmission submission)
+    {
+        provider.GetRequiredService<IMatchChatService>().SendMessage(sessionToken, submission, GetUtcNow());
+    }
+
+    private void RunChatRequest(string? sessionToken, string? text, Action<IServiceProvider, string, string> send)
     {
         if (sessionToken is null)
         {
@@ -44,21 +74,34 @@ public sealed class ChatService : IChatService
         try
         {
             using IServiceScope scope = _scopeFactory.CreateScope();
-            ILobbyChatService chat = scope.ServiceProvider.GetRequiredService<ILobbyChatService>();
-            chat.SendMessage(sessionToken, text, _timeProvider.GetUtcNow().UtcDateTime);
+            send(scope.ServiceProvider, sessionToken, text);
         }
         catch (InvalidSessionException ex)
         {
             throw SessionTranslator.ToFault(ex);
         }
+        catch (ChatChannelForbiddenException ex)
+        {
+            throw ChatTranslator.ToFault(ex);
+        }
         catch (InvalidChatMessageException ex)
         {
             throw ChatTranslator.ToFault(ex);
+        }
+        catch (MatchStoreException ex)
+        {
+            _logger.Error("The match store could not be used while sending a chat message.", ex);
+            throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)
         {
             _logger.Error("The database could not be reached while sending a chat message.", ex);
             throw new FaultException(ServerFailureReason);
         }
+    }
+
+    private DateTime GetUtcNow()
+    {
+        return _timeProvider.GetUtcNow().UtcDateTime;
     }
 }

@@ -133,7 +133,7 @@ public sealed class LobbyChatPanel : Panel
     {
         try
         {
-            await _viewModel.SendChatMessage();
+            await _viewModel.SendLobbyChatMessage();
         }
         catch (ObjectDisposedException ex)
         {

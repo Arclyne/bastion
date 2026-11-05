@@ -33,10 +33,16 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         ChannelSettings.ApplyCertificateValidation(_sessionChannelFactory);
     }
 
-    public event EventHandler<ChatMessageReceivedEventArgs>? ChatMessageReceived
+    public event EventHandler<LobbyChatMessageReceivedEventArgs>? LobbyChatMessageReceived
     {
-        add => _notificationCallback.ChatMessageReceived += value;
-        remove => _notificationCallback.ChatMessageReceived -= value;
+        add => _notificationCallback.LobbyChatMessageReceived += value;
+        remove => _notificationCallback.LobbyChatMessageReceived -= value;
+    }
+
+    public event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived
+    {
+        add => _notificationCallback.MatchChatMessageReceived += value;
+        remove => _notificationCallback.MatchChatMessageReceived -= value;
     }
 
     public event EventHandler<MatchFoundEventArgs>? MatchFound

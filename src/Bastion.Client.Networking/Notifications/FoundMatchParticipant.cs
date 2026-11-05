@@ -2,9 +2,9 @@ using System;
 
 namespace Bastion.Client.Networking.Notifications;
 
-public sealed record PairedPlayer
+public sealed record FoundMatchParticipant
 {
-    public PairedPlayer(string nickname, short? eloRating, byte turnOrder)
+    public FoundMatchParticipant(string nickname, short? eloRating, byte turnOrder)
     {
         ArgumentNullException.ThrowIfNull(nickname);
 

@@ -5,15 +5,19 @@ namespace Bastion.Client.Networking.Notifications;
 
 public sealed class MatchFoundEventArgs : EventArgs
 {
-    public MatchFoundEventArgs(int matchId, IReadOnlyList<PairedPlayer> players)
+    public MatchFoundEventArgs(int matchId, FoundMatchFormat format, IReadOnlyList<FoundMatchParticipant> participants)
     {
-        ArgumentNullException.ThrowIfNull(players);
+        ArgumentNullException.ThrowIfNull(format);
+        ArgumentNullException.ThrowIfNull(participants);
 
         MatchId = matchId;
-        Players = players;
+        Format = format;
+        Participants = participants;
     }
 
     public int MatchId { get; }
 
-    public IReadOnlyList<PairedPlayer> Players { get; }
+    public FoundMatchFormat Format { get; }
+
+    public IReadOnlyList<FoundMatchParticipant> Participants { get; }
 }

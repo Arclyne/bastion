@@ -96,7 +96,7 @@ public class TestRankedMatchCreator
     [Fact]
     public void TryCreateMatch_StoreFails_ReturnsFalse()
     {
-        _matchStore.SaveFailure = new MatchStoreException(new InvalidOperationException(StoreFailureMessage));
+        _matchStore.MatchSaveFailure = new MatchStoreException(new InvalidOperationException(StoreFailureMessage));
 
         bool isCreated = _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out _);
 

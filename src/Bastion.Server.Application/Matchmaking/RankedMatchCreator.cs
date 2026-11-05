@@ -62,7 +62,7 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         }
     }
 
-    private static CreatedMatch ToCreatedMatch(int matchId, Match match, IReadOnlyList<MatchSearch> players)
+    private static List<CreatedMatchParticipant> ToParticipants(Match match, IReadOnlyList<MatchSearch> players)
     {
         var participants = new List<CreatedMatchParticipant>();
         foreach (Participation participation in match.Participations)
@@ -73,7 +73,7 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
                 new CreatedMatchParticipant(connectedPlayer, participation.InitialElo, participation.TurnOrder));
         }
 
-        return new CreatedMatch(matchId, participants);
+        return participants;
     }
 
     private CreatedMatch StartAndSaveMatch(MatchPairing pairing, MatchFormat format, DateTime startedAt)
@@ -82,7 +82,7 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         List<MatchEntrant> entrants = CreateEntrants(playersInTurnOrder, format.GameMode.GameModeId);
         var match = Match.StartRanked(format, entrants, startedAt);
         int matchId = _matchStore.SaveMatch(match);
-        return ToCreatedMatch(matchId, match, playersInTurnOrder);
+        return new CreatedMatch(matchId, format, ToParticipants(match, playersInTurnOrder));
     }
 
     private List<MatchEntrant> CreateEntrants(IReadOnlyList<MatchSearch> playersInTurnOrder, byte gameModeId)

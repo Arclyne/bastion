@@ -44,7 +44,7 @@ public class TestMatchmakingDispatcher
     public void ReviewAndNotify_MatchNotSaved_NotifiesMatchCreationFailed()
     {
         _matchmakingQueue.TryAdd(new MatchSearch(SecondAccountId, SecondNickname, _startedAt));
-        _matchStore.SaveFailure = new MatchStoreException(new InvalidOperationException(StoreFailureMessage));
+        _matchStore.MatchSaveFailure = new MatchStoreException(new InvalidOperationException(StoreFailureMessage));
 
         _matchmakingDispatcher.ReviewAndNotify(_startedAt);
 

@@ -10,7 +10,7 @@ public sealed class ServerConnection : IDisposable
 {
     private readonly AccountClient _accounts = new AccountClient();
     private readonly NotificationClient _notifications;
-    private readonly ChatClient _chat = new ChatClient();
+    private readonly ChatClient _chat;
     private readonly MatchmakingClient _matchmaking;
 
     public ServerConnection(TimeProvider timeProvider)
@@ -18,6 +18,7 @@ public sealed class ServerConnection : IDisposable
         ArgumentNullException.ThrowIfNull(timeProvider);
 
         _notifications = new NotificationClient(timeProvider);
+        _chat = new ChatClient(_notifications);
         _matchmaking = new MatchmakingClient(_notifications);
         Accounts = _accounts;
         Notifications = _notifications;

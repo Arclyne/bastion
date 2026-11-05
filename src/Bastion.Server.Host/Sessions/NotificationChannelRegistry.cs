@@ -12,7 +12,7 @@ using log4net;
 
 namespace Bastion.Server.Host.Sessions;
 
-public sealed class NotificationChannelRegistry : IChatBroadcaster, IMatchmakingNotifier
+public sealed class NotificationChannelRegistry : IChatBroadcaster, IMatchChatNotifier, IMatchmakingNotifier
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationChannelRegistry));
 
@@ -46,10 +46,22 @@ public sealed class NotificationChannelRegistry : IChatBroadcaster, IMatchmaking
     {
         ArgumentNullException.ThrowIfNull(line);
 
-        ChatMessageNotification notification = ChatTranslator.ToNotification(line);
+        LobbyChatMessageNotification notification = ChatTranslator.ToLobbyChatNotification(line);
         foreach (KeyValuePair<int, INotificationCallback> subscription in _callbacksByAccountId)
         {
             DeliverNotification(subscription.Key, subscription.Value, notification);
+        }
+    }
+
+    public void NotifyMatchChatMessage(int matchId, IReadOnlyCollection<int> recipientAccountIds, ChatLine line)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+        ArgumentNullException.ThrowIfNull(line);
+
+        MatchChatMessageNotification notification = ChatTranslator.ToMatchChatNotification(matchId, line);
+        foreach (int accountId in recipientAccountIds)
+        {
+            NotifyPlayer(accountId, notification);
         }
     }
 

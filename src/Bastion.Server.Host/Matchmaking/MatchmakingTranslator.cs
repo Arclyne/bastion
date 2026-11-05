@@ -28,6 +28,9 @@ public static class MatchmakingTranslator
         {
             OccurredAt = now,
             MatchId = createdMatch.MatchId,
+            BoardSize = createdMatch.Format.GameMode.BoardSize,
+            WallsPerPlayer = createdMatch.Format.GameMode.WallsPerPlayer,
+            ClockMinutes = createdMatch.Format.ClockMinutes,
             Participants = createdMatch.Participants.Select(ToMatchFoundParticipant).ToArray(),
         };
     }

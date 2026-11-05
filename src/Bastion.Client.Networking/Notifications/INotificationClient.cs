@@ -4,7 +4,9 @@ namespace Bastion.Client.Networking.Notifications;
 
 public interface INotificationClient
 {
-    event EventHandler<ChatMessageReceivedEventArgs>? ChatMessageReceived;
+    event EventHandler<LobbyChatMessageReceivedEventArgs>? LobbyChatMessageReceived;
+
+    event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
 
     event EventHandler<MatchFoundEventArgs>? MatchFound;
 

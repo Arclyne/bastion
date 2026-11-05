@@ -265,7 +265,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         _clockTimer = _timeProvider.CreateTimer(HandleClockTick, null, _clockTick, _clockTick);
     }
 
-    private void ShowMatchFound(IReadOnlyList<PairedPlayer> players)
+    private void ShowMatchFound(IReadOnlyList<FoundMatchParticipant> participants)
     {
         if (Stage == MatchSearchStage.MatchFound)
         {
@@ -274,7 +274,8 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
 
         StopClock();
         IsPresenceDialogOpen = false;
-        string rivals = string.Join(NicknameSeparator, players.Where(IsRival).Select(player => player.Nickname));
+        IEnumerable<string> rivalNicknames = participants.Where(IsRival).Select(participant => participant.Nickname);
+        string rivals = string.Join(NicknameSeparator, rivalNicknames);
         RivalText = string.Format(CultureInfo.CurrentCulture, Strings.MatchSearchFoundDetailFormat, rivals);
         Stage = MatchSearchStage.MatchFound;
     }
@@ -353,9 +354,9 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         Interlocked.Exchange(ref _clockTimer, null)?.Dispose();
     }
 
-    private bool IsRival(PairedPlayer player)
+    private bool IsRival(FoundMatchParticipant participant)
     {
-        return !string.Equals(player.Nickname, _session.Nickname, StringComparison.Ordinal);
+        return !string.Equals(participant.Nickname, _session.Nickname, StringComparison.Ordinal);
     }
 
     private void HandleClockTick(object? state)
@@ -365,7 +366,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
 
     private void HandleMatchFound(object? sender, MatchFoundEventArgs e)
     {
-        UiThread.Run(_uiContext, () => ShowMatchFound(e.Players));
+        UiThread.Run(_uiContext, () => ShowMatchFound(e.Participants));
     }
 
     private void HandlePresenceRequested(object? sender, PresenceRequestedEventArgs e)
