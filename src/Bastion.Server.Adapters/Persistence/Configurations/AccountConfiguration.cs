@@ -29,8 +29,8 @@ public sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
             .HasMaxLength(StatusLength)
             .IsUnicode(false);
 
-        builder.Property(account => account.Nickname).HasMaxLength(AccountRules.MaximumNicknameLength);
-        builder.Property(account => account.Email).HasMaxLength(AccountRules.MaximumEmailLength);
+        builder.Property(account => account.Nickname).HasMaxLength(AccountPolicy.MaximumNicknameLength);
+        builder.Property(account => account.Email).HasMaxLength(AccountPolicy.MaximumEmailLength);
         builder.Property(account => account.PasswordHash).HasMaxLength(PasswordHasher.HashLength);
         builder.Property(account => account.PasswordSalt).HasMaxLength(PasswordHasher.SaltLength);
         builder.Property(account => account.PreferredLanguage).HasMaxLength(LanguageLength).IsUnicode(false);

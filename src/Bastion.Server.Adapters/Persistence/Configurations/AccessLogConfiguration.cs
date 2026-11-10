@@ -15,7 +15,7 @@ public sealed class AccessLogConfiguration : IEntityTypeConfiguration<AccessLog>
     {
         builder.ToTable(nameof(AccessLog));
         builder.HasKey(accessLog => accessLog.AccessLogId);
-        builder.Property(accessLog => accessLog.EnteredIdentifier).HasMaxLength(AccountRules.MaximumIdentifierLength);
+        builder.Property(accessLog => accessLog.EnteredIdentifier).HasMaxLength(AccountPolicy.MaximumSignInIdentifierLength);
         builder.Property(accessLog => accessLog.Result)
             .HasConversion(new UpperSnakeCaseEnumConverter<AccessLogResult>())
             .HasMaxLength(ResultLength)

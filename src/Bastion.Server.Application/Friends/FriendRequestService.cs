@@ -37,7 +37,7 @@ public sealed class FriendRequestService : IFriendRequestService
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
         string searchText = text.Trim();
-        if (searchText.Length < AccountRules.MinimumNicknameLength)
+        if (searchText.Length < AccountPolicy.MinimumNicknameLength)
         {
             return Array.Empty<PlayerSearchResult>();
         }
