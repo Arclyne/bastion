@@ -203,7 +203,7 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
         }
 
         string text = Draft;
-        if (!ChatRules.IsValidMessage(text))
+        if (!ChatPolicy.IsValidMessage(text))
         {
             StatusText = ChatRejectionText.DescribeInvalidMessage();
             return;
@@ -288,13 +288,13 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
     {
         int length = Draft.Length;
         IsCounterVisible = length >= CounterVisibleFromLength;
-        CounterText = FormatText(Strings.ChatCounterFormat, length, ChatRules.MaximumMessageLength);
+        CounterText = FormatText(Strings.ChatCounterFormat, length, ChatPolicy.MaximumMessageLength);
     }
 
     private void AddMessage(ChatMessageRowViewModel row)
     {
         Messages.Add(row);
-        if (Messages.Count > ChatRules.RecentMessageCount)
+        if (Messages.Count > ChatPolicy.MaximumRecentMessages)
         {
             Messages.RemoveAt(0);
         }

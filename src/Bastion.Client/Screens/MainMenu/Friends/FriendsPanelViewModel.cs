@@ -285,7 +285,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
             _allRows.Add(new FriendRowViewModel(friend, listing.ListedAt));
         }
 
-        FormattedFriendCode = FriendCodeRules.FormatFriendCode(listing.OwnFriendCode);
+        FormattedFriendCode = FriendCodePolicy.Format(listing.OwnFriendCode);
         OwnFriendCodeText = FormatText(Strings.FriendsOwnCodeFormat, FormattedFriendCode);
         IsEmpty = _allRows.Count == 0;
         UpdateHeaderText();

@@ -272,7 +272,7 @@ public sealed class PrivateConversationViewModel : ViewModel
         }
 
         string text = Draft;
-        if (!ChatRules.IsValidMessage(text))
+        if (!ChatPolicy.IsValidMessage(text))
         {
             StatusText = ChatRejectionText.DescribeInvalidMessage();
             return;
@@ -409,7 +409,7 @@ public sealed class PrivateConversationViewModel : ViewModel
     {
         int length = Draft.Length;
         IsCounterVisible = length >= CounterVisibleFromLength;
-        CounterText = FormatText(Strings.ChatCounterFormat, length, ChatRules.MaximumMessageLength);
+        CounterText = FormatText(Strings.ChatCounterFormat, length, ChatPolicy.MaximumMessageLength);
     }
 
     private void ReportLoadFailure(Exception ex)

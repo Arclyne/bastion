@@ -2,9 +2,9 @@ using System;
 
 namespace Bastion.Server.Application.Accounts;
 
-public sealed class SignedInPlayer
+public sealed record LoggedInPlayer
 {
-    public SignedInPlayer(string sessionToken, string nickname, string preferredLanguage)
+    public LoggedInPlayer(string sessionToken, string nickname, string preferredLanguage)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(nickname);

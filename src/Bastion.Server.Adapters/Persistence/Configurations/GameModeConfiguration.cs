@@ -1,6 +1,5 @@
 using System;
 using Bastion.Domain.GameModes;
-using Bastion.Server.Adapters.Persistence.Conversions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -17,9 +16,6 @@ public sealed class GameModeConfiguration : IEntityTypeConfiguration<GameMode>
         builder.ToTable(nameof(GameMode));
         builder.HasKey(gameMode => gameMode.GameModeId);
         builder.Property(gameMode => gameMode.GameModeId).ValueGeneratedNever();
-        builder.Property(gameMode => gameMode.Code)
-            .HasConversion(new UpperSnakeCaseEnumConverter<GameModeCode>())
-            .HasMaxLength(CodeLength)
-            .IsUnicode(false);
+        builder.Property(gameMode => gameMode.Code).HasUpperSnakeCaseConversion(CodeLength);
     }
 }

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Chat;
+using Bastion.Domain.Moderation;
 using Bastion.Server.Application.Common;
 
 namespace Bastion.Server.Application.Chat;
@@ -16,11 +18,11 @@ public sealed class ChatModerator : IChatModerator
         _unitOfWork = unitOfWork;
     }
 
-    public string Screen(int accountId, string text, DateTime now)
+    public string ScreenMessage(int accountId, string text, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(text);
 
-        if (!ChatRules.IsValidMessage(text))
+        if (!ChatPolicy.IsValidMessage(text))
         {
             throw new ChatMessageRejectedException(ChatRejection.InvalidMessage);
         }
@@ -32,7 +34,7 @@ public sealed class ChatModerator : IChatModerator
         }
 
         string trimmedText = text.Trim();
-        if (ChatWordFilter.ContainsBannedTerm(trimmedText, _unitOfWork.BannedWords.ListChatTerms()))
+        if (ChatWordFilter.HasBannedTerm(trimmedText, _unitOfWork.BannedWords.ListChatTerms()))
         {
             throw new ChatMessageRejectedException(ChatRejection.BannedTerm);
         }
@@ -42,9 +44,9 @@ public sealed class ChatModerator : IChatModerator
 
     public ChatMute FindMute(int accountId, DateTime now)
     {
-        var sanctionsInEffect = _unitOfWork.Sanctions.ListChatSanctions(accountId)
-            .Where(sanction => sanction.IsInEffectAt(now))
-            .ToList();
-        return ChatMute.FromSanctionsInEffect(sanctionsInEffect);
+        IReadOnlyList<Sanction> chatSanctions = _unitOfWork.Sanctions.ListChatSanctions(accountId);
+        IEnumerable<Sanction> sanctionsInEffect = chatSanctions.Where(sanction => sanction.IsInEffectAt(now));
+        var sanctionList = new List<Sanction>(sanctionsInEffect);
+        return ChatMute.FromSanctionsInEffect(sanctionList);
     }
 }

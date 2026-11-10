@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Friends;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
 
 namespace Bastion.Server.Application.Tests.Fakes;
@@ -48,8 +49,8 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
         ArgumentNullException.ThrowIfNull(friendship);
 
         AddedFriendships.Add(friendship);
-        Store(friendship.AccountAId, CreateSummary(friendship.AccountBId));
-        Store(friendship.AccountBId, CreateSummary(friendship.AccountAId));
+        Store(friendship.SmallerAccountId, CreateSummary(friendship.LargerAccountId));
+        Store(friendship.LargerAccountId, CreateSummary(friendship.SmallerAccountId));
     }
 
     public bool Remove(int firstAccountId, int secondAccountId)

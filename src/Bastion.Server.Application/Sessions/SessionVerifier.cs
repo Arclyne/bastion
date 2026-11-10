@@ -1,6 +1,7 @@
 using System;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Sessions;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Security;
 
@@ -24,6 +25,20 @@ public sealed class SessionVerifier : ISessionVerifier
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
+        Account account = FindSessionAccount(sessionToken, now);
+        return new ConnectedPlayer(account.AccountId, account.Nickname);
+    }
+
+    public PlayerIdentity VerifyIdentity(string sessionToken, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
+        Account account = FindSessionAccount(sessionToken, now);
+        return new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode);
+    }
+
+    private Account FindSessionAccount(string sessionToken, DateTime now)
+    {
         Session? session = _unitOfWork.Sessions.FindByTokenHash(_tokenGenerator.Hash(sessionToken));
         if (session is null || !session.IsActiveAt(now))
         {
@@ -31,11 +46,6 @@ public sealed class SessionVerifier : ISessionVerifier
         }
 
         Account? account = _unitOfWork.Accounts.FindById(session.AccountId);
-        if (account is null)
-        {
-            throw new InvalidSessionException();
-        }
-
-        return new ConnectedPlayer(account.AccountId, account.Nickname);
+        return account ?? throw new InvalidSessionException();
     }
 }

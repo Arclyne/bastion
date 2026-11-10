@@ -8,6 +8,6 @@ public sealed class RoomCodeGenerator : IRoomCodeGenerator
 {
     public string CreateCode()
     {
-        return RandomNumberGenerator.GetString(RoomRules.CodeAlphabet, RoomRules.CodeLength);
+        return RandomNumberGenerator.GetString(RoomPolicy.CodeAlphabet, RoomPolicy.CodeLength);
     }
 }

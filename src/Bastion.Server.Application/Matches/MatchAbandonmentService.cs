@@ -44,14 +44,16 @@ public sealed class MatchAbandonmentService : IMatchAbandonmentService
             throw new MatchNotJoinedException();
         }
 
-        bool isMatchOver = match.Abandon(player.AccountId, now);
+        match.Abandon(player.AccountId, now);
+        bool isMatchOver = match.Status == MatchStatus.Finished;
         _matchStore.SaveAbandonment(match);
         _logger.Info(
             $"A player left the match. AccountId={player.AccountId}; MatchId={matchId}; IsMatchOver={isMatchOver}");
         IEnumerable<int> recipientAccountIds = match.Participations
             .Where(participation => participation.AccountId != player.AccountId && !participation.EndReason.HasValue)
             .Select(participation => participation.AccountId);
+        var recipientAccountIdList = new List<int>(recipientAccountIds);
         var notice = new AbandonmentNotice(player.Nickname, isMatchOver);
-        _matchEndNotifier.NotifyMatchAbandoned(matchId, new List<int>(recipientAccountIds), notice);
+        _matchEndNotifier.NotifyMatchAbandoned(matchId, recipientAccountIdList, notice);
     }
 }

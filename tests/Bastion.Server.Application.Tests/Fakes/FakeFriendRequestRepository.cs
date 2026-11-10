@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Friends;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
 
 namespace Bastion.Server.Application.Tests.Fakes;
@@ -60,6 +61,6 @@ public sealed class FakeFriendRequestRepository : IFriendRequestRepository
     private static FriendRequestSummary ToSummary(int counterpartAccountId, FriendRequest request)
     {
         var counterpart = new PlayerIdentity(counterpartAccountId, string.Empty, string.Empty);
-        return new FriendRequestSummary(counterpart, request.RequestedAt, request.ExpiresAt);
+        return new FriendRequestSummary(counterpart, request.RequestedAt, request.GetExpirationTime());
     }
 }

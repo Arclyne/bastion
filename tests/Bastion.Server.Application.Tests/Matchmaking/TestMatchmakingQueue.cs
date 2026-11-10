@@ -12,7 +12,7 @@ public class TestMatchmakingQueue
     private const string FirstNickname = "marta_muros";
     private const string SecondNickname = "leo_peon";
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 2, 18, 0, 0, DateTimeKind.Utc);
-    private static readonly DateTime _presenceCheckAt = _startedAt.Add(MatchmakingRules.PresenceCheckInterval);
+    private static readonly DateTime _presenceCheckAt = _startedAt.Add(MatchmakingPolicy.PresenceCheckInterval);
     private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
 
     [Fact]
@@ -64,7 +64,7 @@ public class TestMatchmakingQueue
         _matchmakingQueue.TryAdd(new MatchSearch(FirstAccountId, FirstNickname, _startedAt));
         _matchmakingQueue.Review(_presenceCheckAt);
 
-        QueueReview review = _matchmakingQueue.Review(_presenceCheckAt.Add(MatchmakingRules.PresenceResponseWindow));
+        QueueReview review = _matchmakingQueue.Review(_presenceCheckAt.Add(MatchmakingPolicy.PresenceResponseWindow));
 
         Assert.Single(review.ExpiredSearches);
     }
@@ -76,7 +76,7 @@ public class TestMatchmakingQueue
         _matchmakingQueue.Review(_presenceCheckAt);
         _matchmakingQueue.ConfirmPresence(FirstAccountId, _presenceCheckAt);
 
-        QueueReview review = _matchmakingQueue.Review(_presenceCheckAt.Add(MatchmakingRules.PresenceResponseWindow));
+        QueueReview review = _matchmakingQueue.Review(_presenceCheckAt.Add(MatchmakingPolicy.PresenceResponseWindow));
 
         Assert.Empty(review.ExpiredSearches);
     }

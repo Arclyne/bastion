@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using Bastion.Domain.Rooms;
 using Bastion.Server.Application.Sessions;
 
@@ -44,12 +43,15 @@ public sealed class PrivateRoomService : IPrivateRoomService
         ArgumentNullException.ThrowIfNull(code);
 
         ConnectedPlayer player = _playerVerifier.VerifyPlayerCanEnterRoom(sessionToken, now);
-        return _roomKeeper.Join(player, code.Trim().ToUpper(CultureInfo.InvariantCulture), now);
+        string normalizedCode = RoomPolicy.NormalizeCode(code);
+        return _roomKeeper.Join(player, normalizedCode, now);
     }
 
     /// <inheritdoc/>
     public RoomSnapshot SetReady(string sessionToken, bool isReady, DateTime now)
     {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
         ConnectedPlayer player = _playerVerifier.VerifySession(sessionToken, now);
         return _roomKeeper.SetReady(player.AccountId, isReady);
     }
@@ -68,6 +70,8 @@ public sealed class PrivateRoomService : IPrivateRoomService
     /// <inheritdoc/>
     public void LeaveRoom(string sessionToken, DateTime now)
     {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
         ConnectedPlayer player = _playerVerifier.VerifySession(sessionToken, now);
         _roomKeeper.Leave(player.AccountId, now);
     }
@@ -75,6 +79,8 @@ public sealed class PrivateRoomService : IPrivateRoomService
     /// <inheritdoc/>
     public RoomSnapshot? FindOwnRoom(string sessionToken, DateTime now)
     {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
         ConnectedPlayer player = _playerVerifier.VerifySession(sessionToken, now);
         return _roomKeeper.FindRoomOf(player.AccountId);
     }

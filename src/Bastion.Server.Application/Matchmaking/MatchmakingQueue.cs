@@ -69,10 +69,10 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
     private List<MatchPairing> TakePairings()
     {
         IEnumerable<MatchPairing> completePairings = _searches.Values
-            .Where(search => search.IsAvailable())
+            .Where(search => search.IsSearching())
             .OrderBy(search => search.StartedAt)
-            .Chunk(MatchmakingRules.PlayersPerMatch)
-            .Where(players => players.Length == MatchmakingRules.PlayersPerMatch)
+            .Chunk(MatchmakingPolicy.PlayersPerMatch)
+            .Where(players => players.Length == MatchmakingPolicy.PlayersPerMatch)
             .Select(players => new MatchPairing(players));
         var pairings = new List<MatchPairing>(completePairings);
         foreach (MatchPairing pairing in pairings)
@@ -89,7 +89,8 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
         var presenceRequests = new List<PresenceRequest>();
         foreach (MatchSearch search in idleSearches)
         {
-            presenceRequests.Add(new PresenceRequest(search.AccountId, search.StartPresenceCheck(now)));
+            DateTime presenceDeadline = search.StartPresenceCheck(now);
+            presenceRequests.Add(new PresenceRequest(search.AccountId, presenceDeadline));
         }
 
         return presenceRequests;

@@ -30,7 +30,7 @@ public class TestLobbyChatService
 
     public TestLobbyChatService()
     {
-        _lobbyChatService = new LobbyChatService(_sessionVerifier, _unitOfWork, new LobbyChatRoom(_broadcaster));
+        _lobbyChatService = new LobbyChatService(_sessionVerifier, new ChatModerator(_unitOfWork), new LobbyChatRoom(_broadcaster));
         _sessionVerifier.Add(Token, new ConnectedPlayer(AccountId, Nickname));
         _sessionVerifier.Add(OtherToken, new ConnectedPlayer(OtherAccountId, OtherNickname));
         _unitOfWork.BannedWordStore.ChatTerms.Add(BannedTerm);
@@ -55,7 +55,7 @@ public class TestLobbyChatService
     public void SendMessage_TooLongText_RejectsInvalidMessage()
     {
         ChatMessageRejectedException? rejection = RecordRejection(
-            new string('a', ChatRules.MaximumMessageLength + 1),
+            new string('a', ChatPolicy.MaximumMessageLength + 1),
             _now);
 
         Assert.Equal(ChatRejection.InvalidMessage, rejection?.Rejection);
@@ -156,7 +156,7 @@ public class TestLobbyChatService
     {
         _lobbyChatService.SendMessage(Token, "hola", _now);
 
-        _lobbyChatService.SendMessage(Token, "otra vez", _now.AddSeconds(ChatRules.CooldownSeconds));
+        _lobbyChatService.SendMessage(Token, "otra vez", _now.AddSeconds(ChatPolicy.MessageCooldownSeconds));
 
         Assert.Equal(2, _broadcaster.Lines.Count);
     }
@@ -221,11 +221,11 @@ public class TestLobbyChatService
     [Fact]
     public void OpenLobbyChat_ManyMessages_ReturnsOnlyRecentCount()
     {
-        SendMessagesFromManyPlayers(ChatRules.RecentMessageCount + 1);
+        SendMessagesFromManyPlayers(ChatPolicy.MaximumRecentMessages + 1);
 
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
 
-        Assert.Equal(ChatRules.RecentMessageCount, history.Entries.Count);
+        Assert.Equal(ChatPolicy.MaximumRecentMessages, history.Entries.Count);
     }
 
     [Fact]

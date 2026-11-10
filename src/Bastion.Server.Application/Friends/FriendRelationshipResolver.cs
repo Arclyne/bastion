@@ -36,13 +36,22 @@ public sealed class FriendRelationshipResolver
             return FriendRelationship.AlreadyFriends;
         }
 
-        FriendRequest? request = _pendingRequests.FirstOrDefault(pending =>
-            pending.RequesterId == otherAccountId || pending.RecipientId == otherAccountId);
+        FriendRequest? request = _pendingRequests.FirstOrDefault(pending => Involves(pending, otherAccountId));
         if (request is null)
         {
             return FriendRelationship.None;
         }
 
-        return request.IsSentBy(_ownAccountId) ? FriendRelationship.RequestSent : FriendRelationship.RequestReceived;
+        if (request.IsSentBy(_ownAccountId))
+        {
+            return FriendRelationship.RequestSent;
+        }
+
+        return FriendRelationship.RequestReceived;
+    }
+
+    private static bool Involves(FriendRequest request, int accountId)
+    {
+        return request.RequesterId == accountId || request.RecipientId == accountId;
     }
 }

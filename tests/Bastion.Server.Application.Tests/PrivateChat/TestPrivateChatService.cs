@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Chat;
 using Bastion.Domain.Moderation;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.PrivateChat;
@@ -37,8 +38,9 @@ public class TestPrivateChatService
 
     public TestPrivateChatService()
     {
-        _privateChatService = new PrivateChatService(_sessionVerifier, _unitOfWork, new PrivateChatRoom(_notifier));
-        _sessionVerifier.Add(Token, new ConnectedPlayer(AccountId, Nickname));
+        var channel = new PrivateChatChannel(new PrivateChatRoom(_notifier), new ChatModerator(_unitOfWork));
+        _privateChatService = new PrivateChatService(_sessionVerifier, _unitOfWork, channel);
+        _sessionVerifier.Add(Token, new PlayerIdentity(AccountId, Nickname, FriendCode));
         var friend = new PlayerIdentity(FriendAccountId, FriendNickname, FriendFriendCode);
         _unitOfWork.AccountStore.StorePlayerIdentity(new PlayerIdentity(AccountId, Nickname, FriendCode));
         _unitOfWork.AccountStore.StorePlayerIdentity(friend);
@@ -313,7 +315,7 @@ public class TestPrivateChatService
 
     private Message StoreMessage(int authorId, int recipientId, string text, DateTime sentAt)
     {
-        var message = new Message(new MessageParticipants(authorId, recipientId), text, sentAt);
+        var message = Message.CreatePrivate(new MessageParticipants(authorId, recipientId), text, sentAt);
         _unitOfWork.MessageStore.Add(message);
         return message;
     }

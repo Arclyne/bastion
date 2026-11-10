@@ -39,10 +39,11 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         ArgumentNullException.ThrowIfNull(pairing);
 
         createdMatch = null;
-        string accountIdsText = string.Join(AccountIdSeparator, pairing.Players.Select(player => player.AccountId));
+        IEnumerable<int> pairedAccountIds = pairing.Players.Select(player => player.AccountId);
+        string accountIdsText = string.Join(AccountIdSeparator, pairedAccountIds);
         try
         {
-            GameMode? gameMode = _matchStore.FindActiveGameMode(MatchmakingRules.RankedGameModeCode);
+            GameMode? gameMode = _matchStore.FindActiveGameMode(MatchmakingPolicy.RankedGameModeCode);
             if (gameMode is null)
             {
                 _logger.Error(
@@ -50,7 +51,7 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
                 return false;
             }
 
-            var format = new MatchFormat(gameMode, MatchmakingRules.RankedClockMinutes);
+            var format = new MatchFormat(gameMode, MatchmakingPolicy.RankedClockMinutes);
             createdMatch = StartAndSaveMatch(pairing, format, startedAt);
             _logger.Info($"Ranked match created. MatchId={createdMatch.MatchId}; AccountIds={accountIdsText}");
             return true;
@@ -82,12 +83,14 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         List<MatchEntrant> entrants = CreateEntrants(playersInTurnOrder, format.GameMode.GameModeId);
         var match = Match.StartRanked(format, entrants, startedAt);
         int matchId = _matchStore.SaveMatch(match);
-        return new CreatedMatch(matchId, format, ToParticipants(match, playersInTurnOrder));
+        List<CreatedMatchParticipant> participants = ToParticipants(match, playersInTurnOrder);
+        return new CreatedMatch(matchId, format, participants);
     }
 
     private List<MatchEntrant> CreateEntrants(IReadOnlyList<MatchSearch> playersInTurnOrder, byte gameModeId)
     {
-        int[] accountIds = playersInTurnOrder.Select(player => player.AccountId).ToArray();
+        IEnumerable<int> accountIdsInTurnOrder = playersInTurnOrder.Select(player => player.AccountId);
+        var accountIds = new List<int>(accountIdsInTurnOrder);
         IReadOnlyDictionary<int, short> eloRatingsByAccountId =
             _matchStore.FindEloRatingsByAccountId(gameModeId, accountIds);
 

@@ -27,32 +27,39 @@ public class MatchSearch
 
     public SearchStatus Status { get; private set; }
 
-    public bool IsAvailable()
+    public bool IsSearching()
     {
         return Status == SearchStatus.Searching;
     }
 
     public bool ShouldStartPresenceCheck(DateTime now)
     {
-        return IsAvailable() && now - LastConfirmedAt >= MatchmakingRules.PresenceCheckInterval;
+        TimeSpan timeSinceConfirmation = now - LastConfirmedAt;
+        return IsSearching() && timeSinceConfirmation >= MatchmakingPolicy.PresenceCheckInterval;
     }
 
     public bool HasPresenceExpired(DateTime now)
     {
-        return PresenceRequestedAt is DateTime requestedAt
-            && now - requestedAt >= MatchmakingRules.PresenceResponseWindow;
+        if (PresenceRequestedAt is not DateTime requestedAt)
+        {
+            return false;
+        }
+
+        TimeSpan waitingTime = now - requestedAt;
+        return waitingTime >= MatchmakingPolicy.PresenceResponseWindow;
     }
 
     public DateTime StartPresenceCheck(DateTime now)
     {
-        if (!IsAvailable())
+        if (!IsSearching())
         {
             throw new InvalidOperationException("Presence was already requested for this search.");
         }
 
         Status = SearchStatus.AwaitingPresence;
         PresenceRequestedAt = now;
-        return now + MatchmakingRules.PresenceResponseWindow;
+        DateTime presenceDeadline = now + MatchmakingPolicy.PresenceResponseWindow;
+        return presenceDeadline;
     }
 
     public void ConfirmPresence(DateTime now)

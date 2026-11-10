@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using Bastion.Domain.Accounts;
-using Bastion.Server.Application.Friends;
 
 namespace Bastion.Server.Application.Accounts;
 
 public interface IAccountRepository
 {
-    Account? FindByIdentifier(string identifier);
+    Account? FindByLoginIdentifier(string loginIdentifier);
 
     Account? FindById(int accountId);
 

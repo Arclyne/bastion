@@ -21,7 +21,7 @@ public class TestMatchSearchService
     private const string RoomCode = "K7MTQ3";
 
     private static readonly DateTime _now = new DateTime(2026, 11, 4, 18, 0, 0, DateTimeKind.Utc);
-    private static readonly DateTime _presenceCheckAt = _now.Add(MatchmakingRules.PresenceCheckInterval);
+    private static readonly DateTime _presenceCheckAt = _now.Add(MatchmakingPolicy.PresenceCheckInterval);
 
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
     private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
@@ -67,7 +67,7 @@ public class TestMatchSearchService
         var settings = new RoomSettings(
             GameModeSamples.CreateClassic(),
             GameModeSamples.ClassicWallsPerPlayer,
-            MatchmakingRules.RankedClockMinutes);
+            MatchmakingPolicy.RankedClockMinutes);
         var host = new RoomMember(AccountId, Nickname);
         _roomRegistry.TryOpen(new WaitingRoom(new RoomIdentity(RoomId, RoomCode), settings, host));
 
@@ -123,7 +123,7 @@ public class TestMatchSearchService
         _matchmakingQueue.Review(_presenceCheckAt);
         _matchSearchService.ConfirmPresence(Token, _presenceCheckAt);
 
-        QueueReview review = _matchmakingQueue.Review(_presenceCheckAt.Add(MatchmakingRules.PresenceResponseWindow));
+        QueueReview review = _matchmakingQueue.Review(_presenceCheckAt.Add(MatchmakingPolicy.PresenceResponseWindow));
 
         Assert.Empty(review.ExpiredSearches);
     }

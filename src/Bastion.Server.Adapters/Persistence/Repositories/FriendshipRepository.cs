@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Friends;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
 using Microsoft.EntityFrameworkCore;
 
@@ -59,10 +60,10 @@ public sealed class FriendshipRepository : IFriendshipRepository
     private IQueryable<int> SelectFriendAccountIds(int accountId)
     {
         return _context.Friendships
-            .Where(friendship => friendship.AccountAId == accountId)
-            .Select(friendship => friendship.AccountBId)
+            .Where(friendship => friendship.SmallerAccountId == accountId)
+            .Select(friendship => friendship.LargerAccountId)
             .Concat(_context.Friendships
-                .Where(friendship => friendship.AccountBId == accountId)
-                .Select(friendship => friendship.AccountAId));
+                .Where(friendship => friendship.LargerAccountId == accountId)
+                .Select(friendship => friendship.SmallerAccountId));
     }
 }

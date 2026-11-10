@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Bastion.Domain.Friends;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Application.Tests.Fakes;
@@ -32,7 +33,7 @@ public class TestFriendRequestService
     public TestFriendRequestService()
     {
         _friendRequestService = new FriendRequestService(_unitOfWork, _sessionVerifier, _friendNotifier);
-        _sessionVerifier.Add(Token, new ConnectedPlayer(AccountId, Nickname));
+        _sessionVerifier.Add(Token, new PlayerIdentity(AccountId, Nickname, FriendCode));
         _unitOfWork.AccountStore.StorePlayerIdentity(new PlayerIdentity(AccountId, Nickname, FriendCode));
         _unitOfWork.AccountStore.StorePlayerIdentity(
             new PlayerIdentity(OtherAccountId, OtherNickname, OtherFriendCode));
@@ -110,7 +111,7 @@ public class TestFriendRequestService
     [Fact]
     public void SearchPlayers_ExpiredRequest_ReturnsNone()
     {
-        DateTime expiredAt = _now.AddDays(-FriendshipRules.RequestLifetimeDays);
+        DateTime expiredAt = _now.AddDays(-FriendshipPolicy.RequestLifetimeDays);
         _unitOfWork.FriendRequestStore.Add(new FriendRequest(OtherAccountId, AccountId, expiredAt));
 
         IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherPrefix, _now);
@@ -246,7 +247,7 @@ public class TestFriendRequestService
     [Fact]
     public void SendFriendRequest_ExpiredOwnRequest_ReplacesRequest()
     {
-        DateTime expiredAt = _now.AddDays(-FriendshipRules.RequestLifetimeDays);
+        DateTime expiredAt = _now.AddDays(-FriendshipPolicy.RequestLifetimeDays);
         _unitOfWork.FriendRequestStore.Add(new FriendRequest(AccountId, OtherAccountId, expiredAt));
 
         _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
@@ -289,13 +290,13 @@ public class TestFriendRequestService
 
         FriendRequestBoard board = _friendRequestService.ListFriendRequests(Token, _now);
 
-        Assert.Equal(_now.AddDays(FriendshipRules.RequestLifetimeDays), board.Sent[0].ExpiresAt);
+        Assert.Equal(_now.AddDays(FriendshipPolicy.RequestLifetimeDays), board.Sent[0].ExpiresAt);
     }
 
     [Fact]
     public void ListFriendRequests_ExpiredRequest_IsLeftOut()
     {
-        StoreReceivedRequest(_now.AddDays(-FriendshipRules.RequestLifetimeDays));
+        StoreReceivedRequest(_now.AddDays(-FriendshipPolicy.RequestLifetimeDays));
 
         FriendRequestBoard board = _friendRequestService.ListFriendRequests(Token, _now);
 
@@ -325,7 +326,7 @@ public class TestFriendRequestService
     [Fact]
     public void AcceptFriendRequest_ExpiredRequest_RejectsRequestNotFound()
     {
-        StoreReceivedRequest(_now.AddDays(-FriendshipRules.RequestLifetimeDays));
+        StoreReceivedRequest(_now.AddDays(-FriendshipPolicy.RequestLifetimeDays));
 
         FriendshipRejectedException? rejection = RecordResponseRejection(
             () => _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now));
@@ -433,7 +434,7 @@ public class TestFriendRequestService
 
     private void StoreFriendsUpToLimit(int accountId)
     {
-        for (int index = 0; index < FriendshipRules.MaximumFriends; index++)
+        for (int index = 0; index < FriendshipPolicy.MaximumFriends; index++)
         {
             var friend = new PlayerIdentity(FirstFillerAccountId + index, $"amigo_{index}", UnusedFriendCode);
             _unitOfWork.FriendshipStore.Store(accountId, new FriendSummary(friend, null));

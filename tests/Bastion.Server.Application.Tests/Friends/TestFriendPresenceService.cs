@@ -1,5 +1,6 @@
 using System;
 using Bastion.Domain.Accounts;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Tests.Fakes;
 using Xunit;

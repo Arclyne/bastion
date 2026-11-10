@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Bastion.Domain.Chat;
 
 namespace Bastion.Server.Application.Chat;
@@ -20,9 +19,9 @@ public sealed class LobbyChatRoom : ILobbyChatRoom
         _broadcaster = broadcaster;
     }
 
-    public bool TryClaimTurn(int accountId, DateTime now)
+    public bool TryStartCooldown(int accountId, DateTime now)
     {
-        return _cooldown.TryClaimTurn(accountId, now);
+        return _cooldown.TryStartCooldown(accountId, now);
     }
 
     public PostedChatLine Post(ChatLine line)
@@ -34,11 +33,11 @@ public sealed class LobbyChatRoom : ILobbyChatRoom
         return postedLine;
     }
 
-    public IReadOnlyList<PostedChatLine> ListRecent(int count)
+    public IReadOnlyList<PostedChatLine> ListRecent()
     {
         lock (_roomLock)
         {
-            return _history.TakeLast(count).ToList();
+            return new List<PostedChatLine>(_history);
         }
     }
 
@@ -54,7 +53,7 @@ public sealed class LobbyChatRoom : ILobbyChatRoom
             _lastMessageId++;
             var postedLine = new PostedChatLine(_lastMessageId, line);
             _history.Enqueue(postedLine);
-            if (_history.Count > ChatRules.HistoryCapacity)
+            if (_history.Count > ChatPolicy.MaximumRecentMessages)
             {
                 _history.Dequeue();
             }

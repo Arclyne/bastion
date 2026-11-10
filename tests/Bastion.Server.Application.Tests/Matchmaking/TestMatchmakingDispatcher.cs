@@ -16,7 +16,7 @@ public class TestMatchmakingDispatcher
     private const string StoreFailureMessage = "The database is not reachable.";
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 4, 18, 0, 0, DateTimeKind.Utc);
-    private static readonly DateTime _presenceCheckAt = _startedAt.Add(MatchmakingRules.PresenceCheckInterval);
+    private static readonly DateTime _presenceCheckAt = _startedAt.Add(MatchmakingPolicy.PresenceCheckInterval);
 
     private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
     private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
@@ -64,7 +64,7 @@ public class TestMatchmakingDispatcher
     {
         _matchmakingDispatcher.ReviewAndNotify(_presenceCheckAt);
 
-        _matchmakingDispatcher.ReviewAndNotify(_presenceCheckAt.Add(MatchmakingRules.PresenceResponseWindow));
+        _matchmakingDispatcher.ReviewAndNotify(_presenceCheckAt.Add(MatchmakingPolicy.PresenceResponseWindow));
 
         Assert.Equal(SearchEndReason.PresenceExpired, _matchmakingNotifier.EndReasons[FirstAccountId]);
     }

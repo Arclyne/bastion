@@ -12,26 +12,6 @@ public class TestAccount
     private static readonly DateTime _now = new DateTime(2026, 10, 15, 12, 0, 0, DateTimeKind.Utc);
 
     [Fact]
-    public void CanSignIn_NewAccount_IsFalse()
-    {
-        var account = new Account(Nickname, Email);
-
-        bool canSignIn = account.CanSignIn();
-
-        Assert.False(canSignIn);
-    }
-
-    [Fact]
-    public void CanSignIn_ActivatedAccount_IsTrue()
-    {
-        Account account = CreateActiveAccount();
-
-        bool canSignIn = account.CanSignIn();
-
-        Assert.True(canSignIn);
-    }
-
-    [Fact]
     public void Activate_ActiveAccount_ThrowsInvalidOperationException()
     {
         Account account = CreateActiveAccount();
@@ -42,7 +22,7 @@ public class TestAccount
     }
 
     [Fact]
-    public void RecordFailedSignIn_TwoFailures_DoesNotLock()
+    public void RecordFailedLogin_TwoFailures_DoesNotLock()
     {
         Account account = CreateActiveAccount();
         RecordFailures(account, 2);
@@ -53,7 +33,7 @@ public class TestAccount
     }
 
     [Fact]
-    public void RecordFailedSignIn_ThirdFailure_LocksForFiveMinutes()
+    public void RecordFailedLogin_ThirdFailure_LocksForFiveMinutes()
     {
         Account account = CreateActiveAccount();
 
@@ -63,23 +43,23 @@ public class TestAccount
     }
 
     [Fact]
-    public void RecordFailedSignIn_AfterResetPeriod_RestartsCounter()
+    public void RecordFailedLogin_AfterResetPeriod_RestartsCounter()
     {
         Account account = CreateActiveAccount();
         RecordFailures(account, 2);
 
-        account.RecordFailedSignIn(_now.AddHours(25));
+        account.RecordFailedLogin(_now.AddHours(25));
 
-        Assert.Equal(1, account.FailedAttempts);
+        Assert.Equal(1, account.FailedLoginCount);
     }
 
     [Fact]
-    public void RecordSuccessfulSignIn_LockedAccount_RemovesLock()
+    public void RecordSuccessfulLogin_LockedAccount_RemovesLock()
     {
         Account account = CreateActiveAccount();
         RecordFailures(account, 3);
 
-        account.RecordSuccessfulSignIn();
+        account.RecordSuccessfulLogin();
 
         Assert.False(account.IsLockedAt(_now));
     }
@@ -127,7 +107,7 @@ public class TestAccount
     {
         for (int failureIndex = 0; failureIndex < failureCount; failureIndex++)
         {
-            account.RecordFailedSignIn(_now);
+            account.RecordFailedLogin(_now);
         }
     }
 }

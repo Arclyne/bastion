@@ -25,7 +25,7 @@ public sealed class RoomMember
         SeatIndex = seatIndex;
     }
 
-    internal void MarkReady(bool isReady)
+    internal void SetReady(bool isReady)
     {
         IsReady = isReady;
     }

@@ -15,7 +15,7 @@ public sealed class UpperSnakeCaseEnumConverter<TEnum> : ValueConverter<TEnum, s
     {
     }
 
-    public static string ToCode(TEnum value)
+    private static string ToCode(TEnum value)
     {
         string name = value.ToString();
         var builder = new StringBuilder(name.Length * MaximumCodeLengthFactor);
@@ -32,7 +32,7 @@ public sealed class UpperSnakeCaseEnumConverter<TEnum> : ValueConverter<TEnum, s
         return builder.ToString();
     }
 
-    public static TEnum FromCode(string code)
+    private static TEnum FromCode(string code)
     {
         ArgumentNullException.ThrowIfNull(code);
 

@@ -12,7 +12,7 @@ public class Match
     public const byte FourthTurnOrder = 4;
 
     private const int TwoPlayers = 2;
-    private const int LastPlayerCount = 1;
+    private const int LastStandingPlayerCount = 1;
     private const byte FirstPlacement = 1;
 
     private readonly List<Participation> _participations = new List<Participation>();
@@ -57,6 +57,7 @@ public class Match
         DateTime startedAt)
     {
         ArgumentNullException.ThrowIfNull(format);
+        ArgumentNullException.ThrowIfNull(entrantsInTurnOrder);
 
         var match = new Match(MatchType.Ranked, format, startedAt);
         match.SeatEntrants(entrantsInTurnOrder, format);
@@ -69,6 +70,7 @@ public class Match
         DateTime startedAt)
     {
         ArgumentNullException.ThrowIfNull(format);
+        ArgumentNullException.ThrowIfNull(entrantsInTurnOrder);
 
         var match = new Match(MatchType.Private, format, startedAt);
         match.SeatEntrants(entrantsInTurnOrder, format);
@@ -81,7 +83,7 @@ public class Match
         return Status == MatchStatus.InProgress && participation is not null && !participation.Result.HasValue;
     }
 
-    public bool Abandon(int abandoningAccountId, DateTime abandonedAt)
+    public void Abandon(int abandoningAccountId, DateTime abandonedAt)
     {
         if (!CanBeAbandonedBy(abandoningAccountId))
         {
@@ -91,10 +93,10 @@ public class Match
         if (_participations.Count == TwoPlayers)
         {
             EndTwoPlayerMatchByAbandonment(abandoningAccountId, abandonedAt);
-            return true;
+            return;
         }
 
-        return LeaveFourPlayerMatch(abandoningAccountId, abandonedAt);
+        LeaveFourPlayerMatch(abandoningAccountId, abandonedAt);
     }
 
     private void EndTwoPlayerMatchByAbandonment(int abandoningAccountId, DateTime endedAt)
@@ -108,22 +110,22 @@ public class Match
         EndByAbandonment(endedAt);
     }
 
-    private bool LeaveFourPlayerMatch(int abandoningAccountId, DateTime abandonedAt)
+    private void LeaveFourPlayerMatch(int abandoningAccountId, DateTime abandonedAt)
     {
         List<Participation> activeParticipations = ListActiveParticipations();
         Participation abandoning =
             activeParticipations.First(participation => participation.AccountId == abandoningAccountId);
-        abandoning.Leave(MatchEndReason.Abandonment, (byte)activeParticipations.Count);
+        byte placement = (byte)activeParticipations.Count;
+        abandoning.Leave(MatchEndReason.Abandonment, placement);
         activeParticipations.Remove(abandoning);
-        if (activeParticipations.Count > LastPlayerCount)
+        if (activeParticipations.Count > LastStandingPlayerCount)
         {
             PassTurnFrom(abandoning.TurnOrder);
-            return false;
+            return;
         }
 
         activeParticipations.Single().Win(FirstPlacement);
         EndByAbandonment(abandonedAt);
-        return true;
     }
 
     private void EndByAbandonment(DateTime endedAt)
@@ -149,15 +151,14 @@ public class Match
 
     private List<Participation> ListActiveParticipations()
     {
-        return _participations
+        IEnumerable<Participation> activeParticipations = _participations
             .Where(participation => !participation.Result.HasValue)
-            .OrderBy(participation => participation.TurnOrder)
-            .ToList();
+            .OrderBy(participation => participation.TurnOrder);
+        return new List<Participation>(activeParticipations);
     }
 
     private void SeatEntrants(IReadOnlyList<MatchEntrant> entrantsInTurnOrder, MatchFormat format)
     {
-        ArgumentNullException.ThrowIfNull(entrantsInTurnOrder);
         if (entrantsInTurnOrder.Count != format.GameMode.PlayerCount)
         {
             throw new ArgumentException(
@@ -167,7 +168,8 @@ public class Match
 
         for (int entrantIndex = 0; entrantIndex < entrantsInTurnOrder.Count; entrantIndex++)
         {
-            byte turnOrder = (byte)(FirstTurnOrder + entrantIndex);
+            int turnOrderNumber = FirstTurnOrder + entrantIndex;
+            byte turnOrder = (byte)turnOrderNumber;
             _participations.Add(new Participation(entrantsInTurnOrder[entrantIndex], turnOrder, format));
         }
     }

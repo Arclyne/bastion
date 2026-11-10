@@ -4,11 +4,11 @@ namespace Bastion.Domain.Moderation;
 
 public class Sanction
 {
-    public Sanction(int accountId, SanctionScope scope, DateTime? endedAt)
+    public Sanction(int accountId, SanctionScope scope, DateTime? endsAt)
     {
         AccountId = accountId;
         Scope = scope;
-        EndedAt = endedAt;
+        EndsAt = endsAt;
     }
 
     private Sanction()
@@ -21,19 +21,27 @@ public class Sanction
 
     public SanctionScope Scope { get; private set; }
 
-    public DateTime? EndedAt { get; private set; }
+    public DateTime? EndsAt { get; private set; }
 
     public DateTime? RevokedAt { get; private set; }
 
-    public bool IsPermanent => EndedAt is null;
-
-    public void Revoke(DateTime revokedAt)
+    public bool IsPermanent()
     {
-        RevokedAt = revokedAt;
+        return EndsAt is null;
     }
 
     public bool IsInEffectAt(DateTime now)
     {
-        return RevokedAt is null && (IsPermanent || EndedAt > now);
+        if (RevokedAt is not null)
+        {
+            return false;
+        }
+
+        if (IsPermanent())
+        {
+            return true;
+        }
+
+        return EndsAt > now;
     }
 }

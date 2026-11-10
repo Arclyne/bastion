@@ -31,6 +31,8 @@ public sealed class RoomPlayerVerifier : IRoomPlayerVerifier
 
     public ConnectedPlayer VerifyPlayerCanEnterRoom(string sessionToken, DateTime now)
     {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
         ConnectedPlayer player = VerifySession(sessionToken, now);
         if (!_playerActivity.HasNotificationChannel(player.AccountId))
         {

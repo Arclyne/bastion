@@ -276,9 +276,9 @@ public class TestMatch
     {
         Match match = StartFourPlayerMatch();
 
-        bool isMatchOver = match.Abandon(FirstAccountId, _endedAt);
+        match.Abandon(FirstAccountId, _endedAt);
 
-        Assert.False(isMatchOver);
+        Assert.Equal(MatchStatus.InProgress, match.Status);
     }
 
     [Fact]

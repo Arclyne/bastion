@@ -66,7 +66,7 @@ public sealed class RoomKeeper : IRoomKeeper
         ArgumentNullException.ThrowIfNull(settings);
 
         RoomSnapshot hostedRoom = _roomRegistry.FindHostedRoom(accountId);
-        if (hostedRoom.Members.Count > settings.GameMode.PlayerCount)
+        if (!hostedRoom.CanSeatAllMembers(settings))
         {
             throw new RoomRejectedException(RoomRejection.TooManyPlayers);
         }

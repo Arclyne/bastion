@@ -3,7 +3,7 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Rooms;
 
-public class TestRoomRules
+public class TestRoomPolicy
 {
     private const string ValidCode = "K7MTQ3";
     private const string CodeWithLetterO = "K7MTO3";
@@ -18,7 +18,7 @@ public class TestRoomRules
     [Fact]
     public void IsValidCode_SixAllowedCharacters_ReturnsTrue()
     {
-        bool isValid = RoomRules.IsValidCode(ValidCode);
+        bool isValid = RoomPolicy.IsValidCode(ValidCode);
 
         Assert.True(isValid);
     }
@@ -26,7 +26,7 @@ public class TestRoomRules
     [Fact]
     public void IsValidCode_LetterO_ReturnsFalse()
     {
-        bool isValid = RoomRules.IsValidCode(CodeWithLetterO);
+        bool isValid = RoomPolicy.IsValidCode(CodeWithLetterO);
 
         Assert.False(isValid);
     }
@@ -34,7 +34,7 @@ public class TestRoomRules
     [Fact]
     public void IsValidCode_DigitOne_ReturnsFalse()
     {
-        bool isValid = RoomRules.IsValidCode(CodeWithDigitOne);
+        bool isValid = RoomPolicy.IsValidCode(CodeWithDigitOne);
 
         Assert.False(isValid);
     }
@@ -42,7 +42,7 @@ public class TestRoomRules
     [Fact]
     public void IsValidCode_FiveCharacters_ReturnsFalse()
     {
-        bool isValid = RoomRules.IsValidCode(ShortCode);
+        bool isValid = RoomPolicy.IsValidCode(ShortCode);
 
         Assert.False(isValid);
     }
@@ -50,7 +50,7 @@ public class TestRoomRules
     [Fact]
     public void IsValidCode_Lowercase_ReturnsFalse()
     {
-        bool isValid = RoomRules.IsValidCode(LowercaseCode);
+        bool isValid = RoomPolicy.IsValidCode(LowercaseCode);
 
         Assert.False(isValid);
     }
@@ -58,7 +58,7 @@ public class TestRoomRules
     [Fact]
     public void IsValidWallCount_TwentyOne_ReturnsFalse()
     {
-        bool isValid = RoomRules.IsValidWallCount(TooManyWalls);
+        bool isValid = RoomPolicy.IsValidWallCount(TooManyWalls);
 
         Assert.False(isValid);
     }
@@ -66,7 +66,7 @@ public class TestRoomRules
     [Fact]
     public void IsValidWallCount_Zero_ReturnsFalse()
     {
-        bool isValid = RoomRules.IsValidWallCount(NoWalls);
+        bool isValid = RoomPolicy.IsValidWallCount(NoWalls);
 
         Assert.False(isValid);
     }
@@ -74,7 +74,7 @@ public class TestRoomRules
     [Fact]
     public void IsValidWallCount_Twenty_ReturnsTrue()
     {
-        bool isValid = RoomRules.IsValidWallCount(RoomRules.MaximumWallsPerPlayer);
+        bool isValid = RoomPolicy.IsValidWallCount(RoomPolicy.MaximumWallsPerPlayer);
 
         Assert.True(isValid);
     }
@@ -82,7 +82,7 @@ public class TestRoomRules
     [Fact]
     public void IsValidClock_FourMinutes_ReturnsFalse()
     {
-        bool isValid = RoomRules.IsValidClock(FourMinutes);
+        bool isValid = RoomPolicy.IsValidClock(FourMinutes);
 
         Assert.False(isValid);
     }
@@ -90,7 +90,7 @@ public class TestRoomRules
     [Fact]
     public void IsValidClock_TenMinutes_ReturnsTrue()
     {
-        bool isValid = RoomRules.IsValidClock(TenMinutes);
+        bool isValid = RoomPolicy.IsValidClock(TenMinutes);
 
         Assert.True(isValid);
     }

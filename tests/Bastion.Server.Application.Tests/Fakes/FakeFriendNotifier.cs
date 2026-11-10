@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
 
 namespace Bastion.Server.Application.Tests.Fakes;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Friends;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
 using Microsoft.EntityFrameworkCore;
 
@@ -82,7 +83,7 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
                 (request, account) => new FriendRequestSummary(
                     new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode),
                     request.RequestedAt,
-                    request.RequestedAt.AddDays(FriendshipRules.RequestLifetimeDays)))
+                    request.RequestedAt.AddDays(FriendshipPolicy.RequestLifetimeDays)))
             .ToList();
     }
 }

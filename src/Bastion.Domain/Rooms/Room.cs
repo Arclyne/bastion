@@ -7,7 +7,7 @@ public class Room
     private Room(RoomOpening opening, RoomSettings settings)
     {
         Code = opening.Code;
-        HostId = opening.HostId;
+        HostAccountId = opening.HostAccountId;
         Status = RoomStatus.Open;
         CreatedAt = opening.OpenedAt;
         ApplySettings(settings, opening.OpenedAt);
@@ -22,7 +22,7 @@ public class Room
 
     public string Code { get; private set; }
 
-    public int HostId { get; private set; }
+    public int HostAccountId { get; private set; }
 
     public byte GameModeId { get; private set; }
 
@@ -42,7 +42,7 @@ public class Room
     {
         ArgumentNullException.ThrowIfNull(opening);
         ArgumentNullException.ThrowIfNull(settings);
-        if (!RoomRules.IsValidCode(opening.Code))
+        if (!RoomPolicy.IsValidCode(opening.Code))
         {
             throw new ArgumentException("The room code does not follow the code rules.", nameof(opening));
         }

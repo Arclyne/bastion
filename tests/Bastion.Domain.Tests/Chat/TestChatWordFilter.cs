@@ -13,11 +13,11 @@ public class TestChatWordFilter
     [InlineData("que estupido eres")]
     [InlineData("Eres ESTÚPIDO.")]
     [InlineData("dijo una mala   palabra")]
-    public void ContainsBannedTerm_TextWithTerm_ReturnsTrue(string text)
+    public void HasBannedTerm_TextWithTerm_ReturnsTrue(string text)
     {
-        bool containsBannedTerm = ChatWordFilter.ContainsBannedTerm(text, _bannedTerms);
+        bool hasBannedTerm = ChatWordFilter.HasBannedTerm(text, _bannedTerms);
 
-        Assert.True(containsBannedTerm);
+        Assert.True(hasBannedTerm);
     }
 
     [Theory]
@@ -25,18 +25,18 @@ public class TestChatWordFilter
     [InlineData("qué tontería")]
     [InlineData("tontos")]
     [InlineData("mala jugada, palabra")]
-    public void ContainsBannedTerm_TextWithoutWholeTerm_ReturnsFalse(string text)
+    public void HasBannedTerm_TextWithoutWholeTerm_ReturnsFalse(string text)
     {
-        bool containsBannedTerm = ChatWordFilter.ContainsBannedTerm(text, _bannedTerms);
+        bool hasBannedTerm = ChatWordFilter.HasBannedTerm(text, _bannedTerms);
 
-        Assert.False(containsBannedTerm);
+        Assert.False(hasBannedTerm);
     }
 
     [Fact]
-    public void ContainsBannedTerm_BlankTerm_ReturnsFalse()
+    public void HasBannedTerm_BlankTerm_ReturnsFalse()
     {
-        bool containsBannedTerm = ChatWordFilter.ContainsBannedTerm("hola", new[] { "  " });
+        bool hasBannedTerm = ChatWordFilter.HasBannedTerm("hola", new[] { "  " });
 
-        Assert.False(containsBannedTerm);
+        Assert.False(hasBannedTerm);
     }
 }
