@@ -44,7 +44,8 @@ public sealed class MatchAbandonmentService : IMatchAbandonmentService
             throw new MatchNotJoinedException();
         }
 
-        bool isMatchOver = match.Abandon(player.AccountId, now);
+        match.Abandon(player.AccountId, now);
+        bool isMatchOver = match.Status == MatchStatus.Finished;
         _matchStore.SaveAbandonment(match);
         _logger.Info(
             $"A player left the match. AccountId={player.AccountId}; MatchId={matchId}; IsMatchOver={isMatchOver}");
