@@ -22,12 +22,12 @@ public sealed class FakeAccountRepository : IAccountRepository
         _playerIdentities.Add(playerIdentity);
     }
 
-    public Account? FindByIdentifier(string identifier)
+    public Account? FindByLoginIdentifier(string loginIdentifier)
     {
         foreach (Account account in _accounts)
         {
-            bool isNickname = string.Equals(account.Nickname, identifier, StringComparison.OrdinalIgnoreCase);
-            bool isEmail = string.Equals(account.Email, identifier, StringComparison.OrdinalIgnoreCase);
+            bool isNickname = string.Equals(account.Nickname, loginIdentifier, StringComparison.OrdinalIgnoreCase);
+            bool isEmail = string.Equals(account.Email, loginIdentifier, StringComparison.OrdinalIgnoreCase);
             if (isNickname || isEmail)
             {
                 return account;

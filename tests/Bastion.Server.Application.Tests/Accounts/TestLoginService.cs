@@ -123,7 +123,7 @@ public class TestLoginService
     {
         StoreActiveAccount();
 
-        SignedInPlayer player = _loginService.LogIn(CreateAttempt(Nickname), Password);
+        LoggedInPlayer player = _loginService.LogIn(CreateAttempt(Nickname), Password);
 
         Assert.Equal(FakeSessionTokenGenerator.Token, player.SessionToken);
     }
@@ -133,7 +133,7 @@ public class TestLoginService
     {
         StoreActiveAccount();
 
-        SignedInPlayer player = _loginService.LogIn(CreateAttempt(Email), Password);
+        LoggedInPlayer player = _loginService.LogIn(CreateAttempt(Email), Password);
 
         Assert.Equal(Nickname, player.Nickname);
     }

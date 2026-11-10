@@ -18,13 +18,13 @@ public sealed class AccountRepository : IAccountRepository
         _context = context;
     }
 
-    public Account? FindByIdentifier(string identifier)
+    public Account? FindByLoginIdentifier(string loginIdentifier)
     {
-        ArgumentNullException.ThrowIfNull(identifier);
+        ArgumentNullException.ThrowIfNull(loginIdentifier);
 
-        string email = identifier.ToLowerInvariant();
+        string email = loginIdentifier.ToLowerInvariant();
         return _context.Accounts.FirstOrDefault(
-            account => account.Nickname == identifier || account.Email == email);
+            account => account.Nickname == loginIdentifier || account.Email == email);
     }
 
     public Account? FindById(int accountId)

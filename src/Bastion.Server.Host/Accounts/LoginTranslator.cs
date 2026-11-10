@@ -28,7 +28,7 @@ public static class LoginTranslator
         return new AccessAttempt((credentials.Identifier ?? string.Empty).Trim(), connection, now);
     }
 
-    public static PlayerSession ToSession(SignedInPlayer player)
+    public static PlayerSession ToSession(LoggedInPlayer player)
     {
         ArgumentNullException.ThrowIfNull(player);
 

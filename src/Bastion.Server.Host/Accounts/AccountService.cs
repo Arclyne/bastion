@@ -47,7 +47,7 @@ public sealed class AccountService : IAccountService
         {
             using IServiceScope scope = _scopeFactory.CreateScope();
             ILoginService loginService = scope.ServiceProvider.GetRequiredService<ILoginService>();
-            SignedInPlayer player = loginService.LogIn(attempt, credentials.Password ?? string.Empty);
+            LoggedInPlayer player = loginService.LogIn(attempt, credentials.Password ?? string.Empty);
             return LoginTranslator.ToSession(player);
         }
         catch (InvalidCredentialsException ex)

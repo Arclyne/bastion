@@ -9,6 +9,7 @@ using Bastion.Server.Application.Security;
 
 namespace Bastion.Server.Application.Accounts;
 
+/// <inheritdoc/>
 public sealed class LoginService : ILoginService
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(LoginService));
@@ -28,12 +29,13 @@ public sealed class LoginService : ILoginService
         _tokenGenerator = tokenGenerator;
     }
 
-    public SignedInPlayer LogIn(AccessAttempt attempt, string password)
+    /// <inheritdoc/>
+    public LoggedInPlayer LogIn(AccessAttempt attempt, string password)
     {
         ArgumentNullException.ThrowIfNull(attempt);
         ArgumentNullException.ThrowIfNull(password);
 
-        Account? account = _unitOfWork.Accounts.FindByIdentifier(attempt.EnteredIdentifier);
+        Account? account = _unitOfWork.Accounts.FindByLoginIdentifier(attempt.EnteredIdentifier);
         if (account is null || !account.HasPassword())
         {
             _passwordHasher.Verify(password, null, null);
@@ -60,7 +62,8 @@ public sealed class LoginService : ILoginService
 
     private static AccountRestrictedException CreateLockRestriction(Account account, DateTime now)
     {
-        return new AccountRestrictedException(AccountRestriction.Locked, account.GetRemainingLockMinutes(now));
+        int remainingLockMinutes = account.GetRemainingLockMinutes(now);
+        return new AccountRestrictedException(AccountRestriction.Locked, remainingLockMinutes);
     }
 
     [DoesNotReturn]
@@ -76,7 +79,7 @@ public sealed class LoginService : ILoginService
         throw Reject(accessLog, new InvalidCredentialsException());
     }
 
-    private SignedInPlayer AdmitByAccountStatus(Account account, AccessAttempt attempt)
+    private LoggedInPlayer AdmitByAccountStatus(Account account, AccessAttempt attempt)
     {
         switch (account.AccountStatus)
         {
@@ -85,15 +88,15 @@ public sealed class LoginService : ILoginService
             case AccountStatus.Pending:
                 throw Reject(
                     new AccessLog(AccessLogResult.AccountPending, attempt, account.AccountId),
-                    new AccountRestrictedException(AccountRestriction.Pending, 0));
+                    new AccountRestrictedException(AccountRestriction.Pending));
             case AccountStatus.Suspended:
                 throw Reject(
                     new AccessLog(AccessLogResult.AccountSanctioned, attempt, account.AccountId),
-                    new AccountRestrictedException(AccountRestriction.Suspended, 0));
+                    new AccountRestrictedException(AccountRestriction.Suspended));
             case AccountStatus.Banned:
                 throw Reject(
                     new AccessLog(AccessLogResult.AccountSanctioned, attempt, account.AccountId),
-                    new AccountRestrictedException(AccountRestriction.Banned, 0));
+                    new AccountRestrictedException(AccountRestriction.Banned));
             case AccountStatus.Deleted:
                 throw Reject(
                     new AccessLog(AccessLogResult.AccountNotFound, attempt, account.AccountId),
@@ -104,13 +107,13 @@ public sealed class LoginService : ILoginService
         }
     }
 
-    private SignedInPlayer OpenSession(Account account, AccessAttempt attempt)
+    private LoggedInPlayer OpenSession(Account account, AccessAttempt attempt)
     {
         GeneratedToken token = _tokenGenerator.Generate();
         var ticket = new SessionTicket(token.TokenHash, attempt.OccurredAt);
         _unitOfWork.Sessions.Add(new Session(account.AccountId, ticket, attempt.Connection));
         RecordAccessLog(new AccessLog(AccessLogResult.LoginSucceeded, attempt, account.AccountId));
-        return new SignedInPlayer(token.Token, account.Nickname, account.PreferredLanguage);
+        return new LoggedInPlayer(token.Token, account.Nickname, account.PreferredLanguage);
     }
 
     private TException Reject<TException>(AccessLog accessLog, TException rejection)
@@ -124,7 +127,7 @@ public sealed class LoginService : ILoginService
     {
         _unitOfWork.AccessLogs.Add(accessLog);
         _unitOfWork.SaveChanges();
-        string message = $"Sign-in attempt processed. Result={accessLog.Result}; AccountId={accessLog.AccountId}";
+        string message = $"Login attempt processed. Result={accessLog.Result}; AccountId={accessLog.AccountId}";
         if (accessLog.Result == AccessLogResult.LoginSucceeded)
         {
             _logger.Info(message);
