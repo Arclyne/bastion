@@ -23,19 +23,20 @@ public sealed class FriendshipRepository : IFriendshipRepository
     public IReadOnlyList<FriendSummary> ListFriends(int accountId)
     {
         IQueryable<int> friendAccountIds = SelectFriendAccountIds(accountId);
-
-        return _context.Accounts
-            .Where(account => friendAccountIds.Contains(account.AccountId)
-                && account.AccountStatus != AccountStatus.Deleted)
-            .Select(account => new FriendSummary(
-                new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode),
-                account.LastSeenAt))
-            .ToList();
+        IQueryable<Account> friendAccounts = _context.Accounts
+            .AsNoTracking()
+            .Where(account => friendAccountIds.Contains(account.AccountId))
+            .Where(account => account.AccountStatus != AccountStatus.Deleted);
+        var friends = new List<Account>(friendAccounts);
+        IEnumerable<FriendSummary> summaries = friends
+            .Select(ToFriendSummary);
+        return new List<FriendSummary>(summaries);
     }
 
     public IReadOnlyList<int> ListFriendAccountIds(int accountId)
     {
-        return SelectFriendAccountIds(accountId).ToList();
+        IQueryable<int> friendAccountIds = SelectFriendAccountIds(accountId);
+        return new List<int>(friendAccountIds);
     }
 
     public void Add(Friendship friendship)
@@ -47,23 +48,30 @@ public sealed class FriendshipRepository : IFriendshipRepository
 
     public bool Remove(int firstAccountId, int secondAccountId)
     {
-        int accountAId = Math.Min(firstAccountId, secondAccountId);
-        int accountBId = Math.Max(firstAccountId, secondAccountId);
+        int smallerAccountId = Math.Min(firstAccountId, secondAccountId);
+        int largerAccountId = Math.Max(firstAccountId, secondAccountId);
         DeletedRowCount deleted = _context.Database
             .SqlQuery<DeletedRowCount>(
-                $"EXEC dbo.usp_Friendship_Delete @AccountAId = {accountAId}, @AccountBId = {accountBId}")
+                $"EXEC dbo.usp_Friendship_Delete @AccountAId = {smallerAccountId}, @AccountBId = {largerAccountId}")
             .AsEnumerable()
             .Single();
         return deleted.DeletedRows > 0;
     }
 
+    private static FriendSummary ToFriendSummary(Account friend)
+    {
+        var identity = PlayerIdentity.FromAccount(friend);
+        return new FriendSummary(identity, friend.LastSeenAt);
+    }
+
     private IQueryable<int> SelectFriendAccountIds(int accountId)
     {
-        return _context.Friendships
+        IQueryable<int> friendIdsStoredAsLarger = _context.Friendships
             .Where(friendship => friendship.SmallerAccountId == accountId)
-            .Select(friendship => friendship.LargerAccountId)
-            .Concat(_context.Friendships
-                .Where(friendship => friendship.LargerAccountId == accountId)
-                .Select(friendship => friendship.SmallerAccountId));
+            .Select(friendship => friendship.LargerAccountId);
+        IQueryable<int> friendIdsStoredAsSmaller = _context.Friendships
+            .Where(friendship => friendship.LargerAccountId == accountId)
+            .Select(friendship => friendship.SmallerAccountId);
+        return friendIdsStoredAsLarger.Concat(friendIdsStoredAsSmaller);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Accounts;
 using Bastion.Server.Application.Accounts;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bastion.Server.Adapters.Persistence.Repositories;
 
@@ -33,47 +34,67 @@ public sealed class AccountRepository : IAccountRepository
 
     public PlayerIdentity? FindPlayerIdentity(int accountId)
     {
-        return _context.Accounts
-            .Where(account => account.AccountId == accountId)
-            .Select(account => new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode))
-            .FirstOrDefault();
+        IQueryable<Account> matchingAccounts = _context.Accounts
+            .AsNoTracking()
+            .Where(account => account.AccountId == accountId);
+        return FindIdentity(matchingAccounts);
     }
 
     public IReadOnlyList<PlayerIdentity> ListPlayerIdentities(IReadOnlyCollection<int> accountIds)
     {
         ArgumentNullException.ThrowIfNull(accountIds);
 
-        return _context.Accounts
-            .Where(account => accountIds.Contains(account.AccountId))
-            .Select(account => new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode))
-            .ToList();
+        IQueryable<Account> requestedAccounts = _context.Accounts
+            .AsNoTracking()
+            .Where(account => accountIds.Contains(account.AccountId));
+        return ListIdentities(requestedAccounts);
     }
 
     public PlayerIdentity? FindPlayerIdentityByFriendCode(string friendCode)
     {
         ArgumentNullException.ThrowIfNull(friendCode);
 
-        return SelectActivePlayers()
-            .Where(account => account.FriendCode == friendCode)
-            .Select(account => new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode))
-            .FirstOrDefault();
+        IQueryable<Account> playersWithCode = SelectActivePlayers()
+            .Where(account => account.FriendCode == friendCode);
+        return FindIdentity(playersWithCode);
     }
 
     public IReadOnlyList<PlayerIdentity> SearchPlayerIdentities(string nicknamePrefix, int limit)
     {
         ArgumentNullException.ThrowIfNull(nicknamePrefix);
 
-        return SelectActivePlayers()
+        IQueryable<Account> matchingPlayers = SelectActivePlayers()
             .Where(account => account.Nickname.StartsWith(nicknamePrefix))
             .OrderBy(account => account.Nickname)
-            .Take(limit)
-            .Select(account => new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode))
-            .ToList();
+            .Take(limit);
+        return ListIdentities(matchingPlayers);
+    }
+
+    private static PlayerIdentity? FindIdentity(IQueryable<Account> accounts)
+    {
+        Account? account = accounts.FirstOrDefault();
+        if (account is null)
+        {
+            return null;
+        }
+
+        return PlayerIdentity.FromAccount(account);
+    }
+
+    private static List<PlayerIdentity> ListIdentities(IQueryable<Account> accounts)
+    {
+        var loadedAccounts = new List<Account>(accounts);
+        IEnumerable<PlayerIdentity> identities = loadedAccounts
+            .Select(PlayerIdentity.FromAccount);
+        return new List<PlayerIdentity>(identities);
     }
 
     private IQueryable<Account> SelectActivePlayers()
     {
-        return _context.Accounts.Where(account =>
-            account.AccountType == AccountType.Registered && account.AccountStatus == AccountStatus.Active);
+        IQueryable<Account> activePlayers = _context.Accounts
+            .AsNoTracking()
+            .Where(account => account.AccountType == AccountType.Registered)
+            .Where(account => account.AccountStatus == AccountStatus.Active);
+        return activePlayers;
     }
 }

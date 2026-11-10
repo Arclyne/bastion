@@ -23,31 +23,29 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
 
     public FriendRequest? FindBetween(int firstAccountId, int secondAccountId)
     {
-        return _context.FriendRequests.FirstOrDefault(request =>
-            (request.RequesterId == firstAccountId && request.RecipientId == secondAccountId)
-            || (request.RequesterId == secondAccountId && request.RecipientId == firstAccountId));
+        return FindSent(firstAccountId, secondAccountId) ?? FindSent(secondAccountId, firstAccountId);
     }
 
     public IReadOnlyList<FriendRequest> ListInvolving(int accountId)
     {
-        return _context.FriendRequests
+        IQueryable<FriendRequest> requestsInvolvingAccount = _context.FriendRequests
             .AsNoTracking()
-            .Where(request => request.RequesterId == accountId || request.RecipientId == accountId)
-            .ToList();
+            .Where(request => request.RequesterId == accountId || request.RecipientId == accountId);
+        return new List<FriendRequest>(requestsInvolvingAccount);
     }
 
     public IReadOnlyList<FriendRequestSummary> ListReceived(int accountId)
     {
-        return ListSummaries(
-            _context.FriendRequests.Where(request => request.RecipientId == accountId),
-            request => request.RequesterId);
+        IQueryable<FriendRequest> receivedRequests = _context.FriendRequests
+            .Where(request => request.RecipientId == accountId);
+        return ListSummaries(receivedRequests, request => request.RequesterId);
     }
 
     public IReadOnlyList<FriendRequestSummary> ListSent(int accountId)
     {
-        return ListSummaries(
-            _context.FriendRequests.Where(request => request.RequesterId == accountId),
-            request => request.RecipientId);
+        IQueryable<FriendRequest> sentRequests = _context.FriendRequests
+            .Where(request => request.RequesterId == accountId);
+        return ListSummaries(sentRequests, request => request.RecipientId);
     }
 
     public void Add(FriendRequest request)
@@ -71,19 +69,51 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
         _context.Entry(request).State = EntityState.Detached;
     }
 
+    private static FriendRequestSummary ToSummary(RequestWithCounterpart requestWithCounterpart)
+    {
+        var counterpart = PlayerIdentity.FromAccount(requestWithCounterpart.Counterpart);
+        FriendRequest request = requestWithCounterpart.Request;
+        DateTime expiresAt = request.GetExpirationTime();
+        return new FriendRequestSummary(counterpart, request.RequestedAt, expiresAt);
+    }
+
+    private FriendRequest? FindSent(int requesterId, int recipientId)
+    {
+        return _context.FriendRequests.Find(requesterId, recipientId);
+    }
+
     private List<FriendRequestSummary> ListSummaries(
         IQueryable<FriendRequest> requests,
         Expression<Func<FriendRequest, int>> counterpartAccountId)
     {
-        return requests
+        IQueryable<Account> nonDeletedAccounts = _context.Accounts
+            .Where(account => account.AccountStatus != AccountStatus.Deleted);
+        IQueryable<RequestWithCounterpart> requestsWithCounterpart = requests
+            .AsNoTracking()
             .Join(
-                _context.Accounts.Where(account => account.AccountStatus != AccountStatus.Deleted),
+                nonDeletedAccounts,
                 counterpartAccountId,
                 account => account.AccountId,
-                (request, account) => new FriendRequestSummary(
-                    new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode),
-                    request.RequestedAt,
-                    request.RequestedAt.AddDays(FriendshipPolicy.RequestLifetimeDays)))
-            .ToList();
+                (request, counterpart) => new RequestWithCounterpart(request, counterpart));
+        var loadedRequests = new List<RequestWithCounterpart>(requestsWithCounterpart);
+        IEnumerable<FriendRequestSummary> summaries = loadedRequests
+            .Select(ToSummary);
+        return new List<FriendRequestSummary>(summaries);
+    }
+
+    private sealed record RequestWithCounterpart
+    {
+        public RequestWithCounterpart(FriendRequest request, Account counterpart)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+            ArgumentNullException.ThrowIfNull(counterpart);
+
+            Request = request;
+            Counterpart = counterpart;
+        }
+
+        public FriendRequest Request { get; }
+
+        public Account Counterpart { get; }
     }
 }
