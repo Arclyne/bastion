@@ -23,9 +23,9 @@ public class TestLockoutPolicy
     }
 
     [Fact]
-    public void CounterResetPeriod_Always_IsTwentyFourHours()
+    public void FailedSignInCountResetPeriod_Always_IsTwentyFourHours()
     {
-        TimeSpan period = LockoutPolicy.CounterResetPeriod;
+        TimeSpan period = LockoutPolicy.FailedSignInCountResetPeriod;
 
         Assert.Equal(TimeSpan.FromHours(24), period);
     }

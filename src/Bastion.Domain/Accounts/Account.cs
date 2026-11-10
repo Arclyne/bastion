@@ -97,7 +97,7 @@ public class Account
 
     public void RecordFailedSignIn(DateTime now)
     {
-        if (LastFailedSignInAt is DateTime lastFailure && now - lastFailure >= LockoutPolicy.CounterResetPeriod)
+        if (LastFailedSignInAt is DateTime lastFailure && now - lastFailure >= LockoutPolicy.FailedSignInCountResetPeriod)
         {
             FailedSignInCount = 0;
         }
