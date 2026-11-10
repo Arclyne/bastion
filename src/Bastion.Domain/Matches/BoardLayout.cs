@@ -6,14 +6,14 @@ namespace Bastion.Domain.Matches;
 public static class BoardLayout
 {
     private const char FirstColumn = 'a';
-    private const int FirstRow = 1;
+    private const int RowNumberOffset = 1;
     private const int FirstIndex = 0;
     private const int BoardHalves = 2;
 
     public static BoardCoordinates GetStartingCoordinates(byte boardSize, byte turnOrder)
     {
         int centerIndex = boardSize / BoardHalves;
-        int lastIndex = boardSize - FirstRow;
+        int lastIndex = boardSize - RowNumberOffset;
         switch (turnOrder)
         {
             case Match.FirstTurnOrder:
@@ -35,7 +35,9 @@ public static class BoardLayout
     public static string GetStartingSquare(byte boardSize, byte turnOrder)
     {
         BoardCoordinates coordinates = GetStartingCoordinates(boardSize, turnOrder);
-        char column = (char)(FirstColumn + coordinates.ColumnIndex);
-        return string.Create(CultureInfo.InvariantCulture, $"{column}{coordinates.RowIndex + FirstRow}");
+        int columnCode = FirstColumn + coordinates.ColumnIndex;
+        char column = (char)columnCode;
+        int rowNumber = coordinates.RowIndex + RowNumberOffset;
+        return string.Create(CultureInfo.InvariantCulture, $"{column}{rowNumber}");
     }
 }
