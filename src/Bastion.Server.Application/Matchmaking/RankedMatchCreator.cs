@@ -42,7 +42,7 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         string accountIdsText = string.Join(AccountIdSeparator, pairing.Players.Select(player => player.AccountId));
         try
         {
-            GameMode? gameMode = _matchStore.FindActiveGameMode(MatchmakingRules.RankedGameModeCode);
+            GameMode? gameMode = _matchStore.FindActiveGameMode(MatchmakingPolicy.RankedGameModeCode);
             if (gameMode is null)
             {
                 _logger.Error(
@@ -50,7 +50,7 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
                 return false;
             }
 
-            var format = new MatchFormat(gameMode, MatchmakingRules.RankedClockMinutes);
+            var format = new MatchFormat(gameMode, MatchmakingPolicy.RankedClockMinutes);
             createdMatch = StartAndSaveMatch(pairing, format, startedAt);
             _logger.Info($"Ranked match created. MatchId={createdMatch.MatchId}; AccountIds={accountIdsText}");
             return true;
