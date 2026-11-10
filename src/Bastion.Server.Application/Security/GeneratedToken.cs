@@ -2,7 +2,7 @@ using System;
 
 namespace Bastion.Server.Application.Security;
 
-public sealed class GeneratedToken
+public sealed record GeneratedToken
 {
     public GeneratedToken(string token, byte[] tokenHash)
     {
