@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Bastion.Domain.Friends;
@@ -8,6 +9,8 @@ public sealed class FriendRequestConfiguration : IEntityTypeConfiguration<Friend
 {
     public void Configure(EntityTypeBuilder<FriendRequest> builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         builder.ToTable(nameof(FriendRequest));
         builder.HasKey(request => new { request.RequesterId, request.RecipientId });
     }

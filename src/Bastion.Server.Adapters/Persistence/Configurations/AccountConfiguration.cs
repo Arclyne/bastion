@@ -1,8 +1,8 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Friends;
-using Bastion.Server.Adapters.Persistence.Conversions;
 using Bastion.Server.Adapters.Security;
 
 namespace Bastion.Server.Adapters.Persistence.Configurations;
@@ -17,17 +17,13 @@ public sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
 
     public void Configure(EntityTypeBuilder<Account> builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         builder.ToTable(nameof(Account));
         builder.HasKey(account => account.AccountId);
 
-        builder.Property(account => account.AccountType)
-            .HasConversion(new UpperSnakeCaseEnumConverter<AccountType>())
-            .HasMaxLength(TypeLength)
-            .IsUnicode(false);
-        builder.Property(account => account.AccountStatus)
-            .HasConversion(new UpperSnakeCaseEnumConverter<AccountStatus>())
-            .HasMaxLength(StatusLength)
-            .IsUnicode(false);
+        builder.Property(account => account.AccountType).HasUpperSnakeCaseConversion(TypeLength);
+        builder.Property(account => account.AccountStatus).HasUpperSnakeCaseConversion(StatusLength);
 
         builder.Property(account => account.Nickname).HasMaxLength(AccountPolicy.MaximumNicknameLength);
         builder.Property(account => account.Email).HasMaxLength(AccountPolicy.MaximumEmailLength);

@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Bastion.Domain.Sessions;
@@ -12,6 +13,8 @@ public sealed class SessionConfiguration : IEntityTypeConfiguration<Session>
 
     public void Configure(EntityTypeBuilder<Session> builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         builder.ToTable(nameof(Session));
         builder.HasKey(session => session.SessionId);
         builder.Property(session => session.TokenHash).HasMaxLength(SessionTokenGenerator.TokenHashLength);

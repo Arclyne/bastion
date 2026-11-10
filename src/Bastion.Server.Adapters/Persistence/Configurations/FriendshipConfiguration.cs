@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Bastion.Domain.Friends;
@@ -11,6 +12,8 @@ public sealed class FriendshipConfiguration : IEntityTypeConfiguration<Friendshi
 
     public void Configure(EntityTypeBuilder<Friendship> builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         builder.ToTable(nameof(Friendship));
         builder.HasKey(friendship => new { friendship.SmallerAccountId, friendship.LargerAccountId });
         builder.Property(friendship => friendship.SmallerAccountId).HasColumnName(SmallerAccountIdColumn);

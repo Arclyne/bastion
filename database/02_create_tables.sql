@@ -331,7 +331,7 @@ CREATE TABLE dbo.Message (
     Channel              VARCHAR(12)    NOT NULL,  -- `MATCH` or `ROOM` in the core. The CHECK already accepts `SPECTATORS`, `GLOBAL` and `FRIENDS`, from the later phase, because they need no new columns. Determines what the message belongs to.
     MatchId              INT            NULL,  -- Match; only in the `MATCH` and `SPECTATORS` channels.
     RoomId               INT            NULL,  -- Room; only in the `ROOM` channel.
-    Text                 NVARCHAR(500)  NOT NULL,  -- Text as it was written, in Unicode and untranslated (CU-28 RN-12).
+    Text                 NVARCHAR(200)  NOT NULL,  -- Text as it was written, in Unicode and untranslated (CU-28 RN-12).
     SentAt               DATETIME2(3)   NOT NULL DEFAULT (SYSUTCDATETIME()),  -- Moment it was sent.
     CONSTRAINT PK_Message PRIMARY KEY (MessageId),
     CONSTRAINT FK_Message_Author FOREIGN KEY (AuthorId) REFERENCES dbo.Account (AccountId),  -- 1:N | An account writes many messages.

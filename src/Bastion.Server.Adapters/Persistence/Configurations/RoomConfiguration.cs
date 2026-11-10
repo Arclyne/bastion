@@ -1,6 +1,5 @@
 using System;
 using Bastion.Domain.Rooms;
-using Bastion.Server.Adapters.Persistence.Conversions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,9 +21,6 @@ public sealed class RoomConfiguration : IEntityTypeConfiguration<Room>
             .HasMaxLength(RoomPolicy.CodeLength)
             .IsFixedLength()
             .IsUnicode(false);
-        builder.Property(room => room.Status)
-            .HasConversion(new UpperSnakeCaseEnumConverter<RoomStatus>())
-            .HasMaxLength(StatusLength)
-            .IsUnicode(false);
+        builder.Property(room => room.Status).HasUpperSnakeCaseConversion(StatusLength);
     }
 }
