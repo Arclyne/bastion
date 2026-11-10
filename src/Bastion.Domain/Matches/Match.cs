@@ -115,7 +115,8 @@ public class Match
         List<Participation> activeParticipations = ListActiveParticipations();
         Participation abandoning =
             activeParticipations.First(participation => participation.AccountId == abandoningAccountId);
-        abandoning.Leave(MatchEndReason.Abandonment, (byte)activeParticipations.Count);
+        byte placement = (byte)activeParticipations.Count;
+        abandoning.Leave(MatchEndReason.Abandonment, placement);
         activeParticipations.Remove(abandoning);
         if (activeParticipations.Count > LastStandingPlayerCount)
         {
@@ -167,7 +168,8 @@ public class Match
 
         for (int entrantIndex = 0; entrantIndex < entrantsInTurnOrder.Count; entrantIndex++)
         {
-            byte turnOrder = (byte)(FirstTurnOrder + entrantIndex);
+            int turnOrderNumber = FirstTurnOrder + entrantIndex;
+            byte turnOrder = (byte)turnOrderNumber;
             _participations.Add(new Participation(entrantsInTurnOrder[entrantIndex], turnOrder, format));
         }
     }

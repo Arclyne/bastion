@@ -19,7 +19,9 @@ public class Participation
         PawnSymbol = GetPawnSymbol(turnOrder);
         CurrentSquare = BoardLayout.GetStartingSquare(format.GameMode.BoardSize, turnOrder);
         RemainingWalls = format.WallsPerPlayer;
-        RemainingClockMilliseconds = (int)TimeSpan.FromMinutes(format.ClockMinutes).TotalMilliseconds;
+        var clockTime = TimeSpan.FromMinutes(format.ClockMinutes);
+        double clockMilliseconds = clockTime.TotalMilliseconds;
+        RemainingClockMilliseconds = (int)clockMilliseconds;
         InitialElo = entrant.EloRating;
         IsConnected = true;
     }
@@ -58,7 +60,8 @@ public class Participation
         ArgumentOutOfRangeException.ThrowIfLessThan(turnOrder, Match.FirstTurnOrder);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(turnOrder, _pawnSymbolsInTurnOrder.Length);
 
-        return _pawnSymbolsInTurnOrder[turnOrder - Match.FirstTurnOrder];
+        int symbolIndex = turnOrder - Match.FirstTurnOrder;
+        return _pawnSymbolsInTurnOrder[symbolIndex];
     }
 
     internal void Finish(ParticipationResult result)
