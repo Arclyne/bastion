@@ -10,25 +10,27 @@ using Bastion.Server.Application.Sessions;
 
 namespace Bastion.Server.Application.PrivateChat;
 
+/// <inheritdoc/>
 public sealed class PrivateChatService : IPrivateChatService
 {
     private readonly ISessionVerifier _sessionVerifier;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPrivateChatRoom _chatRoom;
-    private readonly ChatModerator _moderator;
+    private readonly IChatModerator _chatModerator;
 
-    public PrivateChatService(ISessionVerifier sessionVerifier, IUnitOfWork unitOfWork, IPrivateChatRoom chatRoom)
+    public PrivateChatService(ISessionVerifier sessionVerifier, IUnitOfWork unitOfWork, PrivateChatChannel channel)
     {
         ArgumentNullException.ThrowIfNull(sessionVerifier);
         ArgumentNullException.ThrowIfNull(unitOfWork);
-        ArgumentNullException.ThrowIfNull(chatRoom);
+        ArgumentNullException.ThrowIfNull(channel);
 
         _sessionVerifier = sessionVerifier;
         _unitOfWork = unitOfWork;
-        _chatRoom = chatRoom;
-        _moderator = new ChatModerator(unitOfWork);
+        _chatRoom = channel.Room;
+        _chatModerator = channel.Moderator;
     }
 
+    /// <inheritdoc/>
     public IReadOnlyList<ConversationSummary> ListConversations(string sessionToken, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
@@ -37,32 +39,44 @@ public sealed class PrivateChatService : IPrivateChatService
         IReadOnlyList<Message> latestMessages = _unitOfWork.Messages.ListLatestPerPartner(player.AccountId);
         IReadOnlyDictionary<int, int> unreadByAuthor = _unitOfWork.Messages.CountUnreadByAuthor(player.AccountId);
         var friendIds = new HashSet<int>(_unitOfWork.Friendships.ListFriendAccountIds(player.AccountId));
-        var partners = _unitOfWork.Accounts
-            .ListPlayerIdentities(latestMessages.Select(message => message.GetPartnerId(player.AccountId)).ToList())
-            .ToDictionary(identity => identity.AccountId);
+        IEnumerable<int> partnerIdSequence = latestMessages.Select(message => message.GetPartnerId(player.AccountId));
+        var partnerIds = new List<int>(partnerIdSequence);
+        IReadOnlyList<PlayerIdentity> partnerIdentities = _unitOfWork.Accounts.ListPlayerIdentities(partnerIds);
+        var partnersById = new Dictionary<int, PlayerIdentity>(partnerIdentities.Count);
+        foreach (PlayerIdentity identity in partnerIdentities)
+        {
+            partnersById.Add(identity.AccountId, identity);
+        }
 
-        return latestMessages
-            .Where(message => partners.ContainsKey(message.GetPartnerId(player.AccountId)))
-            .Select(message =>
+        var summaries = new List<ConversationSummary>();
+        foreach (Message message in latestMessages)
+        {
+            int partnerId = message.GetPartnerId(player.AccountId);
+            if (!partnersById.TryGetValue(partnerId, out PlayerIdentity? partner))
             {
-                PlayerIdentity partner = partners[message.GetPartnerId(player.AccountId)];
-                return new ConversationSummary(
-                    new ConversationPartner(partner, friendIds.Contains(partner.AccountId)),
-                    new PrivateMessageEntry(message, message.IsSentBy(player.AccountId)),
-                    unreadByAuthor.GetValueOrDefault(partner.AccountId));
-            })
-            .OrderByDescending(summary => summary.LastMessage.Message.SentAt)
-            .ToList();
+                continue;
+            }
+
+            var conversationPartner = new ConversationPartner(partner, friendIds.Contains(partnerId));
+            var lastMessage = new PrivateMessageEntry(message, message.IsSentBy(player.AccountId));
+            int unreadCount = unreadByAuthor.GetValueOrDefault(partnerId);
+            summaries.Add(new ConversationSummary(conversationPartner, lastMessage, unreadCount));
+        }
+
+        IEnumerable<ConversationSummary> latestFirst = summaries
+            .OrderByDescending(summary => summary.LastMessage.Message.SentAt);
+        return new List<ConversationSummary>(latestFirst);
     }
 
+    /// <inheritdoc/>
     public PrivateConversation OpenConversation(string sessionToken, string friendCode, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(friendCode);
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        PlayerIdentity partner = FindPartner(player, friendCode);
-        bool isFriend = IsFriend(player, partner);
+        PlayerIdentity partner = FindPartner(player.AccountId, friendCode);
+        bool isFriend = IsFriend(player.AccountId, partner.AccountId);
         IReadOnlyList<Message> messages = _unitOfWork.Messages.ListConversation(
             player.AccountId,
             partner.AccountId,
@@ -73,56 +87,56 @@ public sealed class PrivateChatService : IPrivateChatService
         }
 
         _unitOfWork.Messages.MarkRead(new MessageParticipants(partner.AccountId, player.AccountId), now);
-        var entries = messages
-            .Select(message => new PrivateMessageEntry(message, message.IsSentBy(player.AccountId)))
-            .ToList();
-        return new PrivateConversation(
-            new ConversationPartner(partner, isFriend),
-            entries,
-            _moderator.FindMute(player.AccountId, now));
+        IEnumerable<PrivateMessageEntry> entries = messages
+            .Select(message => new PrivateMessageEntry(message, message.IsSentBy(player.AccountId)));
+        var entryList = new List<PrivateMessageEntry>(entries);
+        var conversationPartner = new ConversationPartner(partner, isFriend);
+        ChatMute mute = _chatModerator.FindMute(player.AccountId, now);
+        return new PrivateConversation(conversationPartner, entryList, mute);
     }
 
+    /// <inheritdoc/>
     public Message SendPrivateMessage(string sessionToken, PrivateMessageDraft draft, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(draft);
 
-        ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        PlayerIdentity partner = FindPartner(player, draft.FriendCode);
-        if (!IsFriend(player, partner))
+        PlayerIdentity author = _sessionVerifier.VerifyIdentity(sessionToken, now);
+        PlayerIdentity partner = FindPartner(author.AccountId, draft.FriendCode);
+        if (!IsFriend(author.AccountId, partner.AccountId))
         {
             throw new ChatMessageRejectedException(ChatRejection.NotFriends);
         }
 
-        string screenedText = _moderator.ScreenMessage(player.AccountId, draft.Text, now);
-        if (!_chatRoom.TryStartCooldown(player.AccountId, now))
+        string screenedText = _chatModerator.ScreenMessage(author.AccountId, draft.Text, now);
+        if (!_chatRoom.TryStartCooldown(author.AccountId, now))
         {
             throw new ChatMessageRejectedException(ChatRejection.TooFast);
         }
 
-        PlayerIdentity author = _unitOfWork.Accounts.FindPlayerIdentity(player.AccountId)
-            ?? throw new InvalidSessionException();
-        var message = Message.CreatePrivate(new MessageParticipants(player.AccountId, partner.AccountId), screenedText, now);
+        var participants = new MessageParticipants(author.AccountId, partner.AccountId);
+        var message = Message.CreatePrivate(participants, screenedText, now);
         _unitOfWork.Messages.Add(message);
         _unitOfWork.SaveChanges();
         _chatRoom.Deliver(new PrivateMessageDelivery(author, message));
         return message;
     }
 
+    /// <inheritdoc/>
     public void MarkConversationRead(string sessionToken, string friendCode, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(friendCode);
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        PlayerIdentity partner = FindPartner(player, friendCode);
+        PlayerIdentity partner = FindPartner(player.AccountId, friendCode);
         _unitOfWork.Messages.MarkRead(new MessageParticipants(partner.AccountId, player.AccountId), now);
     }
 
-    private PlayerIdentity FindPartner(ConnectedPlayer player, string friendCode)
+    private PlayerIdentity FindPartner(int accountId, string friendCode)
     {
         PlayerIdentity? partner = FriendCodeLookup.FindPlayer(_unitOfWork.Accounts, friendCode);
-        if (partner is null || partner.AccountId == player.AccountId)
+        if (partner is null || partner.AccountId == accountId)
         {
             throw new ChatMessageRejectedException(ChatRejection.PlayerNotFound);
         }
@@ -130,8 +144,9 @@ public sealed class PrivateChatService : IPrivateChatService
         return partner;
     }
 
-    private bool IsFriend(ConnectedPlayer player, PlayerIdentity partner)
+    private bool IsFriend(int accountId, int partnerAccountId)
     {
-        return _unitOfWork.Friendships.ListFriendAccountIds(player.AccountId).Contains(partner.AccountId);
+        IReadOnlyList<int> friendAccountIds = _unitOfWork.Friendships.ListFriendAccountIds(accountId);
+        return friendAccountIds.Contains(partnerAccountId);
     }
 }

@@ -60,13 +60,13 @@ public sealed class MessageRepository : IMessageRepository
             .ToDictionary(unread => unread.AuthorId, unread => unread.Count);
     }
 
-    public void MarkRead(MessageParticipants readMessages, DateTime readAt)
+    public void MarkRead(MessageParticipants participants, DateTime readAt)
     {
-        ArgumentNullException.ThrowIfNull(readMessages);
+        ArgumentNullException.ThrowIfNull(participants);
 
         SelectPrivateMessages()
-            .Where(message => message.AuthorId == readMessages.AuthorId
-                && message.RecipientId == readMessages.RecipientId
+            .Where(message => message.AuthorId == participants.AuthorId
+                && message.RecipientId == participants.RecipientId
                 && message.ReadAt == null)
             .ExecuteUpdate(setters => setters.SetProperty(message => message.ReadAt, readAt));
     }

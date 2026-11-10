@@ -38,8 +38,9 @@ public class TestPrivateChatService
 
     public TestPrivateChatService()
     {
-        _privateChatService = new PrivateChatService(_sessionVerifier, _unitOfWork, new PrivateChatRoom(_notifier));
-        _sessionVerifier.Add(Token, new ConnectedPlayer(AccountId, Nickname));
+        var channel = new PrivateChatChannel(new PrivateChatRoom(_notifier), new ChatModerator(_unitOfWork));
+        _privateChatService = new PrivateChatService(_sessionVerifier, _unitOfWork, channel);
+        _sessionVerifier.Add(Token, new PlayerIdentity(AccountId, Nickname, FriendCode));
         var friend = new PlayerIdentity(FriendAccountId, FriendNickname, FriendFriendCode);
         _unitOfWork.AccountStore.StorePlayerIdentity(new PlayerIdentity(AccountId, Nickname, FriendCode));
         _unitOfWork.AccountStore.StorePlayerIdentity(friend);

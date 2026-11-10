@@ -37,6 +37,7 @@ public static class ServiceRegistration
         services.AddScoped<IFriendListService, FriendListService>();
         services.AddScoped<IFriendRequestService, FriendRequestService>();
         services.AddScoped<IFriendPresenceService, FriendPresenceService>();
+        services.AddScoped<PrivateChatChannel>();
         services.AddScoped<IPrivateChatService, PrivateChatService>();
         services.AddScoped<IPrivateRoomService, PrivateRoomService>();
         services.AddScoped<IRoomPlayerVerifier, RoomPlayerVerifier>();

@@ -43,12 +43,12 @@ public sealed class FakeMessageRepository : IMessageRepository
             .ToDictionary(unread => unread.Key, unread => unread.Count());
     }
 
-    public void MarkRead(MessageParticipants readMessages, DateTime readAt)
+    public void MarkRead(MessageParticipants participants, DateTime readAt)
     {
-        ArgumentNullException.ThrowIfNull(readMessages);
+        ArgumentNullException.ThrowIfNull(participants);
 
         foreach (Message message in Messages.Where(message =>
-            message.AuthorId == readMessages.AuthorId && message.RecipientId == readMessages.RecipientId))
+            message.AuthorId == participants.AuthorId && message.RecipientId == participants.RecipientId))
         {
             message.MarkRead(readAt);
         }
