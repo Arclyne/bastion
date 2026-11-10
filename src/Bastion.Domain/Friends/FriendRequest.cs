@@ -30,7 +30,7 @@ public class FriendRequest
 
     public DateTime GetExpirationTime()
     {
-        return RequestedAt.AddDays(FriendshipRules.RequestLifetimeDays);
+        return RequestedAt.AddDays(FriendshipPolicy.RequestLifetimeDays);
     }
 
     public bool IsExpiredAt(DateTime now)

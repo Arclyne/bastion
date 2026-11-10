@@ -82,7 +82,7 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
                 (request, account) => new FriendRequestSummary(
                     new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode),
                     request.RequestedAt,
-                    request.RequestedAt.AddDays(FriendshipRules.RequestLifetimeDays)))
+                    request.RequestedAt.AddDays(FriendshipPolicy.RequestLifetimeDays)))
             .ToList();
     }
 }

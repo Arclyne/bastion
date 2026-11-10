@@ -177,12 +177,12 @@ public sealed class FriendRequestService : IFriendRequestService
 
     private void EnsureBelowFriendLimit(int ownFriendCount, int otherAccountId)
     {
-        if (ownFriendCount >= FriendshipRules.MaximumFriends)
+        if (ownFriendCount >= FriendshipPolicy.MaximumFriends)
         {
             throw new FriendshipRejectedException(FriendshipRejection.FriendLimitReached);
         }
 
-        if (_unitOfWork.Friendships.ListFriendAccountIds(otherAccountId).Count >= FriendshipRules.MaximumFriends)
+        if (_unitOfWork.Friendships.ListFriendAccountIds(otherAccountId).Count >= FriendshipPolicy.MaximumFriends)
         {
             throw new FriendshipRejectedException(FriendshipRejection.RecipientFriendLimitReached);
         }

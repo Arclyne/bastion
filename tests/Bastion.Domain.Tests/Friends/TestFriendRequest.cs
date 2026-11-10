@@ -16,7 +16,7 @@ public class TestFriendRequest
     {
         var request = new FriendRequest(RequesterId, RecipientId, _requestedAt);
 
-        bool isExpired = request.IsExpiredAt(_requestedAt.AddDays(FriendshipRules.RequestLifetimeDays));
+        bool isExpired = request.IsExpiredAt(_requestedAt.AddDays(FriendshipPolicy.RequestLifetimeDays));
 
         Assert.True(isExpired);
     }
@@ -26,7 +26,7 @@ public class TestFriendRequest
     {
         var request = new FriendRequest(RequesterId, RecipientId, _requestedAt);
 
-        bool isExpired = request.IsExpiredAt(_requestedAt.AddDays(FriendshipRules.RequestLifetimeDays - 1));
+        bool isExpired = request.IsExpiredAt(_requestedAt.AddDays(FriendshipPolicy.RequestLifetimeDays - 1));
 
         Assert.False(isExpired);
     }
