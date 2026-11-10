@@ -69,20 +69,23 @@ public sealed class MatchStore : IMatchStore
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        RunInNewContext(context => UpdateMatch(context, match));
+        RunInNewContext(context => UpdateMatchAndRoom(context, match));
     }
 
     private static bool HasUnfinishedParticipationInContext(BastionDbContext context, int accountId)
     {
-        return context.Participations.Any(
-            participation => participation.AccountId == accountId && !participation.Result.HasValue);
+        IQueryable<Participation> accountUnfinishedParticipations = SelectUnfinishedParticipations(context)
+            .Where(participation => participation.AccountId == accountId);
+        return accountUnfinishedParticipations.Any();
     }
 
     private static GameMode? LoadActiveGameMode(BastionDbContext context, GameModeCode code)
     {
-        return context.GameModes
+        IQueryable<GameMode> activeModesWithCode = context.GameModes
             .AsNoTracking()
-            .FirstOrDefault(gameMode => gameMode.Code == code && gameMode.IsActive);
+            .Where(gameMode => gameMode.Code == code)
+            .Where(gameMode => gameMode.IsActive);
+        return activeModesWithCode.FirstOrDefault();
     }
 
     private static Dictionary<int, short> LoadEloRatingsByAccountId(
@@ -90,10 +93,12 @@ public sealed class MatchStore : IMatchStore
         byte gameModeId,
         IReadOnlyCollection<int> accountIds)
     {
-        return context.ModeStatistics
+        IQueryable<KeyValuePair<int, short>> eloRatings = context.ModeStatistics
             .AsNoTracking()
-            .Where(statistic => statistic.GameModeId == gameModeId && accountIds.Contains(statistic.AccountId))
-            .ToDictionary(statistic => statistic.AccountId, statistic => statistic.EloRating);
+            .Where(statistic => statistic.GameModeId == gameModeId)
+            .Where(statistic => accountIds.Contains(statistic.AccountId))
+            .Select(statistic => new KeyValuePair<int, short>(statistic.AccountId, statistic.EloRating));
+        return new Dictionary<int, short>(eloRatings);
     }
 
     private static int AddMatch(BastionDbContext context, Match match)
@@ -105,11 +110,10 @@ public sealed class MatchStore : IMatchStore
 
     private static List<int> LoadAccountIdsWithUnfinishedParticipation(BastionDbContext context, int matchId)
     {
-        return context.Participations
-            .AsNoTracking()
-            .Where(participation => participation.MatchId == matchId && !participation.Result.HasValue)
-            .Select(participation => participation.AccountId)
-            .ToList();
+        IQueryable<int> accountIds = SelectUnfinishedParticipations(context)
+            .Where(participation => participation.MatchId == matchId)
+            .Select(participation => participation.AccountId);
+        return new List<int>(accountIds);
     }
 
     private static long AddMatchChatMessage(BastionDbContext context, Message message)
@@ -121,13 +125,14 @@ public sealed class MatchStore : IMatchStore
 
     private static Match? LoadMatch(BastionDbContext context, int matchId)
     {
-        return context.Matches
+        IQueryable<Match> matchesWithId = context.Matches
             .AsNoTracking()
             .Include(match => match.Participations)
-            .FirstOrDefault(match => match.MatchId == matchId);
+            .Where(match => match.MatchId == matchId);
+        return matchesWithId.FirstOrDefault();
     }
 
-    private static int UpdateMatch(BastionDbContext context, Match match)
+    private static int UpdateMatchAndRoom(BastionDbContext context, Match match)
     {
         context.Matches.Update(match);
         if (match.MatchType == MatchType.Private && match.Status == MatchStatus.Finished)
@@ -140,9 +145,19 @@ public sealed class MatchStore : IMatchStore
 
     private static void FinishRoomOfMatch(BastionDbContext context, Match match)
     {
-        Room? room = context.Rooms.FirstOrDefault(
-            candidate => candidate.MatchId == match.MatchId && candidate.Status == RoomStatus.InMatch);
+        IQueryable<Room> roomsInMatch = context.Rooms
+            .Where(candidate => candidate.MatchId == match.MatchId)
+            .Where(candidate => candidate.Status == RoomStatus.InMatch);
+        Room? room = roomsInMatch.FirstOrDefault();
         room?.FinishMatch(match.EndedAt.GetValueOrDefault(match.StartedAt));
+    }
+
+    private static IQueryable<Participation> SelectUnfinishedParticipations(BastionDbContext context)
+    {
+        IQueryable<Participation> unfinishedParticipations = context.Participations
+            .AsNoTracking()
+            .Where(participation => !participation.Result.HasValue);
+        return unfinishedParticipations;
     }
 
     private TResult RunInNewContext<TResult>(Func<BastionDbContext, TResult> operation)
