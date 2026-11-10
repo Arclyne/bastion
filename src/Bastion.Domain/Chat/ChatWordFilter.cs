@@ -10,44 +10,48 @@ public static class ChatWordFilter
 {
     private const char WordSeparator = ' ';
 
-    public static bool ContainsBannedTerm(string text, IEnumerable<string> bannedTerms)
+    public static bool HasBannedTerm(string text, IEnumerable<string> bannedTerms)
     {
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(bannedTerms);
 
-        string comparableText = ToComparableWords(text);
-        return bannedTerms
-            .Select(ToComparableWords)
+        string normalizedText = NormalizeWords(text);
+        bool hasBannedTerm = bannedTerms
+            .Select(NormalizeWords)
             .Where(term => !string.IsNullOrWhiteSpace(term))
-            .Any(term => comparableText.Contains(term, StringComparison.Ordinal));
+            .Any(term => normalizedText.Contains(term, StringComparison.Ordinal));
+        return hasBannedTerm;
     }
 
-    private static string ToComparableWords(string text)
+    private static string NormalizeWords(string text)
     {
-        string decomposed = text.Normalize(NormalizationForm.FormD);
-        var builder = new StringBuilder(decomposed.Length);
+        string decomposedText = text.Normalize(NormalizationForm.FormD);
+        var builder = new StringBuilder(decomposedText.Length);
         builder.Append(WordSeparator);
-        foreach (char character in decomposed)
+        foreach (char character in decomposedText)
         {
-            AppendComparable(builder, character);
+            AppendNormalizedCharacter(builder, character);
         }
 
-        if (builder[^1] != WordSeparator)
-        {
-            builder.Append(WordSeparator);
-        }
-
+        AppendSeparator(builder);
         return builder.ToString();
     }
 
-    private static void AppendComparable(StringBuilder builder, char character)
+    private static void AppendNormalizedCharacter(StringBuilder builder, char character)
     {
         if (char.IsLetterOrDigit(character))
         {
             builder.Append(char.ToLowerInvariant(character));
         }
-        else if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark
-            && builder[^1] != WordSeparator)
+        else if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
+        {
+            AppendSeparator(builder);
+        }
+    }
+
+    private static void AppendSeparator(StringBuilder builder)
+    {
+        if (builder[^1] != WordSeparator)
         {
             builder.Append(WordSeparator);
         }

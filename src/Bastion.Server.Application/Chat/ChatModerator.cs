@@ -32,7 +32,7 @@ public sealed class ChatModerator : IChatModerator
         }
 
         string trimmedText = text.Trim();
-        if (ChatWordFilter.ContainsBannedTerm(trimmedText, _unitOfWork.BannedWords.ListChatTerms()))
+        if (ChatWordFilter.HasBannedTerm(trimmedText, _unitOfWork.BannedWords.ListChatTerms()))
         {
             throw new ChatMessageRejectedException(ChatRejection.BannedTerm);
         }
