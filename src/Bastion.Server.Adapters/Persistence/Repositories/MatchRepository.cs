@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using Bastion.Domain.Chat;
 using Bastion.Domain.GameModes;
@@ -9,27 +8,29 @@ using Bastion.Domain.Rooms;
 using Bastion.Server.Application.Matches;
 using Microsoft.EntityFrameworkCore;
 
-namespace Bastion.Server.Adapters.Persistence;
+namespace Bastion.Server.Adapters.Persistence.Repositories;
 
 public sealed class MatchRepository : IMatchRepository
 {
-    private readonly IDbContextFactory<BastionDbContext> _contextFactory;
+    private readonly NewContextRunner<MatchRepositoryException> _newContextRunner;
 
     public MatchRepository(IDbContextFactory<BastionDbContext> contextFactory)
     {
         ArgumentNullException.ThrowIfNull(contextFactory);
 
-        _contextFactory = contextFactory;
+        _newContextRunner = new NewContextRunner<MatchRepositoryException>(
+            contextFactory,
+            innerException => new MatchRepositoryException(innerException));
     }
 
     public bool HasUnfinishedParticipation(int accountId)
     {
-        return RunInNewContext(context => HasUnfinishedParticipationInContext(context, accountId));
+        return _newContextRunner.Run(context => HasUnfinishedParticipationInContext(context, accountId));
     }
 
     public GameMode? FindActiveGameMode(GameModeCode code)
     {
-        return RunInNewContext(context => LoadActiveGameMode(context, code));
+        return _newContextRunner.Run(context => LoadActiveGameMode(context, code));
     }
 
     public IReadOnlyDictionary<int, short> FindEloRatingsByAccountId(
@@ -38,38 +39,38 @@ public sealed class MatchRepository : IMatchRepository
     {
         ArgumentNullException.ThrowIfNull(accountIds);
 
-        return RunInNewContext(context => LoadEloRatingsByAccountId(context, gameModeId, accountIds));
+        return _newContextRunner.Run(context => LoadEloRatingsByAccountId(context, gameModeId, accountIds));
     }
 
     public int SaveMatch(Match match)
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        return RunInNewContext(context => AddMatch(context, match));
+        return _newContextRunner.Run(context => AddMatch(context, match));
     }
 
     public IReadOnlyList<int> FindAccountIdsWithUnfinishedParticipation(int matchId)
     {
-        return RunInNewContext(context => LoadAccountIdsWithUnfinishedParticipation(context, matchId));
+        return _newContextRunner.Run(context => LoadAccountIdsWithUnfinishedParticipation(context, matchId));
     }
 
     public long SaveMatchChatMessage(Message message)
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        return RunInNewContext(context => AddMatchChatMessage(context, message));
+        return _newContextRunner.Run(context => AddMatchChatMessage(context, message));
     }
 
     public Match? FindMatch(int matchId)
     {
-        return RunInNewContext(context => LoadMatch(context, matchId));
+        return _newContextRunner.Run(context => LoadMatch(context, matchId));
     }
 
     public void SaveAbandonment(Match match)
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        RunInNewContext(context => UpdateMatchAndRoom(context, match));
+        _newContextRunner.Run(context => UpdateMatchAndRoom(context, match));
     }
 
     private static bool HasUnfinishedParticipationInContext(BastionDbContext context, int accountId)
@@ -160,20 +161,4 @@ public sealed class MatchRepository : IMatchRepository
         return unfinishedParticipations;
     }
 
-    private TResult RunInNewContext<TResult>(Func<BastionDbContext, TResult> operation)
-    {
-        try
-        {
-            using BastionDbContext context = _contextFactory.CreateDbContext();
-            return operation(context);
-        }
-        catch (DbUpdateException ex)
-        {
-            throw new MatchRepositoryException(ex);
-        }
-        catch (DbException ex)
-        {
-            throw new MatchRepositoryException(ex);
-        }
-    }
 }

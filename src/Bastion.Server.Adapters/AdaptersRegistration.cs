@@ -1,6 +1,7 @@
 using System;
 using Bastion.Server.Adapters.Matchmaking;
 using Bastion.Server.Adapters.Persistence;
+using Bastion.Server.Adapters.Persistence.Repositories;
 using Bastion.Server.Adapters.Rooms;
 using Bastion.Server.Adapters.Security;
 using Bastion.Server.Application.Common;
