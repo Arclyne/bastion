@@ -48,8 +48,8 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
         ArgumentNullException.ThrowIfNull(friendship);
 
         AddedFriendships.Add(friendship);
-        Store(friendship.AccountAId, CreateSummary(friendship.AccountBId));
-        Store(friendship.AccountBId, CreateSummary(friendship.AccountAId));
+        Store(friendship.SmallerAccountId, CreateSummary(friendship.LargerAccountId));
+        Store(friendship.LargerAccountId, CreateSummary(friendship.SmallerAccountId));
     }
 
     public bool Remove(int firstAccountId, int secondAccountId)
