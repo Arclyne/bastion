@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Bastion.Server.Adapters.Persistence;
 
-public sealed class RoomStore : IRoomStore
+public sealed class RoomRepository : IRoomRepository
 {
     private readonly IDbContextFactory<BastionDbContext> _contextFactory;
 
-    public RoomStore(IDbContextFactory<BastionDbContext> contextFactory)
+    public RoomRepository(IDbContextFactory<BastionDbContext> contextFactory)
     {
         ArgumentNullException.ThrowIfNull(contextFactory);
 
@@ -124,11 +124,11 @@ public sealed class RoomStore : IRoomStore
         }
         catch (DbUpdateException ex)
         {
-            throw new RoomStoreException(ex);
+            throw new RoomRepositoryException(ex);
         }
         catch (DbException ex)
         {
-            throw new RoomStoreException(ex);
+            throw new RoomRepositoryException(ex);
         }
     }
 }

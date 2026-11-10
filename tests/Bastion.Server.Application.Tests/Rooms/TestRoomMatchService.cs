@@ -28,9 +28,9 @@ public class TestRoomMatchService
 
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
     private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
-    private readonly FakeMatchStore _matchStore = new FakeMatchStore();
+    private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
     private readonly FakeRoomCodeGenerator _codeGenerator = new FakeRoomCodeGenerator();
-    private readonly FakeRoomStore _roomStore = new FakeRoomStore();
+    private readonly FakeRoomRepository _roomRepository = new FakeRoomRepository();
     private readonly FakeTurnOrderShuffler _turnOrderShuffler = new FakeTurnOrderShuffler();
     private readonly RoomRegistry _roomRegistry;
     private readonly PrivateRoomService _privateRoomService;
@@ -40,11 +40,11 @@ public class TestRoomMatchService
     {
         _roomRegistry = new RoomRegistry(_codeGenerator);
         var playerActivity = new PlayerActivity(_matchmakingNotifier, new MatchmakingQueue(), _roomRegistry);
-        var playerVerifier = new RoomPlayerVerifier(_sessionVerifier, _matchStore, playerActivity);
-        var roomKeeper = new RoomKeeper(_roomRegistry, _roomStore, new FakeRoomNotifier());
-        var settingsValidator = new RoomSettingsValidator(_matchStore);
+        var playerVerifier = new RoomPlayerVerifier(_sessionVerifier, _matchRepository, playerActivity);
+        var roomKeeper = new RoomKeeper(_roomRegistry, _roomRepository, new FakeRoomNotifier());
+        var settingsValidator = new RoomSettingsValidator(_matchRepository);
         _privateRoomService = new PrivateRoomService(playerVerifier, settingsValidator, roomKeeper);
-        var matchCreator = new PrivateMatchCreator(_matchStore, _roomStore, _turnOrderShuffler);
+        var matchCreator = new PrivateMatchCreator(_matchRepository, _roomRepository, _turnOrderShuffler);
         var matchStarter = new RoomMatchStarter(_roomRegistry, matchCreator, _matchmakingNotifier);
         _roomMatchService = new RoomMatchService(playerVerifier, matchStarter);
         AddPlayer(HostToken, HostAccountId, HostNickname);
@@ -90,7 +90,7 @@ public class TestRoomMatchService
 
         _roomMatchService.StartMatch(HostToken, _now);
 
-        Assert.Equal(MatchType.Private, _roomStore.SavedMatchesByRoomId[roomId].MatchType);
+        Assert.Equal(MatchType.Private, _roomRepository.SavedMatchesByRoomId[roomId].MatchType);
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public class TestRoomMatchService
 
         _roomMatchService.StartMatch(HostToken, _now);
 
-        Match match = _roomStore.SavedMatchesByRoomId[roomId];
+        Match match = _roomRepository.SavedMatchesByRoomId[roomId];
         Assert.True(match.Participations.All(participation => participation.RemainingWalls == RoomWallsPerPlayer));
     }
 
@@ -150,7 +150,7 @@ public class TestRoomMatchService
     public void StartMatch_MatchCannotBeSaved_KeepsRoomOpen()
     {
         FillRoom();
-        _roomStore.MatchSaveFailure = new RoomStoreException();
+        _roomRepository.MatchSaveFailure = new RoomRepositoryException();
 
         Record.Exception(() => _roomMatchService.StartMatch(HostToken, _now));
 
@@ -160,7 +160,7 @@ public class TestRoomMatchService
     [Fact]
     public void JoinRoom_RoomAlreadyInMatch_RejectsMatchStarted()
     {
-        _roomStore.CodesInMatch.Add(Code);
+        _roomRepository.CodesInMatch.Add(Code);
 
         RoomRejection rejection = CatchRejection(() => _privateRoomService.JoinRoom(GuestToken, Code, _now));
 

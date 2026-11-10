@@ -11,11 +11,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bastion.Server.Adapters.Persistence;
 
-public sealed class MatchStore : IMatchStore
+public sealed class MatchRepository : IMatchRepository
 {
     private readonly IDbContextFactory<BastionDbContext> _contextFactory;
 
-    public MatchStore(IDbContextFactory<BastionDbContext> contextFactory)
+    public MatchRepository(IDbContextFactory<BastionDbContext> contextFactory)
     {
         ArgumentNullException.ThrowIfNull(contextFactory);
 
@@ -169,11 +169,11 @@ public sealed class MatchStore : IMatchStore
         }
         catch (DbUpdateException ex)
         {
-            throw new MatchStoreException(ex);
+            throw new MatchRepositoryException(ex);
         }
         catch (DbException ex)
         {
-            throw new MatchStoreException(ex);
+            throw new MatchRepositoryException(ex);
         }
     }
 }

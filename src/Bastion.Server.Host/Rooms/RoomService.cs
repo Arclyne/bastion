@@ -92,7 +92,7 @@ public sealed class RoomService : IRoomService
         {
             _logger.Warn("A request to leave a room was ignored because the session is not valid.", ex);
         }
-        catch (RoomStoreException ex)
+        catch (RoomRepositoryException ex)
         {
             _logger.Error("The closed room could not be saved.", ex);
         }
@@ -156,14 +156,14 @@ public sealed class RoomService : IRoomService
             LogRejection(operationName, ex);
             throw RoomTranslator.ToFault(ex);
         }
-        catch (RoomStoreException ex)
+        catch (RoomRepositoryException ex)
         {
-            _logger.Error($"The room store failed during a room request. Operation={operationName}", ex);
+            _logger.Error($"The room repository failed during a room request. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
-        catch (MatchStoreException ex)
+        catch (MatchRepositoryException ex)
         {
-            _logger.Error($"The match store failed during a room request. Operation={operationName}", ex);
+            _logger.Error($"The match repository failed during a room request. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)

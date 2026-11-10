@@ -13,19 +13,19 @@ public class TestMatchmakingDispatcher
     private const int SecondAccountId = 2;
     private const string FirstNickname = "marta_muros";
     private const string SecondNickname = "leo_peon";
-    private const string StoreFailureMessage = "The database is not reachable.";
+    private const string RepositoryFailureMessage = "The database is not reachable.";
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 4, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _presenceCheckAt = _startedAt.Add(MatchmakingPolicy.PresenceCheckInterval);
 
     private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
     private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
-    private readonly FakeMatchStore _matchStore = new FakeMatchStore();
+    private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
     private readonly MatchmakingDispatcher _matchmakingDispatcher;
 
     public TestMatchmakingDispatcher()
     {
-        var rankedMatchCreator = new RankedMatchCreator(_matchStore, new FakeTurnOrderShuffler());
+        var rankedMatchCreator = new RankedMatchCreator(_matchRepository, new FakeTurnOrderShuffler());
         _matchmakingDispatcher = new MatchmakingDispatcher(_matchmakingQueue, _matchmakingNotifier, rankedMatchCreator);
         _matchmakingQueue.TryAdd(new MatchSearch(FirstAccountId, FirstNickname, _startedAt));
     }
@@ -44,7 +44,7 @@ public class TestMatchmakingDispatcher
     public void ReviewAndNotify_MatchNotSaved_NotifiesMatchCreationFailed()
     {
         _matchmakingQueue.TryAdd(new MatchSearch(SecondAccountId, SecondNickname, _startedAt));
-        _matchStore.MatchSaveFailure = new MatchStoreException(new InvalidOperationException(StoreFailureMessage));
+        _matchRepository.MatchSaveFailure = new MatchRepositoryException(new InvalidOperationException(RepositoryFailureMessage));
 
         _matchmakingDispatcher.ReviewAndNotify(_startedAt);
 

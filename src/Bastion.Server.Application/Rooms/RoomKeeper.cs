@@ -9,17 +9,17 @@ public sealed class RoomKeeper : IRoomKeeper
     private const int MaximumCodeAttempts = 10;
 
     private readonly IRoomRegistry _roomRegistry;
-    private readonly IRoomStore _roomStore;
+    private readonly IRoomRepository _roomRepository;
     private readonly IRoomNotifier _roomNotifier;
 
-    public RoomKeeper(IRoomRegistry roomRegistry, IRoomStore roomStore, IRoomNotifier roomNotifier)
+    public RoomKeeper(IRoomRegistry roomRegistry, IRoomRepository roomRepository, IRoomNotifier roomNotifier)
     {
         ArgumentNullException.ThrowIfNull(roomRegistry);
-        ArgumentNullException.ThrowIfNull(roomStore);
+        ArgumentNullException.ThrowIfNull(roomRepository);
         ArgumentNullException.ThrowIfNull(roomNotifier);
 
         _roomRegistry = roomRegistry;
-        _roomStore = roomStore;
+        _roomRepository = roomRepository;
         _roomNotifier = roomNotifier;
     }
 
@@ -29,7 +29,7 @@ public sealed class RoomKeeper : IRoomKeeper
         ArgumentNullException.ThrowIfNull(settings);
 
         string code = CreateFreeCode();
-        int roomId = _roomStore.AddRoom(Room.Open(new RoomOpening(code, host.AccountId, now), settings));
+        int roomId = _roomRepository.AddRoom(Room.Open(new RoomOpening(code, host.AccountId, now), settings));
         var room = new WaitingRoom(
             new RoomIdentity(roomId, code),
             settings,
@@ -37,7 +37,7 @@ public sealed class RoomKeeper : IRoomKeeper
         RoomSnapshot? openedRoom = _roomRegistry.TryOpen(room);
         if (openedRoom is null)
         {
-            _roomStore.CloseRoom(roomId, now);
+            _roomRepository.CloseRoom(roomId, now);
             throw new RoomRejectedException(RoomRejection.InRoom);
         }
 
@@ -71,7 +71,7 @@ public sealed class RoomKeeper : IRoomKeeper
             throw new RoomRejectedException(RoomRejection.TooManyPlayers);
         }
 
-        _roomStore.ChangeRoomSettings(hostedRoom.Identity.RoomId, settings, now);
+        _roomRepository.ChangeRoomSettings(hostedRoom.Identity.RoomId, settings, now);
         RoomSnapshot room = _roomRegistry.ChangeSettings(accountId, settings);
         _roomNotifier.NotifyRoomUpdated(room, accountId);
         return room;
@@ -92,7 +92,7 @@ public sealed class RoomKeeper : IRoomKeeper
         }
 
         _roomNotifier.NotifyRoomClosed(departure.Room, accountId);
-        _roomStore.CloseRoom(departure.Room.Identity.RoomId, now);
+        _roomRepository.CloseRoom(departure.Room.Identity.RoomId, now);
     }
 
     public RoomSnapshot? FindRoomOf(int accountId)
@@ -102,7 +102,7 @@ public sealed class RoomKeeper : IRoomKeeper
 
     public int CloseRoomsLeftOpen(DateTime now)
     {
-        return _roomStore.CloseOpenRooms(now);
+        return _roomRepository.CloseOpenRooms(now);
     }
 
     private RoomSnapshot AdmitToOpenRoom(RoomMember member, string code, DateTime now)
@@ -119,7 +119,7 @@ public sealed class RoomKeeper : IRoomKeeper
 
     private bool IsCodeOfStartedRoom(RoomRejectedException rejection, string code)
     {
-        return rejection.Rejection == RoomRejection.RoomNotFound && _roomStore.IsRoomInMatch(code);
+        return rejection.Rejection == RoomRejection.RoomNotFound && _roomRepository.IsRoomInMatch(code);
     }
 
     private string CreateFreeCode()
@@ -127,7 +127,7 @@ public sealed class RoomKeeper : IRoomKeeper
         for (int attempt = 0; attempt < MaximumCodeAttempts; attempt++)
         {
             string code = _roomRegistry.CreateUnusedCode();
-            if (!_roomStore.IsCodeTaken(code))
+            if (!_roomRepository.IsCodeTaken(code))
             {
                 return code;
             }

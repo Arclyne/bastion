@@ -51,9 +51,9 @@ public sealed class MatchmakingService : IMatchmakingService
         {
             throw MatchmakingTranslator.ToFault(ex);
         }
-        catch (MatchStoreException ex)
+        catch (MatchRepositoryException ex)
         {
-            _logger.Error("The match store could not be read while starting a match search.", ex);
+            _logger.Error("The match repository could not be read while starting a match search.", ex);
             throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)

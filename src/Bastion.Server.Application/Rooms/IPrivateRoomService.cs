@@ -18,7 +18,7 @@ public interface IPrivateRoomService
     /// <exception cref="ArgumentNullException">An argument is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="RoomRejectedException">The player cannot open a room; the rejection says why.</exception>
-    /// <exception cref="RoomStoreException">The room could not be saved.</exception>
+    /// <exception cref="RoomRepositoryException">The room could not be saved.</exception>
     RoomSnapshot CreateRoom(string sessionToken, RequestedRoomSettings requestedSettings, DateTime now);
 
     /// <summary>
@@ -55,7 +55,7 @@ public interface IPrivateRoomService
     /// <exception cref="ArgumentNullException">An argument is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="RoomRejectedException">The settings cannot change; the rejection says why.</exception>
-    /// <exception cref="RoomStoreException">The room could not be saved.</exception>
+    /// <exception cref="RoomRepositoryException">The room could not be saved.</exception>
     RoomSnapshot ChangeSettings(string sessionToken, RequestedRoomSettings requestedSettings, DateTime now);
 
     /// <summary>
@@ -66,7 +66,7 @@ public interface IPrivateRoomService
     /// <param name="now">The current UTC time, used as the closing time of the room.</param>
     /// <exception cref="ArgumentNullException"><paramref name="sessionToken"/> is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
-    /// <exception cref="RoomStoreException">The closed room could not be saved.</exception>
+    /// <exception cref="RoomRepositoryException">The closed room could not be saved.</exception>
     void LeaveRoom(string sessionToken, DateTime now);
 
     /// <summary>

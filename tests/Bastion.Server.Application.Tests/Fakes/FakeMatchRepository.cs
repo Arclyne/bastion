@@ -7,7 +7,7 @@ using Bastion.Server.Application.Matches;
 
 namespace Bastion.Server.Application.Tests.Fakes;
 
-public sealed class FakeMatchStore : IMatchStore
+public sealed class FakeMatchRepository : IMatchRepository
 {
     private const byte ClassicGameModeId = 1;
     private const byte ClassicBoardSize = 9;
@@ -24,14 +24,14 @@ public sealed class FakeMatchStore : IMatchStore
 
     public int NextMatchId { get; set; }
 
-    public MatchStoreException? MatchSaveFailure { get; set; }
+    public MatchRepositoryException? MatchSaveFailure { get; set; }
 
     public Dictionary<int, List<int>> UnfinishedParticipantAccountIdsByMatchId { get; } =
         new Dictionary<int, List<int>>();
 
     public List<Message> SavedMatchChatMessages { get; } = new List<Message>();
 
-    public MatchStoreException? MatchChatMessageSaveFailure { get; set; }
+    public MatchRepositoryException? MatchChatMessageSaveFailure { get; set; }
 
     public Dictionary<int, Match> MatchesById { get; } = new Dictionary<int, Match>();
 

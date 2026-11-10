@@ -91,9 +91,9 @@ public sealed class ChatService : IChatService
         {
             throw ChatTranslator.ToFault(ex);
         }
-        catch (MatchStoreException ex)
+        catch (MatchRepositoryException ex)
         {
-            _logger.Error($"The match store could not be used. Operation={operationName}", ex);
+            _logger.Error($"The match repository could not be used. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)

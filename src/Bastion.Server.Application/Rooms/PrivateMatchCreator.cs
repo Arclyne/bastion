@@ -14,18 +14,18 @@ public sealed class PrivateMatchCreator : IPrivateMatchCreator
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(PrivateMatchCreator));
 
-    private readonly IMatchStore _matchStore;
-    private readonly IRoomStore _roomStore;
+    private readonly IMatchRepository _matchRepository;
+    private readonly IRoomRepository _roomRepository;
     private readonly ITurnOrderShuffler _turnOrderShuffler;
 
-    public PrivateMatchCreator(IMatchStore matchStore, IRoomStore roomStore, ITurnOrderShuffler turnOrderShuffler)
+    public PrivateMatchCreator(IMatchRepository matchRepository, IRoomRepository roomRepository, ITurnOrderShuffler turnOrderShuffler)
     {
-        ArgumentNullException.ThrowIfNull(matchStore);
-        ArgumentNullException.ThrowIfNull(roomStore);
+        ArgumentNullException.ThrowIfNull(matchRepository);
+        ArgumentNullException.ThrowIfNull(roomRepository);
         ArgumentNullException.ThrowIfNull(turnOrderShuffler);
 
-        _matchStore = matchStore;
-        _roomStore = roomStore;
+        _matchRepository = matchRepository;
+        _roomRepository = roomRepository;
         _turnOrderShuffler = turnOrderShuffler;
     }
 
@@ -41,10 +41,10 @@ public sealed class PrivateMatchCreator : IPrivateMatchCreator
         IEnumerable<int> accountIdsInTurnOrder = membersInTurnOrder.Select(member => member.AccountId);
         var accountIds = new List<int>(accountIdsInTurnOrder);
         IReadOnlyDictionary<int, short> eloRatingsByAccountId =
-            _matchStore.FindEloRatingsByAccountId(format.GameMode.GameModeId, accountIds);
+            _matchRepository.FindEloRatingsByAccountId(format.GameMode.GameModeId, accountIds);
         IEnumerable<MatchEntrant> entrants = membersInTurnOrder.Select(member => new MatchEntrant(member.AccountId, null));
         var entrantList = new List<MatchEntrant>(entrants);
-        int matchId = _roomStore.SaveRoomMatch(room.Identity.RoomId, Match.StartPrivate(format, entrantList, startedAt));
+        int matchId = _roomRepository.SaveRoomMatch(room.Identity.RoomId, Match.StartPrivate(format, entrantList, startedAt));
         _logger.Info($"Private match created. MatchId={matchId}; RoomId={room.Identity.RoomId}");
         List<CreatedMatchParticipant> participants = ToParticipants(membersInTurnOrder, eloRatingsByAccountId);
         return new CreatedMatch(matchId, format, participants);

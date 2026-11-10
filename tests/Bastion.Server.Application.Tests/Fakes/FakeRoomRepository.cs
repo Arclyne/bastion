@@ -6,7 +6,7 @@ using Bastion.Server.Application.Rooms;
 
 namespace Bastion.Server.Application.Tests.Fakes;
 
-public sealed class FakeRoomStore : IRoomStore
+public sealed class FakeRoomRepository : IRoomRepository
 {
     public HashSet<string> TakenCodes { get; } = new HashSet<string>();
 
@@ -26,7 +26,7 @@ public sealed class FakeRoomStore : IRoomStore
 
     public int NextMatchId { get; set; } = 100;
 
-    public RoomStoreException? MatchSaveFailure { get; set; }
+    public RoomRepositoryException? MatchSaveFailure { get; set; }
 
     public bool IsCodeTaken(string code)
     {

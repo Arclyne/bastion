@@ -22,8 +22,8 @@ public static class AdaptersRegistration
 
         services.AddDbContextFactory<BastionDbContext>(options => options.UseSqlServer(connectionString));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddSingleton<IMatchStore, MatchStore>();
-        services.AddSingleton<IRoomStore, RoomStore>();
+        services.AddSingleton<IMatchRepository, MatchRepository>();
+        services.AddSingleton<IRoomRepository, RoomRepository>();
         services.AddSingleton<IRoomCodeGenerator, RoomCodeGenerator>();
         services.AddSingleton<ITurnOrderShuffler, TurnOrderShuffler>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();

@@ -18,6 +18,6 @@ public interface IMatchAbandonmentService
     /// <exception cref="ArgumentNullException"><paramref name="sessionToken"/> is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="MatchNotJoinedException">The player is not playing that match.</exception>
-    /// <exception cref="MatchStoreException">The match could not be read or saved.</exception>
+    /// <exception cref="MatchRepositoryException">The match could not be read or saved.</exception>
     void AbandonMatch(string sessionToken, int matchId, DateTime now);
 }

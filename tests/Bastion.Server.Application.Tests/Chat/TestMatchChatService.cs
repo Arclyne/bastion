@@ -23,24 +23,24 @@ public class TestMatchChatService
     private const string PaddedMessageText = "  good luck  ";
     private const string BannedTerm = "cheater";
     private const string BannedMessageText = "you cheater";
-    private const string StoreFailureMessage = "The database is not reachable.";
+    private const string RepositoryFailureMessage = "The database is not reachable.";
     private const int SanctionDays = 1;
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 20, 0, 0, DateTimeKind.Utc);
 
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
     private readonly FakeUnitOfWork _unitOfWork = new FakeUnitOfWork();
-    private readonly FakeMatchStore _matchStore = new FakeMatchStore();
+    private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
     private readonly FakeMatchChatNotifier _matchChatNotifier = new FakeMatchChatNotifier();
     private readonly MatchChatService _matchChatService;
 
     public TestMatchChatService()
     {
-        var matchChatRelay = new MatchChatRelay(_matchStore, _matchChatNotifier);
+        var matchChatRelay = new MatchChatRelay(_matchRepository, _matchChatNotifier);
         _matchChatService = new MatchChatService(_sessionVerifier, new ChatModerator(_unitOfWork), matchChatRelay);
         _sessionVerifier.Add(AuthorToken, new ConnectedPlayer(AuthorAccountId, AuthorNickname));
         _unitOfWork.BannedWordStore.ChatTerms.Add(BannedTerm);
-        _matchStore.UnfinishedParticipantAccountIdsByMatchId[MatchId] = new List<int>
+        _matchRepository.UnfinishedParticipantAccountIdsByMatchId[MatchId] = new List<int>
         {
             AuthorAccountId,
             RivalAccountId,
@@ -52,7 +52,7 @@ public class TestMatchChatService
     {
         _matchChatService.SendMessage(AuthorToken, new MatchChatSubmission(MatchId, MessageText), _now);
 
-        Assert.Single(_matchStore.SavedMatchChatMessages);
+        Assert.Single(_matchRepository.SavedMatchChatMessages);
     }
 
     [Fact]
@@ -122,10 +122,10 @@ public class TestMatchChatService
     }
 
     [Fact]
-    public void SendMessage_StoreFails_NotifiesNobody()
+    public void SendMessage_RepositoryFails_NotifiesNobody()
     {
-        _matchStore.MatchChatMessageSaveFailure =
-            new MatchStoreException(new InvalidOperationException(StoreFailureMessage));
+        _matchRepository.MatchChatMessageSaveFailure =
+            new MatchRepositoryException(new InvalidOperationException(RepositoryFailureMessage));
         var submission = new MatchChatSubmission(MatchId, MessageText);
 
         Record.Exception(() => _matchChatService.SendMessage(AuthorToken, submission, _now));

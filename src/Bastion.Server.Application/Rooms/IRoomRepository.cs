@@ -4,7 +4,7 @@ using Bastion.Domain.Rooms;
 
 namespace Bastion.Server.Application.Rooms;
 
-public interface IRoomStore
+public interface IRoomRepository
 {
     bool IsCodeTaken(string code);
 

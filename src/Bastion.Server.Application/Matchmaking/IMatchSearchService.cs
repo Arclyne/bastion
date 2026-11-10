@@ -17,7 +17,7 @@ public interface IMatchSearchService
     /// <exception cref="ArgumentNullException"><paramref name="sessionToken"/> is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="SearchRejectedException">The player cannot search; the rejection says why.</exception>
-    /// <exception cref="MatchStoreException">The unfinished matches of the player could not be checked.</exception>
+    /// <exception cref="MatchRepositoryException">The unfinished matches of the player could not be checked.</exception>
     void StartSearch(string sessionToken, DateTime now);
 
     /// <summary>

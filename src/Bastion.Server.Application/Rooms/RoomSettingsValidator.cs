@@ -7,20 +7,20 @@ namespace Bastion.Server.Application.Rooms;
 
 public sealed class RoomSettingsValidator : IRoomSettingsValidator
 {
-    private readonly IMatchStore _matchStore;
+    private readonly IMatchRepository _matchRepository;
 
-    public RoomSettingsValidator(IMatchStore matchStore)
+    public RoomSettingsValidator(IMatchRepository matchRepository)
     {
-        ArgumentNullException.ThrowIfNull(matchStore);
+        ArgumentNullException.ThrowIfNull(matchRepository);
 
-        _matchStore = matchStore;
+        _matchRepository = matchRepository;
     }
 
     public RoomSettings Validate(RequestedRoomSettings requestedSettings)
     {
         ArgumentNullException.ThrowIfNull(requestedSettings);
 
-        GameMode? gameMode = _matchStore.FindActiveGameMode(requestedSettings.GameMode);
+        GameMode? gameMode = _matchRepository.FindActiveGameMode(requestedSettings.GameMode);
         if (gameMode is null)
         {
             throw new RoomRejectedException(RoomRejection.InvalidSettings);

@@ -53,9 +53,9 @@ public sealed class MatchService : IMatchService
         {
             throw MatchTranslator.ToFault(ex);
         }
-        catch (MatchStoreException ex)
+        catch (MatchRepositoryException ex)
         {
-            _logger.Error($"The match store failed while a player left a match. MatchId={matchId}", ex);
+            _logger.Error($"The match repository failed while a player left a match. MatchId={matchId}", ex);
             throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)

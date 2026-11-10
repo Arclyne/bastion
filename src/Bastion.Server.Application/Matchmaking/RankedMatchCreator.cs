@@ -18,15 +18,15 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(RankedMatchCreator));
 
-    private readonly IMatchStore _matchStore;
+    private readonly IMatchRepository _matchRepository;
     private readonly ITurnOrderShuffler _turnOrderShuffler;
 
-    public RankedMatchCreator(IMatchStore matchStore, ITurnOrderShuffler turnOrderShuffler)
+    public RankedMatchCreator(IMatchRepository matchRepository, ITurnOrderShuffler turnOrderShuffler)
     {
-        ArgumentNullException.ThrowIfNull(matchStore);
+        ArgumentNullException.ThrowIfNull(matchRepository);
         ArgumentNullException.ThrowIfNull(turnOrderShuffler);
 
-        _matchStore = matchStore;
+        _matchRepository = matchRepository;
         _turnOrderShuffler = turnOrderShuffler;
     }
 
@@ -43,7 +43,7 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         string accountIdsText = string.Join(AccountIdSeparator, pairedAccountIds);
         try
         {
-            GameMode? gameMode = _matchStore.FindActiveGameMode(MatchmakingPolicy.RankedGameModeCode);
+            GameMode? gameMode = _matchRepository.FindActiveGameMode(MatchmakingPolicy.RankedGameModeCode);
             if (gameMode is null)
             {
                 _logger.Error(
@@ -56,7 +56,7 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
             _logger.Info($"Ranked match created. MatchId={createdMatch.MatchId}; AccountIds={accountIdsText}");
             return true;
         }
-        catch (MatchStoreException ex)
+        catch (MatchRepositoryException ex)
         {
             _logger.Error($"The ranked match could not be saved. AccountIds={accountIdsText}", ex);
             return false;
@@ -82,7 +82,7 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         IReadOnlyList<MatchSearch> playersInTurnOrder = _turnOrderShuffler.ShuffleTurnOrder(pairing.Players);
         List<MatchEntrant> entrants = CreateEntrants(playersInTurnOrder, format.GameMode.GameModeId);
         var match = Match.StartRanked(format, entrants, startedAt);
-        int matchId = _matchStore.SaveMatch(match);
+        int matchId = _matchRepository.SaveMatch(match);
         List<CreatedMatchParticipant> participants = ToParticipants(match, playersInTurnOrder);
         return new CreatedMatch(matchId, format, participants);
     }
@@ -92,7 +92,7 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         IEnumerable<int> accountIdsInTurnOrder = playersInTurnOrder.Select(player => player.AccountId);
         var accountIds = new List<int>(accountIdsInTurnOrder);
         IReadOnlyDictionary<int, short> eloRatingsByAccountId =
-            _matchStore.FindEloRatingsByAccountId(gameModeId, accountIds);
+            _matchRepository.FindEloRatingsByAccountId(gameModeId, accountIds);
 
         var entrants = new List<MatchEntrant>();
         foreach (int accountId in accountIds)

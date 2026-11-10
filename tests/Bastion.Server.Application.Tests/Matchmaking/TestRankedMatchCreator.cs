@@ -19,20 +19,20 @@ public class TestRankedMatchCreator
     private const string SecondNickname = "leo_peon";
     private const short FirstEloRating = 1210;
     private const int GeneratedMatchId = 42;
-    private const string StoreFailureMessage = "The database is not reachable.";
+    private const string RepositoryFailureMessage = "The database is not reachable.";
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
 
-    private readonly FakeMatchStore _matchStore = new FakeMatchStore();
+    private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
     private readonly FakeTurnOrderShuffler _turnOrderShuffler = new FakeTurnOrderShuffler();
     private readonly RankedMatchCreator _rankedMatchCreator;
     private readonly MatchPairing _pairing;
 
     public TestRankedMatchCreator()
     {
-        _rankedMatchCreator = new RankedMatchCreator(_matchStore, _turnOrderShuffler);
-        _matchStore.NextMatchId = GeneratedMatchId;
-        _matchStore.EloRatingsByAccountId[FirstAccountId] = FirstEloRating;
+        _rankedMatchCreator = new RankedMatchCreator(_matchRepository, _turnOrderShuffler);
+        _matchRepository.NextMatchId = GeneratedMatchId;
+        _matchRepository.EloRatingsByAccountId[FirstAccountId] = FirstEloRating;
         var players = new MatchSearch[]
         {
             new MatchSearch(FirstAccountId, FirstNickname, _startedAt),
@@ -46,7 +46,7 @@ public class TestRankedMatchCreator
     {
         _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out _);
 
-        Assert.Single(_matchStore.SavedMatches);
+        Assert.Single(_matchRepository.SavedMatches);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class TestRankedMatchCreator
     [Fact]
     public void TryCreateMatch_InactiveGameMode_ReturnsFalse()
     {
-        _matchStore.ActiveGameMode = null;
+        _matchRepository.ActiveGameMode = null;
 
         bool isCreated = _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out _);
 
@@ -94,9 +94,9 @@ public class TestRankedMatchCreator
     }
 
     [Fact]
-    public void TryCreateMatch_StoreFails_ReturnsFalse()
+    public void TryCreateMatch_RepositoryFails_ReturnsFalse()
     {
-        _matchStore.MatchSaveFailure = new MatchStoreException(new InvalidOperationException(StoreFailureMessage));
+        _matchRepository.MatchSaveFailure = new MatchRepositoryException(new InvalidOperationException(RepositoryFailureMessage));
 
         bool isCreated = _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out _);
 
