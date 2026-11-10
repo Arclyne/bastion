@@ -15,6 +15,7 @@ public interface IMatchAbandonmentService
     /// <param name="sessionToken">The token of the player's open session.</param>
     /// <param name="matchId">The match the player leaves.</param>
     /// <param name="now">The current UTC time, which becomes the end of the match if it ends.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="sessionToken"/> is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="MatchNotJoinedException">The player is not playing that match.</exception>
     /// <exception cref="MatchStoreException">The match could not be read or saved.</exception>
