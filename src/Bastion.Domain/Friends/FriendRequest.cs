@@ -28,11 +28,14 @@ public class FriendRequest
 
     public DateTime RequestedAt { get; private set; }
 
-    public DateTime ExpiresAt => RequestedAt.AddDays(FriendshipRules.RequestLifetimeDays);
+    public DateTime GetExpirationTime()
+    {
+        return RequestedAt.AddDays(FriendshipRules.RequestLifetimeDays);
+    }
 
     public bool IsExpiredAt(DateTime now)
     {
-        return now >= ExpiresAt;
+        return now >= GetExpirationTime();
     }
 
     public bool IsSentBy(int accountId)

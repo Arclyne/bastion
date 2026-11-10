@@ -84,7 +84,7 @@ public sealed class FriendRequestService : IFriendRequestService
         _unitOfWork.SaveChanges();
         _friendNotifier.NotifyFriendRequestReceived(
             recipient.AccountId,
-            new FriendRequestSummary(sender, request.RequestedAt, request.ExpiresAt));
+            new FriendRequestSummary(sender, request.RequestedAt, request.GetExpirationTime()));
         return FriendRequestOutcome.RequestSent;
     }
 

@@ -60,6 +60,6 @@ public sealed class FakeFriendRequestRepository : IFriendRequestRepository
     private static FriendRequestSummary ToSummary(int counterpartAccountId, FriendRequest request)
     {
         var counterpart = new PlayerIdentity(counterpartAccountId, string.Empty, string.Empty);
-        return new FriendRequestSummary(counterpart, request.RequestedAt, request.ExpiresAt);
+        return new FriendRequestSummary(counterpart, request.RequestedAt, request.GetExpirationTime());
     }
 }
