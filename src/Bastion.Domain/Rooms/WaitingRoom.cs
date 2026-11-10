@@ -21,7 +21,7 @@ public sealed class WaitingRoom
         Settings = settings;
         HostAccountId = host.AccountId;
         host.TakeSeat(FirstSeatIndex);
-        host.MarkReady(true);
+        host.SetReady(true);
         _members.Add(host);
     }
 
@@ -33,21 +33,19 @@ public sealed class WaitingRoom
 
     public IReadOnlyList<RoomMember> Members => _members;
 
-    public int SeatCount => Settings.GameMode.PlayerCount;
-
     public bool IsHost(int accountId)
     {
         return accountId == HostAccountId;
     }
 
-    public bool HasMember(int accountId)
+    private bool HasMember(int accountId)
     {
         return _members.Any(member => member.AccountId == accountId);
     }
 
     public bool IsFull()
     {
-        return _members.Count >= SeatCount;
+        return _members.Count >= GetSeatCount();
     }
 
     public bool HasKicked(int accountId)
@@ -57,7 +55,7 @@ public sealed class WaitingRoom
 
     public bool IsReadyToStart()
     {
-        return _members.Count == SeatCount && _members.All(member => member.IsReady);
+        return _members.Count == GetSeatCount() && _members.All(member => member.IsReady);
     }
 
     public bool CanSeatAllMembers(RoomSettings settings)
@@ -76,7 +74,7 @@ public sealed class WaitingRoom
         }
 
         member.TakeSeat(FindFirstFreeSeat());
-        member.MarkReady(false);
+        member.SetReady(false);
         _members.Add(member);
         _members.Sort(CompareSeats);
     }
@@ -89,7 +87,7 @@ public sealed class WaitingRoom
             return;
         }
 
-        member.MarkReady(isReady);
+        member.SetReady(isReady);
     }
 
     public void ChangeSettings(RoomSettings settings)
@@ -105,7 +103,7 @@ public sealed class WaitingRoom
         {
             RoomMember member = _members[memberIndex];
             member.TakeSeat(FirstSeatIndex + memberIndex);
-            member.MarkReady(IsHost(member.AccountId));
+            member.SetReady(IsHost(member.AccountId));
         }
     }
 
@@ -122,6 +120,11 @@ public sealed class WaitingRoom
     private static int CompareSeats(RoomMember first, RoomMember second)
     {
         return first.SeatIndex.CompareTo(second.SeatIndex);
+    }
+
+    private int GetSeatCount()
+    {
+        return Settings.GameMode.PlayerCount;
     }
 
     private int FindFirstFreeSeat()

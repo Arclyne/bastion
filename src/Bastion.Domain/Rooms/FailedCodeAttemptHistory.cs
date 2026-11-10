@@ -3,11 +3,14 @@ using System.Collections.Generic;
 
 namespace Bastion.Domain.Rooms;
 
-public sealed class FailedCodeAttempts
+public sealed class FailedCodeAttemptHistory
 {
     private readonly Queue<DateTime> _attemptTimes = new Queue<DateTime>();
 
-    public bool HasAttempts => _attemptTimes.Count > 0;
+    public bool HasAttempts()
+    {
+        return _attemptTimes.Count > 0;
+    }
 
     public void Record(DateTime attemptedAt)
     {
@@ -18,7 +21,7 @@ public sealed class FailedCodeAttempts
     public bool IsLimitReached(DateTime now)
     {
         ForgetOldAttempts(now);
-        return _attemptTimes.Count >= RoomRules.MaximumFailedCodeAttempts;
+        return _attemptTimes.Count >= RoomPolicy.MaximumFailedCodeAttempts;
     }
 
     public TimeSpan GetRetryDelay(DateTime now)
@@ -28,14 +31,23 @@ public sealed class FailedCodeAttempts
             return TimeSpan.Zero;
         }
 
-        return _attemptTimes.Peek() + RoomRules.FailedCodeWindow - now;
+        DateTime retryAt = GetOldestAttemptExpiry();
+        TimeSpan retryDelay = retryAt - now;
+        return retryDelay;
     }
 
     private void ForgetOldAttempts(DateTime now)
     {
-        while (_attemptTimes.Count > 0 && _attemptTimes.Peek() + RoomRules.FailedCodeWindow <= now)
+        while (HasAttempts() && GetOldestAttemptExpiry() <= now)
         {
             _attemptTimes.Dequeue();
         }
+    }
+
+    private DateTime GetOldestAttemptExpiry()
+    {
+        DateTime oldestAttempt = _attemptTimes.Peek();
+        DateTime oldestAttemptExpiry = oldestAttempt + RoomPolicy.FailedCodeWindow;
+        return oldestAttemptExpiry;
     }
 }

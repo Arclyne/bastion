@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Rooms;
 
-public class TestFailedCodeAttempts
+public class TestFailedCodeAttemptHistory
 {
     private const int SecondsBetweenAttempts = 10;
 
@@ -13,7 +13,7 @@ public class TestFailedCodeAttempts
     [Fact]
     public void IsLimitReached_AttemptsBelowLimit_ReturnsFalse()
     {
-        FailedCodeAttempts attempts = RecordAttempts(RoomRules.MaximumFailedCodeAttempts - 1);
+        FailedCodeAttemptHistory attempts = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts - 1);
 
         bool isLimitReached = attempts.IsLimitReached(_firstAttemptAt);
 
@@ -23,7 +23,7 @@ public class TestFailedCodeAttempts
     [Fact]
     public void IsLimitReached_AttemptsAtLimit_ReturnsTrue()
     {
-        FailedCodeAttempts attempts = RecordAttempts(RoomRules.MaximumFailedCodeAttempts);
+        FailedCodeAttemptHistory attempts = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts);
 
         bool isLimitReached = attempts.IsLimitReached(_firstAttemptAt);
 
@@ -33,8 +33,8 @@ public class TestFailedCodeAttempts
     [Fact]
     public void IsLimitReached_WindowPassedSinceFirstAttempt_ReturnsFalse()
     {
-        FailedCodeAttempts attempts = RecordAttempts(RoomRules.MaximumFailedCodeAttempts);
-        DateTime afterFirstExpires = _firstAttemptAt + RoomRules.FailedCodeWindow;
+        FailedCodeAttemptHistory attempts = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts);
+        DateTime afterFirstExpires = _firstAttemptAt + RoomPolicy.FailedCodeWindow;
 
         bool isLimitReached = attempts.IsLimitReached(afterFirstExpires);
 
@@ -44,17 +44,17 @@ public class TestFailedCodeAttempts
     [Fact]
     public void GetRetryDelay_LimitReached_WaitsUntilFirstAttemptExpires()
     {
-        FailedCodeAttempts attempts = RecordAttempts(RoomRules.MaximumFailedCodeAttempts);
+        FailedCodeAttemptHistory attempts = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts);
         DateTime now = _firstAttemptAt.AddSeconds(SecondsBetweenAttempts);
 
         TimeSpan retryDelay = attempts.GetRetryDelay(now);
 
-        Assert.Equal(RoomRules.FailedCodeWindow - TimeSpan.FromSeconds(SecondsBetweenAttempts), retryDelay);
+        Assert.Equal(RoomPolicy.FailedCodeWindow - TimeSpan.FromSeconds(SecondsBetweenAttempts), retryDelay);
     }
 
-    private static FailedCodeAttempts RecordAttempts(int attemptCount)
+    private static FailedCodeAttemptHistory RecordAttempts(int attemptCount)
     {
-        var attempts = new FailedCodeAttempts();
+        var attempts = new FailedCodeAttemptHistory();
         for (int attemptIndex = 0; attemptIndex < attemptCount; attemptIndex++)
         {
             attempts.Record(_firstAttemptAt);

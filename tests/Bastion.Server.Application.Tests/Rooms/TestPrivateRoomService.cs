@@ -205,7 +205,7 @@ public class TestPrivateRoomService
     public void JoinRoom_LimitOfWrongCodesReached_RejectsTooManyAttempts()
     {
         CreateHostRoom();
-        for (int attempt = 0; attempt < RoomRules.MaximumFailedCodeAttempts; attempt++)
+        for (int attempt = 0; attempt < RoomPolicy.MaximumFailedCodeAttempts; attempt++)
         {
             CatchRejection(() => _privateRoomService.JoinRoom(GuestToken, WrongCode, _now));
         }

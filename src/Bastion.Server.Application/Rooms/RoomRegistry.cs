@@ -10,8 +10,8 @@ public sealed class RoomRegistry : IRoomRegistry
     private readonly object _roomsLock = new object();
     private readonly Dictionary<string, WaitingRoom> _roomsByCode = new Dictionary<string, WaitingRoom>();
     private readonly Dictionary<int, WaitingRoom> _roomsByAccountId = new Dictionary<int, WaitingRoom>();
-    private readonly Dictionary<int, FailedCodeAttempts> _failedAttemptsByAccountId =
-        new Dictionary<int, FailedCodeAttempts>();
+    private readonly Dictionary<int, FailedCodeAttemptHistory> _failedAttemptsByAccountId =
+        new Dictionary<int, FailedCodeAttemptHistory>();
     private readonly IRoomCodeGenerator _codeGenerator;
 
     public RoomRegistry(IRoomCodeGenerator codeGenerator)
@@ -163,7 +163,7 @@ public sealed class RoomRegistry : IRoomRegistry
             throw new RoomRejectedException(RoomRejection.InRoom);
         }
 
-        FailedCodeAttempts failedAttempts = GetFailedAttempts(accountId);
+        FailedCodeAttemptHistory failedAttempts = GetFailedAttempts(accountId);
         if (failedAttempts.IsLimitReached(now))
         {
             throw new RoomRejectedException(RoomRejection.TooManyAttempts, failedAttempts.GetRetryDelay(now));
@@ -188,11 +188,11 @@ public sealed class RoomRegistry : IRoomRegistry
         return room;
     }
 
-    private FailedCodeAttempts GetFailedAttempts(int accountId)
+    private FailedCodeAttemptHistory GetFailedAttempts(int accountId)
     {
-        if (!_failedAttemptsByAccountId.TryGetValue(accountId, out FailedCodeAttempts? failedAttempts))
+        if (!_failedAttemptsByAccountId.TryGetValue(accountId, out FailedCodeAttemptHistory? failedAttempts))
         {
-            failedAttempts = new FailedCodeAttempts();
+            failedAttempts = new FailedCodeAttemptHistory();
             _failedAttemptsByAccountId.Add(accountId, failedAttempts);
         }
 
