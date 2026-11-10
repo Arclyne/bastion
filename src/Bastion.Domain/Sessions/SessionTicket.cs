@@ -2,7 +2,7 @@ using System;
 
 namespace Bastion.Domain.Sessions;
 
-public sealed class SessionTicket
+public sealed record SessionTicket
 {
     public SessionTicket(byte[] tokenHash, DateTime issuedAt)
     {
