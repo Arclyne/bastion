@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Bastion.Domain.Rooms;
 
 namespace Bastion.Server.Application.Rooms;
@@ -88,7 +87,8 @@ public sealed class RoomRegistry : IRoomRegistry
     {
         lock (_roomsLock)
         {
-            return RoomSnapshot.Capture(GetHostedRoom(accountId));
+            WaitingRoom room = GetHostedRoom(accountId);
+            return RoomSnapshot.Capture(room);
         }
     }
 
@@ -121,12 +121,14 @@ public sealed class RoomRegistry : IRoomRegistry
             if (room.IsHost(accountId))
             {
                 RemoveRoom(room);
-                return new RoomDeparture(RoomSnapshot.Capture(room), accountId, true);
+                var closedRoom = RoomSnapshot.Capture(room);
+                return new RoomDeparture(closedRoom, accountId, true);
             }
 
             room.Remove(accountId);
             _roomsByAccountId.Remove(accountId);
-            return new RoomDeparture(RoomSnapshot.Capture(room), accountId, false);
+            var remainingRoom = RoomSnapshot.Capture(room);
+            return new RoomDeparture(remainingRoom, accountId, false);
         }
     }
 
@@ -134,7 +136,12 @@ public sealed class RoomRegistry : IRoomRegistry
     {
         lock (_roomsLock)
         {
-            return _roomsByAccountId.TryGetValue(accountId, out WaitingRoom? room) ? RoomSnapshot.Capture(room) : null;
+            if (!_roomsByAccountId.TryGetValue(accountId, out WaitingRoom? room))
+            {
+                return null;
+            }
+
+            return RoomSnapshot.Capture(room);
         }
     }
 
@@ -175,6 +182,7 @@ public sealed class RoomRegistry : IRoomRegistry
             throw new RoomRejectedException(RoomRejection.RoomNotFound);
         }
 
+        ForgetEmptyHistory(accountId, failedAttempts);
         if (room.HasKicked(accountId))
         {
             throw new RoomRejectedException(RoomRejection.Kicked);
@@ -197,6 +205,14 @@ public sealed class RoomRegistry : IRoomRegistry
         }
 
         return failedAttempts;
+    }
+
+    private void ForgetEmptyHistory(int accountId, FailedCodeAttemptHistory failedAttempts)
+    {
+        if (!failedAttempts.HasAttempts())
+        {
+            _failedAttemptsByAccountId.Remove(accountId);
+        }
     }
 
     private WaitingRoom GetRoomOf(int accountId)
@@ -223,9 +239,9 @@ public sealed class RoomRegistry : IRoomRegistry
     private void RemoveRoom(WaitingRoom room)
     {
         _roomsByCode.Remove(room.Identity.Code);
-        foreach (int memberAccountId in room.Members.Select(member => member.AccountId))
+        foreach (RoomMember member in room.Members)
         {
-            _roomsByAccountId.Remove(memberAccountId);
+            _roomsByAccountId.Remove(member.AccountId);
         }
     }
 }

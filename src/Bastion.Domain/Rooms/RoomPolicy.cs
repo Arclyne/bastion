@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 
 namespace Bastion.Domain.Rooms;
@@ -16,6 +17,14 @@ public static class RoomPolicy
     private static readonly byte[] _clockMinuteOptions = new byte[] { 3, 5, 10 };
 
     public static TimeSpan FailedCodeWindow { get; } = TimeSpan.FromMinutes(FailedCodeWindowMinutes);
+
+    public static string NormalizeCode(string code)
+    {
+        ArgumentNullException.ThrowIfNull(code);
+
+        string trimmedCode = code.Trim();
+        return trimmedCode.ToUpper(CultureInfo.InvariantCulture);
+    }
 
     public static bool IsValidCode(string code)
     {

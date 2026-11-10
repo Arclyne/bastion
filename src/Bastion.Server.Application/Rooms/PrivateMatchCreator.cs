@@ -38,13 +38,16 @@ public sealed class PrivateMatchCreator : IPrivateMatchCreator
         {
             WallsPerPlayer = room.Settings.WallsPerPlayer,
         };
-        IReadOnlyDictionary<int, short> eloRatingsByAccountId = _matchStore.FindEloRatingsByAccountId(
-            format.GameMode.GameModeId,
-            membersInTurnOrder.Select(member => member.AccountId).ToArray());
-        var entrants = membersInTurnOrder.Select(member => new MatchEntrant(member.AccountId, null)).ToList();
-        int matchId = _roomStore.SaveRoomMatch(room.Identity.RoomId, Match.StartPrivate(format, entrants, startedAt));
+        IEnumerable<int> accountIdsInTurnOrder = membersInTurnOrder.Select(member => member.AccountId);
+        var accountIds = new List<int>(accountIdsInTurnOrder);
+        IReadOnlyDictionary<int, short> eloRatingsByAccountId =
+            _matchStore.FindEloRatingsByAccountId(format.GameMode.GameModeId, accountIds);
+        IEnumerable<MatchEntrant> entrants = membersInTurnOrder.Select(member => new MatchEntrant(member.AccountId, null));
+        var entrantList = new List<MatchEntrant>(entrants);
+        int matchId = _roomStore.SaveRoomMatch(room.Identity.RoomId, Match.StartPrivate(format, entrantList, startedAt));
         _logger.Info($"Private match created. MatchId={matchId}; RoomId={room.Identity.RoomId}");
-        return new CreatedMatch(matchId, format, ToParticipants(membersInTurnOrder, eloRatingsByAccountId));
+        List<CreatedMatchParticipant> participants = ToParticipants(membersInTurnOrder, eloRatingsByAccountId);
+        return new CreatedMatch(matchId, format, participants);
     }
 
     private static List<CreatedMatchParticipant> ToParticipants(
@@ -57,7 +60,8 @@ public sealed class PrivateMatchCreator : IPrivateMatchCreator
             RoomMemberSnapshot member = membersInTurnOrder[memberIndex];
             short eloRating = eloRatingsByAccountId.GetValueOrDefault(member.AccountId, ModeStatistic.DefaultEloRating);
             var player = new ConnectedPlayer(member.AccountId, member.Nickname);
-            byte turnOrder = (byte)(Match.FirstTurnOrder + memberIndex);
+            int turnOrderNumber = Match.FirstTurnOrder + memberIndex;
+            byte turnOrder = (byte)turnOrderNumber;
             participants.Add(new CreatedMatchParticipant(player, eloRating, turnOrder));
         }
 

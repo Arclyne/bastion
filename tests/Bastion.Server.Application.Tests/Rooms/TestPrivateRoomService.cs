@@ -131,7 +131,14 @@ public class TestPrivateRoomService
     [Fact]
     public void CreateRoom_ValidSettings_SeatsHostReadyInFirstSeat()
     {
-        var expectedHost = new RoomMemberSnapshot(HostAccountId, HostNickname, FirstSeatIndex, true, true);
+        var expectedHost = new RoomMemberSnapshot
+        {
+            AccountId = HostAccountId,
+            Nickname = HostNickname,
+            SeatIndex = FirstSeatIndex,
+            IsReady = true,
+            IsHost = true,
+        };
 
         RoomSnapshot room = CreateHostRoom();
 
@@ -173,7 +180,14 @@ public class TestPrivateRoomService
     public void JoinRoom_LowercaseCode_SeatsPlayerNotReady()
     {
         CreateHostRoom();
-        var expectedGuest = new RoomMemberSnapshot(GuestAccountId, GuestNickname, SecondSeatIndex, false, false);
+        var expectedGuest = new RoomMemberSnapshot
+        {
+            AccountId = GuestAccountId,
+            Nickname = GuestNickname,
+            SeatIndex = SecondSeatIndex,
+            IsReady = false,
+            IsHost = false,
+        };
 
         RoomSnapshot room = _privateRoomService.JoinRoom(GuestToken, LowercaseFirstCode, _now);
 

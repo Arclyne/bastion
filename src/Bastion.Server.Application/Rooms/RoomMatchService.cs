@@ -1,4 +1,5 @@
 using System;
+using Bastion.Server.Application.Matchmaking;
 using Bastion.Server.Application.Sessions;
 
 namespace Bastion.Server.Application.Rooms;
@@ -21,7 +22,10 @@ public sealed class RoomMatchService : IRoomMatchService
     /// <inheritdoc/>
     public int StartMatch(string sessionToken, DateTime now)
     {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
         ConnectedPlayer host = _playerVerifier.VerifySession(sessionToken, now);
-        return _matchStarter.StartMatch(host.AccountId, now).MatchId;
+        CreatedMatch createdMatch = _matchStarter.StartMatch(host.AccountId, now);
+        return createdMatch.MatchId;
     }
 }

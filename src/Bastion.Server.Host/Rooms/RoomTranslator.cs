@@ -40,7 +40,7 @@ public static class RoomTranslator
         {
             Code = room.Identity.Code,
             Options = ToOptions(room),
-            SeatCount = room.SeatCount,
+            SeatCount = room.GetSeatCount(),
             Members = room.Members.Select(ToMemberState).ToArray(),
         };
     }
