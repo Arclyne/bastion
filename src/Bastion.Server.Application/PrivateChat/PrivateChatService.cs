@@ -121,8 +121,8 @@ public sealed class PrivateChatService : IPrivateChatService
 
     private PlayerIdentity FindPartner(ConnectedPlayer player, string friendCode)
     {
-        string normalizedCode = FriendCodeRules.NormalizeFriendCode(friendCode);
-        PlayerIdentity? partner = FriendCodeRules.IsValidFriendCode(normalizedCode)
+        string normalizedCode = FriendCodePolicy.Normalize(friendCode);
+        PlayerIdentity? partner = FriendCodePolicy.IsValid(normalizedCode)
             ? _unitOfWork.Accounts.FindPlayerIdentityByFriendCode(normalizedCode)
             : null;
         if (partner is null || partner.AccountId == player.AccountId)

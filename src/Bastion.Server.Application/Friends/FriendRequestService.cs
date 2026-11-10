@@ -145,8 +145,8 @@ public sealed class FriendRequestService : IFriendRequestService
 
     private PlayerIdentity FindPlayerByCode(string friendCode)
     {
-        string normalizedCode = FriendCodeRules.NormalizeFriendCode(friendCode);
-        PlayerIdentity? player = FriendCodeRules.IsValidFriendCode(normalizedCode)
+        string normalizedCode = FriendCodePolicy.Normalize(friendCode);
+        PlayerIdentity? player = FriendCodePolicy.IsValid(normalizedCode)
             ? _unitOfWork.Accounts.FindPlayerIdentityByFriendCode(normalizedCode)
             : null;
         return player ?? throw new FriendshipRejectedException(FriendshipRejection.PlayerNotFound);
@@ -198,8 +198,8 @@ public sealed class FriendRequestService : IFriendRequestService
 
     private IReadOnlyList<PlayerIdentity> FindPlayers(string searchText)
     {
-        string normalizedCode = FriendCodeRules.NormalizeFriendCode(searchText);
-        if (FriendCodeRules.IsValidFriendCode(normalizedCode))
+        string normalizedCode = FriendCodePolicy.Normalize(searchText);
+        if (FriendCodePolicy.IsValid(normalizedCode))
         {
             PlayerIdentity? codeOwner = _unitOfWork.Accounts.FindPlayerIdentityByFriendCode(normalizedCode);
             if (codeOwner is not null)

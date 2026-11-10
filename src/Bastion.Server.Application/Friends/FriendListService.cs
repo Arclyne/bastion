@@ -47,7 +47,7 @@ public sealed class FriendListService : IFriendListService
         ArgumentNullException.ThrowIfNull(friendCode);
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        string normalizedCode = FriendCodeRules.NormalizeFriendCode(friendCode);
+        string normalizedCode = FriendCodePolicy.Normalize(friendCode);
         FriendSummary? friend = _unitOfWork.Friendships.ListFriends(player.AccountId)
             .FirstOrDefault(summary => summary.Friend.FriendCode == normalizedCode);
         if (friend is null || !_unitOfWork.Friendships.Remove(player.AccountId, friend.Friend.AccountId))

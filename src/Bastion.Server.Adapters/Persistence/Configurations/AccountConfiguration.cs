@@ -37,7 +37,7 @@ public sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(account => account.FailedLoginCount).HasColumnName(FailedLoginCountColumn);
         builder.Property(account => account.LastFailedLoginAt).HasColumnName(LastFailedLoginAtColumn);
         builder.Property(account => account.FriendCode)
-            .HasMaxLength(FriendCodeRules.Length)
+            .HasMaxLength(FriendCodePolicy.Length)
             .IsFixedLength()
             .IsUnicode(false);
     }

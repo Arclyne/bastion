@@ -3,14 +3,14 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Friends;
 
-public class TestFriendCodeRules
+public class TestFriendCodePolicy
 {
     [Theory]
     [InlineData("QU7K2P")]
     [InlineData("AB2CD9")]
-    public void IsValidFriendCode_ValidCode_ReturnsTrue(string text)
+    public void IsValid_ValidCode_ReturnsTrue(string text)
     {
-        bool isValidFriendCode = FriendCodeRules.IsValidFriendCode(text);
+        bool isValidFriendCode = FriendCodePolicy.IsValid(text);
 
         Assert.True(isValidFriendCode);
     }
@@ -27,33 +27,33 @@ public class TestFriendCodeRules
     [InlineData("QULK2P")]
     [InlineData("qu7k2p")]
     [InlineData("QU-7K2P")]
-    public void IsValidFriendCode_InvalidCode_ReturnsFalse(string? text)
+    public void IsValid_InvalidCode_ReturnsFalse(string? text)
     {
-        bool isValidFriendCode = FriendCodeRules.IsValidFriendCode(text);
+        bool isValidFriendCode = FriendCodePolicy.IsValid(text);
 
         Assert.False(isValidFriendCode);
     }
 
     [Fact]
-    public void NormalizeFriendCode_HyphenatedLowercase_ReturnsCompactUppercase()
+    public void Normalize_HyphenatedLowercase_ReturnsCompactUppercase()
     {
-        string normalizedCode = FriendCodeRules.NormalizeFriendCode("qu-7k2p");
+        string normalizedCode = FriendCodePolicy.Normalize("qu-7k2p");
 
         Assert.Equal("QU7K2P", normalizedCode);
     }
 
     [Fact]
-    public void NormalizeFriendCode_SurroundingSpaces_ReturnsTrimmedCode()
+    public void Normalize_SurroundingSpaces_ReturnsTrimmedCode()
     {
-        string normalizedCode = FriendCodeRules.NormalizeFriendCode("  QU7K2P ");
+        string normalizedCode = FriendCodePolicy.Normalize("  QU7K2P ");
 
         Assert.Equal("QU7K2P", normalizedCode);
     }
 
     [Fact]
-    public void FormatFriendCode_ValidCode_InsertsHyphenAfterTwo()
+    public void Format_ValidCode_InsertsHyphenAfterTwo()
     {
-        string formattedCode = FriendCodeRules.FormatFriendCode("QU7K2P");
+        string formattedCode = FriendCodePolicy.Format("QU7K2P");
 
         Assert.Equal("QU-7K2P", formattedCode);
     }

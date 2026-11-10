@@ -2,31 +2,26 @@ using System;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using Bastion.Domain.Text;
 
 namespace Bastion.Domain.Friends;
 
-public static class FriendCodeRules
+public static class FriendCodePolicy
 {
     public const int Length = 6;
 
-    private const int GroupLength = 2;
+    private const int SeparatorPosition = 2;
     private const char Separator = '-';
     private const string Alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-    private const int MatchTimeoutMilliseconds = 250;
 
-    private static readonly TimeSpan _matchTimeout = TimeSpan.FromMilliseconds(MatchTimeoutMilliseconds);
+    private static readonly Regex _friendCodePattern = TextPattern.Create($"^[{Alphabet}]{{{Length}}}$");
 
-    private static readonly Regex _friendCodePattern = new Regex(
-        $"^[{Alphabet}]{{{Length}}}$",
-        RegexOptions.CultureInvariant,
-        _matchTimeout);
-
-    public static bool IsValidFriendCode(string? text)
+    public static bool IsValid(string? text)
     {
         return text is not null && _friendCodePattern.IsMatch(text);
     }
 
-    public static string NormalizeFriendCode(string text)
+    public static string Normalize(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
 
@@ -42,15 +37,16 @@ public static class FriendCodeRules
         return builder.ToString();
     }
 
-    public static string FormatFriendCode(string code)
+    public static string Format(string code)
     {
         ArgumentNullException.ThrowIfNull(code);
 
-        if (code.Length <= GroupLength)
+        if (code.Length <= SeparatorPosition)
         {
             return code;
         }
 
-        return code.Insert(GroupLength, Separator.ToString());
+        string separatorText = Separator.ToString();
+        return code.Insert(SeparatorPosition, separatorText);
     }
 }
