@@ -12,6 +12,8 @@ public sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
     private const int TypeLength = 10;
     private const int StatusLength = 10;
     private const int LanguageLength = 10;
+    private const string FailedSignInCountColumn = "FailedAttempts";
+    private const string LastFailedSignInAtColumn = "LastFailedAttemptAt";
 
     public void Configure(EntityTypeBuilder<Account> builder)
     {
@@ -32,6 +34,8 @@ public sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(account => account.PasswordHash).HasMaxLength(PasswordHasher.HashLength);
         builder.Property(account => account.PasswordSalt).HasMaxLength(PasswordHasher.SaltLength);
         builder.Property(account => account.PreferredLanguage).HasMaxLength(LanguageLength).IsUnicode(false);
+        builder.Property(account => account.FailedSignInCount).HasColumnName(FailedSignInCountColumn);
+        builder.Property(account => account.LastFailedSignInAt).HasColumnName(LastFailedSignInAtColumn);
         builder.Property(account => account.FriendCode)
             .HasMaxLength(FriendCodeRules.Length)
             .IsFixedLength()

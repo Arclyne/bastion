@@ -12,26 +12,6 @@ public class TestAccount
     private static readonly DateTime _now = new DateTime(2026, 10, 15, 12, 0, 0, DateTimeKind.Utc);
 
     [Fact]
-    public void CanSignIn_NewAccount_IsFalse()
-    {
-        var account = new Account(Nickname, Email);
-
-        bool canSignIn = account.CanSignIn();
-
-        Assert.False(canSignIn);
-    }
-
-    [Fact]
-    public void CanSignIn_ActivatedAccount_IsTrue()
-    {
-        Account account = CreateActiveAccount();
-
-        bool canSignIn = account.CanSignIn();
-
-        Assert.True(canSignIn);
-    }
-
-    [Fact]
     public void Activate_ActiveAccount_ThrowsInvalidOperationException()
     {
         Account account = CreateActiveAccount();
@@ -70,7 +50,7 @@ public class TestAccount
 
         account.RecordFailedSignIn(_now.AddHours(25));
 
-        Assert.Equal(1, account.FailedAttempts);
+        Assert.Equal(1, account.FailedSignInCount);
     }
 
     [Fact]

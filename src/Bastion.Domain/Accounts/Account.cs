@@ -4,9 +4,10 @@ namespace Bastion.Domain.Accounts;
 
 public class Account
 {
-    public const string DefaultLanguage = "en";
+    private const string DefaultPreferredLanguage = "en";
 
     public Account(string nickname, string email)
+        : this()
     {
         ArgumentNullException.ThrowIfNull(nickname);
         ArgumentNullException.ThrowIfNull(email);
@@ -15,14 +16,12 @@ public class Account
         Email = email;
         AccountType = AccountType.Registered;
         AccountStatus = AccountStatus.Pending;
-        PreferredLanguage = DefaultLanguage;
-        FriendCode = string.Empty;
     }
 
     private Account()
     {
         Nickname = string.Empty;
-        PreferredLanguage = DefaultLanguage;
+        PreferredLanguage = DefaultPreferredLanguage;
         FriendCode = string.Empty;
     }
 
@@ -42,9 +41,9 @@ public class Account
 
     public string PreferredLanguage { get; private set; }
 
-    public byte FailedAttempts { get; private set; }
+    public byte FailedSignInCount { get; private set; }
 
-    public DateTime? LastFailedAttemptAt { get; private set; }
+    public DateTime? LastFailedSignInAt { get; private set; }
 
     public DateTime? LockedUntil { get; private set; }
 
@@ -53,11 +52,6 @@ public class Account
     public string FriendCode { get; private set; }
 
     public DateTime? LastSeenAt { get; private set; }
-
-    public bool CanSignIn()
-    {
-        return AccountType == AccountType.Registered && AccountStatus == AccountStatus.Active;
-    }
 
     public bool HasPassword()
     {
@@ -85,33 +79,36 @@ public class Account
 
     public bool IsLockedAt(DateTime now)
     {
-        return LockedUntil is DateTime lockedUntil && lockedUntil > now;
+        return TryGetActiveLockEnd(now, out _);
     }
 
     public int GetRemainingLockMinutes(DateTime now)
     {
-        if (LockedUntil is not DateTime lockedUntil || lockedUntil <= now)
+        if (!TryGetActiveLockEnd(now, out DateTime lockEnd))
         {
             return 0;
         }
 
-        return (int)Math.Ceiling((lockedUntil - now).TotalMinutes);
+        TimeSpan remainingLock = lockEnd - now;
+        double roundedUpMinutes = Math.Ceiling(remainingLock.TotalMinutes);
+        int remainingMinutes = (int)roundedUpMinutes;
+        return remainingMinutes;
     }
 
     public void RecordFailedSignIn(DateTime now)
     {
-        if (LastFailedAttemptAt is DateTime lastFailure && now - lastFailure >= LockoutPolicy.CounterResetPeriod)
+        if (LastFailedSignInAt is DateTime lastFailure && now - lastFailure >= LockoutPolicy.CounterResetPeriod)
         {
-            FailedAttempts = 0;
+            FailedSignInCount = 0;
         }
 
-        if (FailedAttempts < byte.MaxValue)
+        if (FailedSignInCount < byte.MaxValue)
         {
-            FailedAttempts++;
+            FailedSignInCount++;
         }
 
-        LastFailedAttemptAt = now;
-        TimeSpan lockDuration = LockoutPolicy.GetLockDuration(FailedAttempts);
+        LastFailedSignInAt = now;
+        TimeSpan lockDuration = LockoutPolicy.GetLockDuration(FailedSignInCount);
         if (lockDuration > TimeSpan.Zero)
         {
             LockedUntil = now + lockDuration;
@@ -120,13 +117,25 @@ public class Account
 
     public void RecordSuccessfulSignIn()
     {
-        FailedAttempts = 0;
-        LastFailedAttemptAt = null;
+        FailedSignInCount = 0;
+        LastFailedSignInAt = null;
         LockedUntil = null;
     }
 
     public void RecordLastSeen(DateTime now)
     {
         LastSeenAt = now;
+    }
+
+    private bool TryGetActiveLockEnd(DateTime now, out DateTime lockEnd)
+    {
+        if (LockedUntil is DateTime lockedUntil && lockedUntil > now)
+        {
+            lockEnd = lockedUntil;
+            return true;
+        }
+
+        lockEnd = default;
+        return false;
     }
 }
