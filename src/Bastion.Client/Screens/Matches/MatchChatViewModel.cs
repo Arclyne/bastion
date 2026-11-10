@@ -79,7 +79,7 @@ public sealed class MatchChatViewModel : ViewModel, IDisposable
         }
 
         string text = Draft;
-        if (!ChatRules.IsValidMessage(text))
+        if (!ChatPolicy.IsValidMessage(text))
         {
             StatusText = ChatRejectionText.DescribeInvalidMessage();
             return;
@@ -144,7 +144,7 @@ public sealed class MatchChatViewModel : ViewModel, IDisposable
     private void AddMessage(ChatMessageRowViewModel row)
     {
         Messages.Add(row);
-        if (Messages.Count > ChatRules.RecentMessageCount)
+        if (Messages.Count > ChatPolicy.MaximumRecentMessages)
         {
             Messages.RemoveAt(0);
         }

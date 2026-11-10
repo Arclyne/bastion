@@ -14,7 +14,7 @@ public sealed class ChatCooldown
         lock (_turnsLock)
         {
             if (_lastTurnByAccountId.TryGetValue(accountId, out DateTime lastTurn)
-                && now < lastTurn.AddSeconds(ChatRules.CooldownSeconds))
+                && now < lastTurn.AddSeconds(ChatPolicy.MessageCooldownSeconds))
             {
                 return false;
             }

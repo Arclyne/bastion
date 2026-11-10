@@ -20,7 +20,7 @@ public sealed class ChatModerator : IChatModerator
     {
         ArgumentNullException.ThrowIfNull(text);
 
-        if (!ChatRules.IsValidMessage(text))
+        if (!ChatPolicy.IsValidMessage(text))
         {
             throw new ChatMessageRejectedException(ChatRejection.InvalidMessage);
         }

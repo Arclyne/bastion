@@ -3,14 +3,14 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Chat;
 
-public class TestChatRules
+public class TestChatPolicy
 {
     [Theory]
     [InlineData("hola")]
     [InlineData("  hola  ")]
     public void IsValidMessage_ValidMessage_ReturnsTrue(string text)
     {
-        bool isValidMessage = ChatRules.IsValidMessage(text);
+        bool isValidMessage = ChatPolicy.IsValidMessage(text);
 
         Assert.True(isValidMessage);
     }
@@ -21,7 +21,7 @@ public class TestChatRules
     [InlineData("   ")]
     public void IsValidMessage_InvalidMessage_ReturnsFalse(string? text)
     {
-        bool isValidMessage = ChatRules.IsValidMessage(text);
+        bool isValidMessage = ChatPolicy.IsValidMessage(text);
 
         Assert.False(isValidMessage);
     }
@@ -29,9 +29,9 @@ public class TestChatRules
     [Fact]
     public void IsValidMessage_MaximumLength_ReturnsTrue()
     {
-        string text = new string('a', ChatRules.MaximumMessageLength);
+        string text = new string('a', ChatPolicy.MaximumMessageLength);
 
-        bool isValidMessage = ChatRules.IsValidMessage(text);
+        bool isValidMessage = ChatPolicy.IsValidMessage(text);
 
         Assert.True(isValidMessage);
     }
@@ -39,9 +39,9 @@ public class TestChatRules
     [Fact]
     public void IsValidMessage_AboveMaximumLength_ReturnsFalse()
     {
-        string text = new string('a', ChatRules.MaximumMessageLength + 1);
+        string text = new string('a', ChatPolicy.MaximumMessageLength + 1);
 
-        bool isValidMessage = ChatRules.IsValidMessage(text);
+        bool isValidMessage = ChatPolicy.IsValidMessage(text);
 
         Assert.False(isValidMessage);
     }

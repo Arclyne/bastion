@@ -66,7 +66,7 @@ public sealed class PrivateChatService : IPrivateChatService
         IReadOnlyList<Message> messages = _unitOfWork.Messages.ListConversation(
             player.AccountId,
             partner.AccountId,
-            ChatRules.RecentMessageCount);
+            ChatPolicy.MaximumRecentMessages);
         if (!isFriend && messages.Count == 0)
         {
             throw new ChatMessageRejectedException(ChatRejection.NotFriends);

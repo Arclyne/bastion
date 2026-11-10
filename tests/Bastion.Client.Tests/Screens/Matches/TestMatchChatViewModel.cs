@@ -144,9 +144,9 @@ public class TestMatchChatViewModel : IDisposable
     }
 
     [Fact]
-    public void MatchChatMessageReceived_OverRecentMessageCount_DropsOldestMessage()
+    public void MatchChatMessageReceived_OverMaximumRecentMessages_DropsOldestMessage()
     {
-        for (int messageNumber = 1; messageNumber <= ChatRules.RecentMessageCount + 1; messageNumber++)
+        for (int messageNumber = 1; messageNumber <= ChatPolicy.MaximumRecentMessages + 1; messageNumber++)
         {
             string text = messageNumber.ToString(CultureInfo.InvariantCulture);
             _chatClient.RaiseMatchChatMessageReceived(JoinedMatchSamples.MatchId, CreateRivalMessage(text));

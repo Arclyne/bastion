@@ -54,7 +54,7 @@ public sealed class LobbyChatRoom : ILobbyChatRoom
             _lastMessageId++;
             var postedLine = new PostedChatLine(_lastMessageId, line);
             _history.Enqueue(postedLine);
-            if (_history.Count > ChatRules.HistoryCapacity)
+            if (_history.Count > ChatPolicy.MaximumRecentMessages)
             {
                 _history.Dequeue();
             }

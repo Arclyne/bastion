@@ -13,7 +13,7 @@ public static class ChatRejectionText
         return string.Format(
             CultureInfo.CurrentCulture,
             Strings.ChatRejectedInvalidFormat,
-            ChatRules.MaximumMessageLength);
+            ChatPolicy.MaximumMessageLength);
     }
 
     public static string Describe(ChatRejection rejection)

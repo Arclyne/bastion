@@ -19,7 +19,7 @@ public class TestChatCooldown
     {
         _cooldown.TryClaimTurn(AccountId, _now);
 
-        bool claimed = _cooldown.TryClaimTurn(AccountId, _now.AddSeconds(ChatRules.CooldownSeconds));
+        bool claimed = _cooldown.TryClaimTurn(AccountId, _now.AddSeconds(ChatPolicy.MessageCooldownSeconds));
 
         Assert.True(claimed);
     }

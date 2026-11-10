@@ -37,12 +37,12 @@ public class TestLobbyChatRoom
     public void Post_AboveCapacity_DropsOldestLine()
     {
         PostedChatLine oldest = _chatRoom.Post(new ChatLine(_sender, "viejo", _now));
-        for (int lineIndex = 0; lineIndex < ChatRules.HistoryCapacity; lineIndex++)
+        for (int lineIndex = 0; lineIndex < ChatPolicy.MaximumRecentMessages; lineIndex++)
         {
             _chatRoom.Post(new ChatLine(_sender, "nuevo", _now));
         }
 
-        bool keepsOldest = _chatRoom.ListRecent(ChatRules.HistoryCapacity).Contains(oldest);
+        bool keepsOldest = _chatRoom.ListRecent(ChatPolicy.MaximumRecentMessages).Contains(oldest);
 
         Assert.False(keepsOldest);
     }
@@ -60,7 +60,7 @@ public class TestLobbyChatRoom
     {
         _chatRoom.TryClaimTurn(AccountId, _now);
 
-        bool claimed = _chatRoom.TryClaimTurn(AccountId, _now.AddSeconds(ChatRules.CooldownSeconds).AddTicks(-1));
+        bool claimed = _chatRoom.TryClaimTurn(AccountId, _now.AddSeconds(ChatPolicy.MessageCooldownSeconds).AddTicks(-1));
 
         Assert.False(claimed);
     }

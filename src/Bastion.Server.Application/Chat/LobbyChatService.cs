@@ -43,7 +43,7 @@ public sealed class LobbyChatService : ILobbyChatService
         ArgumentNullException.ThrowIfNull(sessionToken);
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        var entries = _chatRoom.ListRecent(ChatRules.RecentMessageCount)
+        var entries = _chatRoom.ListRecent(ChatPolicy.MaximumRecentMessages)
             .Select(line => new ChatHistoryEntry(line, line.Line.Sender.AccountId == player.AccountId))
             .ToList();
         return new LobbyChatHistory(entries, _chatRoom.CountListeners(), _moderator.FindMute(player.AccountId, now));
