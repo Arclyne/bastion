@@ -8,6 +8,7 @@ namespace Bastion.Server.Adapters.Persistence.Configurations;
 public sealed class SanctionConfiguration : IEntityTypeConfiguration<Sanction>
 {
     private const int ScopeLength = 10;
+    private const string EndsAtColumn = "EndedAt";
 
     public void Configure(EntityTypeBuilder<Sanction> builder)
     {
@@ -18,5 +19,6 @@ public sealed class SanctionConfiguration : IEntityTypeConfiguration<Sanction>
             .HasConversion(new UpperSnakeCaseEnumConverter<SanctionScope>())
             .HasMaxLength(ScopeLength)
             .IsUnicode(false);
+        builder.Property(sanction => sanction.EndsAt).HasColumnName(EndsAtColumn);
     }
 }

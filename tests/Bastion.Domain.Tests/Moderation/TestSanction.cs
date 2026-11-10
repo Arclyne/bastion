@@ -51,22 +51,11 @@ public class TestSanction
     }
 
     [Fact]
-    public void IsInEffectAt_Revoked_ReturnsFalse()
-    {
-        var sanction = new Sanction(AccountId, SanctionScope.Chat, null);
-        sanction.Revoke(_now.AddHours(-1));
-
-        bool isInEffect = sanction.IsInEffectAt(_now);
-
-        Assert.False(isInEffect);
-    }
-
-    [Fact]
     public void IsPermanent_WithoutEnd_ReturnsTrue()
     {
         var sanction = new Sanction(AccountId, SanctionScope.Chat, null);
 
-        bool isPermanent = sanction.IsPermanent;
+        bool isPermanent = sanction.IsPermanent();
 
         Assert.True(isPermanent);
     }

@@ -18,11 +18,11 @@ public sealed record ChatMute(bool IsMuted, DateTime? EndsAt)
             return None;
         }
 
-        if (sanctions.Any(sanction => sanction.IsPermanent))
+        if (sanctions.Any(sanction => sanction.IsPermanent()))
         {
             return new ChatMute(true, null);
         }
 
-        return new ChatMute(true, sanctions.Max(sanction => sanction.EndedAt));
+        return new ChatMute(true, sanctions.Max(sanction => sanction.EndsAt));
     }
 }
