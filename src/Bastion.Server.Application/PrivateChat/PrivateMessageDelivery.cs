@@ -1,5 +1,5 @@
 using Bastion.Domain.Chat;
-using Bastion.Server.Application.Friends;
+using Bastion.Server.Application.Accounts;
 
 namespace Bastion.Server.Application.PrivateChat;
 

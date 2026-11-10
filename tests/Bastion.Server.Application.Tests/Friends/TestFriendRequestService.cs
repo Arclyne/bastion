@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Bastion.Domain.Friends;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Application.Tests.Fakes;
@@ -32,7 +33,7 @@ public class TestFriendRequestService
     public TestFriendRequestService()
     {
         _friendRequestService = new FriendRequestService(_unitOfWork, _sessionVerifier, _friendNotifier);
-        _sessionVerifier.Add(Token, new ConnectedPlayer(AccountId, Nickname));
+        _sessionVerifier.Add(Token, new PlayerIdentity(AccountId, Nickname, FriendCode));
         _unitOfWork.AccountStore.StorePlayerIdentity(new PlayerIdentity(AccountId, Nickname, FriendCode));
         _unitOfWork.AccountStore.StorePlayerIdentity(
             new PlayerIdentity(OtherAccountId, OtherNickname, OtherFriendCode));

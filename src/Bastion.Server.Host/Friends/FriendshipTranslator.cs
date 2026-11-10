@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Bastion.Contracts.Friends;
 using Bastion.Contracts.Notifications;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
 using CoreWCF;
 

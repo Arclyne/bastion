@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Bastion.Domain.Accounts;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Common;
 
 namespace Bastion.Server.Application.Friends;
 
+/// <inheritdoc/>
 public sealed class FriendPresenceService : IFriendPresenceService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -19,6 +21,7 @@ public sealed class FriendPresenceService : IFriendPresenceService
         _friendNotifier = friendNotifier;
     }
 
+    /// <inheritdoc/>
     public void ReportConnected(int accountId)
     {
         PlayerIdentity? identity = _unitOfWork.Accounts.FindPlayerIdentity(accountId);
@@ -30,6 +33,7 @@ public sealed class FriendPresenceService : IFriendPresenceService
         NotifyFriends(new FriendPresenceChange(identity, FriendPresence.Connected, null));
     }
 
+    /// <inheritdoc/>
     public void ReportDisconnected(int accountId, DateTime now)
     {
         Account? account = _unitOfWork.Accounts.FindById(accountId);

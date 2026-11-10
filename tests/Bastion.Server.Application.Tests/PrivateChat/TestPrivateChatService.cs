@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Chat;
 using Bastion.Domain.Moderation;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.PrivateChat;

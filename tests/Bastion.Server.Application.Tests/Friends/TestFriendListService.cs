@@ -1,4 +1,5 @@
 using System;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Application.Tests.Fakes;
@@ -29,7 +30,7 @@ public class TestFriendListService
     public TestFriendListService()
     {
         _friendListService = new FriendListService(_unitOfWork, _sessionVerifier, _playerPresence);
-        _sessionVerifier.Add(Token, new ConnectedPlayer(AccountId, Nickname));
+        _sessionVerifier.Add(Token, new PlayerIdentity(AccountId, Nickname, FriendCode));
         _unitOfWork.AccountStore.StorePlayerIdentity(new PlayerIdentity(AccountId, Nickname, FriendCode));
     }
 

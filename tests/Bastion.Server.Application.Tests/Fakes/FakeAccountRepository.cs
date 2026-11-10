@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Accounts;
 using Bastion.Server.Application.Accounts;
-using Bastion.Server.Application.Friends;
 
 namespace Bastion.Server.Application.Tests.Fakes;
 

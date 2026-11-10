@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Bastion.Domain.Accounts;
-using Bastion.Server.Application.Friends;
 
 namespace Bastion.Server.Application.Accounts;
 

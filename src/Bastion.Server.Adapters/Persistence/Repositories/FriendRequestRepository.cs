@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Friends;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
 using Microsoft.EntityFrameworkCore;
 

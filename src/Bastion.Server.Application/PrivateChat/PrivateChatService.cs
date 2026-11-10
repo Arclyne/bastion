@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Chat;
-using Bastion.Domain.Friends;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Friends;
@@ -121,10 +121,7 @@ public sealed class PrivateChatService : IPrivateChatService
 
     private PlayerIdentity FindPartner(ConnectedPlayer player, string friendCode)
     {
-        string normalizedCode = FriendCodePolicy.Normalize(friendCode);
-        PlayerIdentity? partner = FriendCodePolicy.IsValid(normalizedCode)
-            ? _unitOfWork.Accounts.FindPlayerIdentityByFriendCode(normalizedCode)
-            : null;
+        PlayerIdentity? partner = FriendCodeLookup.FindPlayer(_unitOfWork.Accounts, friendCode);
         if (partner is null || partner.AccountId == player.AccountId)
         {
             throw new ChatMessageRejectedException(ChatRejection.PlayerNotFound);

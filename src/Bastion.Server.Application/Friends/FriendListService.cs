@@ -1,11 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Friends;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Sessions;
 
 namespace Bastion.Server.Application.Friends;
 
+/// <inheritdoc/>
 public sealed class FriendListService : IFriendListService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -23,24 +26,21 @@ public sealed class FriendListService : IFriendListService
         _playerPresence = playerPresence;
     }
 
+    /// <inheritdoc/>
     public FriendRoster ListFriends(string sessionToken, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        PlayerIdentity? ownIdentity = _unitOfWork.Accounts.FindPlayerIdentity(player.AccountId);
-        if (ownIdentity is null)
-        {
-            throw new InvalidSessionException();
-        }
-
-        var friends = _unitOfWork.Friendships.ListFriends(player.AccountId)
+        PlayerIdentity player = _sessionVerifier.VerifyIdentity(sessionToken, now);
+        IReadOnlyList<FriendSummary> friendSummaries = _unitOfWork.Friendships.ListFriends(player.AccountId);
+        IEnumerable<FriendStatus> friends = friendSummaries
             .Select(ToFriendStatus)
-            .OrderBy(friend => friend.Summary.Friend.Nickname, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-        return new FriendRoster(ownIdentity.FriendCode, friends, now);
+            .OrderBy(friend => friend.Summary.Friend.Nickname, StringComparer.OrdinalIgnoreCase);
+        var friendList = new List<FriendStatus>(friends);
+        return new FriendRoster(player.FriendCode, friendList, now);
     }
 
+    /// <inheritdoc/>
     public void RemoveFriend(string sessionToken, string friendCode, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
@@ -50,7 +50,13 @@ public sealed class FriendListService : IFriendListService
         string normalizedCode = FriendCodePolicy.Normalize(friendCode);
         FriendSummary? friend = _unitOfWork.Friendships.ListFriends(player.AccountId)
             .FirstOrDefault(summary => summary.Friend.FriendCode == normalizedCode);
-        if (friend is null || !_unitOfWork.Friendships.Remove(player.AccountId, friend.Friend.AccountId))
+        if (friend is null)
+        {
+            throw new FriendshipRejectedException(FriendshipRejection.NotFriends);
+        }
+
+        bool isRemoved = _unitOfWork.Friendships.Remove(player.AccountId, friend.Friend.AccountId);
+        if (!isRemoved)
         {
             throw new FriendshipRejectedException(FriendshipRejection.NotFriends);
         }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Bastion.Contracts.Notifications;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.Friends;
 using Bastion.Server.Application.Matches;
