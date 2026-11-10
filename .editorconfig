@@ -58,6 +58,9 @@ dotnet_diagnostic.CA1031.severity = warning
 # 4.6.1 Cyclomatic complexity <= 10 (threshold in CodeMetricsConfig.txt: "CA1502: 10")
 dotnet_diagnostic.CA1502.severity = warning
 
+# 7.1.1 / 7.3.1 Only service interfaces are documented; CS1591 is an error in I*Service.cs (section below)
+dotnet_diagnostic.CS1591.severity = none
+
 # ---- Naming (section 2) ----
 
 # 2.5.1 Interfaces prefixed with I
@@ -106,3 +109,6 @@ dotnet_naming_symbols.member_symbols.applicable_kinds = class, struct, enum, del
 
 dotnet_naming_style.pascal_style.capitalization = pascal_case
 dotnet_naming_style.camel_style.capitalization = camel_case
+
+[I*Service.cs]
+dotnet_diagnostic.CS1591.severity = error
