@@ -41,9 +41,9 @@ public class Account
 
     public string PreferredLanguage { get; private set; }
 
-    public byte FailedSignInCount { get; private set; }
+    public byte FailedLoginCount { get; private set; }
 
-    public DateTime? LastFailedSignInAt { get; private set; }
+    public DateTime? LastFailedLoginAt { get; private set; }
 
     public DateTime? LockedUntil { get; private set; }
 
@@ -95,30 +95,30 @@ public class Account
         return remainingMinutes;
     }
 
-    public void RecordFailedSignIn(DateTime now)
+    public void RecordFailedLogin(DateTime now)
     {
-        if (LastFailedSignInAt is DateTime lastFailure && now - lastFailure >= LockoutPolicy.FailedSignInCountResetPeriod)
+        if (LastFailedLoginAt is DateTime lastFailure && now - lastFailure >= LockoutPolicy.FailedLoginCountResetPeriod)
         {
-            FailedSignInCount = 0;
+            FailedLoginCount = 0;
         }
 
-        if (FailedSignInCount < byte.MaxValue)
+        if (FailedLoginCount < byte.MaxValue)
         {
-            FailedSignInCount++;
+            FailedLoginCount++;
         }
 
-        LastFailedSignInAt = now;
-        TimeSpan lockDuration = LockoutPolicy.GetLockDuration(FailedSignInCount);
+        LastFailedLoginAt = now;
+        TimeSpan lockDuration = LockoutPolicy.GetLockDuration(FailedLoginCount);
         if (lockDuration > TimeSpan.Zero)
         {
             LockedUntil = now + lockDuration;
         }
     }
 
-    public void RecordSuccessfulSignIn()
+    public void RecordSuccessfulLogin()
     {
-        FailedSignInCount = 0;
-        LastFailedSignInAt = null;
+        FailedLoginCount = 0;
+        LastFailedLoginAt = null;
         LockedUntil = null;
     }
 

@@ -54,7 +54,7 @@ public sealed class LoginService : ILoginService
             RejectPassword(account, attempt);
         }
 
-        account.RecordSuccessfulSignIn();
+        account.RecordSuccessfulLogin();
         return AdmitByAccountStatus(account, attempt);
     }
 
@@ -66,7 +66,7 @@ public sealed class LoginService : ILoginService
     [DoesNotReturn]
     private void RejectPassword(Account account, AccessAttempt attempt)
     {
-        account.RecordFailedSignIn(attempt.OccurredAt);
+        account.RecordFailedLogin(attempt.OccurredAt);
         var accessLog = new AccessLog(AccessLogResult.WrongPassword, attempt, account.AccountId);
         if (account.IsLockedAt(attempt.OccurredAt))
         {

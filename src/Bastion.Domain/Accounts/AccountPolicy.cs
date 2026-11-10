@@ -8,7 +8,7 @@ public static class AccountPolicy
     public const int MinimumNicknameLength = 3;
     public const int MaximumNicknameLength = 30;
     public const int MaximumEmailLength = 254;
-    public const int MaximumSignInIdentifierLength = MaximumEmailLength;
+    public const int MaximumLoginIdentifierLength = MaximumEmailLength;
 
     private static readonly Regex _nicknameCharacters = TextPattern.Create("^[A-Za-z0-9_]+$");
 
@@ -34,7 +34,7 @@ public static class AccountPolicy
         return _emailPattern.IsMatch(email);
     }
 
-    public static bool IsValidSignInIdentifier(string? identifier)
+    public static bool IsValidLoginIdentifier(string? identifier)
     {
         return IsValidNickname(identifier) || IsValidEmail(identifier);
     }

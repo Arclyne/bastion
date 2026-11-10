@@ -53,18 +53,18 @@ public class TestAccountPolicy
     [Theory]
     [InlineData("marta_muros")]
     [InlineData("marta@example.com")]
-    public void IsValidSignInIdentifier_NicknameOrEmail_ReturnsTrue(string identifier)
+    public void IsValidLoginIdentifier_NicknameOrEmail_ReturnsTrue(string identifier)
     {
-        bool isValidSignInIdentifier = AccountPolicy.IsValidSignInIdentifier(identifier);
+        bool isValidLoginIdentifier = AccountPolicy.IsValidLoginIdentifier(identifier);
 
-        Assert.True(isValidSignInIdentifier);
+        Assert.True(isValidLoginIdentifier);
     }
 
     [Fact]
-    public void IsValidSignInIdentifier_NeitherNicknameNorEmail_ReturnsFalse()
+    public void IsValidLoginIdentifier_NeitherNicknameNorEmail_ReturnsFalse()
     {
-        bool isValidSignInIdentifier = AccountPolicy.IsValidSignInIdentifier("marta@");
+        bool isValidLoginIdentifier = AccountPolicy.IsValidLoginIdentifier("marta@");
 
-        Assert.False(isValidSignInIdentifier);
+        Assert.False(isValidLoginIdentifier);
     }
 }

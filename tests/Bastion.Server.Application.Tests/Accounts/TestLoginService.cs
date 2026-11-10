@@ -65,7 +65,7 @@ public class TestLoginService
 
         TryLogIn(Nickname, WrongPassword);
 
-        Assert.Equal(1, account.FailedSignInCount);
+        Assert.Equal(1, account.FailedLoginCount);
     }
 
     [Fact]
@@ -149,14 +149,14 @@ public class TestLoginService
     }
 
     [Fact]
-    public void LogIn_ValidCredentials_ResetsFailedSignInCount()
+    public void LogIn_ValidCredentials_ResetsFailedLoginCount()
     {
         Account account = StoreActiveAccount();
         TryLogIn(Nickname, WrongPassword);
 
         _loginService.LogIn(CreateAttempt(Nickname), Password);
 
-        Assert.Equal(0, account.FailedSignInCount);
+        Assert.Equal(0, account.FailedLoginCount);
     }
 
     [Fact]
@@ -188,7 +188,7 @@ public class TestLoginService
     {
         for (int failureIndex = 0; failureIndex < FailuresThatLock; failureIndex++)
         {
-            account.RecordFailedSignIn(_now);
+            account.RecordFailedLogin(_now);
         }
     }
 

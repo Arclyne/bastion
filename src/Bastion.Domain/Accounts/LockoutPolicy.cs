@@ -12,21 +12,21 @@ public static class LockoutPolicy
     private const int ThirdLockMinutes = 60;
     private const int CounterResetHours = 24;
 
-    public static TimeSpan FailedSignInCountResetPeriod { get; } = TimeSpan.FromHours(CounterResetHours);
+    public static TimeSpan FailedLoginCountResetPeriod { get; } = TimeSpan.FromHours(CounterResetHours);
 
-    public static TimeSpan GetLockDuration(int failedSignInCount)
+    public static TimeSpan GetLockDuration(int failedLoginCount)
     {
-        if (failedSignInCount >= ThirdLockThreshold)
+        if (failedLoginCount >= ThirdLockThreshold)
         {
             return TimeSpan.FromMinutes(ThirdLockMinutes);
         }
 
-        if (failedSignInCount == SecondLockThreshold)
+        if (failedLoginCount == SecondLockThreshold)
         {
             return TimeSpan.FromMinutes(SecondLockMinutes);
         }
 
-        if (failedSignInCount == FirstLockThreshold)
+        if (failedLoginCount == FirstLockThreshold)
         {
             return TimeSpan.FromMinutes(FirstLockMinutes);
         }
