@@ -14,7 +14,7 @@ public class TestMessage
     private static readonly DateTime _sentAt = new DateTime(2026, 11, 5, 12, 0, 0, DateTimeKind.Utc);
 
     [Fact]
-    public void Constructor_PrivateMessage_UsesFriendsChannel()
+    public void CreatePrivate_DifferentPlayers_UsesFriendsChannel()
     {
         Message message = CreateMessage();
 
@@ -22,11 +22,11 @@ public class TestMessage
     }
 
     [Fact]
-    public void Constructor_SameAuthorAndRecipient_Throws()
+    public void CreatePrivate_SameAuthorAndRecipient_Throws()
     {
         var participants = new MessageParticipants(AuthorId, AuthorId);
 
-        Assert.Throws<ArgumentException>(() => new Message(participants, "hola", _sentAt));
+        Assert.Throws<ArgumentException>(() => Message.CreatePrivate(participants, "hola", _sentAt));
     }
 
     [Fact]
@@ -62,7 +62,8 @@ public class TestMessage
 
     private static Message CreateMessage()
     {
-        return new Message(new MessageParticipants(AuthorId, RecipientId), "hola", _sentAt);
+        var participants = new MessageParticipants(AuthorId, RecipientId);
+        return Message.CreatePrivate(participants, "hola", _sentAt);
     }
 
     [Fact]

@@ -6,22 +6,6 @@ public class Message
 {
     private const string SameAccountMessage = "A player cannot send a private message to themselves.";
 
-    public Message(MessageParticipants participants, string text, DateTime sentAt)
-    {
-        ArgumentNullException.ThrowIfNull(participants);
-        ArgumentNullException.ThrowIfNull(text);
-        if (participants.AuthorId == participants.RecipientId)
-        {
-            throw new ArgumentException(SameAccountMessage, nameof(participants));
-        }
-
-        AuthorId = participants.AuthorId;
-        RecipientId = participants.RecipientId;
-        Channel = MessageChannel.Friends;
-        Text = text;
-        SentAt = sentAt;
-    }
-
     private Message()
     {
         Text = string.Empty;
@@ -42,6 +26,25 @@ public class Message
     public DateTime SentAt { get; private set; }
 
     public DateTime? ReadAt { get; private set; }
+
+    public static Message CreatePrivate(MessageParticipants participants, string text, DateTime sentAt)
+    {
+        ArgumentNullException.ThrowIfNull(participants);
+        ArgumentNullException.ThrowIfNull(text);
+        if (participants.AuthorId == participants.RecipientId)
+        {
+            throw new ArgumentException(SameAccountMessage, nameof(participants));
+        }
+
+        return new Message
+        {
+            AuthorId = participants.AuthorId,
+            RecipientId = participants.RecipientId,
+            Channel = MessageChannel.Friends,
+            Text = text,
+            SentAt = sentAt,
+        };
+    }
 
     public static Message CreateForMatch(MatchChatSubmission submission, int authorId, DateTime sentAt)
     {
@@ -64,7 +67,12 @@ public class Message
 
     public int GetPartnerId(int accountId)
     {
-        return IsSentBy(accountId) ? RecipientId.GetValueOrDefault() : AuthorId;
+        if (IsSentBy(accountId))
+        {
+            return RecipientId.GetValueOrDefault();
+        }
+
+        return AuthorId;
     }
 
     public void MarkRead(DateTime readAt)

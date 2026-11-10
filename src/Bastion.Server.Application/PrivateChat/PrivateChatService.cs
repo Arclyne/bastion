@@ -102,7 +102,7 @@ public sealed class PrivateChatService : IPrivateChatService
 
         PlayerIdentity author = _unitOfWork.Accounts.FindPlayerIdentity(player.AccountId)
             ?? throw new InvalidSessionException();
-        var message = new Message(new MessageParticipants(player.AccountId, partner.AccountId), screenedText, now);
+        var message = Message.CreatePrivate(new MessageParticipants(player.AccountId, partner.AccountId), screenedText, now);
         _unitOfWork.Messages.Add(message);
         _unitOfWork.SaveChanges();
         _chatRoom.Deliver(new PrivateMessageDelivery(author, message));
