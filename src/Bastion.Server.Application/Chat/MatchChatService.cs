@@ -45,7 +45,7 @@ public sealed class MatchChatService : IMatchChatService
             throw new ChatChannelForbiddenException();
         }
 
-        string screenedText = _chatModerator.Screen(author.AccountId, submission.Text, now);
+        string screenedText = _chatModerator.ScreenMessage(author.AccountId, submission.Text, now);
         if (!_matchChatRelay.TryStartCooldown(author.AccountId, now))
         {
             throw new ChatMessageRejectedException(ChatRejection.TooFast);
@@ -54,6 +54,7 @@ public sealed class MatchChatService : IMatchChatService
         IEnumerable<int> otherParticipantAccountIds =
             participantAccountIds.Where(accountId => accountId != author.AccountId);
         var recipientAccountIds = new List<int>(otherParticipantAccountIds);
-        return _matchChatRelay.Post(submission.MatchId, new ChatLine(author, screenedText, now), recipientAccountIds);
+        var line = new ChatLine(author, screenedText, now);
+        return _matchChatRelay.Post(submission.MatchId, line, recipientAccountIds);
     }
 }

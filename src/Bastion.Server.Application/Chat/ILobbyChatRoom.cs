@@ -5,11 +5,11 @@ namespace Bastion.Server.Application.Chat;
 
 public interface ILobbyChatRoom
 {
-    bool TryClaimTurn(int accountId, DateTime now);
+    bool TryStartCooldown(int accountId, DateTime now);
 
     PostedChatLine Post(ChatLine line);
 
-    IReadOnlyList<PostedChatLine> ListRecent(int count);
+    IReadOnlyList<PostedChatLine> ListRecent();
 
     int CountListeners();
 }

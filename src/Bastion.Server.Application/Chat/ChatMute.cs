@@ -23,6 +23,7 @@ public sealed record ChatMute(bool IsMuted, DateTime? EndsAt)
             return new ChatMute(true, null);
         }
 
-        return new ChatMute(true, sanctions.Max(sanction => sanction.EndsAt));
+        DateTime? latestEnd = sanctions.Max(sanction => sanction.EndsAt);
+        return new ChatMute(true, latestEnd);
     }
 }

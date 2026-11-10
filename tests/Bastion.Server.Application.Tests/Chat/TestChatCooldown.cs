@@ -15,21 +15,21 @@ public class TestChatCooldown
     private readonly ChatCooldown _cooldown = new ChatCooldown();
 
     [Fact]
-    public void TryClaimTurn_AtCooldownEnd_ReturnsTrue()
+    public void TryStartCooldown_AtCooldownEnd_ReturnsTrue()
     {
-        _cooldown.TryClaimTurn(AccountId, _now);
+        _cooldown.TryStartCooldown(AccountId, _now);
 
-        bool claimed = _cooldown.TryClaimTurn(AccountId, _now.AddSeconds(ChatPolicy.MessageCooldownSeconds));
+        bool claimed = _cooldown.TryStartCooldown(AccountId, _now.AddSeconds(ChatPolicy.MessageCooldownSeconds));
 
         Assert.True(claimed);
     }
 
     [Fact]
-    public void TryClaimTurn_OtherAccountWithinCooldown_ReturnsTrue()
+    public void TryStartCooldown_OtherAccountWithinCooldown_ReturnsTrue()
     {
-        _cooldown.TryClaimTurn(AccountId, _now);
+        _cooldown.TryStartCooldown(AccountId, _now);
 
-        bool claimed = _cooldown.TryClaimTurn(OtherAccountId, _now);
+        bool claimed = _cooldown.TryStartCooldown(OtherAccountId, _now);
 
         Assert.True(claimed);
     }

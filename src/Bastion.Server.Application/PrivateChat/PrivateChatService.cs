@@ -94,8 +94,8 @@ public sealed class PrivateChatService : IPrivateChatService
             throw new ChatMessageRejectedException(ChatRejection.NotFriends);
         }
 
-        string screenedText = _moderator.Screen(player.AccountId, draft.Text, now);
-        if (!_chatRoom.TryClaimTurn(player.AccountId, now))
+        string screenedText = _moderator.ScreenMessage(player.AccountId, draft.Text, now);
+        if (!_chatRoom.TryStartCooldown(player.AccountId, now))
         {
             throw new ChatMessageRejectedException(ChatRejection.TooFast);
         }

@@ -27,7 +27,7 @@ public sealed class MatchChatRelay : IMatchChatRelay
 
     public bool TryStartCooldown(int accountId, DateTime now)
     {
-        return _cooldown.TryClaimTurn(accountId, now);
+        return _cooldown.TryStartCooldown(accountId, now);
     }
 
     public PostedChatLine Post(int matchId, ChatLine line, IReadOnlyCollection<int> recipientAccountIds)

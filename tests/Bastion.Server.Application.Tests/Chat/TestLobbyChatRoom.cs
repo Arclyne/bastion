@@ -42,25 +42,25 @@ public class TestLobbyChatRoom
             _chatRoom.Post(new ChatLine(_sender, "nuevo", _now));
         }
 
-        bool keepsOldest = _chatRoom.ListRecent(ChatPolicy.MaximumRecentMessages).Contains(oldest);
+        bool keepsOldest = _chatRoom.ListRecent().Contains(oldest);
 
         Assert.False(keepsOldest);
     }
 
     [Fact]
-    public void TryClaimTurn_FirstTurn_ReturnsTrue()
+    public void TryStartCooldown_FirstMessage_ReturnsTrue()
     {
-        bool claimed = _chatRoom.TryClaimTurn(AccountId, _now);
+        bool claimed = _chatRoom.TryStartCooldown(AccountId, _now);
 
         Assert.True(claimed);
     }
 
     [Fact]
-    public void TryClaimTurn_JustBeforeCooldownEnds_ReturnsFalse()
+    public void TryStartCooldown_JustBeforeCooldownEnds_ReturnsFalse()
     {
-        _chatRoom.TryClaimTurn(AccountId, _now);
+        _chatRoom.TryStartCooldown(AccountId, _now);
 
-        bool claimed = _chatRoom.TryClaimTurn(AccountId, _now.AddSeconds(ChatPolicy.MessageCooldownSeconds).AddTicks(-1));
+        bool claimed = _chatRoom.TryStartCooldown(AccountId, _now.AddSeconds(ChatPolicy.MessageCooldownSeconds).AddTicks(-1));
 
         Assert.False(claimed);
     }

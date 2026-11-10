@@ -15,9 +15,9 @@ public sealed class PrivateChatRoom : IPrivateChatRoom
         _notifier = notifier;
     }
 
-    public bool TryClaimTurn(int accountId, DateTime now)
+    public bool TryStartCooldown(int accountId, DateTime now)
     {
-        return _cooldown.TryClaimTurn(accountId, now);
+        return _cooldown.TryStartCooldown(accountId, now);
     }
 
     public void Deliver(PrivateMessageDelivery delivery)

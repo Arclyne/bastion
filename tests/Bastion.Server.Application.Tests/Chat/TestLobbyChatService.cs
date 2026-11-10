@@ -30,7 +30,7 @@ public class TestLobbyChatService
 
     public TestLobbyChatService()
     {
-        _lobbyChatService = new LobbyChatService(_sessionVerifier, _unitOfWork, new LobbyChatRoom(_broadcaster));
+        _lobbyChatService = new LobbyChatService(_sessionVerifier, new ChatModerator(_unitOfWork), new LobbyChatRoom(_broadcaster));
         _sessionVerifier.Add(Token, new ConnectedPlayer(AccountId, Nickname));
         _sessionVerifier.Add(OtherToken, new ConnectedPlayer(OtherAccountId, OtherNickname));
         _unitOfWork.BannedWordStore.ChatTerms.Add(BannedTerm);
