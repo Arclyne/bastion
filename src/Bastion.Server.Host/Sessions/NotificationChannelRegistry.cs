@@ -102,7 +102,7 @@ public sealed class NotificationChannelRegistry
     {
         ArgumentNullException.ThrowIfNull(createdMatch);
 
-        MatchFoundNotification notification = MatchmakingTranslator.ToNotification(createdMatch, GetUtcNow());
+        var notification = MatchmakingTranslator.ToMatchFoundNotification(createdMatch, GetUtcNow());
         foreach (CreatedMatchParticipant participant in createdMatch.Participants)
         {
             NotifyPlayer(participant.Player.AccountId, notification);
@@ -138,12 +138,12 @@ public sealed class NotificationChannelRegistry
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        NotifyPlayer(request.AccountId, MatchmakingTranslator.ToNotification(request, GetUtcNow()));
+        NotifyPlayer(request.AccountId, MatchmakingTranslator.ToPresenceRequestedNotification(request, GetUtcNow()));
     }
 
     public void NotifySearchEnded(int accountId, SearchEndReason reason)
     {
-        NotifyPlayer(accountId, MatchmakingTranslator.ToNotification(reason, GetUtcNow()));
+        NotifyPlayer(accountId, MatchmakingTranslator.ToSearchEndedNotification(reason, GetUtcNow()));
     }
 
     public void NotifyPresenceChanged(IReadOnlyList<int> recipientAccountIds, FriendPresenceChange change)
