@@ -33,7 +33,7 @@ public sealed class AccountService : IAccountService
     }
 
     /// <inheritdoc/>
-    public PlayerSession LogIn(PlayerCredentials credentials, ClientDevice device)
+    public PlayerSession LogIn(PlayerCredentials? credentials, ClientDevice? device)
     {
         if (credentials is null || device is null)
         {
@@ -41,16 +41,26 @@ public sealed class AccountService : IAccountService
         }
 
         ClientConnection connection = LoginTranslator.ToConnection(device, CallerAddress.GetCurrent());
-        AccessAttempt attempt = LoginTranslator.ToAttempt(
-            credentials,
-            connection,
-            _timeProvider.GetUtcNow().UtcDateTime);
+        DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
+        AccessAttempt attempt = LoginTranslator.ToAttempt(credentials, connection, now);
+        string password = credentials.Password ?? string.Empty;
+        Func<PlayerSession> logIn = () => LogInInRequestScope(attempt, password);
+        return TranslateLoginFailures(nameof(LogIn), connection.IpAddress, logIn);
+    }
+
+    private PlayerSession LogInInRequestScope(AccessAttempt attempt, string password)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        ILoginService loginService = scope.ServiceProvider.GetRequiredService<ILoginService>();
+        LoggedInPlayer player = loginService.LogIn(attempt, password);
+        return LoginTranslator.ToSession(player);
+    }
+
+    private PlayerSession TranslateLoginFailures(string operationName, string ipAddress, Func<PlayerSession> operation)
+    {
         try
         {
-            using IServiceScope scope = _scopeFactory.CreateScope();
-            ILoginService loginService = scope.ServiceProvider.GetRequiredService<ILoginService>();
-            LoggedInPlayer player = loginService.LogIn(attempt, credentials.Password ?? string.Empty);
-            return LoginTranslator.ToSession(player);
+            return operation();
         }
         catch (InvalidCredentialsException ex)
         {
@@ -62,12 +72,12 @@ public sealed class AccountService : IAccountService
         }
         catch (DbUpdateException ex)
         {
-            _logger.Error($"The login could not be saved. IpAddress={connection.IpAddress}", ex);
+            _logger.Error($"The login could not be saved. Operation={operationName}; IpAddress={ipAddress}", ex);
             throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)
         {
-            _logger.Error($"The database could not be reached. IpAddress={connection.IpAddress}", ex);
+            _logger.Error($"The database could not be reached. Operation={operationName}; IpAddress={ipAddress}", ex);
             throw new FaultException(ServerFailureReason);
         }
     }
