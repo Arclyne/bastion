@@ -3,7 +3,7 @@ using System.ServiceModel;
 
 namespace Bastion.Client.Networking.Channels;
 
-public sealed class ServiceChannel<TContract> : IDisposable
+public sealed class ServiceChannel<TContract> : IServiceChannel<TContract>, IDisposable
     where TContract : class
 {
     private readonly ChannelFactory<TContract> _channelFactory;

@@ -3,16 +3,21 @@ using System.Collections.Generic;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Chat;
-using Bastion.Contracts;
 using Bastion.Contracts.Chat;
 using Bastion.Contracts.PrivateChat;
 
 namespace Bastion.Client.Networking.PrivateChat;
 
-public sealed class ConversationClient : IConversationClient, IDisposable
+public sealed class ConversationClient : IConversationClient
 {
-    private readonly ServiceChannel<IConversationService> _channel =
-        new ServiceChannel<IConversationService>(ServiceEndpoints.ConversationsPath);
+    private readonly IServiceChannel<IConversationService> _channel;
+
+    public ConversationClient(IServiceChannel<IConversationService> channel)
+    {
+        ArgumentNullException.ThrowIfNull(channel);
+
+        _channel = channel;
+    }
 
     public IReadOnlyList<ConversationPreview> ListConversations(string sessionToken)
     {
@@ -51,11 +56,6 @@ public sealed class ConversationClient : IConversationClient, IDisposable
             service.MarkConversationRead(sessionToken, friendCode);
             return true;
         });
-    }
-
-    public void Dispose()
-    {
-        _channel.Dispose();
     }
 
     private static Exception ToClientException(Exception ex)

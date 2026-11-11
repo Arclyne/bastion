@@ -1,14 +1,20 @@
 using System;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
-using Bastion.Contracts;
 using Bastion.Contracts.Accounts;
 
 namespace Bastion.Client.Networking.Accounts;
 
-public sealed class AccountClient : IAccountClient, IDisposable
+public sealed class AccountClient : IAccountClient
 {
-    private readonly ServiceChannel<IAccountService> _channel = new ServiceChannel<IAccountService>(ServiceEndpoints.AccountsPath);
+    private readonly IServiceChannel<IAccountService> _channel;
+
+    public AccountClient(IServiceChannel<IAccountService> channel)
+    {
+        ArgumentNullException.ThrowIfNull(channel);
+
+        _channel = channel;
+    }
 
     public LoggedInSession LogIn(LoginCredentials credentials)
     {
@@ -26,11 +32,6 @@ public sealed class AccountClient : IAccountClient, IDisposable
         };
         PlayerSession session = Call(service => service.LogIn(playerCredentials, device));
         return ToLoggedInSession(session);
-    }
-
-    public void Dispose()
-    {
-        _channel.Dispose();
     }
 
     private TResult Call<TResult>(Func<IAccountService, TResult> operation)

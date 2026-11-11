@@ -2,21 +2,21 @@ using System;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Notifications;
-using Bastion.Contracts;
 using Bastion.Contracts.Rooms;
 
 namespace Bastion.Client.Networking.Rooms;
 
-public sealed class RoomClient : IRoomClient, IDisposable
+public sealed class RoomClient : IRoomClient
 {
-    private readonly ServiceChannel<IRoomService> _channel =
-        new ServiceChannel<IRoomService>(ServiceEndpoints.RoomsPath);
+    private readonly IServiceChannel<IRoomService> _channel;
     private readonly INotificationClient _notificationClient;
 
-    public RoomClient(INotificationClient notificationClient)
+    public RoomClient(IServiceChannel<IRoomService> channel, INotificationClient notificationClient)
     {
+        ArgumentNullException.ThrowIfNull(channel);
         ArgumentNullException.ThrowIfNull(notificationClient);
 
+        _channel = channel;
         _notificationClient = notificationClient;
     }
 
@@ -91,11 +91,6 @@ public sealed class RoomClient : IRoomClient, IDisposable
 
         RoomState? state = Call(service => service.FindOwnRoom(sessionToken));
         return state is null ? null : RoomContractTranslator.ToPrivateRoom(state);
-    }
-
-    public void Dispose()
-    {
-        _channel.Dispose();
     }
 
     private static Exception ToClientException(Exception ex)

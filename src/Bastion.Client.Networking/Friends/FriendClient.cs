@@ -2,15 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
-using Bastion.Contracts;
 using Bastion.Contracts.Friends;
 
 namespace Bastion.Client.Networking.Friends;
 
-public sealed class FriendClient : IFriendClient, IDisposable
+public sealed class FriendClient : IFriendClient
 {
-    private readonly ServiceChannel<IFriendshipService> _channel =
-        new ServiceChannel<IFriendshipService>(ServiceEndpoints.FriendsPath);
+    private readonly IServiceChannel<IFriendshipService> _channel;
+
+    public FriendClient(IServiceChannel<IFriendshipService> channel)
+    {
+        ArgumentNullException.ThrowIfNull(channel);
+
+        _channel = channel;
+    }
 
     public FriendListing ListFriends(string sessionToken)
     {
@@ -76,11 +81,6 @@ public sealed class FriendClient : IFriendClient, IDisposable
         ArgumentNullException.ThrowIfNull(friendCode);
 
         Call(service => service.RemoveFriend(sessionToken, friendCode));
-    }
-
-    public void Dispose()
-    {
-        _channel.Dispose();
     }
 
     private static Exception ToClientException(Exception ex)

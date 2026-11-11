@@ -2,21 +2,21 @@ using System;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Notifications;
-using Bastion.Contracts;
 using Bastion.Contracts.Matchmaking;
 
 namespace Bastion.Client.Networking.Matchmaking;
 
-public sealed class MatchmakingClient : IMatchmakingClient, IDisposable
+public sealed class MatchmakingClient : IMatchmakingClient
 {
-    private readonly ServiceChannel<IMatchmakingService> _channel =
-        new ServiceChannel<IMatchmakingService>(ServiceEndpoints.MatchmakingPath);
+    private readonly IServiceChannel<IMatchmakingService> _channel;
     private readonly INotificationClient _notificationClient;
 
-    public MatchmakingClient(INotificationClient notificationClient)
+    public MatchmakingClient(IServiceChannel<IMatchmakingService> channel, INotificationClient notificationClient)
     {
+        ArgumentNullException.ThrowIfNull(channel);
         ArgumentNullException.ThrowIfNull(notificationClient);
 
+        _channel = channel;
         _notificationClient = notificationClient;
     }
 
@@ -63,11 +63,6 @@ public sealed class MatchmakingClient : IMatchmakingClient, IDisposable
         ArgumentNullException.ThrowIfNull(sessionToken);
 
         Call(service => service.ConfirmPresence(sessionToken));
-    }
-
-    public void Dispose()
-    {
-        _channel.Dispose();
     }
 
     private static Exception ToClientException(Exception ex)

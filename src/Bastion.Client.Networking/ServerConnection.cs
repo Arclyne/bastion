@@ -1,5 +1,6 @@
 using System;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Chat;
 using Bastion.Client.Networking.Friends;
 using Bastion.Client.Networking.Matches;
@@ -7,37 +8,48 @@ using Bastion.Client.Networking.Matchmaking;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.PrivateChat;
 using Bastion.Client.Networking.Rooms;
+using Bastion.Contracts;
+using Bastion.Contracts.Accounts;
+using Bastion.Contracts.Chat;
+using Bastion.Contracts.Friends;
+using Bastion.Contracts.Matches;
+using Bastion.Contracts.Matchmaking;
+using Bastion.Contracts.PrivateChat;
+using Bastion.Contracts.Rooms;
 
 namespace Bastion.Client.Networking;
 
 public sealed class ServerConnection : IDisposable
 {
-    private readonly AccountClient _accounts = new AccountClient();
+    private readonly ServiceChannel<IAccountService> _accountChannel =
+        new ServiceChannel<IAccountService>(ServiceEndpoints.AccountsPath);
+    private readonly ServiceChannel<IChatService> _chatChannel =
+        new ServiceChannel<IChatService>(ServiceEndpoints.ChatPath);
+    private readonly ServiceChannel<IMatchmakingService> _matchmakingChannel =
+        new ServiceChannel<IMatchmakingService>(ServiceEndpoints.MatchmakingPath);
+    private readonly ServiceChannel<IMatchService> _matchChannel =
+        new ServiceChannel<IMatchService>(ServiceEndpoints.MatchesPath);
+    private readonly ServiceChannel<IFriendshipService> _friendshipChannel =
+        new ServiceChannel<IFriendshipService>(ServiceEndpoints.FriendsPath);
+    private readonly ServiceChannel<IConversationService> _conversationChannel =
+        new ServiceChannel<IConversationService>(ServiceEndpoints.ConversationsPath);
+    private readonly ServiceChannel<IRoomService> _roomChannel =
+        new ServiceChannel<IRoomService>(ServiceEndpoints.RoomsPath);
     private readonly NotificationClient _notifications;
-    private readonly ChatClient _chat;
-    private readonly MatchmakingClient _matchmaking;
-    private readonly MatchClient _matches;
-    private readonly FriendClient _friends = new FriendClient();
-    private readonly ConversationClient _conversations = new ConversationClient();
-    private readonly RoomClient _rooms;
 
     public ServerConnection(TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
 
         _notifications = new NotificationClient(timeProvider);
-        _chat = new ChatClient(_notifications);
-        _matchmaking = new MatchmakingClient(_notifications);
-        _matches = new MatchClient(_notifications);
-        _rooms = new RoomClient(_notifications);
-        Accounts = _accounts;
+        Accounts = new AccountClient(_accountChannel);
         Notifications = _notifications;
-        Chat = _chat;
-        Matchmaking = _matchmaking;
-        Matches = _matches;
-        Friends = _friends;
-        Conversations = _conversations;
-        Rooms = _rooms;
+        Chat = new ChatClient(_chatChannel, _notifications);
+        Matchmaking = new MatchmakingClient(_matchmakingChannel, _notifications);
+        Matches = new MatchClient(_matchChannel, _notifications);
+        Friends = new FriendClient(_friendshipChannel);
+        Conversations = new ConversationClient(_conversationChannel);
+        Rooms = new RoomClient(_roomChannel, _notifications);
     }
 
     public IAccountClient Accounts { get; }
@@ -59,12 +71,12 @@ public sealed class ServerConnection : IDisposable
     public void Dispose()
     {
         _notifications.Dispose();
-        _chat.Dispose();
-        _matchmaking.Dispose();
-        _matches.Dispose();
-        _friends.Dispose();
-        _conversations.Dispose();
-        _rooms.Dispose();
-        _accounts.Dispose();
+        _chatChannel.Dispose();
+        _matchmakingChannel.Dispose();
+        _matchChannel.Dispose();
+        _friendshipChannel.Dispose();
+        _conversationChannel.Dispose();
+        _roomChannel.Dispose();
+        _accountChannel.Dispose();
     }
 }
