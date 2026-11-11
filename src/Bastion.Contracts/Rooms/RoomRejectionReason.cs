@@ -18,7 +18,7 @@ public enum RoomRejectionReason
     InRoom,
 
     [EnumMember]
-    InvalidSettings,
+    InvalidOptions,
 
     [EnumMember]
     RoomNotFound,

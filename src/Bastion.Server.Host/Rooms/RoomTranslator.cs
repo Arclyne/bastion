@@ -18,7 +18,7 @@ public static class RoomTranslator
             [RoomRejection.UnfinishedMatch] = RoomRejectionReason.UnfinishedMatch,
             [RoomRejection.SearchingMatch] = RoomRejectionReason.SearchingMatch,
             [RoomRejection.InRoom] = RoomRejectionReason.InRoom,
-            [RoomRejection.InvalidSettings] = RoomRejectionReason.InvalidSettings,
+            [RoomRejection.InvalidSettings] = RoomRejectionReason.InvalidOptions,
             [RoomRejection.RoomNotFound] = RoomRejectionReason.RoomNotFound,
             [RoomRejection.RoomFull] = RoomRejectionReason.RoomFull,
             [RoomRejection.Kicked] = RoomRejectionReason.Kicked,

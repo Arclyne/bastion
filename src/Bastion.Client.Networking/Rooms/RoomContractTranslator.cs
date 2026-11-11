@@ -55,7 +55,7 @@ public static class RoomContractTranslator
                 return RoomRejection.SearchingMatch;
             case RoomRejectionReason.InRoom:
                 return RoomRejection.InRoom;
-            case RoomRejectionReason.InvalidSettings:
+            case RoomRejectionReason.InvalidOptions:
                 return RoomRejection.InvalidSettings;
             case RoomRejectionReason.RoomNotFound:
                 return RoomRejection.RoomNotFound;

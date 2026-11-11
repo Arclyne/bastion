@@ -4,7 +4,8 @@ using Bastion.Contracts.Sessions;
 namespace Bastion.Contracts.Rooms;
 
 /// <summary>
-/// Opens private rooms and lets players join them with their code, get ready and leave.
+/// Opens private rooms and lets players join them with their code, get ready and leave, and lets the host change the
+/// options and start the match.
 /// The changes made by other members arrive through the notification channel opened with <see cref="ISessionService"/>.
 /// </summary>
 [ServiceContract]
@@ -22,7 +23,7 @@ public interface IRoomService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="RoomRejectedFault"/>: the room cannot open; the detail says why.
     /// </exception>
-    /// <exception cref="FaultException">The server could not reach the database.</exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     [FaultContract(typeof(RoomRejectedFault))]
@@ -58,13 +59,14 @@ public interface IRoomService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="RoomRejectedFault"/>: the player is not in a room.
     /// </exception>
+    /// <exception cref="FaultException">The server could not reach the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     [FaultContract(typeof(RoomRejectedFault))]
     RoomState SetReady(string? sessionToken, bool isReady);
 
     /// <summary>
-    /// Changes the settings of the room hosted by the player of the session. The other members stop being ready.
+    /// Changes the options of the room hosted by the player of the session. The other members stop being ready.
     /// </summary>
     /// <param name="sessionToken">The token of the host's open session.</param>
     /// <param name="options">The new game mode, walls per player and clock.</param>
@@ -73,9 +75,9 @@ public interface IRoomService
     /// With <see cref="InvalidSessionFault"/>: the session is not open.
     /// </exception>
     /// <exception cref="FaultException{TDetail}">
-    /// With <see cref="RoomRejectedFault"/>: the settings cannot change; the detail says why.
+    /// With <see cref="RoomRejectedFault"/>: the options cannot change; the detail says why.
     /// </exception>
-    /// <exception cref="FaultException">The server could not reach the database.</exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     [FaultContract(typeof(RoomRejectedFault))]
@@ -92,7 +94,9 @@ public interface IRoomService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="RoomRejectedFault"/>: the match cannot start; the detail says why.
     /// </exception>
-    /// <exception cref="FaultException">The server could not save the match; the room stays open.</exception>
+    /// <exception cref="FaultException">
+    /// The server could not reach the database or save the match; the room stays open.
+    /// </exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     [FaultContract(typeof(RoomRejectedFault))]
@@ -113,6 +117,7 @@ public interface IRoomService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="InvalidSessionFault"/>: the session is not open.
     /// </exception>
+    /// <exception cref="FaultException">The server could not reach the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     RoomState? FindOwnRoom(string? sessionToken);
