@@ -271,10 +271,10 @@ public sealed class FriendRequestsViewModel : ViewModel
     private void ShowListing(FriendRequestListing listing)
     {
         _received.Clear();
-        _received.AddRange(listing.Received.Select(request =>
+        _received.AddRange(listing.ReceivedRequests.Select(request =>
             new FriendRequestRowViewModel(request, listing.ListedAt, true)));
         _sent.Clear();
-        _sent.AddRange(listing.Sent.Select(request =>
+        _sent.AddRange(listing.SentRequests.Select(request =>
             new FriendRequestRowViewModel(request, listing.ListedAt, false)));
         StatusText = string.Empty;
         UpdateSummary();

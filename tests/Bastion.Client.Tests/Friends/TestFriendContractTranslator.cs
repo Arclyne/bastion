@@ -100,7 +100,7 @@ public class TestFriendContractTranslator
 
         var listing = FriendContractTranslator.ToFriendRequestListing(list);
 
-        Assert.Empty(listing.Received);
+        Assert.Empty(listing.ReceivedRequests);
     }
 
     private static FriendList CreateList(FriendListEntry entry)

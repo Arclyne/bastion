@@ -39,8 +39,8 @@ public static class FriendContractTranslator
         ArgumentNullException.ThrowIfNull(list);
 
         return new FriendRequestListing(
-            ToPendingRequests(list.Received),
-            ToPendingRequests(list.Sent),
+            ToPendingRequests(list.ReceivedRequests),
+            ToPendingRequests(list.SentRequests),
             list.ListedAt);
     }
 

@@ -280,7 +280,7 @@ public class TestFriendRequestService
 
         FriendRequestBoard board = _friendRequestService.ListFriendRequests(Token, _now);
 
-        Assert.Single(board.Received);
+        Assert.Single(board.ReceivedRequests);
     }
 
     [Fact]
@@ -290,7 +290,7 @@ public class TestFriendRequestService
 
         FriendRequestBoard board = _friendRequestService.ListFriendRequests(Token, _now);
 
-        Assert.Equal(_now.AddDays(FriendshipPolicy.RequestLifetimeDays), board.Sent[0].ExpiresAt);
+        Assert.Equal(_now.AddDays(FriendshipPolicy.RequestLifetimeDays), board.SentRequests[0].ExpiresAt);
     }
 
     [Fact]
@@ -300,7 +300,7 @@ public class TestFriendRequestService
 
         FriendRequestBoard board = _friendRequestService.ListFriendRequests(Token, _now);
 
-        Assert.Empty(board.Received);
+        Assert.Empty(board.ReceivedRequests);
     }
 
     [Fact]
