@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using Bastion.Contracts.Friends;
 using Bastion.Server.Application.Friends;
@@ -11,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Host.Friends;
 
+/// <inheritdoc/>
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class FriendshipService : IFriendshipService
 {
@@ -30,92 +32,74 @@ public sealed class FriendshipService : IFriendshipService
         _timeProvider = timeProvider;
     }
 
+    /// <inheritdoc/>
     public FriendList ListFriends(string? sessionToken)
     {
         string token = RequireSessionToken(sessionToken);
-        return Run(nameof(ListFriends), services =>
-        {
-            FriendRoster roster = services.GetRequiredService<IFriendListService>().ListFriends(token, GetUtcNow());
-            return FriendshipTranslator.ToFriendList(roster);
-        });
+        Func<FriendList> listFriends = () => ListFriendsInRequestScope(token);
+        return TranslateFriendshipFailures(nameof(ListFriends), listFriends);
     }
 
+    /// <inheritdoc/>
     public PlayerSearchEntry[] SearchPlayers(string? sessionToken, string? text)
     {
         string token = RequireSessionToken(sessionToken);
         string searchText = text ?? string.Empty;
-        return Run(nameof(SearchPlayers), services =>
-        {
-            IFriendRequestService requestService = services.GetRequiredService<IFriendRequestService>();
-            return FriendshipTranslator.ToSearchEntries(requestService.SearchPlayers(token, searchText, GetUtcNow()));
-        });
+        Func<PlayerSearchEntry[]> searchPlayers = () => SearchPlayersInRequestScope(token, searchText);
+        return TranslateFriendshipFailures(nameof(SearchPlayers), searchPlayers);
     }
 
+    /// <inheritdoc/>
     public FriendRequestResult SendFriendRequest(string? sessionToken, string? friendCode)
     {
         string token = RequireSessionToken(sessionToken);
-        if (friendCode is null)
-        {
-            throw FriendshipTranslator.ToFault(new FriendshipRejectedException(FriendshipRejection.PlayerNotFound));
-        }
-
-        return Run(nameof(SendFriendRequest), services =>
-        {
-            IFriendRequestService requestService = services.GetRequiredService<IFriendRequestService>();
-            return FriendshipTranslator.ToResult(requestService.SendFriendRequest(token, friendCode, GetUtcNow()));
-        });
+        string recipientCode = RequireFriendCode(friendCode, FriendshipRejection.PlayerNotFound);
+        Func<FriendRequestResult> sendRequest = () => SendFriendRequestInRequestScope(token, recipientCode);
+        return TranslateFriendshipFailures(nameof(SendFriendRequest), sendRequest);
     }
 
+    /// <inheritdoc/>
     public FriendRequestList ListFriendRequests(string? sessionToken)
     {
         string token = RequireSessionToken(sessionToken);
-        return Run(nameof(ListFriendRequests), services =>
-        {
-            IFriendRequestService requestService = services.GetRequiredService<IFriendRequestService>();
-            return FriendshipTranslator.ToFriendRequestList(requestService.ListFriendRequests(token, GetUtcNow()));
-        });
+        Func<FriendRequestList> listRequests = () => ListFriendRequestsInRequestScope(token);
+        return TranslateFriendshipFailures(nameof(ListFriendRequests), listRequests);
     }
 
+    /// <inheritdoc/>
     public void AcceptFriendRequest(string? sessionToken, string? requesterFriendCode)
     {
         string token = RequireSessionToken(sessionToken);
-        string code = RequireRequestCode(requesterFriendCode);
-        RunResponse(
-            nameof(AcceptFriendRequest),
-            requestService => requestService.AcceptFriendRequest(token, code, GetUtcNow()));
+        string requesterCode = RequireFriendCode(requesterFriendCode, FriendshipRejection.RequestNotFound);
+        Action acceptRequest = () => AcceptFriendRequestInRequestScope(token, requesterCode);
+        TranslateFriendshipFailures(nameof(AcceptFriendRequest), acceptRequest);
     }
 
+    /// <inheritdoc/>
     public void RejectFriendRequest(string? sessionToken, string? requesterFriendCode)
     {
         string token = RequireSessionToken(sessionToken);
-        string code = RequireRequestCode(requesterFriendCode);
-        RunResponse(
-            nameof(RejectFriendRequest),
-            requestService => requestService.RejectFriendRequest(token, code, GetUtcNow()));
+        string requesterCode = RequireFriendCode(requesterFriendCode, FriendshipRejection.RequestNotFound);
+        Action rejectRequest = () => RejectFriendRequestInRequestScope(token, requesterCode);
+        TranslateFriendshipFailures(nameof(RejectFriendRequest), rejectRequest);
     }
 
+    /// <inheritdoc/>
     public void CancelFriendRequest(string? sessionToken, string? recipientFriendCode)
     {
         string token = RequireSessionToken(sessionToken);
-        string code = RequireRequestCode(recipientFriendCode);
-        RunResponse(
-            nameof(CancelFriendRequest),
-            requestService => requestService.CancelFriendRequest(token, code, GetUtcNow()));
+        string recipientCode = RequireFriendCode(recipientFriendCode, FriendshipRejection.RequestNotFound);
+        Action cancelRequest = () => CancelFriendRequestInRequestScope(token, recipientCode);
+        TranslateFriendshipFailures(nameof(CancelFriendRequest), cancelRequest);
     }
 
+    /// <inheritdoc/>
     public void RemoveFriend(string? sessionToken, string? friendCode)
     {
         string token = RequireSessionToken(sessionToken);
-        if (friendCode is null)
-        {
-            throw FriendshipTranslator.ToFault(new FriendshipRejectedException(FriendshipRejection.NotFriends));
-        }
-
-        Run(nameof(RemoveFriend), services =>
-        {
-            services.GetRequiredService<IFriendListService>().RemoveFriend(token, friendCode, GetUtcNow());
-            return true;
-        });
+        string removedFriendCode = RequireFriendCode(friendCode, FriendshipRejection.NotFriends);
+        Action removeFriend = () => RemoveFriendInRequestScope(token, removedFriendCode);
+        TranslateFriendshipFailures(nameof(RemoveFriend), removeFriend);
     }
 
     private static string RequireSessionToken(string? sessionToken)
@@ -123,27 +107,76 @@ public sealed class FriendshipService : IFriendshipService
         return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());
     }
 
-    private static string RequireRequestCode(string? friendCode)
+    private static string RequireFriendCode(string? friendCode, FriendshipRejection rejectionWhenMissing)
     {
-        return friendCode
-            ?? throw FriendshipTranslator.ToFault(new FriendshipRejectedException(FriendshipRejection.RequestNotFound));
+        return friendCode ?? throw FriendshipTranslator.ToFault(new FriendshipRejectedException(rejectionWhenMissing));
     }
 
-    private void RunResponse(string operationName, Action<IFriendRequestService> response)
+    private FriendList ListFriendsInRequestScope(string token)
     {
-        Run(operationName, services =>
-        {
-            response(services.GetRequiredService<IFriendRequestService>());
-            return true;
-        });
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IFriendListService friendList = scope.ServiceProvider.GetRequiredService<IFriendListService>();
+        FriendRoster roster = friendList.ListFriends(token, GetUtcNow());
+        return FriendshipTranslator.ToFriendList(roster);
     }
 
-    private TResult Run<TResult>(string operationName, Func<IServiceProvider, TResult> operation)
+    private PlayerSearchEntry[] SearchPlayersInRequestScope(string token, string searchText)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IFriendRequestService friendRequests = scope.ServiceProvider.GetRequiredService<IFriendRequestService>();
+        IReadOnlyList<PlayerSearchResult> results = friendRequests.SearchPlayers(token, searchText, GetUtcNow());
+        return FriendshipTranslator.ToSearchEntries(results);
+    }
+
+    private FriendRequestResult SendFriendRequestInRequestScope(string token, string recipientCode)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IFriendRequestService friendRequests = scope.ServiceProvider.GetRequiredService<IFriendRequestService>();
+        FriendRequestOutcome outcome = friendRequests.SendFriendRequest(token, recipientCode, GetUtcNow());
+        return FriendshipTranslator.ToFriendRequestResult(outcome);
+    }
+
+    private FriendRequestList ListFriendRequestsInRequestScope(string token)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IFriendRequestService friendRequests = scope.ServiceProvider.GetRequiredService<IFriendRequestService>();
+        FriendRequestBoard board = friendRequests.ListFriendRequests(token, GetUtcNow());
+        return FriendshipTranslator.ToFriendRequestList(board);
+    }
+
+    private void AcceptFriendRequestInRequestScope(string token, string requesterCode)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IFriendRequestService friendRequests = scope.ServiceProvider.GetRequiredService<IFriendRequestService>();
+        friendRequests.AcceptFriendRequest(token, requesterCode, GetUtcNow());
+    }
+
+    private void RejectFriendRequestInRequestScope(string token, string requesterCode)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IFriendRequestService friendRequests = scope.ServiceProvider.GetRequiredService<IFriendRequestService>();
+        friendRequests.RejectFriendRequest(token, requesterCode, GetUtcNow());
+    }
+
+    private void CancelFriendRequestInRequestScope(string token, string recipientCode)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IFriendRequestService friendRequests = scope.ServiceProvider.GetRequiredService<IFriendRequestService>();
+        friendRequests.CancelFriendRequest(token, recipientCode, GetUtcNow());
+    }
+
+    private void RemoveFriendInRequestScope(string token, string removedFriendCode)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IFriendListService friendList = scope.ServiceProvider.GetRequiredService<IFriendListService>();
+        friendList.RemoveFriend(token, removedFriendCode, GetUtcNow());
+    }
+
+    private TResult TranslateFriendshipFailures<TResult>(string operationName, Func<TResult> operation)
     {
         try
         {
-            using IServiceScope scope = _scopeFactory.CreateScope();
-            return operation(scope.ServiceProvider);
+            return operation();
         }
         catch (InvalidSessionException ex)
         {
@@ -163,6 +196,18 @@ public sealed class FriendshipService : IFriendshipService
             _logger.Error($"The database could not be reached. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
+    }
+
+    private void TranslateFriendshipFailures(string operationName, Action operation)
+    {
+        Func<bool> operationAsFunction = () => CompleteOperation(operation);
+        TranslateFriendshipFailures(operationName, operationAsFunction);
+    }
+
+    private static bool CompleteOperation(Action operation)
+    {
+        operation();
+        return true;
     }
 
     private DateTime GetUtcNow()

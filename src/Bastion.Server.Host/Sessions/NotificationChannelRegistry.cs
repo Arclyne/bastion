@@ -151,7 +151,7 @@ public sealed class NotificationChannelRegistry
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
         ArgumentNullException.ThrowIfNull(change);
 
-        FriendPresenceNotification notification = FriendshipTranslator.ToNotification(change, GetUtcNow());
+        FriendPresenceNotification notification = FriendshipTranslator.ToPresenceNotification(change, GetUtcNow());
         NotifyPlayers(recipientAccountIds, notification);
     }
 
