@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Bastion.Contracts.Chat;
 using Bastion.Contracts.Notifications;
@@ -12,10 +13,10 @@ public static class ChatContractTranslator
         ArgumentNullException.ThrowIfNull(log);
 
         LobbyChatMessage[] messages = log.Messages ?? Array.Empty<LobbyChatMessage>();
-        return new LobbyChatTranscript(
-            messages.Select(ToChatMessage).ToList(),
-            log.ConnectedPlayerCount,
-            new ChatMute(log.IsMuted, log.MutedUntil));
+        IEnumerable<ChatMessage> chatMessages = messages.Select(ToChatMessage);
+        var messageList = new List<ChatMessage>(chatMessages);
+        var mute = new ChatMute(log.IsMuted, log.MutedUntil);
+        return new LobbyChatTranscript(messageList, log.ConnectedPlayerCount, mute);
     }
 
     public static ChatMessage ToChatMessage(ChatMessageNotification notification)
@@ -56,12 +57,14 @@ public static class ChatContractTranslator
     private static ChatMessage ToChatMessage(LobbyChatMessage message)
     {
         var author = new ChatAuthor(message.SenderNickname ?? string.Empty, message.IsOwn);
-        return new ChatMessage(author, message.Text ?? string.Empty, message.SentAt);
+        string text = message.Text ?? string.Empty;
+        return new ChatMessage(author, text, message.SentAt);
     }
 
     private static ChatMessage ToReceivedMessage(string? senderNickname, string? text, DateTime sentAt)
     {
         var author = new ChatAuthor(senderNickname ?? string.Empty, false);
-        return new ChatMessage(author, text ?? string.Empty, sentAt);
+        string messageText = text ?? string.Empty;
+        return new ChatMessage(author, messageText, sentAt);
     }
 }

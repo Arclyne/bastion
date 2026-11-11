@@ -52,24 +52,6 @@ public sealed class ChatClient : IChatClient
         return ChatContractTranslator.ToTranscript(log);
     }
 
-    private static Exception ToClientException(Exception ex)
-    {
-        if (ex is FaultException<ChatMessageRejectedFault> rejected)
-        {
-            return new ChatMessageRejectedException(
-                ChatContractTranslator.ToRejection(rejected.Detail.Reason),
-                rejected.Detail.MutedUntil,
-                ex);
-        }
-
-        if (ex is FaultException<ChatChannelForbiddenFault>)
-        {
-            return new ChatChannelForbiddenException(ex);
-        }
-
-        return ServiceFailureTranslator.ToClientException(ex);
-    }
-
     private TResult Call<TResult>(Func<IChatService, TResult> operation)
     {
         try
@@ -84,5 +66,21 @@ public sealed class ChatClient : IChatClient
         {
             throw ToClientException(ex);
         }
+    }
+
+    private static Exception ToClientException(Exception ex)
+    {
+        if (ex is FaultException<ChatMessageRejectedFault> rejected)
+        {
+            ChatRejection rejection = ChatContractTranslator.ToRejection(rejected.Detail.Reason);
+            return new ChatMessageRejectedException(rejection, rejected.Detail.MutedUntil, ex);
+        }
+
+        if (ex is FaultException<ChatChannelForbiddenFault>)
+        {
+            return new ChatChannelForbiddenException(ex);
+        }
+
+        return ServiceFailureTranslator.ToClientException(ex);
     }
 }
