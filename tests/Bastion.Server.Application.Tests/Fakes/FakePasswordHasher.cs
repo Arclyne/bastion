@@ -5,16 +5,20 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakePasswordHasher : IPasswordHasher
 {
-    public int VerifyCount { get; private set; }
+    public int SimulatedCheckCount { get; private set; }
 
     public static byte[] HashOf(string password)
     {
         return Encoding.UTF8.GetBytes(password);
     }
 
-    public bool Verify(string password, byte[]? storedHash, byte[]? storedSalt)
+    public bool IsPasswordCorrect(string enteredPassword, byte[]? storedHash, byte[]? storedSalt)
     {
-        VerifyCount++;
-        return storedHash is not null && Encoding.UTF8.GetString(storedHash) == password;
+        return storedHash is not null && Encoding.UTF8.GetString(storedHash) == enteredPassword;
+    }
+
+    public void SimulatePasswordCheck(string enteredPassword)
+    {
+        SimulatedCheckCount++;
     }
 }

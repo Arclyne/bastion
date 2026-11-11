@@ -38,7 +38,7 @@ public sealed class LoginService : ILoginService
         Account? account = _unitOfWork.Accounts.FindByLoginIdentifier(attempt.EnteredIdentifier);
         if (account is null || !account.HasPassword())
         {
-            _passwordHasher.Verify(password, null, null);
+            _passwordHasher.SimulatePasswordCheck(password);
             throw Reject(
                 new AccessLog(AccessLogResult.AccountNotFound, attempt, null),
                 new InvalidCredentialsException());
@@ -51,7 +51,7 @@ public sealed class LoginService : ILoginService
                 CreateLockRestriction(account, attempt.OccurredAt));
         }
 
-        if (!_passwordHasher.Verify(password, account.PasswordHash, account.PasswordSalt))
+        if (!_passwordHasher.IsPasswordCorrect(password, account.PasswordHash, account.PasswordSalt))
         {
             RejectPassword(account, attempt);
         }
