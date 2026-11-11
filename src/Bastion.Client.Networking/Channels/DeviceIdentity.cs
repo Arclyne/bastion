@@ -14,7 +14,9 @@ public static class DeviceIdentity
     public static string GetFingerprint()
     {
         string source = Environment.MachineName + Separator + Environment.UserName;
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source)));
+        byte[] encodedSource = Encoding.UTF8.GetBytes(source);
+        byte[] hash = SHA256.HashData(encodedSource);
+        return Convert.ToHexString(hash);
     }
 
     public static string GetClientVersion()

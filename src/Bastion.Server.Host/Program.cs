@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using System.Net;
+using Bastion.Contracts;
 using Bastion.Server.Adapters;
 using CoreWCF.Configuration;
 using log4net;
@@ -95,10 +95,11 @@ public static class Program
     private static int GetNetTcpPort(IConfiguration configuration)
     {
         int netTcpPort = configuration.GetValue<int>(NetTcpPortKey);
-        if (netTcpPort <= IPEndPoint.MinPort || netTcpPort > IPEndPoint.MaxPort)
+        if (!ServiceEndpoints.IsRegisteredPort(netTcpPort))
         {
             throw new InvalidOperationException(
-                $"The net.tcp port is missing or out of range. Key={NetTcpPortKey}; Port={netTcpPort}");
+                $"The net.tcp port is missing or is not a registered port. Key={NetTcpPortKey}; Port={netTcpPort}; "
+                + $"FirstPort={ServiceEndpoints.FirstRegisteredPort}; LastPort={ServiceEndpoints.LastRegisteredPort}");
         }
 
         return netTcpPort;

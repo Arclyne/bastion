@@ -6,11 +6,11 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Bastion.Client.Networking.Channels;
 
-public sealed class ThumbprintCertificateValidator : X509CertificateValidator
+public sealed class ThumbprintX509CertificateValidator : X509CertificateValidator
 {
     private readonly string _expectedThumbprint;
 
-    public ThumbprintCertificateValidator(string expectedThumbprint)
+    public ThumbprintX509CertificateValidator(string expectedThumbprint)
     {
         ArgumentNullException.ThrowIfNull(expectedThumbprint);
 
