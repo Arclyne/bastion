@@ -1,13 +1,5 @@
 using System;
 using System.Security.Cryptography.X509Certificates;
-using Bastion.Server.Host.Accounts;
-using Bastion.Server.Host.Chat;
-using Bastion.Server.Host.Friends;
-using Bastion.Server.Host.Matches;
-using Bastion.Server.Host.Matchmaking;
-using Bastion.Server.Host.PrivateChat;
-using Bastion.Server.Host.Rooms;
-using Bastion.Server.Host.Sessions;
 using CoreWCF;
 using CoreWCF.Configuration;
 using Microsoft.Extensions.Configuration;
@@ -31,27 +23,22 @@ public sealed class ServerCertificate : IDisposable
         ArgumentNullException.ThrowIfNull(configuration);
 
         string? path = configuration[PathKey];
-        string? password = configuration[PasswordKey];
-        if (string.IsNullOrWhiteSpace(path) || password is null)
+        if (string.IsNullOrWhiteSpace(path))
         {
-            throw new InvalidOperationException($"The server certificate is not configured. Key={PathKey}");
+            throw new InvalidOperationException($"The server certificate path is not configured. Key={PathKey}");
         }
 
-        return new ServerCertificate(X509CertificateLoader.LoadPkcs12FromFile(path, password));
+        string password = configuration[PasswordKey]
+            ?? throw new InvalidOperationException(
+                $"The server certificate password is not configured. Key={PasswordKey}");
+        X509Certificate2 certificate = X509CertificateLoader.LoadPkcs12FromFile(path, password);
+        return new ServerCertificate(certificate);
     }
 
-    public void ConfigureServices(IServiceBuilder serviceBuilder)
+    public void ApplyTo(IServiceBuilder serviceBuilder)
     {
         ArgumentNullException.ThrowIfNull(serviceBuilder);
 
-        serviceBuilder.AddService<AccountService>();
-        serviceBuilder.AddService<SessionService>();
-        serviceBuilder.AddService<ChatService>();
-        serviceBuilder.AddService<MatchmakingService>();
-        serviceBuilder.AddService<MatchService>();
-        serviceBuilder.AddService<FriendshipService>();
-        serviceBuilder.AddService<ConversationService>();
-        serviceBuilder.AddService<RoomService>();
         serviceBuilder.ConfigureAllServiceHostBase(ApplyCertificateTo);
     }
 

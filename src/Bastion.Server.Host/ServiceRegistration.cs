@@ -16,6 +16,7 @@ using Bastion.Server.Host.Matchmaking;
 using Bastion.Server.Host.PrivateChat;
 using Bastion.Server.Host.Rooms;
 using Bastion.Server.Host.Sessions;
+using CoreWCF.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Host;
@@ -43,7 +44,6 @@ public static class ServiceRegistration
         services.AddScoped<IRoomPlayerVerifier, RoomPlayerVerifier>();
         services.AddScoped<IRoomSettingsValidator, RoomSettingsValidator>();
         services.AddScoped<IRoomMatchService, RoomMatchService>();
-        services.AddSingleton<FriendPresenceReporter>();
         services.AddSingleton<IMatchmakingQueue, MatchmakingQueue>();
         services.AddSingleton<IRoomRegistry, RoomRegistry>();
         services.AddSingleton<IRoomKeeper, RoomKeeper>();
@@ -55,29 +55,26 @@ public static class ServiceRegistration
         services.AddSingleton<IMatchChatRelay, MatchChatRelay>();
         services.AddSingleton<IPrivateChatRoom, PrivateChatRoom>();
         services.AddSingleton<IMatchmakingDispatcher, MatchmakingDispatcher>();
-        services.AddSingleton<NotificationChannelRegistry>();
-        services.AddSingleton<IChatBroadcaster>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
-        services.AddSingleton<IMatchChatNotifier>(
-            provider => provider.GetRequiredService<NotificationChannelRegistry>());
-        services.AddSingleton<IMatchmakingNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
-        services.AddSingleton<IMatchEndNotifier>(
-            provider => provider.GetRequiredService<NotificationChannelRegistry>());
-        services.AddSingleton<IPlayerPresence>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
-        services.AddSingleton<IFriendNotifier>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
-        services.AddSingleton<IPrivateMessageNotifier>(
-            provider => provider.GetRequiredService<NotificationChannelRegistry>());
-        services.AddSingleton<IRoomNotifier>(
-            provider => provider.GetRequiredService<NotificationChannelRegistry>());
-        services.AddHostedService<MatchmakingBackgroundService>();
-        services.AddHostedService<RoomCleanupService>();
         return services;
     }
 
-    public static IServiceCollection AddBastionServiceModel(this IServiceCollection services)
+    public static IServiceCollection AddBastionHost(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<FriendPresenceReporter>();
+        services.AddSingleton<NotificationChannelRegistry>();
+        services.AddSingleton<IChatBroadcaster>(GetChannelRegistry);
+        services.AddSingleton<IMatchChatNotifier>(GetChannelRegistry);
+        services.AddSingleton<IMatchmakingNotifier>(GetChannelRegistry);
+        services.AddSingleton<IMatchEndNotifier>(GetChannelRegistry);
+        services.AddSingleton<IPlayerPresence>(GetChannelRegistry);
+        services.AddSingleton<IFriendNotifier>(GetChannelRegistry);
+        services.AddSingleton<IPrivateMessageNotifier>(GetChannelRegistry);
+        services.AddSingleton<IRoomNotifier>(GetChannelRegistry);
+        services.AddHostedService<MatchmakingBackgroundService>();
+        services.AddHostedService<RoomCleanupService>();
         services.AddTransient<AccountService>();
         services.AddTransient<SessionService>();
         services.AddTransient<ChatService>();
@@ -87,5 +84,25 @@ public static class ServiceRegistration
         services.AddTransient<ConversationService>();
         services.AddTransient<RoomService>();
         return services;
+    }
+
+    public static IServiceBuilder AddBastionServices(this IServiceBuilder serviceBuilder)
+    {
+        ArgumentNullException.ThrowIfNull(serviceBuilder);
+
+        serviceBuilder.AddService<AccountService>();
+        serviceBuilder.AddService<SessionService>();
+        serviceBuilder.AddService<ChatService>();
+        serviceBuilder.AddService<MatchmakingService>();
+        serviceBuilder.AddService<MatchService>();
+        serviceBuilder.AddService<FriendshipService>();
+        serviceBuilder.AddService<ConversationService>();
+        serviceBuilder.AddService<RoomService>();
+        return serviceBuilder;
+    }
+
+    private static NotificationChannelRegistry GetChannelRegistry(IServiceProvider provider)
+    {
+        return provider.GetRequiredService<NotificationChannelRegistry>();
     }
 }

@@ -53,10 +53,10 @@ public static class Program
             Path.Combine(AppContext.BaseDirectory, ServiceModelConfigurationFileName));
         builder.Services.AddBastionAdapters(connectionString);
         builder.Services.AddBastionApplication();
-        builder.Services.AddBastionServiceModel();
+        builder.Services.AddBastionHost();
 
         using WebApplication app = builder.Build();
-        app.UseServiceModel(certificate.ConfigureServices);
+        app.UseServiceModel(serviceBuilder => ConfigureServiceModel(serviceBuilder, certificate));
         app.Start();
         _logger.Info($"Game server started. NetTcpPort={netTcpPort}");
         app.WaitForShutdown();
@@ -66,6 +66,12 @@ public static class Program
     {
         var configurationFile = new FileInfo(Path.Combine(AppContext.BaseDirectory, LogConfigurationFileName));
         XmlConfigurator.Configure(LogManager.GetRepository(typeof(Program).Assembly), configurationFile);
+    }
+
+    private static void ConfigureServiceModel(IServiceBuilder serviceBuilder, ServerCertificate certificate)
+    {
+        serviceBuilder.AddBastionServices();
+        certificate.ApplyTo(serviceBuilder);
     }
 
     private static void LogUnhandledException(object sender, UnhandledExceptionEventArgs e)
