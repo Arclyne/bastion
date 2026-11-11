@@ -4,15 +4,15 @@ namespace Bastion.Server.Application.Chat;
 
 public sealed record ChatHistoryEntry
 {
-    public ChatHistoryEntry(PostedChatLine line, bool isOwn)
+    public ChatHistoryEntry(PostedChatLine postedLine, bool isOwn)
     {
-        ArgumentNullException.ThrowIfNull(line);
+        ArgumentNullException.ThrowIfNull(postedLine);
 
-        Line = line;
+        PostedLine = postedLine;
         IsOwn = isOwn;
     }
 
-    public PostedChatLine Line { get; }
+    public PostedChatLine PostedLine { get; }
 
     public bool IsOwn { get; }
 }

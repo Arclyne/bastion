@@ -3,6 +3,7 @@ using Bastion.Contracts.Accounts;
 using Bastion.Domain.Auditing;
 using Bastion.Domain.Sessions;
 using Bastion.Server.Application.Accounts;
+using Bastion.Server.Host.Common;
 using CoreWCF;
 
 namespace Bastion.Server.Host.Accounts;
@@ -45,8 +46,7 @@ public static class LoginTranslator
         ArgumentNullException.ThrowIfNull(rejection);
 
         var fault = new InvalidCredentialsFault();
-        var reason = new FaultReason(rejection.Message);
-        return new FaultException<InvalidCredentialsFault>(fault, reason);
+        return FaultExceptionFactory.Create(fault, rejection);
     }
 
     public static FaultException<AccountRestrictedFault> ToFault(AccountRestrictedException rejection)
@@ -58,8 +58,7 @@ public static class LoginTranslator
             Reason = ToReason(rejection.Restriction),
             LockMinutes = rejection.LockMinutes,
         };
-        var reason = new FaultReason(rejection.Message);
-        return new FaultException<AccountRestrictedFault>(fault, reason);
+        return FaultExceptionFactory.Create(fault, rejection);
     }
 
     private static RestrictionReason ToReason(AccountRestriction restriction)

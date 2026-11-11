@@ -195,7 +195,7 @@ public class TestLobbyChatService
 
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
 
-        Assert.Equal(new[] { "primero", "segundo" }, history.Entries.Select(entry => entry.Line.Line.Text));
+        Assert.Equal(new[] { "primero", "segundo" }, history.Entries.Select(entry => entry.PostedLine.Line.Text));
     }
 
     [Fact]
