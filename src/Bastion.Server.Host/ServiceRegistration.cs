@@ -63,8 +63,9 @@ public static class ServiceRegistration
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddSingleton(TimeProvider.System);
-        services.AddSingleton<FriendPresenceReporter>();
+        services.AddSingleton<IFriendPresenceReporter, FriendPresenceReporter>();
         services.AddSingleton<NotificationChannelRegistry>();
+        services.AddSingleton<INotificationChannelRegistry>(GetChannelRegistry);
         services.AddSingleton<IChatBroadcaster>(GetChannelRegistry);
         services.AddSingleton<IMatchChatNotifier>(GetChannelRegistry);
         services.AddSingleton<IMatchmakingNotifier>(GetChannelRegistry);

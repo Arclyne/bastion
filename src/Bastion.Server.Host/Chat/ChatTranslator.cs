@@ -69,6 +69,11 @@ public static class ChatTranslator
         };
     }
 
+    public static string RequireText(string? text)
+    {
+        return text ?? throw ToFault(new ChatMessageRejectedException(ChatRejection.InvalidMessage));
+    }
+
     public static FaultException<ChatMessageRejectedFault> ToFault(ChatMessageRejectedException rejection)
     {
         ArgumentNullException.ThrowIfNull(rejection);

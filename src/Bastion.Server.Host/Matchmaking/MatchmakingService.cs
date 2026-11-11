@@ -34,7 +34,7 @@ public sealed class MatchmakingService : IMatchmakingService
     /// <inheritdoc/>
     public void StartSearch(string? sessionToken)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         Action startSearch = () => StartSearchInRequestScope(token);
         TranslateMatchmakingFailures(nameof(StartSearch), startSearch);
     }
@@ -51,11 +51,6 @@ public sealed class MatchmakingService : IMatchmakingService
     {
         Action<string> confirmPresence = ConfirmPresenceInRequestScope;
         LogOneWayFailures(nameof(ConfirmPresence), sessionToken, confirmPresence);
-    }
-
-    private static string RequireSessionToken(string? sessionToken)
-    {
-        return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());
     }
 
     private void StartSearchInRequestScope(string token)

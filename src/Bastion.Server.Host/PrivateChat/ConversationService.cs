@@ -39,7 +39,7 @@ public sealed class ConversationService : IConversationService
     /// <inheritdoc/>
     public ConversationEntry[] ListConversations(string? sessionToken)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         Func<ConversationEntry[]> listConversations = () => ListConversationsInRequestScope(token);
         return TranslateConversationFailures(nameof(ListConversations), listConversations);
     }
@@ -47,7 +47,7 @@ public sealed class ConversationService : IConversationService
     /// <inheritdoc/>
     public PrivateConversationLog OpenConversation(string? sessionToken, string? friendCode)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         string partnerCode = RequireFriendCode(friendCode);
         Func<PrivateConversationLog> openConversation = () => OpenConversationInRequestScope(token, partnerCode);
         return TranslateConversationFailures(nameof(OpenConversation), openConversation);
@@ -56,9 +56,9 @@ public sealed class ConversationService : IConversationService
     /// <inheritdoc/>
     public ChatMessageReceipt SendPrivateMessage(string? sessionToken, string? friendCode, string? text)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         string recipientCode = RequireFriendCode(friendCode);
-        string messageText = RequireText(text);
+        string messageText = ChatTranslator.RequireText(text);
         var draft = new PrivateMessageDraft(recipientCode, messageText);
         Func<ChatMessageReceipt> sendMessage = () => SendPrivateMessageInRequestScope(token, draft);
         return TranslateConversationFailures(nameof(SendPrivateMessage), sendMessage);
@@ -67,26 +67,16 @@ public sealed class ConversationService : IConversationService
     /// <inheritdoc/>
     public void MarkConversationRead(string? sessionToken, string? friendCode)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         string partnerCode = RequireFriendCode(friendCode);
         Action markConversationRead = () => MarkConversationReadInRequestScope(token, partnerCode);
         TranslateConversationFailures(nameof(MarkConversationRead), markConversationRead);
-    }
-
-    private static string RequireSessionToken(string? sessionToken)
-    {
-        return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());
     }
 
     private static string RequireFriendCode(string? friendCode)
     {
         return friendCode
             ?? throw ChatTranslator.ToFault(new ChatMessageRejectedException(ChatRejection.PlayerNotFound));
-    }
-
-    private static string RequireText(string? text)
-    {
-        return text ?? throw ChatTranslator.ToFault(new ChatMessageRejectedException(ChatRejection.InvalidMessage));
     }
 
     private ConversationEntry[] ListConversationsInRequestScope(string token)

@@ -22,7 +22,8 @@ using log4net;
 namespace Bastion.Server.Host.Sessions;
 
 public sealed class NotificationChannelRegistry
-    : IChatBroadcaster,
+    : INotificationChannelRegistry,
+    IChatBroadcaster,
     IMatchChatNotifier,
     IMatchEndNotifier,
     IMatchmakingNotifier,
@@ -36,12 +37,12 @@ public sealed class NotificationChannelRegistry
     private readonly ConcurrentDictionary<int, INotificationCallback> _callbacksByAccountId =
         new ConcurrentDictionary<int, INotificationCallback>();
     private readonly IMatchmakingQueue _matchmakingQueue;
-    private readonly FriendPresenceReporter _presenceReporter;
+    private readonly IFriendPresenceReporter _presenceReporter;
     private readonly TimeProvider _timeProvider;
 
     public NotificationChannelRegistry(
         IMatchmakingQueue matchmakingQueue,
-        FriendPresenceReporter presenceReporter,
+        IFriendPresenceReporter presenceReporter,
         TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(matchmakingQueue);
@@ -62,23 +63,24 @@ public sealed class NotificationChannelRegistry
 
         _callbacksByAccountId[player.AccountId] = callback;
         var callbackChannel = (ICommunicationObject)callback;
-        callbackChannel.Closed += (_, _) => UnregisterChannel(player.AccountId, callback);
-        callbackChannel.Faulted += (_, _) => UnregisterChannel(player.AccountId, callback);
+        EventHandler unregisterChannel = (_, _) => UnregisterChannel(player.AccountId, callback);
+        callbackChannel.Closed += unregisterChannel;
+        callbackChannel.Faulted += unregisterChannel;
         _logger.Info($"Player subscribed to notifications. AccountId={player.AccountId}");
         _presenceReporter.ReportConnected(player.AccountId);
     }
 
-    public void Broadcast(PostedChatLine line)
+    public void Broadcast(PostedChatLine postedLine)
     {
-        ArgumentNullException.ThrowIfNull(line);
+        ArgumentNullException.ThrowIfNull(postedLine);
 
-        ChatMessageNotification notification = ChatTranslator.ToLobbyChatNotification(line);
-        int senderAccountId = line.Line.Sender.AccountId;
-        foreach (KeyValuePair<int, INotificationCallback> subscription in _callbacksByAccountId)
+        ChatMessageNotification notification = ChatTranslator.ToLobbyChatNotification(postedLine);
+        int senderAccountId = postedLine.Line.Sender.AccountId;
+        foreach ((int accountId, INotificationCallback callback) in _callbacksByAccountId)
         {
-            if (subscription.Key != senderAccountId)
+            if (accountId != senderAccountId)
             {
-                DeliverNotification(subscription.Key, subscription.Value, notification);
+                DeliverNotification(accountId, callback, notification);
             }
         }
     }
@@ -138,12 +140,14 @@ public sealed class NotificationChannelRegistry
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        NotifyPlayer(request.AccountId, MatchmakingTranslator.ToPresenceRequestedNotification(request, GetUtcNow()));
+        var notification = MatchmakingTranslator.ToPresenceRequestedNotification(request, GetUtcNow());
+        NotifyPlayer(request.AccountId, notification);
     }
 
     public void NotifySearchEnded(int accountId, SearchEndReason reason)
     {
-        NotifyPlayer(accountId, MatchmakingTranslator.ToSearchEndedNotification(reason, GetUtcNow()));
+        var notification = MatchmakingTranslator.ToSearchEndedNotification(reason, GetUtcNow());
+        NotifyPlayer(accountId, notification);
     }
 
     public void NotifyPresenceChanged(IReadOnlyList<int> recipientAccountIds, FriendPresenceChange change)
@@ -159,21 +163,25 @@ public sealed class NotificationChannelRegistry
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        NotifyPlayer(recipientAccountId, FriendshipTranslator.ToRequestNotification(request, GetUtcNow()));
+        FriendRequestNotification notification = FriendshipTranslator.ToRequestNotification(request, GetUtcNow());
+        NotifyPlayer(recipientAccountId, notification);
     }
 
     public void NotifyFriendshipStarted(int accountId, PlayerIdentity friend)
     {
         ArgumentNullException.ThrowIfNull(friend);
 
-        NotifyPlayer(accountId, FriendshipTranslator.ToFriendshipStartedNotification(friend, GetUtcNow()));
+        var notification = FriendshipTranslator.ToFriendshipStartedNotification(friend, GetUtcNow());
+        NotifyPlayer(accountId, notification);
     }
 
     public void NotifyPrivateMessage(PrivateMessageDelivery delivery)
     {
         ArgumentNullException.ThrowIfNull(delivery);
 
-        NotifyPlayer(delivery.Message.RecipientId.GetValueOrDefault(), PrivateChatTranslator.ToPrivateMessageNotification(delivery));
+        int recipientAccountId = delivery.Message.RecipientId.GetValueOrDefault();
+        var notification = PrivateChatTranslator.ToPrivateMessageNotification(delivery);
+        NotifyPlayer(recipientAccountId, notification);
     }
 
     public void NotifyRoomUpdated(RoomSnapshot room, int originAccountId)
@@ -190,11 +198,6 @@ public sealed class NotificationChannelRegistry
 
         RoomClosedNotification notification = RoomTranslator.ToClosedNotification(room, GetUtcNow());
         NotifyPlayers(room.ListAccountIdsExcept(originAccountId), notification);
-    }
-
-    private DateTime GetUtcNow()
-    {
-        return _timeProvider.GetUtcNow().UtcDateTime;
     }
 
     private void NotifyPlayers(IEnumerable<int> accountIds, Notification notification)
@@ -234,7 +237,8 @@ public sealed class NotificationChannelRegistry
     private void AbortFailedChannel(int accountId, INotificationCallback callback, Exception cause)
     {
         _logger.Warn($"A notification could not be delivered. AccountId={accountId}", cause);
-        ((ICommunicationObject)callback).Abort();
+        var callbackChannel = (ICommunicationObject)callback;
+        callbackChannel.Abort();
         UnregisterChannel(accountId, callback);
     }
 
@@ -245,7 +249,7 @@ public sealed class NotificationChannelRegistry
             return;
         }
 
-        _logger.Info($"Player left notifications. AccountId={accountId}");
+        _logger.Info($"Player unsubscribed from notifications. AccountId={accountId}");
         _presenceReporter.ReportDisconnected(accountId);
 
         if (_matchmakingQueue.TryRemove(accountId))
@@ -259,5 +263,10 @@ public sealed class NotificationChannelRegistry
     private void OnPlayerDisconnected(PlayerDisconnectedEventArgs e)
     {
         PlayerDisconnected?.Invoke(this, e);
+    }
+
+    private DateTime GetUtcNow()
+    {
+        return _timeProvider.GetUtcNow().UtcDateTime;
     }
 }

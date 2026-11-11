@@ -35,8 +35,8 @@ public sealed class ChatService : IChatService
     /// <inheritdoc/>
     public ChatMessageReceipt SendChatMessage(string? sessionToken, string? text)
     {
-        string token = RequireSessionToken(sessionToken);
-        string messageText = RequireText(text);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
+        string messageText = ChatTranslator.RequireText(text);
         Func<ChatMessageReceipt> sendMessage = () => SendChatMessageInRequestScope(token, messageText);
         return TranslateChatFailures(nameof(SendChatMessage), sendMessage);
     }
@@ -44,7 +44,7 @@ public sealed class ChatService : IChatService
     /// <inheritdoc/>
     public LobbyChatLog OpenLobbyChat(string? sessionToken)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         Func<LobbyChatLog> openChat = () => OpenLobbyChatInRequestScope(token);
         return TranslateChatFailures(nameof(OpenLobbyChat), openChat);
     }
@@ -52,21 +52,11 @@ public sealed class ChatService : IChatService
     /// <inheritdoc/>
     public ChatMessageReceipt SendMatchChatMessage(string? sessionToken, int matchId, string? text)
     {
-        string token = RequireSessionToken(sessionToken);
-        string messageText = RequireText(text);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
+        string messageText = ChatTranslator.RequireText(text);
         var submission = new MatchChatSubmission(matchId, messageText);
         Func<ChatMessageReceipt> sendMessage = () => SendMatchChatMessageInRequestScope(token, submission);
         return TranslateChatFailures(nameof(SendMatchChatMessage), sendMessage);
-    }
-
-    private static string RequireSessionToken(string? sessionToken)
-    {
-        return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());
-    }
-
-    private static string RequireText(string? text)
-    {
-        return text ?? throw ChatTranslator.ToFault(new ChatMessageRejectedException(ChatRejection.InvalidMessage));
     }
 
     private ChatMessageReceipt SendChatMessageInRequestScope(string token, string messageText)

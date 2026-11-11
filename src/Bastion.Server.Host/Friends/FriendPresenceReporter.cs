@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Host.Friends;
 
-public sealed class FriendPresenceReporter
+public sealed class FriendPresenceReporter : IFriendPresenceReporter
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(FriendPresenceReporter));
 

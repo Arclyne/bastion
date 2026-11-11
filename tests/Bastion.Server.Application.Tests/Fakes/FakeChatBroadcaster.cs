@@ -9,9 +9,9 @@ public sealed class FakeChatBroadcaster : IChatBroadcaster
 
     public int ListenerCount { get; set; }
 
-    public void Broadcast(PostedChatLine line)
+    public void Broadcast(PostedChatLine postedLine)
     {
-        Lines.Add(line);
+        Lines.Add(postedLine);
     }
 
     public int CountListeners()
