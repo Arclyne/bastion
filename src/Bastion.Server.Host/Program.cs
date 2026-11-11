@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using Bastion.Server.Adapters;
 using CoreWCF.Configuration;
 using log4net;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Bastion.Server.Host;
@@ -23,7 +25,10 @@ public static class Program
 
     public static void Main(string[] args)
     {
+        ArgumentNullException.ThrowIfNull(args);
+
         ConfigureLogging();
+        AppDomain.CurrentDomain.UnhandledException += LogUnhandledException;
         var options = new WebApplicationOptions
         {
             Args = args,
@@ -52,14 +57,21 @@ public static class Program
 
         using WebApplication app = builder.Build();
         app.UseServiceModel(certificate.ConfigureServices);
+        app.Start();
         _logger.Info($"Game server started. NetTcpPort={netTcpPort}");
-        app.Run();
+        app.WaitForShutdown();
     }
 
     private static void ConfigureLogging()
     {
         var configurationFile = new FileInfo(Path.Combine(AppContext.BaseDirectory, LogConfigurationFileName));
         XmlConfigurator.Configure(LogManager.GetRepository(typeof(Program).Assembly), configurationFile);
+    }
+
+    private static void LogUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        var exception = e.ExceptionObject as Exception;
+        _logger.Fatal("The game server stopped because of an unhandled exception.", exception);
     }
 
     private static string GetConnectionString(IConfiguration configuration)
@@ -77,9 +89,10 @@ public static class Program
     private static int GetNetTcpPort(IConfiguration configuration)
     {
         int netTcpPort = configuration.GetValue<int>(NetTcpPortKey);
-        if (netTcpPort <= 0)
+        if (netTcpPort <= IPEndPoint.MinPort || netTcpPort > IPEndPoint.MaxPort)
         {
-            throw new InvalidOperationException($"The net.tcp port is not configured. Key={NetTcpPortKey}");
+            throw new InvalidOperationException(
+                $"The net.tcp port is missing or out of range. Key={NetTcpPortKey}; Port={netTcpPort}");
         }
 
         return netTcpPort;
