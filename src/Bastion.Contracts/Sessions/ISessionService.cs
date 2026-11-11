@@ -4,7 +4,7 @@ using Bastion.Contracts.Notifications;
 namespace Bastion.Contracts.Sessions;
 
 /// <summary>
-/// Opens the duplex channel through which the server sends notifications to a signed-in player.
+/// Opens the duplex channel through which the server sends notifications to a logged-in player.
 /// </summary>
 [ServiceContract(CallbackContract = typeof(INotificationCallback))]
 public interface ISessionService

@@ -19,6 +19,17 @@ public static class ServiceEndpoints
 
     public static Uri CreateAddress(string host, int port, string path)
     {
-        return new UriBuilder(Scheme, host, port, path).Uri;
+        if (host is null)
+        {
+            throw new ArgumentNullException(nameof(host));
+        }
+
+        if (path is null)
+        {
+            throw new ArgumentNullException(nameof(path));
+        }
+
+        var addressBuilder = new UriBuilder(Scheme, host, port, path);
+        return addressBuilder.Uri;
     }
 }
