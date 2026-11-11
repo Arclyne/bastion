@@ -10,6 +10,7 @@ using Bastion.Contracts.Notifications;
 
 namespace Bastion.Client.Networking.Notifications;
 
+/// <inheritdoc/>
 [CallbackBehavior(UseSynchronizationContext = false, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class NotificationCallback : INotificationCallback
 {
@@ -37,6 +38,7 @@ public sealed class NotificationCallback : INotificationCallback
 
     public event EventHandler<RoomClosedEventArgs>? RoomClosed;
 
+    /// <inheritdoc/>
     public void ReceiveNotification(Notification notification)
     {
         if (TryDispatchChatNotification(notification)
