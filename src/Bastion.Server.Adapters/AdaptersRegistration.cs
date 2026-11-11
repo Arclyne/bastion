@@ -23,7 +23,7 @@ public static class AdaptersRegistration
         ArgumentNullException.ThrowIfNull(services);
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
 
-        services.AddDbContextFactory<BastionDbContext>(options => options.UseSqlServer(connectionString, UseNonRetryingStrategy));
+        services.AddDbContextFactory<BastionDbContext>(options => options.UseSqlServer(connectionString, KeepDatabaseErrorsAsDbException));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddSingleton<IMatchRepository, MatchRepository>();
         services.AddSingleton<IRoomRepository, RoomRepository>();
@@ -34,10 +34,8 @@ public static class AdaptersRegistration
         return services;
     }
 
-    private static void UseNonRetryingStrategy(SqlServerDbContextOptionsBuilder sqlServer)
+    private static void KeepDatabaseErrorsAsDbException(SqlServerDbContextOptionsBuilder sqlServer)
     {
-        // The SQL Server default strategy wraps transient errors in an InvalidOperationException;
-        // this one keeps the DbException, which the repositories translate.
         sqlServer.ExecutionStrategy(dependencies => new NonRetryingExecutionStrategy(dependencies));
     }
 }
