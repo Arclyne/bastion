@@ -265,7 +265,7 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
         }
 
         IsEmpty = Messages.Count == 0;
-        ChannelDetail = FormatText(Strings.ChatConnectedCountFormat, transcript.ConnectedPlayers);
+        ChannelDetail = FormatText(Strings.ChatConnectedCountFormat, transcript.ConnectedPlayerCount);
         ShowMute(transcript.Mute);
     }
 

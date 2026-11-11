@@ -10,7 +10,7 @@ public sealed class LobbyChatLog
     public LobbyChatMessage[]? Messages { get; set; }
 
     [DataMember]
-    public int ConnectedPlayers { get; set; }
+    public int ConnectedPlayerCount { get; set; }
 
     [DataMember]
     public bool IsMuted { get; set; }

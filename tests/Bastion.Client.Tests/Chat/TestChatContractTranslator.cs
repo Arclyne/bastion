@@ -10,7 +10,7 @@ public class TestChatContractTranslator
 {
     private const string SenderNickname = "luis_quo";
     private const string Text = "hola";
-    private const int ConnectedPlayers = 4;
+    private const int ConnectedPlayerCount = 4;
 
     private static readonly DateTime _sentAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
 
@@ -28,7 +28,7 @@ public class TestChatContractTranslator
     [Fact]
     public void ToTranscript_NullMessages_ReturnsEmptyList()
     {
-        var log = new LobbyChatLog { ConnectedPlayers = ConnectedPlayers };
+        var log = new LobbyChatLog { ConnectedPlayerCount = ConnectedPlayerCount };
 
         LobbyChatTranscript transcript = ChatContractTranslator.ToTranscript(log);
 
@@ -78,7 +78,7 @@ public class TestChatContractTranslator
         return new LobbyChatLog
         {
             Messages = new[] { message },
-            ConnectedPlayers = ConnectedPlayers,
+            ConnectedPlayerCount = ConnectedPlayerCount,
         };
     }
 }

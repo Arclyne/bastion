@@ -5,19 +5,19 @@ namespace Bastion.Server.Application.Chat;
 
 public sealed record LobbyChatHistory
 {
-    public LobbyChatHistory(IReadOnlyList<ChatHistoryEntry> entries, int connectedPlayers, ChatMute mute)
+    public LobbyChatHistory(IReadOnlyList<ChatHistoryEntry> entries, int connectedPlayerCount, ChatMute mute)
     {
         ArgumentNullException.ThrowIfNull(entries);
         ArgumentNullException.ThrowIfNull(mute);
 
         Entries = entries;
-        ConnectedPlayers = connectedPlayers;
+        ConnectedPlayerCount = connectedPlayerCount;
         Mute = mute;
     }
 
     public IReadOnlyList<ChatHistoryEntry> Entries { get; }
 
-    public int ConnectedPlayers { get; }
+    public int ConnectedPlayerCount { get; }
 
     public ChatMute Mute { get; }
 }

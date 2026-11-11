@@ -63,7 +63,7 @@ public static class ChatTranslator
         return new LobbyChatLog
         {
             Messages = messages,
-            ConnectedPlayers = history.ConnectedPlayers,
+            ConnectedPlayerCount = history.ConnectedPlayerCount,
             IsMuted = history.Mute.IsMuted,
             MutedUntil = history.Mute.EndsAt,
         };

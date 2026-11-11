@@ -233,7 +233,7 @@ public class TestLobbyChatService
     {
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
 
-        Assert.Equal(ListenerCount, history.ConnectedPlayers);
+        Assert.Equal(ListenerCount, history.ConnectedPlayerCount);
     }
 
     [Fact]
