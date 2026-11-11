@@ -8,15 +8,15 @@ using Microsoft.Extensions.Hosting;
 
 namespace Bastion.Server.Host.Rooms;
 
-public sealed class RoomBackgroundService : IHostedService
+public sealed class RoomCleanupService : IHostedService
 {
-    private static readonly ILog _logger = LogManager.GetLogger(typeof(RoomBackgroundService));
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(RoomCleanupService));
 
     private readonly NotificationChannelRegistry _channelRegistry;
     private readonly IRoomKeeper _roomKeeper;
     private readonly TimeProvider _timeProvider;
 
-    public RoomBackgroundService(
+    public RoomCleanupService(
         NotificationChannelRegistry channelRegistry,
         IRoomKeeper roomKeeper,
         TimeProvider timeProvider)

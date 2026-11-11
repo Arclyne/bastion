@@ -1,47 +1,69 @@
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using Bastion.Contracts.Notifications;
 using Bastion.Contracts.Rooms;
 using Bastion.Domain.GameModes;
 using Bastion.Server.Application.Rooms;
+using Bastion.Server.Host.Common;
 using CoreWCF;
 
 namespace Bastion.Server.Host.Rooms;
 
 public static class RoomTranslator
 {
+    private static readonly IReadOnlyDictionary<RoomRejection, RoomRejectionReason> _reasonsByRejection =
+        new Dictionary<RoomRejection, RoomRejectionReason>
+        {
+            [RoomRejection.NotificationsUnavailable] = RoomRejectionReason.NotificationsUnavailable,
+            [RoomRejection.UnfinishedMatch] = RoomRejectionReason.UnfinishedMatch,
+            [RoomRejection.SearchingMatch] = RoomRejectionReason.SearchingMatch,
+            [RoomRejection.InRoom] = RoomRejectionReason.InRoom,
+            [RoomRejection.InvalidSettings] = RoomRejectionReason.InvalidSettings,
+            [RoomRejection.RoomNotFound] = RoomRejectionReason.RoomNotFound,
+            [RoomRejection.RoomFull] = RoomRejectionReason.RoomFull,
+            [RoomRejection.Kicked] = RoomRejectionReason.Kicked,
+            [RoomRejection.TooManyAttempts] = RoomRejectionReason.TooManyAttempts,
+            [RoomRejection.TooManyPlayers] = RoomRejectionReason.TooManyPlayers,
+            [RoomRejection.NotInRoom] = RoomRejectionReason.NotInRoom,
+            [RoomRejection.NotHost] = RoomRejectionReason.NotHost,
+            [RoomRejection.NotReadyToStart] = RoomRejectionReason.NotReadyToStart,
+            [RoomRejection.MatchStarted] = RoomRejectionReason.MatchStarted,
+        };
+
     public static FaultException<RoomRejectedFault> ToFault(RoomRejectedException rejection)
     {
         ArgumentNullException.ThrowIfNull(rejection);
 
+        double retryAfterSeconds = Math.Ceiling(rejection.RetryDelay.TotalSeconds);
         var fault = new RoomRejectedFault
         {
             Reason = ToReason(rejection.Rejection),
-            RetryAfterSeconds = (int)Math.Ceiling(rejection.RetryDelay.TotalSeconds),
+            RetryAfterSeconds = (int)retryAfterSeconds,
         };
-        return new FaultException<RoomRejectedFault>(fault, new FaultReason(rejection.Message));
+        return FaultExceptionFactory.Create(fault, rejection);
     }
 
     public static RequestedRoomSettings ToRequestedSettings(RoomOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        return new RequestedRoomSettings(
-            ToGameModeCode(options.GameMode),
-            options.WallsPerPlayer,
-            options.ClockMinutes);
+        GameModeCode gameModeCode = ToGameModeCode(options.GameMode);
+        return new RequestedRoomSettings(gameModeCode, options.WallsPerPlayer, options.ClockMinutes);
     }
 
     public static RoomState ToState(RoomSnapshot room)
     {
         ArgumentNullException.ThrowIfNull(room);
 
+        RoomOptions options = ToOptions(room);
+        int seatCount = room.GetSeatCount();
+        RoomMemberState[] members = ContractArray.ConvertAll(room.Members, ToMemberState);
         return new RoomState
         {
             Code = room.Identity.Code,
-            Options = ToOptions(room),
-            SeatCount = room.GetSeatCount(),
-            Members = room.Members.Select(ToMemberState).ToArray(),
+            Options = options,
+            SeatCount = seatCount,
+            Members = members,
         };
     }
 
@@ -49,10 +71,11 @@ public static class RoomTranslator
     {
         ArgumentNullException.ThrowIfNull(room);
 
+        RoomState state = ToState(room);
         return new RoomUpdatedNotification
         {
             OccurredAt = now,
-            Room = ToState(room),
+            Room = state,
         };
     }
 
@@ -68,25 +91,14 @@ public static class RoomTranslator
         };
     }
 
-    private static RoomOptions ToOptions(RoomSnapshot room)
+    private static RoomRejectionReason ToReason(RoomRejection rejection)
     {
-        return new RoomOptions
+        if (!_reasonsByRejection.TryGetValue(rejection, out RoomRejectionReason reason))
         {
-            GameMode = ToRoomGameMode(room.Settings.GameMode.Code),
-            WallsPerPlayer = room.Settings.WallsPerPlayer,
-            ClockMinutes = room.Settings.ClockMinutes,
-        };
-    }
+            throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported room rejection.");
+        }
 
-    private static RoomMemberState ToMemberState(RoomMemberSnapshot member)
-    {
-        return new RoomMemberState
-        {
-            Nickname = member.Nickname,
-            SeatIndex = member.SeatIndex,
-            IsReady = member.IsReady,
-            IsHost = member.IsHost,
-        };
+        return reason;
     }
 
     private static GameModeCode ToGameModeCode(RoomGameMode gameMode)
@@ -104,6 +116,17 @@ public static class RoomTranslator
         }
     }
 
+    private static RoomOptions ToOptions(RoomSnapshot room)
+    {
+        RoomGameMode gameMode = ToRoomGameMode(room.Settings.GameMode.Code);
+        return new RoomOptions
+        {
+            GameMode = gameMode,
+            WallsPerPlayer = room.Settings.WallsPerPlayer,
+            ClockMinutes = room.Settings.ClockMinutes,
+        };
+    }
+
     private static RoomGameMode ToRoomGameMode(GameModeCode code)
     {
         switch (code)
@@ -119,49 +142,14 @@ public static class RoomTranslator
         }
     }
 
-    private static RoomRejectionReason ToReason(RoomRejection rejection)
+    private static RoomMemberState ToMemberState(RoomMemberSnapshot member)
     {
-        switch (rejection)
+        return new RoomMemberState
         {
-            case RoomRejection.NotificationsUnavailable:
-                return RoomRejectionReason.NotificationsUnavailable;
-            case RoomRejection.UnfinishedMatch:
-                return RoomRejectionReason.UnfinishedMatch;
-            case RoomRejection.SearchingMatch:
-                return RoomRejectionReason.SearchingMatch;
-            case RoomRejection.InRoom:
-                return RoomRejectionReason.InRoom;
-            case RoomRejection.InvalidSettings:
-                return RoomRejectionReason.InvalidSettings;
-            case RoomRejection.RoomNotFound:
-                return RoomRejectionReason.RoomNotFound;
-            default:
-                return ToPlacementReason(rejection);
-        }
-    }
-
-    private static RoomRejectionReason ToPlacementReason(RoomRejection rejection)
-    {
-        switch (rejection)
-        {
-            case RoomRejection.RoomFull:
-                return RoomRejectionReason.RoomFull;
-            case RoomRejection.Kicked:
-                return RoomRejectionReason.Kicked;
-            case RoomRejection.TooManyAttempts:
-                return RoomRejectionReason.TooManyAttempts;
-            case RoomRejection.TooManyPlayers:
-                return RoomRejectionReason.TooManyPlayers;
-            case RoomRejection.NotInRoom:
-                return RoomRejectionReason.NotInRoom;
-            case RoomRejection.NotHost:
-                return RoomRejectionReason.NotHost;
-            case RoomRejection.NotReadyToStart:
-                return RoomRejectionReason.NotReadyToStart;
-            case RoomRejection.MatchStarted:
-                return RoomRejectionReason.MatchStarted;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported room rejection.");
-        }
+            Nickname = member.Nickname,
+            SeatIndex = member.SeatIndex,
+            IsReady = member.IsReady,
+            IsHost = member.IsHost,
+        };
     }
 }

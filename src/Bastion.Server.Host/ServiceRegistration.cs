@@ -69,7 +69,7 @@ public static class ServiceRegistration
         services.AddSingleton<IRoomNotifier>(
             provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddHostedService<MatchmakingBackgroundService>();
-        services.AddHostedService<RoomBackgroundService>();
+        services.AddHostedService<RoomCleanupService>();
         return services;
     }
 
