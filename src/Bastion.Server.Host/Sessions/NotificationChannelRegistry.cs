@@ -72,7 +72,7 @@ public sealed class NotificationChannelRegistry
     {
         ArgumentNullException.ThrowIfNull(line);
 
-        ChatMessageNotification notification = ChatTranslator.ToNotification(line);
+        ChatMessageNotification notification = ChatTranslator.ToLobbyChatNotification(line);
         int senderAccountId = line.Line.Sender.AccountId;
         foreach (KeyValuePair<int, INotificationCallback> subscription in _callbacksByAccountId)
         {

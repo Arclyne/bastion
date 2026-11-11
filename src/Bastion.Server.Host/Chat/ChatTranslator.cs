@@ -9,7 +9,7 @@ namespace Bastion.Server.Host.Chat;
 
 public static class ChatTranslator
 {
-    public static ChatMessageNotification ToNotification(PostedChatLine postedLine)
+    public static ChatMessageNotification ToLobbyChatNotification(PostedChatLine postedLine)
     {
         ArgumentNullException.ThrowIfNull(postedLine);
 
