@@ -14,7 +14,7 @@ namespace Bastion.Server.Host.Matches;
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class MatchService : IMatchService
 {
-    private const string ServerFailureReason = "The server could not close the match.";
+    private const string ServerFailureReason = "The server could not record the match abandonment.";
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchService));
 
@@ -33,17 +33,30 @@ public sealed class MatchService : IMatchService
     /// <inheritdoc/>
     public void AbandonMatch(string? sessionToken, int matchId)
     {
-        if (sessionToken is null)
-        {
-            throw SessionTranslator.ToFault(new InvalidSessionException());
-        }
+        string token = RequireSessionToken(sessionToken);
+        Action abandonMatch = () => AbandonMatchInRequestScope(token, matchId);
+        TranslateMatchFailures(nameof(AbandonMatch), matchId, abandonMatch);
+    }
 
+    private static string RequireSessionToken(string? sessionToken)
+    {
+        return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());
+    }
+
+    private void AbandonMatchInRequestScope(string token, int matchId)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchAbandonmentService abandonmentService =
+            scope.ServiceProvider.GetRequiredService<IMatchAbandonmentService>();
+        DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
+        abandonmentService.AbandonMatch(token, matchId, now);
+    }
+
+    private void TranslateMatchFailures(string operationName, int matchId, Action operation)
+    {
         try
         {
-            using IServiceScope scope = _scopeFactory.CreateScope();
-            IMatchAbandonmentService abandonmentService =
-                scope.ServiceProvider.GetRequiredService<IMatchAbandonmentService>();
-            abandonmentService.AbandonMatch(sessionToken, matchId, _timeProvider.GetUtcNow().UtcDateTime);
+            operation();
         }
         catch (InvalidSessionException ex)
         {
@@ -55,12 +68,12 @@ public sealed class MatchService : IMatchService
         }
         catch (MatchRepositoryException ex)
         {
-            _logger.Error($"The match repository failed while a player left a match. MatchId={matchId}", ex);
+            _logger.Error($"The match repository could not be used. Operation={operationName}; MatchId={matchId}", ex);
             throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)
         {
-            _logger.Error($"The database could not be reached while a player left a match. MatchId={matchId}", ex);
+            _logger.Error($"The database could not be reached. Operation={operationName}; MatchId={matchId}", ex);
             throw new FaultException(ServerFailureReason);
         }
     }
