@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Friends;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.PrivateChat;
@@ -24,13 +25,13 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(ChatTabViewModel));
 
-    private readonly SignedInSession _session;
+    private readonly LoggedInSession _session;
     private readonly IConversationClient _conversations;
     private readonly IFriendDirectory _friends;
     private readonly INotificationClient _notifications;
     private readonly SynchronizationContext? _uiContext;
 
-    public ChatTabViewModel(SignedInSession session, ChatClients clients, IFriendDirectory friends)
+    public ChatTabViewModel(LoggedInSession session, ChatClients clients, IFriendDirectory friends)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(clients);

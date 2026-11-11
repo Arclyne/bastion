@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Matchmaking;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Screens.MainMenu;
@@ -43,7 +44,7 @@ public class TestMatchSearchViewModel : IDisposable
 
     public TestMatchSearchViewModel()
     {
-        var session = new SignedInSession(SessionToken, OwnNickname, PreferredLanguage);
+        var session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
         _viewModel = InlineUiContext.CreateViewModel(
             () => new MatchSearchViewModel(session, _matchmakingClient, _timeProvider));
         _viewModel.MatchFound += HandleMatchFound;

@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
-using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Matches;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.Sessions;

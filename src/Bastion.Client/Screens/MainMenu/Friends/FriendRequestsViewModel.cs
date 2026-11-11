@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Friends;
 using Bastion.Client.Networking.Sessions;
 using Gum.Mvvm;
@@ -20,13 +21,13 @@ public sealed class FriendRequestsViewModel : ViewModel
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(FriendRequestsViewModel));
 
-    private readonly SignedInSession _session;
+    private readonly LoggedInSession _session;
     private readonly IFriendClient _friends;
     private readonly List<FriendRequestRowViewModel> _received = new List<FriendRequestRowViewModel>();
     private readonly List<FriendRequestRowViewModel> _sent = new List<FriendRequestRowViewModel>();
     private FriendRequestRowViewModel? _toastRow;
 
-    public FriendRequestsViewModel(SignedInSession session, IFriendClient friends)
+    public FriendRequestsViewModel(LoggedInSession session, IFriendClient friends)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(friends);

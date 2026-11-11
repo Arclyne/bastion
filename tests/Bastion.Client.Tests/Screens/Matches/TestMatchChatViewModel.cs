@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
-using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Chat;
 using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Screens.Matches;

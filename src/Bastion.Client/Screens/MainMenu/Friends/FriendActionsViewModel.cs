@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Friends;
 using Bastion.Client.Networking.Sessions;
 using Gum.Mvvm;
@@ -14,11 +15,11 @@ public sealed class FriendActionsViewModel : ViewModel
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(FriendActionsViewModel));
 
-    private readonly SignedInSession _session;
+    private readonly LoggedInSession _session;
     private readonly IFriendClient _friends;
     private string _friendCode = string.Empty;
 
-    public FriendActionsViewModel(SignedInSession session, IFriendClient friends)
+    public FriendActionsViewModel(LoggedInSession session, IFriendClient friends)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(friends);

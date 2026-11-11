@@ -23,7 +23,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
     private readonly TimeProvider _timeProvider;
     private readonly List<IDisposable> _screenViewModels = new List<IDisposable>();
     private FrameworkElement? _currentScreen;
-    private SignedInSession? _signedInSession;
+    private LoggedInSession? _loggedInSession;
     private JoinedMatch? _joinedMatch;
     private MatchChatViewModel? _matchChatViewModel;
     private MatchAbandonmentViewModel? _matchAbandonmentViewModel;
@@ -46,7 +46,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         ShowScreen(() => new LoginView(new LoginViewModel(_languages, _connection.Accounts, this)));
     }
 
-    public void ShowMainMenu(SignedInSession session)
+    public void ShowMainMenu(LoggedInSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
 
@@ -67,7 +67,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         DisposeViewModelsExcept(Array.Empty<IDisposable>());
     }
 
-    private MainMenuViewModel OpenMainMenu(SignedInSession session)
+    private MainMenuViewModel OpenMainMenu(LoggedInSession session)
     {
         var mainMenuViewModel = new MainMenuViewModel(session, _connection.Notifications);
         var chatClients = new ChatClients(_connection.Chat, _connection.Conversations, _connection.Notifications);
@@ -79,7 +79,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
             () => new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel),
             friendsPanel,
             matchSearchViewModel);
-        _signedInSession = session;
+        _loggedInSession = session;
         _ = friendsPanel.LoadFriends();
         _ = friendsPanel.Requests.LoadRequests();
         _ = friendsPanel.Chat.LoadConversations();
@@ -146,12 +146,12 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 
     private void HandleMatchFound(object? sender, MatchFoundEventArgs e)
     {
-        if (_signedInSession is null)
+        if (_loggedInSession is null)
         {
             return;
         }
 
-        ShowVersus(new JoinedMatch(_signedInSession, e));
+        ShowVersus(new JoinedMatch(_loggedInSession, e));
     }
 
     private void HandleCountdownFinished(object? sender, EventArgs e)
@@ -166,11 +166,11 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 
     private void HandleReturnToMenuRequested(object? sender, EventArgs e)
     {
-        if (_signedInSession is null)
+        if (_loggedInSession is null)
         {
             return;
         }
 
-        OpenMainMenu(_signedInSession);
+        OpenMainMenu(_loggedInSession);
     }
 }

@@ -1,6 +1,6 @@
 using System;
 
-namespace Bastion.Client.Networking.Accounts;
+namespace Bastion.Client.Networking.Channels;
 
 public sealed class ServerErrorException : Exception
 {

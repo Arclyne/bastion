@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Friends;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.Sessions;
@@ -21,13 +22,13 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(FriendsPanelViewModel));
 
-    private readonly SignedInSession _session;
+    private readonly LoggedInSession _session;
     private readonly IFriendClient _friends;
     private readonly INotificationClient _notifications;
     private readonly SynchronizationContext? _uiContext;
     private readonly List<FriendRowViewModel> _allRows = new List<FriendRowViewModel>();
 
-    public FriendsPanelViewModel(SignedInSession session, SocialClients clients)
+    public FriendsPanelViewModel(LoggedInSession session, SocialClients clients)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(clients);

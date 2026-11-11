@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Gum.Mvvm;
 using log4net;
 
@@ -197,7 +198,7 @@ public sealed class LoginViewModel : ViewModel
         try
         {
             var credentials = new LoginCredentials(Identifier.Trim(), Password);
-            SignedInSession session = await Task.Run(() => _accounts.LogIn(credentials));
+            LoggedInSession session = await Task.Run(() => _accounts.LogIn(credentials));
             EnterMainMenu(session);
         }
         catch (InvalidCredentialsException ex)
@@ -259,7 +260,7 @@ public sealed class LoginViewModel : ViewModel
         }
     }
 
-    private void EnterMainMenu(SignedInSession session)
+    private void EnterMainMenu(LoggedInSession session)
     {
         ApplyPreferredLanguage(session.PreferredLanguage);
         _navigator.ShowMainMenu(session);

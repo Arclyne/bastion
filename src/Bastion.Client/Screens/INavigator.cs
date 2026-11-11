@@ -6,5 +6,5 @@ public interface INavigator
 {
     void ShowLogin();
 
-    void ShowMainMenu(SignedInSession session);
+    void ShowMainMenu(LoggedInSession session);
 }

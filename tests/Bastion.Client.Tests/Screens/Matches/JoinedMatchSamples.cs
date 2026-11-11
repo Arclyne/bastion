@@ -32,7 +32,7 @@ public static class JoinedMatchSamples
             new FoundMatchParticipant(OwnNickname, OwnEloRating, ownTurnOrder),
         };
         var format = new FoundMatchFormat(BoardSize, WallsPerPlayer, ClockMinutes);
-        var session = new SignedInSession(SessionToken, OwnNickname, PreferredLanguage);
+        var session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
         return new JoinedMatch(session, new MatchFoundEventArgs(MatchId, format, participants));
     }
 
@@ -46,7 +46,7 @@ public static class JoinedMatchSamples
             new FoundMatchParticipant(ThirdNickname, RivalEloRating, Match.SecondTurnOrder),
         };
         var format = new FoundMatchFormat(BoardSize, FourPlayerWallsPerPlayer, ClockMinutes);
-        var session = new SignedInSession(SessionToken, OwnNickname, PreferredLanguage);
+        var session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
         return new JoinedMatch(session, new MatchFoundEventArgs(MatchId, format, participants));
     }
 }

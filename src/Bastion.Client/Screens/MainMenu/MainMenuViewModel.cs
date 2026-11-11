@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.Sessions;
 using Gum.Mvvm;
@@ -12,10 +13,10 @@ public sealed class MainMenuViewModel : ViewModel
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MainMenuViewModel));
 
-    private readonly SignedInSession _session;
+    private readonly LoggedInSession _session;
     private readonly INotificationClient _notifications;
 
-    public MainMenuViewModel(SignedInSession session, INotificationClient notifications)
+    public MainMenuViewModel(LoggedInSession session, INotificationClient notifications)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(notifications);

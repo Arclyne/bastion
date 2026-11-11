@@ -5,7 +5,7 @@ namespace Bastion.Client.Networking.Accounts;
 public sealed class AccountRestrictedException : Exception
 {
     public AccountRestrictedException(AccountRestriction restriction, int lockMinutes, Exception innerException)
-        : base($"The account cannot sign in. Restriction={restriction}", innerException)
+        : base($"The account cannot log in. Restriction={restriction}", innerException)
     {
         Restriction = restriction;
         LockMinutes = lockMinutes;

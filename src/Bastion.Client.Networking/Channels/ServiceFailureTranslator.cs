@@ -1,6 +1,5 @@
 using System;
 using System.ServiceModel;
-using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Networking.Sessions;
 using Bastion.Contracts.Sessions;
 

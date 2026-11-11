@@ -34,7 +34,7 @@ public class TestFriendsPanelViewModel
 
     private FriendsPanelViewModel CreateViewModel()
     {
-        var session = new SignedInSession(SessionToken, OwnNickname, PreferredLanguage);
+        var session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
         var chatClients = new ChatClients(new FakeChatClient(), new FakeConversationClient(), _notifications);
         var clients = new SocialClients(new FakeFriendClient(), chatClients, _notifications);
         return InlineUiContext.CreateViewModel(() => new FriendsPanelViewModel(session, clients));

@@ -2,5 +2,5 @@ namespace Bastion.Client.Networking.Accounts;
 
 public interface IAccountClient
 {
-    SignedInSession LogIn(LoginCredentials credentials);
+    LoggedInSession LogIn(LoginCredentials credentials);
 }

@@ -5,7 +5,7 @@ using Bastion.Client.Networking.Notifications;
 
 namespace Bastion.Client.Screens.Matches;
 
-public sealed record JoinedMatch(SignedInSession Session, MatchFoundEventArgs FoundMatch)
+public sealed record JoinedMatch(LoggedInSession Session, MatchFoundEventArgs FoundMatch)
 {
     public FoundMatchParticipant FindOwnParticipant()
     {
