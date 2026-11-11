@@ -173,7 +173,7 @@ public sealed class NotificationChannelRegistry
     {
         ArgumentNullException.ThrowIfNull(delivery);
 
-        NotifyPlayer(delivery.Message.RecipientId.GetValueOrDefault(), PrivateChatTranslator.ToNotification(delivery));
+        NotifyPlayer(delivery.Message.RecipientId.GetValueOrDefault(), PrivateChatTranslator.ToPrivateMessageNotification(delivery));
     }
 
     public void NotifyRoomUpdated(RoomSnapshot room, int originAccountId)
