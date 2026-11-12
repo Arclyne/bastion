@@ -49,7 +49,7 @@ public static class PawnMovePolicy
         BoardStep step)
     {
         var firstSide = new BoardStep(step.RowStep, step.ColumnStep);
-        var secondSide = new BoardStep(-step.RowStep, -step.ColumnStep);
+        BoardStep secondSide = firstSide.GetOpposite();
         BoardStep[] sides = { firstSide, secondSide };
         var diagonalLandings = new List<BoardCoordinates>();
         foreach (BoardStep side in sides)

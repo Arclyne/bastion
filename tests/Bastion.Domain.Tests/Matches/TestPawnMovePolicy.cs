@@ -87,7 +87,8 @@ public sealed class TestPawnMovePolicy
             [Match.SecondTurnOrder] = _aheadOfCenter,
             [Match.ThirdTurnOrder] = _twoAheadOfCenter,
         };
-        var board = new Board(ClassicBoardSize, pawnsByTurnOrder, Array.Empty<Wall>());
+        Wall[] noWalls = Array.Empty<Wall>();
+        var board = new Board(ClassicBoardSize, pawnsByTurnOrder, noWalls);
 
         IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 

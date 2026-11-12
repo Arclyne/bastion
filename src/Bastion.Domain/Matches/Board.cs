@@ -72,7 +72,7 @@ public sealed record Board
         ArgumentNullException.ThrowIfNull(from);
         ArgumentNullException.ThrowIfNull(step);
 
-        if (step.RowStep != 0)
+        if (step.IsBetweenRows())
         {
             int lowerRowIndex = Math.Min(from.RowIndex, from.RowIndex + step.RowStep);
             return HasWallAlongRow(from.ColumnIndex, lowerRowIndex);

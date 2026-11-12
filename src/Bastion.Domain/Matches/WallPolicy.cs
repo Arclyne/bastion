@@ -7,23 +7,20 @@ public static class WallPolicy
 {
     private const int FirstGrooveIndex = 0;
     private const int GrooveCountOffset = 1;
-    private const int Forward = 1;
-    private const int Backward = -1;
-    private const int Still = 0;
 
     public static WallRejection? FindRejection(Board board, Wall wall)
     {
         ArgumentNullException.ThrowIfNull(board);
         ArgumentNullException.ThrowIfNull(wall);
 
-        if (!IsInside(board.Size, wall))
+        if (!IsGrooveOnBoard(board.Size, wall))
         {
-            return new WallRejection(WallRejectionReason.OutOfBoard, null);
+            return new WallRejection(WallRejectionReason.OutOfBoard, BlockedTurnOrder: null);
         }
 
         if (CollidesWithPlacedWall(board, wall))
         {
-            return new WallRejection(WallRejectionReason.GrooveTaken, null);
+            return new WallRejection(WallRejectionReason.GrooveTaken, BlockedTurnOrder: null);
         }
 
         Board boardWithWall = board.WithWall(wall);
@@ -31,7 +28,7 @@ public static class WallPolicy
         return blockingRejection;
     }
 
-    private static bool IsInside(byte boardSize, Wall wall)
+    private static bool IsGrooveOnBoard(byte boardSize, Wall wall)
     {
         int grooveCount = boardSize - GrooveCountOffset;
         BoardCoordinates groove = wall.Groove;
@@ -52,9 +49,9 @@ public static class WallPolicy
         }
 
         BoardStep alongWall = wall.Orientation == WallOrientation.Horizontal
-            ? new BoardStep(Forward, Still)
-            : new BoardStep(Still, Forward);
-        var backAlongWall = new BoardStep(alongWall.ColumnStep * Backward, alongWall.RowStep * Backward);
+            ? BoardStep.NextColumn
+            : BoardStep.NextRow;
+        BoardStep backAlongWall = alongWall.GetOpposite();
         BoardCoordinates nextGroove = alongWall.Advance(wall.Groove);
         BoardCoordinates previousGroove = backAlongWall.Advance(wall.Groove);
         var nextWall = new Wall(nextGroove, wall.Orientation);

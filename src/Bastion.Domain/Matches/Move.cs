@@ -17,9 +17,6 @@ public class Move
 
     internal Move(WallPlacement placement, MoveTiming timing)
     {
-        ArgumentNullException.ThrowIfNull(placement);
-        ArgumentNullException.ThrowIfNull(timing);
-
         MoveNumber = placement.MoveNumber;
         AccountId = placement.AccountId;
         MoveType = MoveType.Wall;

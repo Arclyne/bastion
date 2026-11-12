@@ -34,12 +34,21 @@ public sealed class TestMatch
     private const string ClassicTwoAheadSquare = "e3";
     private const string ClassicSecondForwardSquare = "e8";
     private const string QuickFirstPlayerGoalSquare = "d7";
+    private const short ThirdMoveNumber = 3;
+    private const string CenterGrooveSquare = "e4";
+    private const string FirstRowCenterGroove = "e1";
+    private const byte SingleWallPerPlayer = 1;
+    private const byte ClassicWallsAfterOne = 9;
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _endedAt = new DateTime(2026, 11, 5, 18, 7, 0, DateTimeKind.Utc);
     private static readonly MatchEntrant _firstEntrant = new MatchEntrant(FirstAccountId, FirstEloRating);
     private static readonly MatchEntrant _secondEntrant = new MatchEntrant(SecondAccountId, SecondEloRating);
     private static readonly MatchEntrant[] _entrants = { _firstEntrant, _secondEntrant };
+    private static readonly BoardCoordinates _centerGroove = BoardLayout.ParseSquare(CenterGrooveSquare);
+    private static readonly BoardCoordinates _firstRowCenterGroove = BoardLayout.ParseSquare(FirstRowCenterGroove);
+    private static readonly Wall _centerWall = new Wall(_centerGroove, WallOrientation.Horizontal);
+    private static readonly Wall _wallAheadOfFirstPawn = new Wall(_firstRowCenterGroove, WallOrientation.Horizontal);
     private static readonly string[] _quickMovesBeforeFirstPlayerGoal =
     {
         "d2", "c7", "d3", "c6", "d4", "c5", "d5", "c4", "d6", "c3",
@@ -550,6 +559,117 @@ public sealed class TestMatch
         Assert.Equal(ParticipationResult.Lost, second.Result);
     }
 
+    [Fact]
+    public void PlaceWall_FreeGroove_SpendsOneWall()
+    {
+        Match match = StartClassicMatch();
+        WallPlacement placement = CreateFirstPlayerWallPlacement(_centerWall);
+
+        match.PlaceWall(placement, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+
+        Participation first = FindParticipation(match, FirstAccountId);
+        Assert.Equal(ClassicWallsAfterOne, first.RemainingWalls);
+    }
+
+    [Fact]
+    public void PlaceWall_FreeGroove_PassesTurn()
+    {
+        Match match = StartClassicMatch();
+        WallPlacement placement = CreateFirstPlayerWallPlacement(_centerWall);
+
+        match.PlaceWall(placement, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+
+        Assert.Equal(Match.SecondTurnOrder, match.CurrentTurnOrder);
+    }
+
+    [Fact]
+    public void PlaceWall_FreeGroove_RecordsWallMove()
+    {
+        Match match = StartClassicMatch();
+        WallPlacement placement = CreateFirstPlayerWallPlacement(_centerWall);
+
+        match.PlaceWall(placement, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+
+        Move move = match.Moves.Single();
+        Wall recordedWall = move.GetWall();
+        Assert.Equal(_centerWall, recordedWall);
+    }
+
+    [Fact]
+    public void PlaceWall_FreeGroove_RecordsGrooveInBoardNotation()
+    {
+        Match match = StartClassicMatch();
+        WallPlacement placement = CreateFirstPlayerWallPlacement(_centerWall);
+
+        match.PlaceWall(placement, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+
+        Move move = match.Moves.Single();
+        Assert.Equal(CenterGrooveSquare, move.Groove);
+    }
+
+    [Fact]
+    public void BuildBoard_WallPlaced_ContainsWall()
+    {
+        Match match = StartClassicMatch();
+        PlaceFirstPlayerWall(match, _centerWall);
+
+        Board board = match.BuildBoard(GameModeSampleFactory.ClassicBoardSize);
+
+        bool hasWall = board.HasWall(_centerWall);
+        Assert.True(hasWall);
+    }
+
+    [Fact]
+    public void ListReachableSquares_WallAheadOfPawn_ExcludesSquareBehindWall()
+    {
+        Match match = StartClassicMatch();
+        PlaceFirstPlayerWall(match, _wallAheadOfFirstPawn);
+        BoardCoordinates squareBehindWall = BoardLayout.ParseSquare(ClassicForwardSquare);
+
+        IReadOnlyList<BoardCoordinates> reachableSquares =
+            match.ListReachableSquares(FirstAccountId, GameModeSampleFactory.ClassicBoardSize);
+
+        Assert.DoesNotContain(squareBehindWall, reachableSquares);
+    }
+
+    [Fact]
+    public void FindWallRejection_LastWallSpent_RejectsNoWallsLeft()
+    {
+        Match match = StartClassicMatchWithWalls(SingleWallPerPlayer);
+        PlaceFirstPlayerWall(match, _centerWall);
+        PawnMove secondMove = CreateSecondPlayerForwardMove();
+        match.MovePawn(secondMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+        var placement = new WallPlacement(FirstAccountId, ThirdMoveNumber, _wallAheadOfFirstPawn);
+        var expectedRejection = new WallRejection(WallRejectionReason.NoWallsLeft, BlockedTurnOrder: null);
+
+        WallRejection? rejection = match.FindWallRejection(placement, GameModeSampleFactory.ClassicBoardSize);
+
+        Assert.Equal(expectedRejection, rejection);
+    }
+
+    [Fact]
+    public void PlaceWall_GrooveTaken_Throws()
+    {
+        Match match = StartClassicMatch();
+        PlaceFirstPlayerWall(match, _centerWall);
+        var placement = new WallPlacement(SecondAccountId, SecondMoveNumber, _centerWall);
+
+        Action place = () => match.PlaceWall(placement, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+
+        Assert.Throws<InvalidOperationException>(place);
+    }
+
+    [Fact]
+    public void PlaceWall_RivalTurn_Throws()
+    {
+        Match match = StartClassicMatch();
+        var placement = new WallPlacement(SecondAccountId, FirstMoveNumber, _centerWall);
+
+        Action place = () => match.PlaceWall(placement, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+
+        Assert.Throws<InvalidOperationException>(place);
+    }
+
     private static MatchFormat CreateClassicFormat()
     {
         GameMode classicMode = GameModeSampleFactory.CreateClassic();
@@ -626,5 +746,23 @@ public sealed class TestMatch
         short moveNumber = match.GetNextMoveNumber();
         BoardCoordinates destination = BoardLayout.ParseSquare(QuickFirstPlayerGoalSquare);
         return new PawnMove(FirstAccountId, moveNumber, destination);
+    }
+
+    private static WallPlacement CreateFirstPlayerWallPlacement(Wall wall)
+    {
+        return new WallPlacement(FirstAccountId, FirstMoveNumber, wall);
+    }
+
+    private static void PlaceFirstPlayerWall(Match match, Wall wall)
+    {
+        WallPlacement placement = CreateFirstPlayerWallPlacement(wall);
+        match.PlaceWall(placement, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+    }
+
+    private static Match StartClassicMatchWithWalls(byte wallsPerPlayer)
+    {
+        MatchFormat classicFormat = CreateClassicFormat();
+        MatchFormat format = classicFormat with { WallsPerPlayer = wallsPerPlayer };
+        return Match.StartRanked(format, _entrants, _startedAt);
     }
 }
