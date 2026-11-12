@@ -224,14 +224,6 @@ public sealed class TestLoginService
         return new AccessAttempt(identifier, _connection, _now);
     }
 
-    private static void LockAccount(Account account)
-    {
-        for (int failureIndex = 0; failureIndex < FailuresThatLock; failureIndex++)
-        {
-            account.RecordFailedLogin(_now);
-        }
-    }
-
     private Account AddActiveAccount()
     {
         Account account = AddPendingAccount();
@@ -246,5 +238,13 @@ public sealed class TestLoginService
         account.ChangePassword(passwordHash, _salt);
         _unitOfWork.AccountRepository.AddAccount(account);
         return account;
+    }
+
+    private static void LockAccount(Account account)
+    {
+        for (int failureIndex = 0; failureIndex < FailuresThatLock; failureIndex++)
+        {
+            account.RecordFailedLogin(_now);
+        }
     }
 }

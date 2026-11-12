@@ -181,11 +181,6 @@ public sealed class TestMatchAbandonmentService
         Assert.Throws<InvalidSessionException>(abandon);
     }
 
-    private static MatchEntrant CreateUnrankedEntrant(int accountId)
-    {
-        return new MatchEntrant(accountId, EloRating: null);
-    }
-
     private void AddFourPlayerMatch()
     {
         GameMode fourPlayerMode = GameModeSampleFactory.CreateFourPlayers();
@@ -197,6 +192,11 @@ public sealed class TestMatchAbandonmentService
         MatchEntrant[] entrants = { abandoning, rival, third, fourth };
         var match = Match.StartPrivate(format, entrants, _startedAt);
         _matchRepository.MatchesById[FourPlayerMatchId] = match;
+    }
+
+    private static MatchEntrant CreateUnrankedEntrant(int accountId)
+    {
+        return new MatchEntrant(accountId, EloRating: null);
     }
 
     private void AddTwoPlayerMatch()
