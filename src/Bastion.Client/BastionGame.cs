@@ -47,7 +47,8 @@ public sealed class BastionGame : Game
         GumService.Default.Initialize(this, DefaultVisualsVersion.V3);
         GumService.Default.UseSingleThreadedAsync();
         ThemeInitializer.Initialize(this);
-        var languages = new LanguageService(new LanguagePreferenceStore(), GumService.Default.LocalizationService);
+        var languagePreferenceStore = new LanguagePreferenceStore();
+        var languages = new LanguageService(languagePreferenceStore, GumService.Default.LocalizationService);
         languages.LoadInitialLanguage();
         var clipboard = new GumClipboard(GumService.Default.Clipboard);
         var localServices = new LocalServices(languages, clipboard, TimeProvider.System);

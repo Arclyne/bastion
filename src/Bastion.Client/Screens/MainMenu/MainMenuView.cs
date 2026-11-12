@@ -77,30 +77,22 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         AddChild(CreateSettingsButton());
         AddChild(CreateFriendsButton());
         AddChild(CreateChatButton());
-        AddChild(CreateCountBadge(
-            friendsPanelViewModel.Requests,
-            new BadgeBinding(
-                nameof(FriendRequestsViewModel.PendingCountText),
-                nameof(FriendRequestsViewModel.HasPending)),
-            FriendsPillRightOffset));
-        AddChild(CreateCountBadge(
-            friendsPanelViewModel.Chat,
-            new BadgeBinding(nameof(ChatTabViewModel.UnreadText), nameof(ChatTabViewModel.HasUnread)),
-            ChatPillRightOffset));
+        var requestsBinding = new BadgeBinding(
+            nameof(FriendRequestsViewModel.PendingCountText),
+            nameof(FriendRequestsViewModel.HasPending));
+        var unreadBinding = new BadgeBinding(nameof(ChatTabViewModel.UnreadText), nameof(ChatTabViewModel.HasUnread));
+        AddChild(CreateCountBadge(friendsPanelViewModel.Requests, requestsBinding, FriendsPillRightOffset));
+        AddChild(CreateCountBadge(friendsPanelViewModel.Chat, unreadBinding, ChatPillRightOffset));
         AddChild(CreateMenuCard());
         AddChild(CreateMatchSearchPanel());
         AddChild(CreateHowToPlayButton());
         AddChild(ViewFactory.CreateVersionLabel());
         AddChild(CreateFriendsPanel(friendsPanelViewModel));
         AddChild(CreateRequestToast(friendsPanelViewModel.Requests));
-        AddDialog(
-            new RemoveFriendDialogView(friendsPanelViewModel.Actions),
-            friendsPanelViewModel.Actions,
-            nameof(FriendActionsViewModel.IsDialogOpen));
-        AddDialog(
-            new PresenceDialogView(matchSearchViewModel),
-            matchSearchViewModel,
-            nameof(MatchSearchViewModel.IsPresenceDialogOpen));
+        var removeFriendDialog = new RemoveFriendDialogView(friendsPanelViewModel.Actions);
+        var presenceDialog = new PresenceDialogView(matchSearchViewModel);
+        AddDialog(removeFriendDialog, friendsPanelViewModel.Actions, nameof(FriendActionsViewModel.IsDialogOpen));
+        AddDialog(presenceDialog, matchSearchViewModel, nameof(MatchSearchViewModel.IsPresenceDialogOpen));
     }
 
     public void ReceiveEscapeKey()

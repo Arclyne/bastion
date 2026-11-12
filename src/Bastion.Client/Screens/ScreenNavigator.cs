@@ -45,7 +45,8 @@ public sealed class ScreenNavigator : INavigator, IDisposable
     public void ShowLogin()
     {
         var loginViewModel = new LoginViewModel(_languages, _connection.Accounts, this);
-        ShowScreen(new LoginView(loginViewModel, _languages));
+        var loginView = new LoginView(loginViewModel, _languages);
+        ShowScreen(loginView);
     }
 
     public void ShowMainMenu(LoggedInSession session)
@@ -79,10 +80,8 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         var friendsPanel = new FriendsPanelViewModel(session, clients, _localServices);
         var matchSearchViewModel = new MatchSearchViewModel(session, _connection.Matchmaking, _timeProvider);
         matchSearchViewModel.MatchFound += HandleMatchFound;
-        ShowScreen(
-            new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel),
-            friendsPanel,
-            matchSearchViewModel);
+        var mainMenuView = new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel);
+        ShowScreen(mainMenuView, friendsPanel, matchSearchViewModel);
         _loggedInSession = session;
         _ = friendsPanel.LoadFriends();
         _ = friendsPanel.Requests.LoadRequests();
@@ -97,11 +96,8 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         matchAbandonmentViewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
         var versusViewModel = new VersusViewModel(joinedMatch, _timeProvider);
         versusViewModel.CountdownFinished += HandleCountdownFinished;
-        ShowScreen(
-            new VersusView(versusViewModel),
-            versusViewModel,
-            matchChatViewModel,
-            matchAbandonmentViewModel);
+        var versusView = new VersusView(versusViewModel);
+        ShowScreen(versusView, versusViewModel, matchChatViewModel, matchAbandonmentViewModel);
         _joinedMatch = joinedMatch;
         _matchChatViewModel = matchChatViewModel;
         _matchAbandonmentViewModel = matchAbandonmentViewModel;
@@ -113,11 +109,8 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         MatchAbandonmentViewModel matchAbandonmentViewModel)
     {
         var matchViewModel = new MatchViewModel(joinedMatch, matchAbandonmentViewModel);
-        ShowScreen(
-            new MatchView(matchViewModel, matchChatViewModel, matchAbandonmentViewModel),
-            matchChatViewModel,
-            matchAbandonmentViewModel,
-            matchViewModel);
+        var matchView = new MatchView(matchViewModel, matchChatViewModel, matchAbandonmentViewModel);
+        ShowScreen(matchView, matchChatViewModel, matchAbandonmentViewModel, matchViewModel);
         ShownMatch = matchViewModel;
     }
 
@@ -148,7 +141,8 @@ public sealed class ScreenNavigator : INavigator, IDisposable
             return;
         }
 
-        ShowVersus(new JoinedMatch(_loggedInSession, e));
+        var joinedMatch = new JoinedMatch(_loggedInSession, e);
+        ShowVersus(joinedMatch);
     }
 
     private void HandleCountdownFinished(object? sender, EventArgs e)

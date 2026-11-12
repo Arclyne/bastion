@@ -47,7 +47,8 @@ public sealed class LoginView : ScreenView
         AddChild(CreateCard());
         AddChild(CreateExitButton());
         AddChild(ViewFactory.CreateVersionLabel());
-        AddDialog(new ServerFailureDialogView(viewModel), viewModel, nameof(LoginViewModel.IsDialogOpen));
+        var failureDialog = new ServerFailureDialogView(viewModel);
+        AddDialog(failureDialog, viewModel, nameof(LoginViewModel.IsDialogOpen));
     }
 
     private Panel CreateCard()
