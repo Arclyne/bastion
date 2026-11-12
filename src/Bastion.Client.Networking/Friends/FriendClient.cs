@@ -83,25 +83,6 @@ public sealed class FriendClient : IFriendClient
         Call(service => service.RemoveFriend(sessionToken, friendCode));
     }
 
-    private static Exception ToClientException(Exception ex)
-    {
-        if (ex is FaultException<FriendshipRejectedFault> rejected)
-        {
-            return new FriendshipRejectedException(FriendContractTranslator.ToRejection(rejected.Detail.Reason), ex);
-        }
-
-        return ServiceFailureTranslator.ToClientException(ex);
-    }
-
-    private void Call(Action<IFriendshipService> operation)
-    {
-        Call(service =>
-        {
-            operation(service);
-            return true;
-        });
-    }
-
     private TResult Call<TResult>(Func<IFriendshipService, TResult> operation)
     {
         try
@@ -116,5 +97,28 @@ public sealed class FriendClient : IFriendClient
         {
             throw ToClientException(ex);
         }
+    }
+
+    private static Exception ToClientException(Exception ex)
+    {
+        if (ex is FaultException<FriendshipRejectedFault> rejected)
+        {
+            FriendshipRejection rejection = FriendContractTranslator.ToRejection(rejected.Detail.Reason);
+            return new FriendshipRejectedException(rejection, ex);
+        }
+
+        return ServiceFailureTranslator.ToClientException(ex);
+    }
+
+    private void Call(Action<IFriendshipService> operation)
+    {
+        Func<IFriendshipService, bool> operationAsFunction = service => CompleteOperation(operation, service);
+        Call(operationAsFunction);
+    }
+
+    private static bool CompleteOperation(Action<IFriendshipService> operation, IFriendshipService service)
+    {
+        operation(service);
+        return true;
     }
 }
