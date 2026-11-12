@@ -64,12 +64,13 @@ public sealed class GumScreenHost : IScreenHost
 
     private void PlaceDialog(ModalLayer dialog)
     {
-        if (dialog.IsOpen)
+        if (!dialog.IsOpen)
         {
-            _modalRoot.AddChild(dialog);
+            _modalRoot.Children.Remove(dialog.Visual);
             return;
         }
 
-        _modalRoot.Children.Remove(dialog.Visual);
+        dialog.Visual.RefreshLocalization();
+        _modalRoot.AddChild(dialog);
     }
 }
