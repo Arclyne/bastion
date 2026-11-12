@@ -3,6 +3,7 @@ using Bastion.Client.Theme;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
 
@@ -36,6 +37,13 @@ public sealed class PrivateMessageRowView : StackPanel
 
         AddChild(CreateAligned(CreateBubble(row), row.IsOwn));
         AddChild(CreateAligned(CreateMeta(), row.IsOwn));
+    }
+
+    public static GraphicalUiElement CreateVisual(object? item)
+    {
+        PrivateMessageRowViewModel row = ViewFactory.RequireRow<PrivateMessageRowViewModel>(item);
+        var rowView = new PrivateMessageRowView(row);
+        return rowView.Visual;
     }
 
     private static Panel CreateDayLabel(string dayLabel)

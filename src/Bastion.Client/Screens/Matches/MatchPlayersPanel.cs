@@ -19,7 +19,6 @@ public sealed class MatchPlayersPanel : Panel
     private const float RowContentX = 12;
     private const float PawnSize = 18;
     private const float NameWidth = 150;
-    private const int PawnHalves = 2;
     private const int HorizontalSideCount = 2;
 
     public MatchPlayersPanel(MatchViewModel viewModel)
@@ -98,7 +97,7 @@ public sealed class MatchPlayersPanel : Panel
             Height = PawnSize,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        RectangleRuntime circle = Shapes.CreateRounded(Palette.GetPawnColor(player.PawnSymbol), PawnSize / PawnHalves);
+        RectangleRuntime circle = Shapes.CreateCircle(Palette.GetPawnColor(player.PawnSymbol), PawnSize);
         Shapes.InsertBehindContent(pawn.Visual, circle);
         ViewFactory.CenterVertically(pawn);
         return pawn;

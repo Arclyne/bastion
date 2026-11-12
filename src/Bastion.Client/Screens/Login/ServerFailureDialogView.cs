@@ -7,7 +7,7 @@ using log4net;
 
 namespace Bastion.Client.Screens.Login;
 
-public sealed class ServerFailureDialogView : Panel
+public sealed class ServerFailureDialogView : DialogCard
 {
     private const float ButtonSpacing = 12;
     private const int ButtonsPerRow = 2;
@@ -22,32 +22,15 @@ public sealed class ServerFailureDialogView : Panel
 
         _viewModel = viewModel;
         Anchor(Gum.Wireframe.Anchor.Center);
-        Width = DialogMetrics.Width;
-        WidthUnits = DimensionUnitType.Absolute;
-        Height = DialogMetrics.PaddingBottom;
-        HeightUnits = DimensionUnitType.RelativeToChildren;
-        AddChild(CreateContent());
-        Skins.ApplyCard(Visual);
-    }
-
-    private StackPanel CreateContent()
-    {
-        var content = new StackPanel
-        {
-            X = DialogMetrics.PaddingX,
-            Y = DialogMetrics.PaddingTop,
-            Spacing = DialogMetrics.SectionSpacing,
-        };
-        content.AddChild(ViewFactory.CreateBoundLabel(
+        Content.AddChild(ViewFactory.CreateBoundLabel(
             nameof(LoginViewModel.DialogTitleKey),
             TextStyles.DialogTitle,
             DialogMetrics.ContentWidth));
-        content.AddChild(ViewFactory.CreateBoundLabel(
+        Content.AddChild(ViewFactory.CreateBoundLabel(
             nameof(LoginViewModel.DialogMessageKey),
             TextStyles.DialogMessage,
             DialogMetrics.ContentWidth));
-        content.AddChild(CreateButtons());
-        return content;
+        Content.AddChild(CreateButtons());
     }
 
     private StackPanel CreateButtons()

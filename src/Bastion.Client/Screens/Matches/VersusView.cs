@@ -19,7 +19,6 @@ public sealed class VersusView : ScreenView
     private const float AvatarSize = 96;
     private const float AvatarRingWidth = 3;
     private const float VersusWidth = 120;
-    private const int AvatarHalves = 2;
     private const int HorizontalSideCount = 2;
     private const int OwnPlayerCount = 1;
 
@@ -79,7 +78,7 @@ public sealed class VersusView : ScreenView
         return row;
     }
 
-    private static StackPanel CreatePlayerCard(VersusPlayer versusPlayer)
+    private static StackPanel CreatePlayerCard(VersusPlayer player)
     {
         var avatar = new Panel
         {
@@ -88,20 +87,20 @@ public sealed class VersusView : ScreenView
             Height = AvatarSize,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        RectangleRuntime circle = Shapes.CreateRounded(Palette.AvatarFill, AvatarSize / AvatarHalves);
-        circle.StrokeColor = Palette.GetPawnColor(versusPlayer.PawnSymbol);
+        RectangleRuntime circle = Shapes.CreateCircle(Palette.AvatarFill, AvatarSize);
+        circle.StrokeColor = Palette.GetPawnColor(player.PawnSymbol);
         circle.StrokeWidth = AvatarRingWidth;
         Shapes.InsertBehindContent(avatar.Visual, circle);
 
-        var player = new StackPanel
+        var card = new StackPanel
         {
             Width = PlayerWidth,
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = PlayerSpacing,
         };
-        player.AddChild(avatar);
-        player.AddChild(ViewFactory.CreateUntranslatedLabel(versusPlayer.Nickname, TextStyles.IdentityName));
-        player.AddChild(ViewFactory.CreateUntranslatedLabel(versusPlayer.EloText, TextStyles.IdentityDetail));
-        return player;
+        card.AddChild(avatar);
+        card.AddChild(ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyles.IdentityName));
+        card.AddChild(ViewFactory.CreateUntranslatedLabel(player.EloText, TextStyles.IdentityDetail));
+        return card;
     }
 }

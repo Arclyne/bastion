@@ -1,10 +1,11 @@
 using System;
-using System.Collections.Specialized;
 using Bastion.Client.Controls;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
+using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
+using Gum.Wireframe;
 
 namespace Bastion.Client.Screens.MainMenu.Friends;
 
@@ -18,7 +19,6 @@ public sealed class FriendRequestsView : StackPanel
     private const float RowsHeight = 470;
 
     private readonly FriendRequestsViewModel _requests;
-    private readonly ScrollViewer _rows;
 
     public FriendRequestsView(FriendRequestsViewModel requests)
     {
@@ -30,8 +30,6 @@ public sealed class FriendRequestsView : StackPanel
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = ViewSpacing;
 
-        _rows = ViewFactory.CreateScrollList(ViewWidth, RowsHeight);
-
         AddChild(CreateSubtabRow());
         AddChild(ViewFactory.CreateBoundNotice(
             nameof(FriendRequestsViewModel.StatusText),
@@ -41,9 +39,7 @@ public sealed class FriendRequestsView : StackPanel
             nameof(FriendRequestsViewModel.EmptyText),
             nameof(FriendRequestsViewModel.HasEmptyText),
             TextStyles.NoticeTitle));
-        AddChild(_rows);
-
-        requests.VisibleRows.CollectionChanged += HandleVisibleRowsChanged;
+        AddChild(CreateRequestList());
     }
 
     private StackPanel CreateSubtabRow()
@@ -75,6 +71,21 @@ public sealed class FriendRequestsView : StackPanel
         return new TabButton(button, selectedProperty, SubtabSpacing);
     }
 
+    private ItemsControl CreateRequestList()
+    {
+        ItemsControl requestList = ViewFactory.CreateScrollList<ItemsControl>(ViewWidth, RowsHeight);
+        requestList.VisualTemplate = new VisualTemplate(CreateRequestRow);
+        requestList.Items = _requests.VisibleRows;
+        return requestList;
+    }
+
+    private GraphicalUiElement CreateRequestRow(object? item)
+    {
+        FriendRequestRowViewModel row = ViewFactory.RequireRow<FriendRequestRowViewModel>(item);
+        var rowView = new FriendRequestRowView(_requests, row);
+        return rowView.Visual;
+    }
+
     private void HandleReceivedClick(object? sender, EventArgs e)
     {
         _requests.ShowReceived();
@@ -83,15 +94,5 @@ public sealed class FriendRequestsView : StackPanel
     private void HandleSentClick(object? sender, EventArgs e)
     {
         _requests.ShowSent();
-    }
-
-    private void HandleVisibleRowsChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        ViewFactory.ClearRows(_rows.InnerPanel);
-        foreach (FriendRequestRowViewModel row in _requests.VisibleRows)
-        {
-            var rowView = new FriendRequestRowView(_requests, row);
-            _rows.InnerPanel.AddChild(rowView.Visual);
-        }
     }
 }

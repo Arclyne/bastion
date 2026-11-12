@@ -117,9 +117,10 @@ public static class ViewFactory
         element.X = MiddleOffsetX;
     }
 
-    public static ScrollViewer CreateScrollList(float width, float height)
+    public static TList CreateScrollList<TList>(float width, float height)
+        where TList : ScrollViewer, new()
     {
-        var list = new ScrollViewer
+        var list = new TList
         {
             Width = width,
             WidthUnits = DimensionUnitType.Absolute,
@@ -138,6 +139,18 @@ public static class ViewFactory
         {
             container.Children.RemoveAt(container.Children.Count - 1);
         }
+    }
+
+    public static TRow RequireRow<TRow>(object? item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        if (item is not TRow row)
+        {
+            throw new ArgumentException($"The list item must be a {typeof(TRow).Name}.", nameof(item));
+        }
+
+        return row;
     }
 
     public static Label CreateVersionLabel()

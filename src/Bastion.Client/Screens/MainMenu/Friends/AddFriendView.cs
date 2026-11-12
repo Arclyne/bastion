@@ -1,10 +1,11 @@
 using System;
-using System.Collections.Specialized;
 using Bastion.Client.Controls;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
+using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.Wireframe;
 using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Friends;
@@ -21,7 +22,6 @@ public sealed class AddFriendView : StackPanel
     private static readonly ILog _logger = LogManager.GetLogger(typeof(AddFriendView));
 
     private readonly FriendsPanelViewModel _friendsPanelViewModel;
-    private readonly ScrollViewer _results;
 
     public AddFriendView(FriendsPanelViewModel friendsPanelViewModel)
     {
@@ -33,15 +33,11 @@ public sealed class AddFriendView : StackPanel
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = ViewSpacing;
 
-        _results = ViewFactory.CreateScrollList(ViewWidth, ResultsHeight);
-
         AddChild(CreateBackButton());
         AddChild(CreateSearchRow());
         AddChild(ViewFactory.CreateLabel(nameof(Strings.FriendsSearchHint), TextStyles.Hint));
         AddChild(CreateStatus());
-        AddChild(_results);
-
-        friendsPanelViewModel.AddFriend.Results.CollectionChanged += HandleResultsChanged;
+        AddChild(CreateResults());
     }
 
     private Button CreateBackButton()
@@ -85,6 +81,21 @@ public sealed class AddFriendView : StackPanel
             TextStyles.FieldError);
     }
 
+    private ItemsControl CreateResults()
+    {
+        ItemsControl results = ViewFactory.CreateScrollList<ItemsControl>(ViewWidth, ResultsHeight);
+        results.VisualTemplate = new VisualTemplate(CreateResultRow);
+        results.Items = _friendsPanelViewModel.AddFriend.Results;
+        return results;
+    }
+
+    private GraphicalUiElement CreateResultRow(object? item)
+    {
+        FoundPlayerRowViewModel row = ViewFactory.RequireRow<FoundPlayerRowViewModel>(item);
+        var rowView = new FoundPlayerRowView(_friendsPanelViewModel.AddFriend, row);
+        return rowView.Visual;
+    }
+
     private void HandleBackClick(object? sender, EventArgs e)
     {
         _friendsPanelViewModel.CloseAddFriend();
@@ -99,16 +110,6 @@ public sealed class AddFriendView : StackPanel
         catch (ObjectDisposedException ex)
         {
             _logger.Warn("The player search could not run because the connection is closed.", ex);
-        }
-    }
-
-    private void HandleResultsChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        ViewFactory.ClearRows(_results.InnerPanel);
-        foreach (FoundPlayerRowViewModel row in _friendsPanelViewModel.AddFriend.Results)
-        {
-            var rowView = new FoundPlayerRowView(_friendsPanelViewModel.AddFriend, row);
-            _results.InnerPanel.AddChild(rowView.Visual);
         }
     }
 }

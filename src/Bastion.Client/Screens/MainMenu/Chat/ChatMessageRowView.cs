@@ -2,6 +2,7 @@ using System;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
+using Gum.Wireframe;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
@@ -23,6 +24,13 @@ public sealed class ChatMessageRowView : StackPanel
         AddChild(CreateFixedLabel(row.Text, TextStyles.NoticeMessage));
         AddChild(CreateStateLabel(nameof(ChatMessageRowViewModel.IsPending), TextStyles.Hint));
         AddChild(CreateStateLabel(nameof(ChatMessageRowViewModel.HasFailed), TextStyles.FieldError));
+    }
+
+    public static GraphicalUiElement CreateVisual(object? item)
+    {
+        ChatMessageRowViewModel row = ViewFactory.RequireRow<ChatMessageRowViewModel>(item);
+        var rowView = new ChatMessageRowView(row);
+        return rowView.Visual;
     }
 
     private static StackPanel CreateHeader(ChatMessageRowViewModel row)

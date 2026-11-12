@@ -74,7 +74,7 @@ public sealed class FriendListView : StackPanel
 
     private ScrollViewer CreateGroups()
     {
-        ScrollViewer groups = ViewFactory.CreateScrollList(ListWidth, ScrollHeight);
+        ScrollViewer groups = ViewFactory.CreateScrollList<ScrollViewer>(ListWidth, ScrollHeight);
         groups.InnerPanel.AddChild(ViewFactory.CreateBoundNotice(
             nameof(FriendsPanelViewModel.ConnectedGroupTitle),
             nameof(FriendsPanelViewModel.HasConnectedFriends),

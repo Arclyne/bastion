@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Notifications;
@@ -30,11 +30,11 @@ public sealed class VersusViewModel : ViewModel, IDisposable
         _uiContext = SynchronizationContext.Current;
         FoundMatchFormat format = joinedMatch.FoundMatch.Format;
         Own = ToVersusPlayer(joinedMatch.FindOwnParticipant());
-        Rivals = joinedMatch.FoundMatch.Participants
+        IEnumerable<VersusPlayer> orderedRivals = joinedMatch.FoundMatch.Participants
             .Where(participant => !joinedMatch.IsOwnParticipant(participant))
             .OrderBy(participant => participant.TurnOrder)
-            .Select(ToVersusPlayer)
-            .ToList();
+            .Select(ToVersusPlayer);
+        Rivals = new List<VersusPlayer>(orderedRivals);
         ModeText = MatchScreenText.FormatMode(format.BoardSize, format.WallsPerPlayer);
         _secondsLeft = CountdownSeconds;
         CountdownText = FormatCountdown(_secondsLeft);
@@ -62,10 +62,9 @@ public sealed class VersusViewModel : ViewModel, IDisposable
 
     private static VersusPlayer ToVersusPlayer(FoundMatchParticipant participant)
     {
-        return new VersusPlayer(
-            participant.Nickname,
-            MatchScreenText.FormatElo(participant.EloRating),
-            Participation.GetPawnSymbol(participant.TurnOrder));
+        string eloText = MatchScreenText.FormatElo(participant.EloRating);
+        PawnSymbol pawnSymbol = Participation.GetPawnSymbol(participant.TurnOrder);
+        return new VersusPlayer(participant.Nickname, eloText, pawnSymbol);
     }
 
     private static string FormatCountdown(int secondsLeft)

@@ -69,21 +69,21 @@ public static class ConversationParts
         return label;
     }
 
-    public static ScrollViewer CreateMessageList(float height, float rowSpacing)
+    public static ItemsControl CreateMessageList(float height, float rowSpacing)
     {
-        ScrollViewer messages = ViewFactory.CreateScrollList(ViewWidth, height);
+        ItemsControl messages = ViewFactory.CreateScrollList<ItemsControl>(ViewWidth, height);
         messages.InnerPanel.StackSpacing = rowSpacing;
         return messages;
     }
 
-    public static StackPanel CreateInputRow(EventHandler handleSendClick)
+    public static StackPanel CreateInputRow(EventHandler handleSendClick, float rowWidth)
     {
         ArgumentNullException.ThrowIfNull(handleSendClick);
 
         var input = new TextField
         {
             Placeholder = nameof(Strings.ChatPlaceholder),
-            Width = ViewWidth - SendButtonWidth - InputSpacing,
+            Width = rowWidth - SendButtonWidth - InputSpacing,
             Height = InputHeight,
         };
         input.SetBinding(nameof(TextField.Text), nameof(ChatComposerViewModel.Draft));

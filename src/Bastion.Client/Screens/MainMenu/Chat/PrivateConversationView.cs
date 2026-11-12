@@ -1,10 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
+using Gum.Forms;
 using Gum.Forms.Controls;
 using log4net;
 
@@ -21,7 +21,7 @@ public sealed class PrivateConversationView : StackPanel
     private static readonly ILog _logger = LogManager.GetLogger(typeof(PrivateConversationView));
 
     private readonly PrivateConversationViewModel _conversation;
-    private readonly ScrollViewer _messages;
+    private readonly ItemsControl _messages;
 
     public PrivateConversationView(PrivateConversationViewModel conversation)
     {
@@ -32,7 +32,7 @@ public sealed class PrivateConversationView : StackPanel
         Width = ConversationParts.ViewWidth;
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = SectionSpacing;
-        _messages = ConversationParts.CreateMessageList(ScrollHeight, RowSpacing);
+        _messages = CreateMessages();
 
         AddChild(CreateHeader());
         AddChild(ConversationParts.CreateNoticeLabel(
@@ -60,10 +60,18 @@ public sealed class PrivateConversationView : StackPanel
             nameof(PrivateConversationViewModel.CounterText),
             nameof(PrivateConversationViewModel.IsCounterVisible),
             TextStyles.Hint));
-        AddChild(ConversationParts.CreateInputRow(HandleSendClick));
+        AddChild(ConversationParts.CreateInputRow(HandleSendClick, ConversationParts.ViewWidth));
 
         _conversation.Messages.CollectionChanged += HandleMessagesChanged;
         _conversation.PropertyChanged += HandleConversationPropertyChanged;
+    }
+
+    private ItemsControl CreateMessages()
+    {
+        ItemsControl messages = ConversationParts.CreateMessageList(ScrollHeight, RowSpacing);
+        messages.VisualTemplate = new VisualTemplate(PrivateMessageRowView.CreateVisual);
+        messages.Items = _conversation.Messages;
+        return messages;
     }
 
     private StackPanel CreateHeader()
@@ -114,26 +122,6 @@ public sealed class PrivateConversationView : StackPanel
         return notice;
     }
 
-    private void AddRows(IList? rows)
-    {
-        if (rows is null)
-        {
-            return;
-        }
-
-        foreach (PrivateMessageRowViewModel row in rows)
-        {
-            var rowView = new PrivateMessageRowView(row);
-            _messages.InnerPanel.AddChild(rowView.Visual);
-        }
-    }
-
-    private void RebuildRows()
-    {
-        ViewFactory.ClearRows(_messages.InnerPanel);
-        AddRows(_conversation.Messages);
-    }
-
     private void HandleBackClick(object? sender, EventArgs e)
     {
         _conversation.Close();
@@ -165,21 +153,6 @@ public sealed class PrivateConversationView : StackPanel
 
     private void HandleMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        switch (e.Action)
-        {
-            case NotifyCollectionChangedAction.Add:
-                AddRows(e.NewItems);
-                break;
-            case NotifyCollectionChangedAction.Remove:
-            case NotifyCollectionChangedAction.Replace:
-            case NotifyCollectionChangedAction.Move:
-            case NotifyCollectionChangedAction.Reset:
-                RebuildRows();
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(e), e.Action, "Unsupported collection change.");
-        }
-
         ConversationParts.ScrollToLatest(_messages);
     }
 

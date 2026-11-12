@@ -33,9 +33,9 @@ public sealed class BoardScene
         ArgumentNullException.ThrowIfNull(content);
 
         _graphicsDevice = graphicsDevice;
-        _classicBoardModel = new SceneModel(content.Load<Model>(ClassicBoardAssetName));
-        _quickBoardModel = new SceneModel(content.Load<Model>(QuickBoardAssetName));
-        _pawnModel = new SceneModel(content.Load<Model>(PawnAssetName));
+        _classicBoardModel = LoadSceneModel(content, ClassicBoardAssetName);
+        _quickBoardModel = LoadSceneModel(content, QuickBoardAssetName);
+        _pawnModel = LoadSceneModel(content, PawnAssetName);
     }
 
     public void Draw(MatchViewModel match)
@@ -52,15 +52,22 @@ public sealed class BoardScene
         }
     }
 
+    private static SceneModel LoadSceneModel(ContentManager content, string assetName)
+    {
+        Model model = content.Load<Model>(assetName);
+        return new SceneModel(model);
+    }
+
     private void PrepareGoalColors(MatchViewModel match)
     {
-        if (ReferenceEquals(_preparedMatch, match) && _preparedPawnCount == match.Pawns.Count)
+        if (AreGoalColorsCurrent(match))
         {
             return;
         }
 
         _goalColorsByMeshName.Clear();
-        foreach (MatchPlayerViewModel player in match.Players.Where(candidate => !candidate.HasLeft))
+        IEnumerable<MatchPlayerViewModel> remainingPlayers = match.Players.Where(candidate => !candidate.HasLeft);
+        foreach (MatchPlayerViewModel player in remainingPlayers)
         {
             string goalMeshName =
                 BoardSceneLayout.GetGoalMeshName(match.BoardSize, player.TurnOrder, match.Players.Count);
@@ -69,6 +76,11 @@ public sealed class BoardScene
 
         _preparedMatch = match;
         _preparedPawnCount = match.Pawns.Count;
+    }
+
+    private bool AreGoalColorsCurrent(MatchViewModel match)
+    {
+        return ReferenceEquals(_preparedMatch, match) && _preparedPawnCount == match.Pawns.Count;
     }
 
     private SceneCamera CreateCamera(byte ownTurnOrder)

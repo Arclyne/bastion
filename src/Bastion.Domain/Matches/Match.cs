@@ -10,8 +10,8 @@ public class Match
     public const byte SecondTurnOrder = 2;
     public const byte ThirdTurnOrder = 3;
     public const byte FourthTurnOrder = 4;
+    public const int TwoPlayerCount = 2;
 
-    private const int TwoPlayers = 2;
     private const int LastStandingPlayerCount = 1;
     private const byte FirstPlacement = 1;
 
@@ -90,7 +90,7 @@ public class Match
             throw new InvalidOperationException("Only a player of a match in progress can abandon it.");
         }
 
-        if (_participations.Count == TwoPlayers)
+        if (_participations.Count == TwoPlayerCount)
         {
             EndTwoPlayerMatchByAbandonment(abandoningAccountId, abandonedAt);
             return;

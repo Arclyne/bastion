@@ -1,13 +1,12 @@
 using System;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
-using Gum.DataTypes;
 using Gum.Forms.Controls;
 using log4net;
 
 namespace Bastion.Client.Screens.MainMenu;
 
-public sealed class MatchSearchPanel : Panel
+public sealed class MatchSearchPanel : DialogCard
 {
     private const float ButtonWidth = 160;
 
@@ -21,26 +20,13 @@ public sealed class MatchSearchPanel : Panel
 
         _viewModel = viewModel;
         BindingContext = viewModel;
-        Width = DialogMetrics.Width;
-        WidthUnits = DimensionUnitType.Absolute;
-        Height = DialogMetrics.PaddingBottom;
-        HeightUnits = DimensionUnitType.RelativeToChildren;
         SetBinding(nameof(IsVisible), nameof(MatchSearchViewModel.IsSearching));
-
-        var content = new StackPanel
-        {
-            X = DialogMetrics.PaddingX,
-            Y = DialogMetrics.PaddingTop,
-            Spacing = DialogMetrics.SectionSpacing,
-        };
-        content.AddChild(ViewFactory.CreateLabel(nameof(Strings.MatchSearchSearchingTitle), TextStyles.DialogTitle));
-        content.AddChild(ViewFactory.CreateBoundUntranslatedLabel(
+        Content.AddChild(ViewFactory.CreateLabel(nameof(Strings.MatchSearchSearchingTitle), TextStyles.DialogTitle));
+        Content.AddChild(ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchSearchViewModel.SearchDetail),
             TextStyles.DialogMessage,
             DialogMetrics.ContentWidth));
-        content.AddChild(CreateCancelButton());
-        AddChild(content);
-        Skins.ApplyCard(Visual);
+        Content.AddChild(CreateCancelButton());
     }
 
     private Button CreateCancelButton()

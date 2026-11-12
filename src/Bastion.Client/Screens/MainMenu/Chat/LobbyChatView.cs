@@ -1,10 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
+using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
@@ -24,7 +24,7 @@ public sealed class LobbyChatView : StackPanel
     private static readonly ILog _logger = LogManager.GetLogger(typeof(LobbyChatView));
 
     private readonly LobbyChatViewModel _chat;
-    private readonly ScrollViewer _messages;
+    private readonly ItemsControl _messages;
 
     public LobbyChatView(LobbyChatViewModel chat)
     {
@@ -54,15 +54,17 @@ public sealed class LobbyChatView : StackPanel
             nameof(LobbyChatViewModel.CounterText),
             nameof(LobbyChatViewModel.IsCounterVisible),
             TextStyles.Hint));
-        AddChild(ConversationParts.CreateInputRow(HandleSendClick));
+        AddChild(ConversationParts.CreateInputRow(HandleSendClick, ConversationParts.ViewWidth));
 
         _chat.Messages.CollectionChanged += HandleMessagesChanged;
         _chat.PropertyChanged += HandleChatPropertyChanged;
     }
 
-    private ScrollViewer CreateMessages()
+    private ItemsControl CreateMessages()
     {
-        ScrollViewer messages = ConversationParts.CreateMessageList(ScrollHeight, RowSpacing);
+        ItemsControl messages = ConversationParts.CreateMessageList(ScrollHeight, RowSpacing);
+        messages.VisualTemplate = new VisualTemplate(ChatMessageRowView.CreateVisual);
+        messages.Items = _chat.Messages;
         var messagesVisual = (ScrollViewerVisual)messages.Visual;
         var scrollBarVisual = (InteractiveGue)messagesVisual.VerticalScrollBarInstance;
         if (scrollBarVisual.FormsControlAsObject is ScrollBar scrollBar)
@@ -99,26 +101,6 @@ public sealed class LobbyChatView : StackPanel
         return unread;
     }
 
-    private void AddRows(IList? rows)
-    {
-        if (rows is null)
-        {
-            return;
-        }
-
-        foreach (ChatMessageRowViewModel row in rows)
-        {
-            var rowView = new ChatMessageRowView(row);
-            _messages.InnerPanel.AddChild(rowView.Visual);
-        }
-    }
-
-    private void RebuildRows()
-    {
-        ViewFactory.ClearRows(_messages.InnerPanel);
-        AddRows(_chat.Messages);
-    }
-
     private void HandleScrollChanged(object? sender, EventArgs e)
     {
         bool isReadingLatest = _messages.VerticalScrollBarValue >= _messages.VerticalScrollBarMaximum - LatestTolerance;
@@ -150,23 +132,6 @@ public sealed class LobbyChatView : StackPanel
 
     private void HandleMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        switch (e.Action)
-        {
-            case NotifyCollectionChangedAction.Add:
-                AddRows(e.NewItems);
-                break;
-            case NotifyCollectionChangedAction.Remove:
-                _messages.InnerPanel.Children.RemoveAt(e.OldStartingIndex);
-                break;
-            case NotifyCollectionChangedAction.Replace:
-            case NotifyCollectionChangedAction.Move:
-            case NotifyCollectionChangedAction.Reset:
-                RebuildRows();
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(e), e.Action, "Unsupported collection change.");
-        }
-
         if (_chat.IsReadingLatest)
         {
             ConversationParts.ScrollToLatest(_messages);

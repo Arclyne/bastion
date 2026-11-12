@@ -10,8 +10,6 @@ namespace Bastion.Client.Screens.Matches;
 
 public sealed class MatchViewModel : IDisposable
 {
-    private const int TwoPlayers = 2;
-
     private readonly MatchAbandonmentViewModel _abandonmentViewModel;
     private List<BoardPawn> _pawns = new List<BoardPawn>();
 
@@ -22,10 +20,10 @@ public sealed class MatchViewModel : IDisposable
 
         _abandonmentViewModel = abandonmentViewModel;
         FoundMatchFormat format = joinedMatch.FoundMatch.Format;
-        IEnumerable<MatchPlayerViewModel> playerQuery = joinedMatch.FoundMatch.Participants
+        IEnumerable<MatchPlayerViewModel> orderedPlayers = joinedMatch.FoundMatch.Participants
             .OrderBy(participant => participant.TurnOrder)
             .Select(participant => CreatePlayerViewModel(joinedMatch, participant, format));
-        Players = new List<MatchPlayerViewModel>(playerQuery);
+        Players = new List<MatchPlayerViewModel>(orderedPlayers);
         BoardSize = format.BoardSize;
         OwnTurnOrder = Players.First(player => player.IsOwn).TurnOrder;
         TurnText = FormatTurn(Players.First(player => player.HasFirstTurn()), Players.Count);
@@ -58,7 +56,8 @@ public sealed class MatchViewModel : IDisposable
         FoundMatchParticipant participant,
         FoundMatchFormat format)
     {
-        return new MatchPlayerViewModel(participant, format, joinedMatch.IsOwnParticipant(participant));
+        bool isOwn = joinedMatch.IsOwnParticipant(participant);
+        return new MatchPlayerViewModel(participant, format, isOwn);
     }
 
     private static string FormatTurn(MatchPlayerViewModel firstPlayer, int playerCount)
@@ -68,18 +67,12 @@ public sealed class MatchViewModel : IDisposable
             return Strings.MatchYourTurn;
         }
 
-        if (playerCount == TwoPlayers)
+        if (playerCount == Match.TwoPlayerCount)
         {
             return Strings.MatchRivalTurn;
         }
 
         return string.Format(CultureInfo.CurrentCulture, Strings.MatchPlayerTurnFormat, firstPlayer.Nickname);
-    }
-
-    private BoardPawn CreatePawn(MatchPlayerViewModel player)
-    {
-        BoardCoordinates coordinates = BoardLayout.GetStartingCoordinates(BoardSize, player.TurnOrder);
-        return new BoardPawn(coordinates, player.PawnSymbol);
     }
 
     private void MarkPlayerLeft(string nickname)
@@ -90,7 +83,16 @@ public sealed class MatchViewModel : IDisposable
 
     private void RebuildPawns()
     {
-        _pawns = Players.Where(player => !player.HasLeft).Select(CreatePawn).ToList();
+        IEnumerable<BoardPawn> remainingPawns = Players
+            .Where(player => !player.HasLeft)
+            .Select(CreatePawn);
+        _pawns = new List<BoardPawn>(remainingPawns);
+    }
+
+    private BoardPawn CreatePawn(MatchPlayerViewModel player)
+    {
+        BoardCoordinates coordinates = BoardLayout.GetStartingCoordinates(BoardSize, player.TurnOrder);
+        return new BoardPawn(coordinates, player.PawnSymbol);
     }
 
     private void HandlePlayerLeft(object? sender, PlayerLeftEventArgs e)

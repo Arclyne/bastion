@@ -87,20 +87,21 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
 
         IsAbandoning = true;
         StatusText = string.Empty;
-        bool isMatchOver;
         try
         {
-            isMatchOver = await TryAbandonJoinedMatch();
+            await LeaveJoinedMatch();
         }
         finally
         {
             IsAbandoning = false;
         }
 
-        if (isMatchOver)
+        if (HasStatus)
         {
-            OnReturnToMenuRequested();
+            return;
         }
+
+        OnReturnToMenuRequested();
     }
 
     public void RequestReturnToMenu()
@@ -113,37 +114,32 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
         _matches.MatchAbandoned -= HandleMatchAbandoned;
     }
 
-    private async Task<bool> TryAbandonJoinedMatch()
+    private async Task LeaveJoinedMatch()
     {
         try
         {
             await Task.Run(AbandonJoinedMatch);
-            return true;
         }
         catch (MatchNotJoinedException ex)
         {
             _logger.Warn("The match was already closed when the player left it.", ex);
-            return true;
         }
         catch (InvalidSessionException ex)
         {
-            ReportAbandonFailure(ex);
-            return false;
+            _logger.Warn("The player could not leave the match because the session is no longer valid.", ex);
+            StatusText = Strings.MatchAbandonFailed;
         }
         catch (ServerUnreachableException ex)
         {
             ReportAbandonFailure(ex);
-            return false;
         }
         catch (ConnectionLostException ex)
         {
             ReportAbandonFailure(ex);
-            return false;
         }
         catch (ServerErrorException ex)
         {
             ReportAbandonFailure(ex);
-            return false;
         }
     }
 
@@ -154,16 +150,13 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
 
     private void ReportAbandonFailure(Exception ex)
     {
-        _logger.Warn("The player could not leave the match.", ex);
+        _logger.Error("The player could not leave the match.", ex);
         StatusText = Strings.MatchAbandonFailed;
     }
 
-    private void ShowRivalAbandoned(string abandoningNickname)
+    private void OnReturnToMenuRequested()
     {
-        RivalAbandonedText = string.Format(
-            CultureInfo.CurrentCulture,
-            Strings.MatchRivalAbandonedFormat,
-            abandoningNickname);
+        ReturnToMenuRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void ReceiveAbandonment(string abandoningNickname, bool isMatchOver)
@@ -176,17 +169,21 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
 
         _leftNicknames.Add(abandoningNickname);
         PlayerLeftText = string.Format(CultureInfo.CurrentCulture, Strings.MatchPlayerLeftFormat, abandoningNickname);
-        OnPlayerLeft(new PlayerLeftEventArgs(abandoningNickname));
+        var departure = new PlayerLeftEventArgs(abandoningNickname);
+        OnPlayerLeft(departure);
+    }
+
+    private void ShowRivalAbandoned(string abandoningNickname)
+    {
+        RivalAbandonedText = string.Format(
+            CultureInfo.CurrentCulture,
+            Strings.MatchRivalAbandonedFormat,
+            abandoningNickname);
     }
 
     private void OnPlayerLeft(PlayerLeftEventArgs e)
     {
         PlayerLeft?.Invoke(this, e);
-    }
-
-    private void OnReturnToMenuRequested()
-    {
-        ReturnToMenuRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void HandleMatchAbandoned(object? sender, MatchAbandonedEventArgs e)

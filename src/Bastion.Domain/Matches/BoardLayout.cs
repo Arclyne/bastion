@@ -13,7 +13,7 @@ public static class BoardLayout
     public static BoardCoordinates GetStartingCoordinates(byte boardSize, byte turnOrder)
     {
         int centerIndex = boardSize / BoardHalves;
-        int lastIndex = boardSize - RowNumberOffset;
+        int lastIndex = GetLastIndex(boardSize);
         switch (turnOrder)
         {
             case Match.FirstTurnOrder:
@@ -39,5 +39,11 @@ public static class BoardLayout
         char column = (char)columnCode;
         int rowNumber = coordinates.RowIndex + RowNumberOffset;
         return string.Create(CultureInfo.InvariantCulture, $"{column}{rowNumber}");
+    }
+
+    public static int GetLastIndex(byte boardSize)
+    {
+        int lastIndex = boardSize - RowNumberOffset;
+        return lastIndex;
     }
 }

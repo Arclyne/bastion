@@ -35,8 +35,9 @@ public sealed class MatchView : ScreenView
         AddChild(CreateAbandonButton());
         AddChild(CreateAbandonStatus());
         AddChild(CreatePlayerLeftNotice());
+        var rivalAbandonedDialog = new RivalAbandonedDialogView(abandonmentViewModel);
         AddDialog(
-            new RivalAbandonedDialogView(abandonmentViewModel),
+            rivalAbandonedDialog,
             abandonmentViewModel,
             nameof(MatchAbandonmentViewModel.HasRivalAbandoned));
     }
@@ -62,10 +63,10 @@ public sealed class MatchView : ScreenView
         pill.Anchor(Gum.Wireframe.Anchor.TopRight);
         pill.X = -ScreenMetrics.MarginX;
         pill.Y = ScreenMetrics.MarginY;
-        Label text = ViewFactory.CreateUntranslatedLabel(matchViewModel.TurnText, TextStyles.IdentityName);
-        text.X = TurnPillPaddingX;
-        ViewFactory.CenterVertically(text);
-        pill.AddChild(text);
+        Label turnLabel = ViewFactory.CreateUntranslatedLabel(matchViewModel.TurnText, TextStyles.IdentityName);
+        turnLabel.X = TurnPillPaddingX;
+        ViewFactory.CenterVertically(turnLabel);
+        pill.AddChild(turnLabel);
         Skins.ApplyCard(pill.Visual);
         return pill;
     }
@@ -97,12 +98,13 @@ public sealed class MatchView : ScreenView
 
     private Label CreateAbandonStatus()
     {
-        Label status = ViewFactory.CreateBoundUntranslatedLabel(
+        Label status = ViewFactory.CreateBoundNotice(
             nameof(MatchAbandonmentViewModel.StatusText),
-            TextStyles.FieldError,
-            AbandonButtonWidth);
+            nameof(MatchAbandonmentViewModel.HasStatus),
+            TextStyles.FieldError);
+        status.Width = AbandonButtonWidth;
+        status.WidthUnits = DimensionUnitType.Absolute;
         status.BindingContext = _abandonmentViewModel;
-        status.SetBinding(nameof(IsVisible), nameof(MatchAbandonmentViewModel.HasStatus));
         status.Anchor(Gum.Wireframe.Anchor.BottomLeft);
         status.X = ScreenMetrics.MarginX;
         status.Y = -(ScreenMetrics.MarginY + ScreenMetrics.MenuPillHeight + AbandonStatusGap);
@@ -111,12 +113,13 @@ public sealed class MatchView : ScreenView
 
     private Label CreatePlayerLeftNotice()
     {
-        Label notice = ViewFactory.CreateBoundUntranslatedLabel(
+        Label notice = ViewFactory.CreateBoundNotice(
             nameof(MatchAbandonmentViewModel.PlayerLeftText),
-            TextStyles.IdentityName,
-            PlayerLeftNoticeWidth);
+            nameof(MatchAbandonmentViewModel.HasPlayerLeft),
+            TextStyles.IdentityName);
+        notice.Width = PlayerLeftNoticeWidth;
+        notice.WidthUnits = DimensionUnitType.Absolute;
         notice.BindingContext = _abandonmentViewModel;
-        notice.SetBinding(nameof(IsVisible), nameof(MatchAbandonmentViewModel.HasPlayerLeft));
         notice.Anchor(Gum.Wireframe.Anchor.Top);
         notice.Y = ScreenMetrics.MarginY;
         return notice;

@@ -8,13 +8,15 @@ namespace Bastion.Client.Screens.Matches;
 
 public sealed class MatchPlayerViewModel : ViewModel
 {
+    private readonly string _eloText;
+
     public MatchPlayerViewModel(FoundMatchParticipant participant, FoundMatchFormat format, bool isOwn)
     {
         ArgumentNullException.ThrowIfNull(participant);
         ArgumentNullException.ThrowIfNull(format);
 
         Nickname = participant.Nickname;
-        EloText = MatchScreenText.FormatElo(participant.EloRating);
+        _eloText = MatchScreenText.FormatElo(participant.EloRating);
         WallsText = MatchScreenText.FormatWallCount(format.WallsPerPlayer);
         ClockText = MatchScreenText.FormatClock(format.ClockMinutes);
         PawnSymbol = Participation.GetPawnSymbol(participant.TurnOrder);
@@ -23,8 +25,6 @@ public sealed class MatchPlayerViewModel : ViewModel
     }
 
     public string Nickname { get; }
-
-    public string EloText { get; }
 
     public string WallsText { get; }
 
@@ -43,7 +43,7 @@ public sealed class MatchPlayerViewModel : ViewModel
     }
 
     [DependsOn(nameof(HasLeft))]
-    public string DetailText => HasLeft ? Strings.MatchPlayerLeft : EloText;
+    public string DetailText => HasLeft ? Strings.MatchPlayerLeft : _eloText;
 
     public bool HasFirstTurn()
     {

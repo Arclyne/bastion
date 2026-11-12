@@ -14,62 +14,35 @@ using log4net;
 
 namespace Bastion.Client.Screens.Matches;
 
-public sealed class MatchChatViewModel : ViewModel, IDisposable
+public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
 {
+    private const int OldestMessageIndex = 0;
+
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchChatViewModel));
 
     private readonly JoinedMatch _joinedMatch;
     private readonly IChatClient _chat;
-    private readonly TimeProvider _timeProvider;
     private readonly SynchronizationContext? _uiContext;
 
     public MatchChatViewModel(JoinedMatch joinedMatch, IChatClient chat, TimeProvider timeProvider)
+        : base(timeProvider)
     {
         ArgumentNullException.ThrowIfNull(joinedMatch);
         ArgumentNullException.ThrowIfNull(chat);
-        ArgumentNullException.ThrowIfNull(timeProvider);
 
         _joinedMatch = joinedMatch;
         _chat = chat;
-        _timeProvider = timeProvider;
         _uiContext = SynchronizationContext.Current;
-        Draft = string.Empty;
-        StatusText = string.Empty;
+        Messages = new ObservableCollection<ChatMessageRowViewModel>();
         _chat.MatchChatMessageReceived += HandleMatchChatMessageReceived;
     }
 
-    public ObservableCollection<ChatMessageRowViewModel> Messages { get; } =
-        new ObservableCollection<ChatMessageRowViewModel>();
+    public ObservableCollection<ChatMessageRowViewModel> Messages { get; }
 
-    public string Draft
-    {
-        get => Get<string>();
-        set
-        {
-            if (Set(value))
-            {
-                StatusText = string.Empty;
-            }
-        }
-    }
-
-    public bool IsSending
-    {
-        get => Get<bool>();
-        private set => Set(value);
-    }
+    public override bool CanWrite => true;
 
     [DependsOn(nameof(IsSending))]
-    public bool CanSend => !IsSending;
-
-    public string StatusText
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
-
-    [DependsOn(nameof(StatusText))]
-    public bool HasStatus => StatusText.Length > 0;
+    public override bool CanSend => !IsSending;
 
     public async Task SendMessage()
     {
@@ -85,7 +58,9 @@ public sealed class MatchChatViewModel : ViewModel, IDisposable
             return;
         }
 
-        var row = ChatMessageRowViewModel.CreatePending(text.Trim(), _timeProvider.GetUtcNow().UtcDateTime);
+        string trimmedText = text.Trim();
+        DateTime createdAt = GetUtcNow();
+        var row = ChatMessageRowViewModel.CreatePending(trimmedText, createdAt);
         AddMessage(row);
         Draft = string.Empty;
         IsSending = true;
@@ -101,11 +76,13 @@ public sealed class MatchChatViewModel : ViewModel, IDisposable
         }
         catch (ChatChannelForbiddenException ex)
         {
-            ReportSendFailure(row, ex);
+            _logger.Warn("The match chat message was turned down because the player is not in the match.", ex);
+            row.Fail(Strings.MatchChatUnavailable);
         }
         catch (InvalidSessionException ex)
         {
-            ReportSendFailure(row, ex);
+            _logger.Warn("The match chat message could not be sent because the session is no longer valid.", ex);
+            row.Fail(Strings.MatchChatUnavailable);
         }
         catch (ServerUnreachableException ex)
         {
@@ -132,7 +109,7 @@ public sealed class MatchChatViewModel : ViewModel, IDisposable
 
     private static void ReportSendFailure(ChatMessageRowViewModel row, Exception ex)
     {
-        _logger.Warn("A match chat message could not be sent.", ex);
+        _logger.Error("A match chat message could not be sent.", ex);
         row.Fail(Strings.MatchChatUnavailable);
     }
 
@@ -146,7 +123,7 @@ public sealed class MatchChatViewModel : ViewModel, IDisposable
         Messages.Add(row);
         if (Messages.Count > ChatPolicy.MaximumRecentMessages)
         {
-            Messages.RemoveAt(0);
+            Messages.RemoveAt(OldestMessageIndex);
         }
     }
 

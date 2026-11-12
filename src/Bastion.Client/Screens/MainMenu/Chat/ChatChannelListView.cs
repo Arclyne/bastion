@@ -1,10 +1,11 @@
 using System;
-using System.Collections.Specialized;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
+using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
+using Gum.Wireframe;
 using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
@@ -27,7 +28,6 @@ public sealed class ChatChannelListView : StackPanel
     private static readonly ILog _logger = LogManager.GetLogger(typeof(ChatChannelListView));
 
     private readonly ChatTabViewModel _chatTab;
-    private readonly ScrollViewer _conversations;
 
     public ChatChannelListView(ChatTabViewModel chatTab)
     {
@@ -37,23 +37,12 @@ public sealed class ChatChannelListView : StackPanel
         Width = ListWidth;
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = ListSpacing;
-        _conversations = CreateConversations();
         AddChild(CreateGlobalRow());
         AddChild(CreateLobbyLoadFailure());
         AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatWithFriendsTitle), TextStyles.SectionLabel));
         AddChild(CreateNoConversations());
         AddChild(CreateConversationsLoadFailure());
-        AddChild(_conversations);
-
-        _chatTab.Conversations.CollectionChanged += HandleConversationsChanged;
-    }
-
-    private static ScrollViewer CreateConversations()
-    {
-        ScrollViewer conversations = ViewFactory.CreateScrollList(ListWidth, ConversationsHeight);
-        conversations.InnerPanel.StackSpacing = ConversationSpacing;
-        conversations.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.HasConversations));
-        return conversations;
+        AddChild(CreateConversations());
     }
 
     private Panel CreateGlobalRow()
@@ -139,6 +128,23 @@ public sealed class ChatChannelListView : StackPanel
         return failure;
     }
 
+    private ItemsControl CreateConversations()
+    {
+        ItemsControl conversations = ViewFactory.CreateScrollList<ItemsControl>(ListWidth, ConversationsHeight);
+        conversations.InnerPanel.StackSpacing = ConversationSpacing;
+        conversations.VisualTemplate = new VisualTemplate(CreateConversationRow);
+        conversations.Items = _chatTab.Conversations;
+        conversations.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.HasConversations));
+        return conversations;
+    }
+
+    private GraphicalUiElement CreateConversationRow(object? item)
+    {
+        ConversationRowViewModel row = ViewFactory.RequireRow<ConversationRowViewModel>(item);
+        var rowView = new ConversationRowView(row, _chatTab);
+        return rowView.Visual;
+    }
+
     private void HandleOpenGlobalClick(object? sender, EventArgs e)
     {
         _chatTab.OpenGlobal();
@@ -165,16 +171,6 @@ public sealed class ChatChannelListView : StackPanel
         catch (ObjectDisposedException ex)
         {
             _logger.Warn("The private conversations could not be reloaded because the connection is closed.", ex);
-        }
-    }
-
-    private void HandleConversationsChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        ViewFactory.ClearRows(_conversations.InnerPanel);
-        foreach (ConversationRowViewModel row in _chatTab.Conversations)
-        {
-            var rowView = new ConversationRowView(row, _chatTab);
-            _conversations.InnerPanel.AddChild(rowView.Visual);
         }
     }
 }

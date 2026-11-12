@@ -7,7 +7,7 @@ using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Friends;
 
-public sealed class RemoveFriendDialogView : Panel
+public sealed class RemoveFriendDialogView : DialogCard
 {
     private const float ButtonSpacing = 12;
     private const int ButtonsPerRow = 2;
@@ -23,40 +23,31 @@ public sealed class RemoveFriendDialogView : Panel
         _actions = actions;
         BindingContext = actions;
         Anchor(Gum.Wireframe.Anchor.Center);
-        Width = DialogMetrics.Width;
-        WidthUnits = DimensionUnitType.Absolute;
-        Height = DialogMetrics.PaddingBottom;
-        HeightUnits = DimensionUnitType.RelativeToChildren;
-        AddChild(CreateContent());
-        Skins.ApplyCard(Visual);
-    }
-
-    private StackPanel CreateContent()
-    {
-        Label keepsHistory = ViewFactory.CreateLabel(nameof(Strings.FriendsRemoveKeepsHistory), TextStyles.DialogMessage);
-        keepsHistory.Width = DialogMetrics.ContentWidth;
-        keepsHistory.WidthUnits = DimensionUnitType.Absolute;
-
-        Label error = CreateBoundLabel(nameof(FriendActionsViewModel.ErrorText), TextStyles.FieldError);
-        error.SetBinding(nameof(IsVisible), nameof(FriendActionsViewModel.HasError));
-
-        var content = new StackPanel
-        {
-            X = DialogMetrics.PaddingX,
-            Y = DialogMetrics.PaddingTop,
-            Spacing = DialogMetrics.SectionSpacing,
-        };
-        content.AddChild(CreateBoundLabel(nameof(FriendActionsViewModel.DialogTitle), TextStyles.DialogTitle));
-        content.AddChild(CreateBoundLabel(nameof(FriendActionsViewModel.DialogMessage), TextStyles.DialogMessage));
-        content.AddChild(keepsHistory);
-        content.AddChild(error);
-        content.AddChild(CreateButtons());
-        return content;
+        Content.AddChild(CreateBoundLabel(nameof(FriendActionsViewModel.DialogTitle), TextStyles.DialogTitle));
+        Content.AddChild(CreateBoundLabel(nameof(FriendActionsViewModel.DialogMessage), TextStyles.DialogMessage));
+        Content.AddChild(CreateKeepsHistoryNotice());
+        Content.AddChild(CreateError());
+        Content.AddChild(CreateButtons());
     }
 
     private static Label CreateBoundLabel(string textProperty, TextStyle style)
     {
         return ViewFactory.CreateBoundUntranslatedLabel(textProperty, style, DialogMetrics.ContentWidth);
+    }
+
+    private static Label CreateKeepsHistoryNotice()
+    {
+        Label keepsHistory = ViewFactory.CreateLabel(nameof(Strings.FriendsRemoveKeepsHistory), TextStyles.DialogMessage);
+        keepsHistory.Width = DialogMetrics.ContentWidth;
+        keepsHistory.WidthUnits = DimensionUnitType.Absolute;
+        return keepsHistory;
+    }
+
+    private static Label CreateError()
+    {
+        Label error = CreateBoundLabel(nameof(FriendActionsViewModel.ErrorText), TextStyles.FieldError);
+        error.SetBinding(nameof(IsVisible), nameof(FriendActionsViewModel.HasError));
+        return error;
     }
 
     private StackPanel CreateButtons()

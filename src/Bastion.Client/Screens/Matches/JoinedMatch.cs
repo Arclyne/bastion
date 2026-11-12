@@ -5,16 +5,24 @@ using Bastion.Client.Networking.Notifications;
 
 namespace Bastion.Client.Screens.Matches;
 
-public sealed record JoinedMatch(LoggedInSession Session, MatchFoundEventArgs FoundMatch)
+public sealed record JoinedMatch
 {
+    public JoinedMatch(LoggedInSession session, MatchFoundEventArgs foundMatch)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(foundMatch);
+
+        Session = session;
+        FoundMatch = foundMatch;
+    }
+
+    public LoggedInSession Session { get; }
+
+    public MatchFoundEventArgs FoundMatch { get; }
+
     public FoundMatchParticipant FindOwnParticipant()
     {
         return FoundMatch.Participants.First(IsOwnParticipant);
-    }
-
-    public FoundMatchParticipant FindRivalParticipant()
-    {
-        return FoundMatch.Participants.First(participant => !IsOwnParticipant(participant));
     }
 
     public bool IsOwnParticipant(FoundMatchParticipant participant)
