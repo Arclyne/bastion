@@ -86,9 +86,10 @@ public sealed class MatchPlayersPanel : Panel
 
     private static Label CreateWallsLabel(MatchPlayerViewModel player)
     {
-        Label walls = ViewFactory.CreateUntranslatedLabel(player.WallsText, TextStyleCatalog.IdentityDetail);
+        Label walls = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(MatchPlayerViewModel.WallsText),
+            TextStyleCatalog.IdentityDetail);
         walls.BindingContext = player;
-        walls.SetBinding(nameof(Label.Text), nameof(MatchPlayerViewModel.WallsText));
         return walls;
     }
 

@@ -51,7 +51,7 @@ public static class BoardSceneLayout
 
     public static bool TryGetGroove(byte boardSize, Vector3 surfacePoint, out BoardCoordinates groove)
     {
-        float centerIndex = (boardSize - 1) / BoardHalves;
+        float centerIndex = GetCenterIndex(boardSize);
         float columnPosition = surfacePoint.X + centerIndex;
         float rowPosition = centerIndex - surfacePoint.Z;
         float flooredColumn = MathF.Floor(columnPosition);
@@ -69,7 +69,7 @@ public static class BoardSceneLayout
     {
         ArgumentNullException.ThrowIfNull(wall);
 
-        float centerIndex = (boardSize - 1) / BoardHalves;
+        float centerIndex = GetCenterIndex(boardSize);
         float centerX = wall.Groove.ColumnIndex + GrooveOffset - centerIndex;
         float centerZ = centerIndex - wall.Groove.RowIndex - GrooveOffset;
         bool isHorizontal = wall.Orientation == WallOrientation.Horizontal;

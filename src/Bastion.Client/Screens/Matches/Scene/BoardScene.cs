@@ -32,6 +32,7 @@ public sealed class BoardScene : IDisposable
     private const float GhostAlpha = 0.55f;
 
     private static readonly Plane _boardSurface = new Plane(Vector3.Up, BoardSurfaceDistance);
+    private static readonly BoardCoordinates _offBoardCoordinates = new BoardCoordinates(OffBoardIndex, OffBoardIndex);
 
     private readonly GraphicsDevice _graphicsDevice;
     private readonly SceneModel _classicBoardModel;
@@ -86,7 +87,7 @@ public sealed class BoardScene : IDisposable
 
         if (!TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint))
         {
-            square = new BoardCoordinates(OffBoardIndex, OffBoardIndex);
+            square = _offBoardCoordinates;
             return false;
         }
 
@@ -99,7 +100,7 @@ public sealed class BoardScene : IDisposable
 
         if (!TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint))
         {
-            groove = new BoardCoordinates(OffBoardIndex, OffBoardIndex);
+            groove = _offBoardCoordinates;
             return false;
         }
 

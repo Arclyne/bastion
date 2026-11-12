@@ -150,7 +150,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     public bool CanPlaceWall()
     {
         byte ownRemainingWalls = GetRemainingWalls(OwnTurnOrder);
-        return CanChooseMove() && IsOwnTurn() && ownRemainingWalls > 0;
+        return CanChooseMove() && IsOwnTurn() && ownRemainingWalls > Participation.NoWallsLeft;
     }
 
     public async Task<bool> PlaceWall(Wall wall)
@@ -215,7 +215,6 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         OnStateChanged();
     }
 
-
     private async Task SendMove(BoardCoordinates destination)
     {
         string toSquare = BoardLayout.ToSquare(destination);
@@ -257,7 +256,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         }
         catch (InvalidSessionException ex)
         {
-            ReportMoveFailure(ex);
+            _logger.Warn("The move could not be sent because the session is no longer valid.", ex);
+            NoticeText = Strings.MatchMoveFailed;
         }
         catch (ServerUnreachableException ex)
         {
@@ -311,7 +311,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
     private void ReportMoveFailure(Exception ex)
     {
-        _logger.Warn("The move could not be sent.", ex);
+        _logger.Error("The move could not be sent.", ex);
         NoticeText = Strings.MatchMoveFailed;
     }
 
@@ -347,7 +347,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         }
 
         var orientation = MatchWallTranslator.ToWallOrientation(e.Orientation);
-        _walls.Add(new Wall(groove, orientation));
+        var wall = new Wall(groove, orientation);
+        _walls.Add(wall);
         _remainingWallsByTurnOrder[placerTurnOrder] = e.RemainingWalls;
         TakeServerTurn(e.NextTurnOrder, e.NextMoveNumber);
         ClearSelection();

@@ -22,6 +22,8 @@ public sealed class TestMatchViewModel : IDisposable
     private const int ClassicLastRowIndex = 8;
     private const string FiveMinuteClockText = "5:00";
     private const int FourPlayers = 4;
+    private const int FirstPlayerIndex = 0;
+    private const int SecondPlayerIndex = 1;
     private const int FourthPlayerIndex = 3;
 
     private static readonly BoardCoordinates _rivalForward = new BoardCoordinates(ClassicCenterColumnIndex, SecondRowIndex);
@@ -88,7 +90,7 @@ public sealed class TestMatchViewModel : IDisposable
     {
         MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
 
-        MatchPlayerViewModel firstPlayer = viewModel.Players[0];
+        MatchPlayerViewModel firstPlayer = viewModel.Players[FirstPlayerIndex];
         Assert.True(firstPlayer.HasTurn);
     }
 
@@ -111,7 +113,7 @@ public sealed class TestMatchViewModel : IDisposable
 
         _matchClient.RaisePawnMoved(rivalMove);
 
-        MatchPlayerViewModel ownPlayer = viewModel.Players[1];
+        MatchPlayerViewModel ownPlayer = viewModel.Players[SecondPlayerIndex];
         Assert.True(ownPlayer.HasTurn);
     }
 
@@ -148,12 +150,15 @@ public sealed class TestMatchViewModel : IDisposable
         string expectedText = string.Format(
             CultureInfo.CurrentCulture,
             Strings.MatchWallsFormat,
-            WallPlacedSamples.WallsLeftAfterOne);
+            WallPlacedSampleFactory.WallsLeftAfterOne);
         MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+        WallPlacedEventArgs rivalWall =
+            WallPlacedSampleFactory.CreateFirstWall(JoinedMatchSampleFactory.RivalNickname, CenterGroove);
 
-        _matchClient.RaiseWallPlaced(WallPlacedSamples.CreateFirstWall(JoinedMatchSampleFactory.RivalNickname, CenterGroove));
+        _matchClient.RaiseWallPlaced(rivalWall);
 
-        Assert.Equal(expectedText, viewModel.Players[0].WallsText);
+        MatchPlayerViewModel rivalPlayer = viewModel.Players[FirstPlayerIndex];
+        Assert.Equal(expectedText, rivalPlayer.WallsText);
     }
 
     [Fact]
@@ -208,7 +213,7 @@ public sealed class TestMatchViewModel : IDisposable
 
         MatchViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
 
-        MatchPlayerViewModel firstPlayer = viewModel.Players[0];
+        MatchPlayerViewModel firstPlayer = viewModel.Players[FirstPlayerIndex];
         Assert.Equal(expectedText, firstPlayer.WallsText);
     }
 
@@ -217,7 +222,7 @@ public sealed class TestMatchViewModel : IDisposable
     {
         MatchViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
 
-        MatchPlayerViewModel firstPlayer = viewModel.Players[0];
+        MatchPlayerViewModel firstPlayer = viewModel.Players[FirstPlayerIndex];
         Assert.Equal(FiveMinuteClockText, firstPlayer.ClockText);
     }
 

@@ -196,7 +196,7 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
     private bool IsWallTurn()
     {
         byte ownRemainingWalls = _play.GetRemainingWalls(_play.OwnTurnOrder);
-        return !_play.IsMatchOver && _play.IsOwnTurn() && ownRemainingWalls > 0;
+        return !_play.IsMatchOver && _play.IsOwnTurn() && ownRemainingWalls > Participation.NoWallsLeft;
     }
 
     private void HandlePlayStateChanged(object? sender, EventArgs e)
