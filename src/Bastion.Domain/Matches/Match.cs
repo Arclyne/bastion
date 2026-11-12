@@ -165,18 +165,97 @@ public class Match
         PassTurnFrom(mover.TurnOrder);
     }
 
-    private void EnsurePawnCanMove(PawnMove pawnMove, byte boardSize)
+    private void SeatEntrants(IReadOnlyList<MatchEntrant> entrantsInTurnOrder, MatchFormat format)
     {
-        if (!IsTurnOf(pawnMove.AccountId) || pawnMove.MoveNumber != GetNextMoveNumber())
+        if (entrantsInTurnOrder.Count != format.GameMode.PlayerCount)
         {
-            throw new InvalidOperationException("Only the player who has the turn can make the expected move.");
+            throw new ArgumentException(
+                "The number of entrants differs from the player count of the game mode.",
+                nameof(entrantsInTurnOrder));
         }
 
-        IReadOnlyList<BoardCoordinates> reachableSquares = ListReachableSquares(pawnMove.AccountId, boardSize);
-        if (!reachableSquares.Contains(pawnMove.Destination))
+        for (int entrantIndex = 0; entrantIndex < entrantsInTurnOrder.Count; entrantIndex++)
         {
-            throw new InvalidOperationException("The pawn cannot reach that square.");
+            int turnOrderNumber = FirstTurnOrder + entrantIndex;
+            byte turnOrder = (byte)turnOrderNumber;
+            MatchEntrant entrant = entrantsInTurnOrder[entrantIndex];
+            var participation = new Participation(entrant, turnOrder, format);
+            _participations.Add(participation);
         }
+    }
+
+    private void EndTwoPlayerMatchByAbandonment(int abandoningAccountId, DateTime endedAt)
+    {
+        foreach (Participation participation in _participations)
+        {
+            bool isAbandoning = participation.AccountId == abandoningAccountId;
+            participation.Finish(isAbandoning ? ParticipationResult.Lost : ParticipationResult.Won);
+        }
+
+        Finish(MatchEndReason.Abandonment, endedAt);
+    }
+
+    private void Finish(MatchEndReason endReason, DateTime endedAt)
+    {
+        Status = MatchStatus.Finished;
+        EndedAt = endedAt;
+        EndReason = endReason;
+    }
+
+    private void LeaveFourPlayerMatch(int abandoningAccountId, DateTime abandonedAt)
+    {
+        List<Participation> activeParticipations = ListActiveParticipations();
+        Participation abandoning =
+            activeParticipations.First(participation => participation.AccountId == abandoningAccountId);
+        byte placement = (byte)activeParticipations.Count;
+        abandoning.Leave(MatchEndReason.Abandonment, placement);
+        activeParticipations.Remove(abandoning);
+        if (activeParticipations.Count > LastStandingPlayerCount)
+        {
+            PassTurnFrom(abandoning.TurnOrder);
+            return;
+        }
+
+        activeParticipations.Single().Win(FirstPlacement);
+        Finish(MatchEndReason.Abandonment, abandonedAt);
+    }
+
+    private List<Participation> ListActiveParticipations()
+    {
+        IEnumerable<Participation> activeParticipations = _participations
+            .Where(participation => !participation.Result.HasValue)
+            .OrderBy(participation => participation.TurnOrder);
+        return new List<Participation>(activeParticipations);
+    }
+
+    private void PassTurnFrom(byte leavingTurnOrder)
+    {
+        if (CurrentTurnOrder != leavingTurnOrder)
+        {
+            return;
+        }
+
+        List<Participation> activeParticipations = ListActiveParticipations();
+        Participation nextPlayer =
+            activeParticipations.FirstOrDefault(participation => participation.TurnOrder > leavingTurnOrder)
+            ?? activeParticipations.First();
+        CurrentTurnOrder = nextPlayer.TurnOrder;
+    }
+
+    private Participation? FindActiveParticipation(int accountId)
+    {
+        Participation? participation = FindParticipation(accountId);
+        if (Status != MatchStatus.InProgress || participation is null || participation.Result.HasValue)
+        {
+            return null;
+        }
+
+        return participation;
+    }
+
+    private Participation? FindParticipation(int accountId)
+    {
+        return _participations.FirstOrDefault(participation => participation.AccountId == accountId);
     }
 
     private BoardCoordinates FindPawnCoordinates(Participation participation, byte boardSize)
@@ -196,6 +275,20 @@ public class Match
         return destination;
     }
 
+    private void EnsurePawnCanMove(PawnMove pawnMove, byte boardSize)
+    {
+        if (!IsTurnOf(pawnMove.AccountId) || pawnMove.MoveNumber != GetNextMoveNumber())
+        {
+            throw new InvalidOperationException("Only the player who has the turn can make the expected move.");
+        }
+
+        IReadOnlyList<BoardCoordinates> reachableSquares = ListReachableSquares(pawnMove.AccountId, boardSize);
+        if (!reachableSquares.Contains(pawnMove.Destination))
+        {
+            throw new InvalidOperationException("The pawn cannot reach that square.");
+        }
+    }
+
     private int GetTimeSpentMilliseconds(DateTime playedAt)
     {
         DateTime turnStartedAt = _moves.Count == 0 ? StartedAt : _moves.Max(move => move.PlayedAt);
@@ -213,97 +306,6 @@ public class Match
             participation.Finish(isWinner ? ParticipationResult.Won : ParticipationResult.Lost);
         }
 
-        Close(MatchEndReason.Goal, endedAt);
-    }
-
-    private void EndTwoPlayerMatchByAbandonment(int abandoningAccountId, DateTime endedAt)
-    {
-        foreach (Participation participation in _participations)
-        {
-            bool isAbandoning = participation.AccountId == abandoningAccountId;
-            participation.Finish(isAbandoning ? ParticipationResult.Lost : ParticipationResult.Won);
-        }
-
-        Close(MatchEndReason.Abandonment, endedAt);
-    }
-
-    private void LeaveFourPlayerMatch(int abandoningAccountId, DateTime abandonedAt)
-    {
-        List<Participation> activeParticipations = ListActiveParticipations();
-        Participation abandoning =
-            activeParticipations.First(participation => participation.AccountId == abandoningAccountId);
-        byte placement = (byte)activeParticipations.Count;
-        abandoning.Leave(MatchEndReason.Abandonment, placement);
-        activeParticipations.Remove(abandoning);
-        if (activeParticipations.Count > LastStandingPlayerCount)
-        {
-            PassTurnFrom(abandoning.TurnOrder);
-            return;
-        }
-
-        activeParticipations.Single().Win(FirstPlacement);
-        Close(MatchEndReason.Abandonment, abandonedAt);
-    }
-
-    private void Close(MatchEndReason endReason, DateTime endedAt)
-    {
-        Status = MatchStatus.Finished;
-        EndedAt = endedAt;
-        EndReason = endReason;
-    }
-
-    private void PassTurnFrom(byte leavingTurnOrder)
-    {
-        if (CurrentTurnOrder != leavingTurnOrder)
-        {
-            return;
-        }
-
-        List<Participation> activeParticipations = ListActiveParticipations();
-        Participation nextPlayer =
-            activeParticipations.FirstOrDefault(participation => participation.TurnOrder > leavingTurnOrder)
-            ?? activeParticipations.First();
-        CurrentTurnOrder = nextPlayer.TurnOrder;
-    }
-
-    private List<Participation> ListActiveParticipations()
-    {
-        IEnumerable<Participation> activeParticipations = _participations
-            .Where(participation => !participation.Result.HasValue)
-            .OrderBy(participation => participation.TurnOrder);
-        return new List<Participation>(activeParticipations);
-    }
-
-    private void SeatEntrants(IReadOnlyList<MatchEntrant> entrantsInTurnOrder, MatchFormat format)
-    {
-        if (entrantsInTurnOrder.Count != format.GameMode.PlayerCount)
-        {
-            throw new ArgumentException(
-                "The number of entrants differs from the player count of the game mode.",
-                nameof(entrantsInTurnOrder));
-        }
-
-        for (int entrantIndex = 0; entrantIndex < entrantsInTurnOrder.Count; entrantIndex++)
-        {
-            int turnOrderNumber = FirstTurnOrder + entrantIndex;
-            byte turnOrder = (byte)turnOrderNumber;
-            _participations.Add(new Participation(entrantsInTurnOrder[entrantIndex], turnOrder, format));
-        }
-    }
-
-    private Participation? FindParticipation(int accountId)
-    {
-        return _participations.FirstOrDefault(participation => participation.AccountId == accountId);
-    }
-
-    private Participation? FindActiveParticipation(int accountId)
-    {
-        Participation? participation = FindParticipation(accountId);
-        if (Status != MatchStatus.InProgress || participation is null || participation.Result.HasValue)
-        {
-            return null;
-        }
-
-        return participation;
+        Finish(MatchEndReason.Goal, endedAt);
     }
 }

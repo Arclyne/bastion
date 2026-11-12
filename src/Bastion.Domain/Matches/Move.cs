@@ -6,10 +6,6 @@ public class Move
 {
     internal Move(PawnMove pawnMove, string fromSquare, MoveTiming timing)
     {
-        ArgumentNullException.ThrowIfNull(pawnMove);
-        ArgumentNullException.ThrowIfNull(fromSquare);
-        ArgumentNullException.ThrowIfNull(timing);
-
         MoveNumber = pawnMove.MoveNumber;
         AccountId = pawnMove.AccountId;
         MoveType = MoveType.PawnMove;

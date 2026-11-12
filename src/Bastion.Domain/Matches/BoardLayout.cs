@@ -98,7 +98,7 @@ public static class BoardLayout
     {
         ArgumentNullException.ThrowIfNull(coordinates);
 
-        int lastIndex = boardSize - RowNumberOffset;
+        int lastIndex = GetLastIndex(boardSize);
         switch (turnOrder)
         {
             case Match.FirstTurnOrder:

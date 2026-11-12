@@ -93,7 +93,9 @@ public sealed class TestBoardLayout
     [Fact]
     public void ParseSquare_RowZero_ThrowsFormatException()
     {
-        Assert.Throws<FormatException>(() => BoardLayout.ParseSquare(RowZeroSquare));
+        Action parse = () => BoardLayout.ParseSquare(RowZeroSquare);
+
+        Assert.Throws<FormatException>(parse);
     }
 
     [Theory]

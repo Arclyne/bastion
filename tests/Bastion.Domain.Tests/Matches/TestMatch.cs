@@ -26,12 +26,24 @@ public sealed class TestMatch
     private const byte LastOfFourPlacement = 4;
     private const byte ThirdPlacement = 3;
     private const byte FirstPlacement = 1;
+    private const int ThirtySecondsInMilliseconds = 30000;
+    private const int TenSecondsInMilliseconds = 10000;
+    private const short FirstMoveNumber = 1;
+    private const short SecondMoveNumber = 2;
+    private const string ClassicForwardSquare = "e2";
+    private const string ClassicTwoAheadSquare = "e3";
+    private const string ClassicSecondForwardSquare = "e8";
+    private const string QuickFirstPlayerGoalSquare = "d7";
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _endedAt = new DateTime(2026, 11, 5, 18, 7, 0, DateTimeKind.Utc);
     private static readonly MatchEntrant _firstEntrant = new MatchEntrant(FirstAccountId, FirstEloRating);
     private static readonly MatchEntrant _secondEntrant = new MatchEntrant(SecondAccountId, SecondEloRating);
     private static readonly MatchEntrant[] _entrants = { _firstEntrant, _secondEntrant };
+    private static readonly string[] _quickMovesBeforeFirstPlayerGoal =
+    {
+        "d2", "c7", "d3", "c6", "d4", "c5", "d5", "c4", "d6", "c3",
+    };
 
     [Fact]
     public void StartRanked_TwoEntrants_CreatesOneParticipationEach()
@@ -335,6 +347,209 @@ public sealed class TestMatch
         Assert.Equal(expectedOutcome, (winner.Result, winner.Placement, match.Status));
     }
 
+    [Fact]
+    public void GetNextMoveNumber_NoMoves_ReturnsOne()
+    {
+        Match match = StartClassicMatch();
+
+        short nextMoveNumber = match.GetNextMoveNumber();
+
+        Assert.Equal(FirstMoveNumber, nextMoveNumber);
+    }
+
+    [Fact]
+    public void IsTurnOf_FirstPlayerAtStart_ReturnsTrue()
+    {
+        Match match = StartClassicMatch();
+
+        bool isTurn = match.IsTurnOf(FirstAccountId);
+
+        Assert.True(isTurn);
+    }
+
+    [Fact]
+    public void IsTurnOf_SecondPlayerAtStart_ReturnsFalse()
+    {
+        Match match = StartClassicMatch();
+
+        bool isTurn = match.IsTurnOf(SecondAccountId);
+
+        Assert.False(isTurn);
+    }
+
+    [Fact]
+    public void MovePawn_FirstPlayerForward_MovesPawnToDestination()
+    {
+        Match match = StartClassicMatch();
+        PawnMove forwardMove = CreateFirstPlayerForwardMove();
+
+        match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+
+        Participation first = FindParticipation(match, FirstAccountId);
+        Assert.Equal(ClassicForwardSquare, first.CurrentSquare);
+    }
+
+    [Fact]
+    public void MovePawn_FirstPlayerForward_PassesTurnToSecondPlayer()
+    {
+        Match match = StartClassicMatch();
+        PawnMove forwardMove = CreateFirstPlayerForwardMove();
+
+        match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+
+        Assert.Equal(Match.SecondTurnOrder, match.CurrentTurnOrder);
+    }
+
+    [Fact]
+    public void MovePawn_SecondPlayerMoves_GivesTurnBackToFirstPlayer()
+    {
+        Match match = StartClassicMatch();
+        PawnMove forwardMove = CreateFirstPlayerForwardMove();
+        match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+        PawnMove secondMove = CreateSecondPlayerForwardMove();
+        DateTime playedAt = _startedAt.AddMilliseconds(TenSecondsInMilliseconds);
+
+        match.MovePawn(secondMove, GameModeSampleFactory.ClassicBoardSize, playedAt);
+
+        Assert.Equal(Match.FirstTurnOrder, match.CurrentTurnOrder);
+    }
+
+    [Fact]
+    public void MovePawn_FirstPlayerForward_RecordsMoveFromStartingSquare()
+    {
+        Match match = StartClassicMatch();
+        PawnMove forwardMove = CreateFirstPlayerForwardMove();
+
+        match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+
+        Move move = match.Moves.Single();
+        Assert.Equal(ClassicFirstSquare, move.FromSquare);
+    }
+
+    [Fact]
+    public void MovePawn_ThirtySecondsAfterStart_SpendsThoseSecondsFromClock()
+    {
+        Match match = StartClassicMatch();
+        PawnMove forwardMove = CreateFirstPlayerForwardMove();
+        DateTime playedAt = _startedAt.AddMilliseconds(ThirtySecondsInMilliseconds);
+        int expectedClock = FiveMinutesInMilliseconds - ThirtySecondsInMilliseconds;
+
+        match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, playedAt);
+
+        Participation first = FindParticipation(match, FirstAccountId);
+        Assert.Equal(expectedClock, first.RemainingClockMilliseconds);
+    }
+
+    [Fact]
+    public void MovePawn_SecondMove_CountsTimeFromPreviousMove()
+    {
+        Match match = StartClassicMatch();
+        PawnMove forwardMove = CreateFirstPlayerForwardMove();
+        match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+        PawnMove secondMove = CreateSecondPlayerForwardMove();
+        DateTime playedAt = _startedAt.AddMilliseconds(TenSecondsInMilliseconds);
+
+        match.MovePawn(secondMove, GameModeSampleFactory.ClassicBoardSize, playedAt);
+
+        Move lastMove = match.Moves.Last();
+        Assert.Equal(TenSecondsInMilliseconds, lastMove.TimeSpentMilliseconds);
+    }
+
+    [Fact]
+    public void MovePawn_SecondPlayerAtStart_ThrowsInvalidOperationException()
+    {
+        Match match = StartClassicMatch();
+        BoardCoordinates destination = BoardLayout.ParseSquare(ClassicSecondForwardSquare);
+        var pawnMove = new PawnMove(SecondAccountId, FirstMoveNumber, destination);
+
+        Action move = () => match.MovePawn(pawnMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+
+        Assert.Throws<InvalidOperationException>(move);
+    }
+
+    [Fact]
+    public void MovePawn_UnexpectedMoveNumber_ThrowsInvalidOperationException()
+    {
+        Match match = StartClassicMatch();
+        BoardCoordinates destination = BoardLayout.ParseSquare(ClassicForwardSquare);
+        var pawnMove = new PawnMove(FirstAccountId, SecondMoveNumber, destination);
+
+        Action move = () => match.MovePawn(pawnMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+
+        Assert.Throws<InvalidOperationException>(move);
+    }
+
+    [Fact]
+    public void MovePawn_SquareTwoAhead_ThrowsInvalidOperationException()
+    {
+        Match match = StartClassicMatch();
+        BoardCoordinates destination = BoardLayout.ParseSquare(ClassicTwoAheadSquare);
+        var pawnMove = new PawnMove(FirstAccountId, FirstMoveNumber, destination);
+
+        Action move = () => match.MovePawn(pawnMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+
+        Assert.Throws<InvalidOperationException>(move);
+    }
+
+    [Fact]
+    public void BuildBoard_AfterFirstMove_PlacesPawnOnDestination()
+    {
+        Match match = StartClassicMatch();
+        PawnMove forwardMove = CreateFirstPlayerForwardMove();
+        match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+
+        Board board = match.BuildBoard(GameModeSampleFactory.ClassicBoardSize);
+
+        BoardCoordinates firstPawn = board.GetPawnCoordinates(Match.FirstTurnOrder);
+        Assert.Equal(forwardMove.Destination, firstPawn);
+    }
+
+    [Fact]
+    public void MovePawn_FirstPlayerReachesGoal_FinishesMatch()
+    {
+        Match match = PlayQuickMatchBeforeFirstPlayerGoal();
+        PawnMove goalMove = CreateFirstPlayerGoalMove(match);
+
+        match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _endedAt);
+
+        Assert.Equal(MatchStatus.Finished, match.Status);
+    }
+
+    [Fact]
+    public void MovePawn_FirstPlayerReachesGoal_EndsByGoal()
+    {
+        Match match = PlayQuickMatchBeforeFirstPlayerGoal();
+        PawnMove goalMove = CreateFirstPlayerGoalMove(match);
+
+        match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _endedAt);
+
+        Assert.Equal(MatchEndReason.Goal, match.EndReason);
+    }
+
+    [Fact]
+    public void MovePawn_FirstPlayerReachesGoal_FirstPlayerWins()
+    {
+        Match match = PlayQuickMatchBeforeFirstPlayerGoal();
+        PawnMove goalMove = CreateFirstPlayerGoalMove(match);
+
+        match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _endedAt);
+
+        Participation first = FindParticipation(match, FirstAccountId);
+        Assert.Equal(ParticipationResult.Won, first.Result);
+    }
+
+    [Fact]
+    public void MovePawn_FirstPlayerReachesGoal_SecondPlayerLoses()
+    {
+        Match match = PlayQuickMatchBeforeFirstPlayerGoal();
+        PawnMove goalMove = CreateFirstPlayerGoalMove(match);
+
+        match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _endedAt);
+
+        Participation second = FindParticipation(match, SecondAccountId);
+        Assert.Equal(ParticipationResult.Lost, second.Result);
+    }
+
     private static MatchFormat CreateClassicFormat()
     {
         GameMode classicMode = GameModeSampleFactory.CreateClassic();
@@ -374,5 +589,42 @@ public sealed class TestMatch
         MatchEntrant fourth = CreateUnrankedEntrant(FourthAccountId);
         MatchEntrant[] entrants = { first, second, third, fourth };
         return Match.StartPrivate(format, entrants, _startedAt);
+    }
+
+    private static PawnMove CreateFirstPlayerForwardMove()
+    {
+        BoardCoordinates destination = BoardLayout.ParseSquare(ClassicForwardSquare);
+        return new PawnMove(FirstAccountId, FirstMoveNumber, destination);
+    }
+
+    private static PawnMove CreateSecondPlayerForwardMove()
+    {
+        BoardCoordinates destination = BoardLayout.ParseSquare(ClassicSecondForwardSquare);
+        return new PawnMove(SecondAccountId, SecondMoveNumber, destination);
+    }
+
+    private static Match PlayQuickMatchBeforeFirstPlayerGoal()
+    {
+        GameMode quickMode = GameModeSampleFactory.CreateQuick();
+        var format = new MatchFormat(quickMode, ClockMinutes);
+        var match = Match.StartRanked(format, _entrants, _startedAt);
+        for (int moveIndex = 0; moveIndex < _quickMovesBeforeFirstPlayerGoal.Length; moveIndex++)
+        {
+            int accountId = _entrants[moveIndex % Match.TwoPlayerCount].AccountId;
+            short moveNumber = match.GetNextMoveNumber();
+            BoardCoordinates destination = BoardLayout.ParseSquare(_quickMovesBeforeFirstPlayerGoal[moveIndex]);
+            var pawnMove = new PawnMove(accountId, moveNumber, destination);
+            DateTime playedAt = _startedAt.AddSeconds(moveIndex);
+            match.MovePawn(pawnMove, GameModeSampleFactory.QuickBoardSize, playedAt);
+        }
+
+        return match;
+    }
+
+    private static PawnMove CreateFirstPlayerGoalMove(Match match)
+    {
+        short moveNumber = match.GetNextMoveNumber();
+        BoardCoordinates destination = BoardLayout.ParseSquare(QuickFirstPlayerGoalSquare);
+        return new PawnMove(FirstAccountId, moveNumber, destination);
     }
 }

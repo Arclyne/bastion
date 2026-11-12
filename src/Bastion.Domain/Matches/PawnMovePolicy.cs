@@ -9,19 +9,23 @@ public static class PawnMovePolicy
     private const int Backward = -1;
     private const int Still = 0;
 
-    private static readonly BoardStep[] _orthogonalSteps = new BoardStep[]
+    private static readonly BoardStep _nextRowStep = new BoardStep(Still, Forward);
+    private static readonly BoardStep _previousRowStep = new BoardStep(Still, Backward);
+    private static readonly BoardStep _nextColumnStep = new BoardStep(Forward, Still);
+    private static readonly BoardStep _previousColumnStep = new BoardStep(Backward, Still);
+    private static readonly BoardStep[] _orthogonalSteps =
     {
-        new BoardStep(Still, Forward),
-        new BoardStep(Still, Backward),
-        new BoardStep(Forward, Still),
-        new BoardStep(Backward, Still),
+        _nextRowStep,
+        _previousRowStep,
+        _nextColumnStep,
+        _previousColumnStep,
     };
 
     public static IReadOnlyList<BoardCoordinates> ListReachableSquares(Board board, byte turnOrder)
     {
         ArgumentNullException.ThrowIfNull(board);
 
-        BoardCoordinates pawn = board.GetPawn(turnOrder);
+        BoardCoordinates pawn = board.GetPawnCoordinates(turnOrder);
         var reachableSquares = new List<BoardCoordinates>();
         foreach (BoardStep step in _orthogonalSteps)
         {
@@ -55,6 +59,18 @@ public static class PawnMovePolicy
         return diagonalLandings;
     }
 
+    private static BoardCoordinates Advance(BoardCoordinates coordinates, BoardStep step)
+    {
+        int columnIndex = coordinates.ColumnIndex + step.ColumnStep;
+        int rowIndex = coordinates.RowIndex + step.RowStep;
+        return new BoardCoordinates(columnIndex, rowIndex);
+    }
+
+    private static bool IsFree(Board board, BoardCoordinates coordinates)
+    {
+        return board.IsInside(coordinates) && !board.IsOccupied(coordinates);
+    }
+
     private static List<BoardCoordinates> ListDiagonalLandings(
         Board board,
         BoardCoordinates jumpedPawn,
@@ -62,8 +78,9 @@ public static class PawnMovePolicy
     {
         var firstSide = new BoardStep(step.RowStep, step.ColumnStep);
         var secondSide = new BoardStep(-step.RowStep, -step.ColumnStep);
+        BoardStep[] sides = { firstSide, secondSide };
         var diagonalLandings = new List<BoardCoordinates>();
-        foreach (BoardStep side in new BoardStep[] { firstSide, secondSide })
+        foreach (BoardStep side in sides)
         {
             BoardCoordinates landing = Advance(jumpedPawn, side);
             if (IsFree(board, landing))
@@ -73,17 +90,5 @@ public static class PawnMovePolicy
         }
 
         return diagonalLandings;
-    }
-
-    private static bool IsFree(Board board, BoardCoordinates coordinates)
-    {
-        return board.IsInside(coordinates) && !board.IsOccupied(coordinates);
-    }
-
-    private static BoardCoordinates Advance(BoardCoordinates coordinates, BoardStep step)
-    {
-        int columnIndex = coordinates.ColumnIndex + step.ColumnStep;
-        int rowIndex = coordinates.RowIndex + step.RowStep;
-        return new BoardCoordinates(columnIndex, rowIndex);
     }
 }

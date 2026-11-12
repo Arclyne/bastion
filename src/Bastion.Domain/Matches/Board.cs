@@ -19,7 +19,7 @@ public sealed record Board
 
     public byte Size { get; }
 
-    public BoardCoordinates GetPawn(byte turnOrder)
+    public BoardCoordinates GetPawnCoordinates(byte turnOrder)
     {
         if (!_pawnsByTurnOrder.TryGetValue(turnOrder, out BoardCoordinates? pawn))
         {

@@ -4,8 +4,9 @@ namespace Bastion.Domain.Tests.GameModes;
 
 public static class GameModeSampleFactory
 {
-    private const byte ClassicBoardSize = 9;
-    private const byte QuickBoardSize = 7;
+    public const byte ClassicBoardSize = 9;
+    public const byte QuickBoardSize = 7;
+
     private const byte TwoPlayers = 2;
     private const byte FourPlayers = 4;
     private const byte ClassicWallsPerPlayer = 10;

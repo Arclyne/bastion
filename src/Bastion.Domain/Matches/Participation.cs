@@ -91,8 +91,6 @@ public class Participation
 
     internal void MoveTo(string square)
     {
-        ArgumentNullException.ThrowIfNull(square);
-
         CurrentSquare = square;
     }
 
