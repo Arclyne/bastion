@@ -32,6 +32,7 @@ public static class ServiceRegistration
         services.AddScoped<ILobbyChatService, LobbyChatService>();
         services.AddScoped<IMatchChatService, MatchChatService>();
         services.AddScoped<IMatchAbandonmentService, MatchAbandonmentService>();
+        services.AddScoped<IPawnMoveService, PawnMoveService>();
         services.AddScoped<IChatModerator, ChatModerator>();
         services.AddScoped<IMatchSearchService, MatchSearchService>();
         services.AddScoped<IMatchmakingPlayerVerifier, MatchmakingPlayerVerifier>();
@@ -70,6 +71,7 @@ public static class ServiceRegistration
         services.AddSingleton<IMatchChatNotifier>(GetChannelRegistry);
         services.AddSingleton<IMatchmakingNotifier>(GetChannelRegistry);
         services.AddSingleton<IMatchEndNotifier>(GetChannelRegistry);
+        services.AddSingleton<IMatchMoveNotifier>(GetChannelRegistry);
         services.AddSingleton<IPlayerPresence>(GetChannelRegistry);
         services.AddSingleton<IFriendNotifier>(GetChannelRegistry);
         services.AddSingleton<IPrivateMessageNotifier>(GetChannelRegistry);
