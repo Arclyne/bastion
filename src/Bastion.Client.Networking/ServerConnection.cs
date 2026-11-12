@@ -21,20 +21,13 @@ namespace Bastion.Client.Networking;
 
 public sealed class ServerConnection : IDisposable
 {
-    private readonly ServiceChannel<IAccountService> _accountChannel =
-        new ServiceChannel<IAccountService>(ServiceEndpoints.AccountsPath);
-    private readonly ServiceChannel<IChatService> _chatChannel =
-        new ServiceChannel<IChatService>(ServiceEndpoints.ChatPath);
-    private readonly ServiceChannel<IMatchmakingService> _matchmakingChannel =
-        new ServiceChannel<IMatchmakingService>(ServiceEndpoints.MatchmakingPath);
-    private readonly ServiceChannel<IMatchService> _matchChannel =
-        new ServiceChannel<IMatchService>(ServiceEndpoints.MatchesPath);
-    private readonly ServiceChannel<IFriendshipService> _friendshipChannel =
-        new ServiceChannel<IFriendshipService>(ServiceEndpoints.FriendsPath);
-    private readonly ServiceChannel<IConversationService> _conversationChannel =
-        new ServiceChannel<IConversationService>(ServiceEndpoints.ConversationsPath);
-    private readonly ServiceChannel<IRoomService> _roomChannel =
-        new ServiceChannel<IRoomService>(ServiceEndpoints.RoomsPath);
+    private readonly ServiceChannel<IAccountService> _accountChannel;
+    private readonly ServiceChannel<IChatService> _chatChannel;
+    private readonly ServiceChannel<IMatchmakingService> _matchmakingChannel;
+    private readonly ServiceChannel<IMatchService> _matchChannel;
+    private readonly ServiceChannel<IFriendshipService> _friendshipChannel;
+    private readonly ServiceChannel<IConversationService> _conversationChannel;
+    private readonly ServiceChannel<IRoomService> _roomChannel;
     private readonly SessionChannelFactory _sessionChannelFactory;
     private readonly NotificationClient _notifications;
 
@@ -42,6 +35,13 @@ public sealed class ServerConnection : IDisposable
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
 
+        _accountChannel = new ServiceChannel<IAccountService>(ServiceEndpoints.AccountsPath);
+        _chatChannel = new ServiceChannel<IChatService>(ServiceEndpoints.ChatPath);
+        _matchmakingChannel = new ServiceChannel<IMatchmakingService>(ServiceEndpoints.MatchmakingPath);
+        _matchChannel = new ServiceChannel<IMatchService>(ServiceEndpoints.MatchesPath);
+        _friendshipChannel = new ServiceChannel<IFriendshipService>(ServiceEndpoints.FriendsPath);
+        _conversationChannel = new ServiceChannel<IConversationService>(ServiceEndpoints.ConversationsPath);
+        _roomChannel = new ServiceChannel<IRoomService>(ServiceEndpoints.RoomsPath);
         var notificationCallback = new NotificationCallback();
         _sessionChannelFactory = new SessionChannelFactory(notificationCallback);
         _notifications = new NotificationClient(notificationCallback, _sessionChannelFactory, timeProvider);
