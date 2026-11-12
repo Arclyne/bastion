@@ -1,4 +1,6 @@
+using System;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Screens;
 using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Screens.MainMenu.Friends;
 using Bastion.Client.Tests.Fakes;
@@ -11,6 +13,8 @@ public class TestFriendsPanelViewModel
     private const string SessionToken = "session-token";
     private const string OwnNickname = "marta_muros";
     private const string PreferredLanguage = "es-MX";
+
+    private static readonly DateTimeOffset _now = new DateTimeOffset(2026, 11, 12, 10, 0, 0, TimeSpan.Zero);
 
     private readonly FakeNotificationClient _notifications = new FakeNotificationClient();
     private readonly FakeClipboard _clipboard = new FakeClipboard();
@@ -59,6 +63,8 @@ public class TestFriendsPanelViewModel
         var session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
         var chatClients = new ChatClients(new FakeChatClient(), new FakeConversationClient(), _notifications);
         var clients = new SocialClients(new FakeFriendClient(), chatClients, _notifications);
-        return InlineUiContext.CreateViewModel(() => new FriendsPanelViewModel(session, clients, _clipboard));
+        var timeProvider = new ManualTimeProvider(_now);
+        var localServices = new LocalServices(new FakeLanguageService(), _clipboard, timeProvider);
+        return InlineUiContext.CreateViewModel(() => new FriendsPanelViewModel(session, clients, localServices));
     }
 }

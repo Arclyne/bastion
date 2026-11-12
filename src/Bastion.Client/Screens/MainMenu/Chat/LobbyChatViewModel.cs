@@ -1,6 +1,5 @@
 using System;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
@@ -15,10 +14,11 @@ using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
-public sealed class LobbyChatViewModel : ViewModel, IDisposable
+public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
 {
-    private const int CounterVisibleFromLength = 180;
     private const int SingleMessage = 1;
+    private const int NoUnread = 0;
+    private const int OldestMessageIndex = 0;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(LobbyChatViewModel));
 
@@ -28,38 +28,29 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
     private readonly SynchronizationContext? _uiContext;
     private int _unreadCount;
 
-    public LobbyChatViewModel(LoggedInSession session, IChatClient chat, INotificationClient notifications)
+    public LobbyChatViewModel(ChatContext context)
+        : base(GetTimeProvider(context))
     {
-        ArgumentNullException.ThrowIfNull(session);
-        ArgumentNullException.ThrowIfNull(chat);
-        ArgumentNullException.ThrowIfNull(notifications);
-
-        _session = session;
-        _chat = chat;
+        _session = context.Session;
+        _chat = context.Clients.Lobby;
+        _notifications = context.Clients.Notifications;
         _uiContext = SynchronizationContext.Current;
-        _notifications = notifications;
         _notifications.ChatMessageReceived += HandleChatMessageReceived;
-        Draft = string.Empty;
+        Messages = new ObservableCollection<ChatMessageRowViewModel>();
         ChannelDetail = string.Empty;
-        CounterText = string.Empty;
         MuteText = string.Empty;
-        StatusText = string.Empty;
         UnreadText = string.Empty;
         IsReadingLatest = true;
         IsEmpty = true;
     }
 
-    public ObservableCollection<ChatMessageRowViewModel> Messages { get; } =
-        new ObservableCollection<ChatMessageRowViewModel>();
+    public ObservableCollection<ChatMessageRowViewModel> Messages { get; }
 
     public bool IsConversationOpen
     {
         get => Get<bool>();
         private set => Set(value);
     }
-
-    [DependsOn(nameof(IsConversationOpen))]
-    public bool IsChannelListVisible => !IsConversationOpen;
 
     public string ChannelDetail
     {
@@ -79,31 +70,6 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
         private set => Set(value);
     }
 
-    public string Draft
-    {
-        get => Get<string>();
-        set
-        {
-            if (Set(value))
-            {
-                StatusText = string.Empty;
-                UpdateCounter();
-            }
-        }
-    }
-
-    public string CounterText
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
-
-    public bool IsCounterVisible
-    {
-        get => Get<bool>();
-        private set => Set(value);
-    }
-
     public bool IsMuted
     {
         get => Get<bool>();
@@ -111,7 +77,7 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
     }
 
     [DependsOn(nameof(IsMuted))]
-    public bool CanWrite => !IsMuted;
+    public override bool CanWrite => !IsMuted;
 
     public string MuteText
     {
@@ -119,24 +85,9 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
         private set => Set(value);
     }
 
-    public bool IsSending
-    {
-        get => Get<bool>();
-        private set => Set(value);
-    }
-
     [DependsOn(nameof(IsSending))]
     [DependsOn(nameof(IsMuted))]
-    public bool CanSend => !IsSending && !IsMuted;
-
-    public string StatusText
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
-
-    [DependsOn(nameof(StatusText))]
-    public bool HasStatus => StatusText.Length > 0;
+    public override bool CanSend => !IsSending && !IsMuted;
 
     public bool IsReadingLatest { get; private set; }
 
@@ -152,7 +103,7 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
     public void OpenConversation()
     {
         IsConversationOpen = true;
-        UpdateReadingPosition(true);
+        UpdateReadingPosition(isReadingLatest: true);
     }
 
     public void CloseConversation()
@@ -165,7 +116,7 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
         IsReadingLatest = isReadingLatest;
         if (isReadingLatest)
         {
-            _unreadCount = 0;
+            _unreadCount = NoUnread;
             UnreadText = string.Empty;
         }
     }
@@ -180,7 +131,8 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
         }
         catch (InvalidSessionException ex)
         {
-            ReportLoadFailure(ex);
+            _logger.Warn("The lobby chat could not be loaded because the session is no longer valid.", ex);
+            HasLoadFailed = true;
         }
         catch (ServerUnreachableException ex)
         {
@@ -210,8 +162,10 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
             return;
         }
 
-        var row = ChatMessageRowViewModel.CreatePending(text.Trim(), DateTime.UtcNow);
-        UpdateReadingPosition(true);
+        string trimmedText = text.Trim();
+        DateTime createdAt = GetUtcNow();
+        var row = ChatMessageRowViewModel.CreatePending(trimmedText, createdAt);
+        UpdateReadingPosition(isReadingLatest: true);
         AddMessage(row);
         Draft = string.Empty;
         IsSending = true;
@@ -222,12 +176,13 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
         }
         catch (ChatMessageRejectedException ex)
         {
-            _logger.Info($"The server turned down the chat message. Rejection={ex.Rejection}");
-            ShowRejection(row, ex);
+            _logger.Warn($"The server turned down the chat message. Rejection={ex.Rejection}", ex);
+            ShowRejection(row, ex.Rejection, ex.MutedUntil);
         }
         catch (InvalidSessionException ex)
         {
-            ReportSendFailure(row, ex);
+            _logger.Warn("The chat message could not be sent because the session is no longer valid.", ex);
+            row.Fail(Strings.ChatSendFailed);
         }
         catch (ServerUnreachableException ex)
         {
@@ -252,17 +207,13 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
         _notifications.ChatMessageReceived -= HandleChatMessageReceived;
     }
 
-    private static string FormatText(string format, params object[] arguments)
-    {
-        return string.Format(CultureInfo.CurrentCulture, format, arguments);
-    }
-
     private void ShowTranscript(LobbyChatTranscript transcript)
     {
         Messages.Clear();
         foreach (ChatMessage message in transcript.Messages)
         {
-            Messages.Add(new ChatMessageRowViewModel(message));
+            var row = new ChatMessageRowViewModel(message);
+            Messages.Add(row);
         }
 
         IsEmpty = Messages.Count == 0;
@@ -276,20 +227,10 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
         MuteText = ChatRejectionText.DescribeMute(mute);
     }
 
-    private void ShowRejection(ChatMessageRowViewModel row, ChatMessageRejectedException rejection)
+    private void ReportLoadFailure(Exception ex)
     {
-        row.Fail(ChatRejectionText.Describe(rejection.Rejection));
-        if (rejection.Rejection == ChatRejection.Muted)
-        {
-            ShowMute(new ChatMute(true, rejection.MutedUntil));
-        }
-    }
-
-    private void UpdateCounter()
-    {
-        int length = Draft.Length;
-        IsCounterVisible = length >= CounterVisibleFromLength;
-        CounterText = FormatText(Strings.ChatCounterFormat, length, ChatPolicy.MaximumMessageLength);
+        _logger.Error("The lobby chat could not be loaded.", ex);
+        HasLoadFailed = true;
     }
 
     private void AddMessage(ChatMessageRowViewModel row)
@@ -297,22 +238,26 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
         Messages.Add(row);
         if (Messages.Count > ChatPolicy.MaximumRecentMessages)
         {
-            Messages.RemoveAt(0);
+            Messages.RemoveAt(OldestMessageIndex);
         }
 
         IsEmpty = false;
     }
 
-    private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)
+    private void ShowRejection(ChatMessageRowViewModel row, ChatRejection rejection, DateTime? mutedUntil)
     {
-        var row = new ChatMessageRowViewModel(e.Message);
-        if (_uiContext is null)
+        row.Fail(ChatRejectionText.Describe(rejection));
+        if (rejection == ChatRejection.Muted)
         {
-            ReceiveMessage(row);
-            return;
+            var mute = new ChatMute(IsMuted: true, mutedUntil);
+            ShowMute(mute);
         }
+    }
 
-        _uiContext.Post(state => ReceiveMessage((ChatMessageRowViewModel)state!), row);
+    private void ReportSendFailure(ChatMessageRowViewModel row, Exception ex)
+    {
+        _logger.Error("The chat message could not be sent.", ex);
+        row.Fail(Strings.ChatSendFailed);
     }
 
     private void ReceiveMessage(ChatMessageRowViewModel row)
@@ -329,15 +274,9 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
             : FormatText(Strings.ChatNewMessagesFormat, _unreadCount);
     }
 
-    private void ReportLoadFailure(Exception ex)
+    private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)
     {
-        _logger.Warn("The lobby chat could not be loaded.", ex);
-        HasLoadFailed = true;
-    }
-
-    private void ReportSendFailure(ChatMessageRowViewModel row, Exception ex)
-    {
-        _logger.Warn("The chat message could not be sent.", ex);
-        row.Fail(Strings.ChatSendFailed);
+        var row = new ChatMessageRowViewModel(e.Message);
+        UiThread.Run(_uiContext, () => ReceiveMessage(row));
     }
 }

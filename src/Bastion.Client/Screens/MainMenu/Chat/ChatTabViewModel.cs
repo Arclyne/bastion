@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,35 +28,36 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
     private readonly IConversationClient _conversations;
     private readonly IFriendDirectory _friends;
     private readonly INotificationClient _notifications;
+    private readonly TimeProvider _timeProvider;
     private readonly SynchronizationContext? _uiContext;
 
-    public ChatTabViewModel(LoggedInSession session, ChatClients clients, IFriendDirectory friends)
+    public ChatTabViewModel(ChatContext context, IFriendDirectory friends)
     {
-        ArgumentNullException.ThrowIfNull(session);
-        ArgumentNullException.ThrowIfNull(clients);
+        ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(friends);
 
-        _session = session;
-        _conversations = clients.Conversations;
+        _session = context.Session;
+        _conversations = context.Clients.Conversations;
         _friends = friends;
-        _notifications = clients.Notifications;
+        _notifications = context.Clients.Notifications;
+        _timeProvider = context.TimeProvider;
         _uiContext = SynchronizationContext.Current;
-        Lobby = new LobbyChatViewModel(session, clients.Lobby, clients.Notifications);
-        Lobby.PropertyChanged += HandleLobbyPropertyChanged;
-        Private = new PrivateConversationViewModel(session, clients.Conversations);
-        Private.MessageSent += HandlePrivateMessageSent;
-        Private.Closed += HandlePrivateClosed;
+        LobbyChat = new LobbyChatViewModel(context);
+        LobbyChat.PropertyChanged += HandleLobbyPropertyChanged;
+        PrivateConversation = new PrivateConversationViewModel(context);
+        PrivateConversation.MessageSent += HandlePrivateMessageSent;
+        PrivateConversation.Closed += HandlePrivateClosed;
         _notifications.PrivateMessageReceived += HandlePrivateMessageReceived;
+        Conversations = new ObservableCollection<ConversationRowViewModel>();
         UnreadText = string.Empty;
         Pane = ChatPane.List;
     }
 
-    public LobbyChatViewModel Lobby { get; }
+    public LobbyChatViewModel LobbyChat { get; }
 
-    public PrivateConversationViewModel Private { get; }
+    public PrivateConversationViewModel PrivateConversation { get; }
 
-    public ObservableCollection<ConversationRowViewModel> Conversations { get; } =
-        new ObservableCollection<ConversationRowViewModel>();
+    public ObservableCollection<ConversationRowViewModel> Conversations { get; }
 
     public ChatPane Pane
     {
@@ -101,7 +101,7 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
 
     public async Task Load()
     {
-        await Task.WhenAll(Lobby.LoadChannel(), LoadConversations());
+        await Task.WhenAll(LobbyChat.LoadChannel(), LoadConversations());
     }
 
     public async Task LoadConversations()
@@ -111,11 +111,15 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         {
             IReadOnlyList<ConversationPreview> previews = await Task.Run(
                 () => _conversations.ListConversations(_session.Token));
-            ShowPreviews(previews.Select(preview => new ConversationRowViewModel(preview)));
+            DateTime today = ChatTimeText.GetLocalToday(_timeProvider);
+            IEnumerable<ConversationRowViewModel> rows = previews.Select(
+                preview => new ConversationRowViewModel(preview, today));
+            ShowPreviews(rows);
         }
         catch (InvalidSessionException ex)
         {
-            ReportLoadFailure(ex);
+            _logger.Warn("The private conversations could not be loaded because the session is no longer valid.", ex);
+            HasConversationsLoadFailed = true;
         }
         catch (ServerUnreachableException ex)
         {
@@ -133,7 +137,7 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
 
     public void OpenGlobal()
     {
-        Lobby.OpenConversation();
+        LobbyChat.OpenConversation();
         Pane = ChatPane.Global;
     }
 
@@ -145,23 +149,27 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         ConversationRowViewModel? row = FindRow(partner.FriendCode);
         row?.UpdateUnread(NoUnread);
         UpdateUnreadTotal();
-        _ = Private.Open(partner, _friends.FindPresence(partner.FriendCode));
+        _ = PrivateConversation.Open(partner, _friends.FindPresence(partner.FriendCode));
     }
 
     public void RefreshPresence(string friendCode)
     {
-        if (Private.IsShowing(friendCode))
+        ArgumentNullException.ThrowIfNull(friendCode);
+
+        if (!PrivateConversation.IsShowing(friendCode))
         {
-            Private.ApplyPresence(_friends.FindPresence(friendCode));
+            return;
         }
+
+        PrivateConversation.ApplyPresence(_friends.FindPresence(friendCode));
     }
 
     public void BackToList()
     {
-        Lobby.CloseConversation();
-        if (Private.IsOpen)
+        LobbyChat.CloseConversation();
+        if (PrivateConversation.IsOpen)
         {
-            Private.Close();
+            PrivateConversation.Close();
         }
 
         Pane = ChatPane.List;
@@ -170,7 +178,7 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
     public void Dispose()
     {
         _notifications.PrivateMessageReceived -= HandlePrivateMessageReceived;
-        Lobby.Dispose();
+        LobbyChat.Dispose();
     }
 
     private void ShowPreviews(IEnumerable<ConversationRowViewModel> rows)
@@ -185,6 +193,18 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         UpdateUnreadTotal();
     }
 
+    private void UpdateUnreadTotal()
+    {
+        int total = Conversations.Sum(row => row.UnreadCount);
+        UnreadText = BadgeText.FormatCount(total);
+    }
+
+    private void ReportLoadFailure(Exception ex)
+    {
+        _logger.Error("The private conversations could not be loaded.", ex);
+        HasConversationsLoadFailed = true;
+    }
+
     private ConversationRowViewModel? FindRow(string friendCode)
     {
         return Conversations.FirstOrDefault(row => row.Partner.FriendCode == friendCode);
@@ -193,14 +213,17 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
     private void UpdateConversation(PlayerTag partner, PrivateMessage message, int newUnread)
     {
         ConversationRowViewModel? row = FindRow(partner.FriendCode);
+        DateTime today = ChatTimeText.GetLocalToday(_timeProvider);
         if (row is null)
         {
-            var preview = new ConversationPreview(new ConversationContact(partner, true), message, newUnread);
-            Conversations.Insert(FirstPosition, new ConversationRowViewModel(preview));
+            var contact = new ConversationContact(partner, isFriend: true);
+            var preview = new ConversationPreview(contact, message, newUnread);
+            var newRow = new ConversationRowViewModel(preview, today);
+            Conversations.Insert(FirstPosition, newRow);
         }
         else
         {
-            row.ShowMessage(message, row.UnreadCount + newUnread);
+            row.ShowMessage(message, row.UnreadCount + newUnread, today);
             Conversations.Move(Conversations.IndexOf(row), FirstPosition);
         }
 
@@ -208,42 +231,11 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         UpdateUnreadTotal();
     }
 
-    private void UpdateUnreadTotal()
-    {
-        int total = Conversations.Sum(row => row.UnreadCount);
-        UnreadText = total > NoUnread ? total.ToString(CultureInfo.CurrentCulture) : string.Empty;
-    }
-
-    private void HandleLobbyPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(LobbyChatViewModel.IsConversationOpen)
-            && !Lobby.IsConversationOpen
-            && Pane == ChatPane.Global)
-        {
-            Pane = ChatPane.List;
-        }
-    }
-
-    private void HandlePrivateClosed(object? sender, EventArgs e)
-    {
-        Pane = ChatPane.List;
-    }
-
-    private void HandlePrivateMessageSent(object? sender, ConversationUpdatedEventArgs e)
-    {
-        UpdateConversation(e.Partner, e.Message, NoUnread);
-    }
-
-    private void HandlePrivateMessageReceived(object? sender, PrivateMessageReceivedEventArgs e)
-    {
-        RunOnUi(() => ReceivePrivateMessage(e.Sender, e.Message));
-    }
-
     private void ReceivePrivateMessage(PlayerTag sender, PrivateMessage message)
     {
-        if (Private.IsShowing(sender.FriendCode))
+        if (PrivateConversation.IsShowing(sender.FriendCode))
         {
-            Private.Receive(message);
+            PrivateConversation.Receive(message);
             UpdateConversation(sender, message, NoUnread);
             return;
         }
@@ -251,20 +243,28 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         UpdateConversation(sender, message, OneUnread);
     }
 
-    private void RunOnUi(Action action)
+    private void HandleLobbyPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (_uiContext is null)
+        if (e.PropertyName == nameof(LobbyChatViewModel.IsConversationOpen)
+            && !LobbyChat.IsConversationOpen
+            && Pane == ChatPane.Global)
         {
-            action();
-            return;
+            Pane = ChatPane.List;
         }
-
-        _uiContext.Post(state => ((Action)state!).Invoke(), action);
     }
 
-    private void ReportLoadFailure(Exception ex)
+    private void HandlePrivateMessageSent(object? sender, ConversationUpdatedEventArgs e)
     {
-        _logger.Warn("The private conversations could not be loaded.", ex);
-        HasConversationsLoadFailed = true;
+        UpdateConversation(e.Partner, e.Message, NoUnread);
+    }
+
+    private void HandlePrivateClosed(object? sender, EventArgs e)
+    {
+        Pane = ChatPane.List;
+    }
+
+    private void HandlePrivateMessageReceived(object? sender, PrivateMessageReceivedEventArgs e)
+    {
+        UiThread.Run(_uiContext, () => ReceivePrivateMessage(e.Sender, e.Message));
     }
 }

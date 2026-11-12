@@ -2,7 +2,6 @@ using System;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
@@ -29,13 +28,14 @@ public sealed class ChatMessageRowView : StackPanel
     private static StackPanel CreateHeader(ChatMessageRowViewModel row)
     {
         TextStyle authorStyle = row.IsOwn ? TextStyles.ChatOwnAuthor : TextStyles.ChatAuthor;
-        Label time = CreateUnlocalizedLabel(TextStyles.Hint);
-        time.SetBinding(nameof(Label.Text), nameof(ChatMessageRowViewModel.TimeText));
+        Label time = ViewFactory.CreateBoundUntranslatedLabel(nameof(ChatMessageRowViewModel.TimeText), TextStyles.Hint);
+        Label author = ViewFactory.CreateUntranslatedLabel(row.AuthorText, authorStyle);
 
-        Label author = CreateUnlocalizedLabel(authorStyle);
-        author.Text = row.AuthorText;
-
-        var header = new StackPanel { Orientation = Orientation.Horizontal, Spacing = HeaderSpacing };
+        var header = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = HeaderSpacing,
+        };
         header.AddChild(author);
         header.AddChild(time);
         return header;
@@ -43,8 +43,7 @@ public sealed class ChatMessageRowView : StackPanel
 
     private static Label CreateFixedLabel(string text, TextStyle style)
     {
-        Label label = CreateUnlocalizedLabel(style);
-        label.Text = text;
+        Label label = ViewFactory.CreateUntranslatedLabel(text, style);
         label.Width = RowWidth;
         label.WidthUnits = DimensionUnitType.Absolute;
         return label;
@@ -52,18 +51,11 @@ public sealed class ChatMessageRowView : StackPanel
 
     private static Label CreateStateLabel(string visibilityProperty, TextStyle style)
     {
-        Label label = CreateUnlocalizedLabel(style);
-        label.Width = RowWidth;
-        label.WidthUnits = DimensionUnitType.Absolute;
-        label.SetBinding(nameof(Label.Text), nameof(ChatMessageRowViewModel.StateText));
+        Label label = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(ChatMessageRowViewModel.StateText),
+            style,
+            RowWidth);
         label.SetBinding(nameof(IsVisible), visibilityProperty);
-        return label;
-    }
-
-    private static Label CreateUnlocalizedLabel(TextStyle style)
-    {
-        Label label = ViewFactory.CreateLabel(string.Empty, style);
-        ((LabelVisual)label.Visual).LocalizeText = false;
         return label;
     }
 }

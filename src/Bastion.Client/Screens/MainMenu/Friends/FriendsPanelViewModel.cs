@@ -29,16 +29,16 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
     private readonly SynchronizationContext? _uiContext;
     private readonly List<FriendRowViewModel> _allRows = new List<FriendRowViewModel>();
 
-    public FriendsPanelViewModel(LoggedInSession session, SocialClients clients, IClipboard clipboard)
+    public FriendsPanelViewModel(LoggedInSession session, SocialClients clients, LocalServices localServices)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(clients);
-        ArgumentNullException.ThrowIfNull(clipboard);
+        ArgumentNullException.ThrowIfNull(localServices);
 
         _session = session;
         _friends = clients.Friends;
         _notifications = clients.Notifications;
-        _clipboard = clipboard;
+        _clipboard = localServices.Clipboard;
         _uiContext = SynchronizationContext.Current;
         AddFriend = new AddFriendViewModel(session, clients.Friends);
         AddFriend.FriendshipStarted += HandleFriendshipStarted;
@@ -47,7 +47,8 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         Requests = new FriendRequestsViewModel(session, clients.Friends);
         Requests.FriendshipStarted += HandleFriendshipStarted;
         Actions.MessageRequested += HandleMessageRequested;
-        Chat = new ChatTabViewModel(session, clients.Chat, this);
+        var chatContext = new ChatContext(session, clients.Chat, localServices.TimeProvider);
+        Chat = new ChatTabViewModel(chatContext, this);
         _notifications.FriendPresenceChanged += HandleFriendPresenceChanged;
         _notifications.FriendRequestReceived += HandleFriendRequestReceived;
         _notifications.FriendshipStarted += HandleRemoteFriendshipStarted;

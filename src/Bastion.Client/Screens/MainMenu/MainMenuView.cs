@@ -1,4 +1,5 @@
 using System;
+using Bastion.Client.Controls;
 using Bastion.Client.Localization;
 using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Screens.MainMenu.Friends;
@@ -52,7 +53,6 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
     private const float ChatPillRightOffset = FriendsPillRightOffset + FriendsPillWidth + PillSpacing;
     private const float PillRowY = ScreenMetrics.MarginY + SettingsOffsetY;
     private const float FriendsPanelGapY = 12;
-    private const float BadgeSize = 22;
     private const float BadgeOverlap = 8;
     private const float SearchPanelMarginY = 88;
 
@@ -211,20 +211,10 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
 
     private static Panel CreateCountBadge(object bindingContext, BadgeBinding binding, float pillRightOffset)
     {
-        Label count = ViewFactory.CreateBoundUntranslatedLabel(binding.TextProperty, TextStyles.PrimaryButton);
-        ViewFactory.CenterHorizontally(count);
-        ViewFactory.CenterVertically(count);
-
-        var badge = new Panel
+        var badge = new CountBadge(binding.TextProperty)
         {
-            Width = BadgeSize,
-            WidthUnits = DimensionUnitType.Absolute,
-            Height = BadgeSize,
-            HeightUnits = DimensionUnitType.Absolute,
             BindingContext = bindingContext,
         };
-        Shapes.InsertBehindContent(badge.Visual, Shapes.CreateCircle(Palette.PlayerOne, BadgeSize));
-        badge.AddChild(count);
         badge.Anchor(Gum.Wireframe.Anchor.TopRight);
         badge.X = -pillRightOffset + BadgeOverlap;
         badge.Y = PillRowY - BadgeOverlap;

@@ -3,7 +3,6 @@ using Bastion.Client.Theme;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
 
@@ -20,6 +19,7 @@ public sealed class PrivateMessageRowView : StackPanel
     private const float MetaSpacing = 6;
     private const int HorizontalSideCount = 2;
     private const int VerticalSideCount = 2;
+    private const float RightEdgeOffsetX = 0;
 
     public PrivateMessageRowView(PrivateMessageRowViewModel row)
     {
@@ -29,7 +29,7 @@ public sealed class PrivateMessageRowView : StackPanel
         Width = RowWidth;
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = RowSpacing;
-        if (row.HasDayLabel)
+        if (row.HasDayLabel())
         {
             AddChild(CreateDayLabel(row.DayLabel));
         }
@@ -38,19 +38,10 @@ public sealed class PrivateMessageRowView : StackPanel
         AddChild(CreateAligned(CreateMeta(), row.IsOwn));
     }
 
-    private static Label CreateUnlocalizedLabel(TextStyle style)
-    {
-        Label label = ViewFactory.CreateLabel(string.Empty, style);
-        ((LabelVisual)label.Visual).LocalizeText = false;
-        return label;
-    }
-
     private static Panel CreateDayLabel(string dayLabel)
     {
-        Label day = CreateUnlocalizedLabel(TextStyles.SectionLabel);
-        day.Text = dayLabel;
-        day.XUnits = GeneralUnitType.PixelsFromMiddle;
-        day.XOrigin = HorizontalAlignment.Center;
+        Label day = ViewFactory.CreateUntranslatedLabel(dayLabel, TextStyles.SectionLabel);
+        ViewFactory.CenterHorizontally(day);
 
         var holder = new Panel
         {
@@ -62,10 +53,28 @@ public sealed class PrivateMessageRowView : StackPanel
         return holder;
     }
 
+    private static Panel CreateAligned(FrameworkElement content, bool alignRight)
+    {
+        if (alignRight)
+        {
+            content.XUnits = GeneralUnitType.PixelsFromLarge;
+            content.XOrigin = HorizontalAlignment.Right;
+            content.X = RightEdgeOffsetX;
+        }
+
+        var holder = new Panel
+        {
+            Width = RowWidth,
+            WidthUnits = DimensionUnitType.Absolute,
+            HeightUnits = DimensionUnitType.RelativeToChildren,
+        };
+        holder.AddChild(content);
+        return holder;
+    }
+
     private static Panel CreateBubble(PrivateMessageRowViewModel row)
     {
-        Label text = CreateUnlocalizedLabel(TextStyles.NoticeMessage);
-        text.Text = row.Text;
+        Label text = ViewFactory.CreateUntranslatedLabel(row.Text, TextStyles.NoticeMessage);
         text.WidthUnits = DimensionUnitType.RelativeToChildren;
         text.Visual.MaxWidth = BubbleTextMaxWidth;
         text.X = BubblePaddingX;
@@ -86,38 +95,24 @@ public sealed class PrivateMessageRowView : StackPanel
 
     private static StackPanel CreateMeta()
     {
-        Label time = CreateUnlocalizedLabel(TextStyles.Hint);
-        time.SetBinding(nameof(Label.Text), nameof(PrivateMessageRowViewModel.TimeText));
-        Label pending = CreateUnlocalizedLabel(TextStyles.Hint);
-        pending.SetBinding(nameof(Label.Text), nameof(PrivateMessageRowViewModel.StateText));
+        Label time = ViewFactory.CreateBoundUntranslatedLabel(nameof(PrivateMessageRowViewModel.TimeText), TextStyles.Hint);
+        Label pending = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(PrivateMessageRowViewModel.StateText),
+            TextStyles.Hint);
         pending.SetBinding(nameof(IsVisible), nameof(PrivateMessageRowViewModel.IsPending));
-        Label failed = CreateUnlocalizedLabel(TextStyles.FieldError);
-        failed.SetBinding(nameof(Label.Text), nameof(PrivateMessageRowViewModel.StateText));
+        Label failed = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(PrivateMessageRowViewModel.StateText),
+            TextStyles.FieldError);
         failed.SetBinding(nameof(IsVisible), nameof(PrivateMessageRowViewModel.HasFailed));
 
-        var meta = new StackPanel { Orientation = Orientation.Horizontal, Spacing = MetaSpacing };
+        var meta = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = MetaSpacing,
+        };
         meta.AddChild(time);
         meta.AddChild(pending);
         meta.AddChild(failed);
         return meta;
-    }
-
-    private static Panel CreateAligned(FrameworkElement content, bool alignRight)
-    {
-        if (alignRight)
-        {
-            content.XUnits = GeneralUnitType.PixelsFromLarge;
-            content.XOrigin = HorizontalAlignment.Right;
-            content.X = 0;
-        }
-
-        var holder = new Panel
-        {
-            Width = RowWidth,
-            WidthUnits = DimensionUnitType.Absolute,
-            HeightUnits = DimensionUnitType.RelativeToChildren,
-        };
-        holder.AddChild(content);
-        return holder;
     }
 }

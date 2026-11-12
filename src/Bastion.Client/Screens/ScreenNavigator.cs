@@ -17,7 +17,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 {
     private readonly ServerConnection _connection;
     private readonly ILanguageService _languages;
-    private readonly IClipboard _clipboard;
+    private readonly LocalServices _localServices;
     private readonly TimeProvider _timeProvider;
     private readonly IScreenHost _screenHost;
     private readonly List<IDisposable> _screenViewModels = new List<IDisposable>();
@@ -35,7 +35,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 
         _connection = connection;
         _languages = localServices.Languages;
-        _clipboard = localServices.Clipboard;
+        _localServices = localServices;
         _timeProvider = localServices.TimeProvider;
         _screenHost = screenHost;
     }
@@ -76,7 +76,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         var mainMenuViewModel = new MainMenuViewModel(session, _connection.Notifications);
         var chatClients = new ChatClients(_connection.Chat, _connection.Conversations, _connection.Notifications);
         var clients = new SocialClients(_connection.Friends, chatClients, _connection.Notifications);
-        var friendsPanel = new FriendsPanelViewModel(session, clients, _clipboard);
+        var friendsPanel = new FriendsPanelViewModel(session, clients, _localServices);
         var matchSearchViewModel = new MatchSearchViewModel(session, _connection.Matchmaking, _timeProvider);
         matchSearchViewModel.MatchFound += HandleMatchFound;
         ShowScreen(
