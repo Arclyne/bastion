@@ -273,7 +273,7 @@ public sealed class LoginViewModel : ViewModel
             return;
         }
 
-        SupportedLanguage? language = SupportedLanguages.FindClosest(new CultureInfo(preferredLanguage));
+        SupportedLanguage? language = LanguageCatalog.FindClosest(new CultureInfo(preferredLanguage));
         if (language is not null)
         {
             SelectedLanguage = language;

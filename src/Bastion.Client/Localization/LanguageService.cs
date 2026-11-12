@@ -7,6 +7,7 @@ using Gum.Localization;
 
 namespace Bastion.Client.Localization;
 
+/// <inheritdoc/>
 public sealed class LanguageService : ILanguageService
 {
     private readonly ILanguagePreferenceStore _languagePreferenceStore;
@@ -19,47 +20,33 @@ public sealed class LanguageService : ILanguageService
 
         _languagePreferenceStore = languagePreferenceStore;
         _textDatabase = textDatabase;
-        CurrentLanguage = SupportedLanguages.Default;
+        Languages = LanguageCatalog.Languages;
+        CurrentLanguage = LanguageCatalog.Default;
     }
 
-    public IReadOnlyList<SupportedLanguage> Languages => SupportedLanguages.All;
+    /// <inheritdoc/>
+    public IReadOnlyList<SupportedLanguage> Languages { get; }
 
+    /// <inheritdoc/>
     public SupportedLanguage CurrentLanguage { get; private set; }
 
+    /// <inheritdoc/>
     public event EventHandler? LanguageChanged;
 
+    /// <inheritdoc/>
     public void LoadInitialLanguage()
     {
         LoadTextDatabase();
         ApplyLanguage(ResolveInitialLanguage());
     }
 
+    /// <inheritdoc/>
     public void ChangeLanguage(SupportedLanguage language)
     {
         ArgumentNullException.ThrowIfNull(language);
 
         ApplyLanguage(language);
         _languagePreferenceStore.SaveCultureName(language.CultureName);
-    }
-
-    private SupportedLanguage ResolveInitialLanguage()
-    {
-        SupportedLanguage? savedLanguage = SupportedLanguages.FindByCultureName(_languagePreferenceStore.LoadCultureName());
-        SupportedLanguage? systemLanguage = SupportedLanguages.FindClosest(CultureInfo.CurrentUICulture);
-        return savedLanguage ?? systemLanguage ?? SupportedLanguages.Default;
-    }
-
-    private void ApplyLanguage(SupportedLanguage language)
-    {
-        var culture = new CultureInfo(language.CultureName);
-        CultureInfo.CurrentCulture = culture;
-        CultureInfo.CurrentUICulture = culture;
-        CultureInfo.DefaultThreadCurrentCulture = culture;
-        CultureInfo.DefaultThreadCurrentUICulture = culture;
-
-        CurrentLanguage = language;
-        _textDatabase.CurrentLanguage = IndexOf(language);
-        LanguageChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void LoadTextDatabase()
@@ -73,13 +60,34 @@ public sealed class LanguageService : ILanguageService
         var entries = new Dictionary<string, string[]>();
         foreach (string key in ReadKeys())
         {
-            entries[key] = Translate(key);
+            entries[key] = ReadTranslations(key);
         }
 
         _textDatabase.AddDatabase(entries, headers);
     }
 
-    private string[] Translate(string key)
+    private static List<string> ReadKeys()
+    {
+        var keys = new List<string>();
+        ResourceSet? neutralSet = Strings.ResourceManager.GetResourceSet(
+            CultureInfo.InvariantCulture,
+            createIfNotExists: true,
+            tryParents: true);
+        if (neutralSet is null)
+        {
+            return keys;
+        }
+
+        foreach (DictionaryEntry entry in neutralSet)
+        {
+            string key = (string)entry.Key;
+            keys.Add(key);
+        }
+
+        return keys;
+    }
+
+    private string[] ReadTranslations(string key)
     {
         string[] translations = new string[Languages.Count];
         for (int languageIndex = 0; languageIndex < Languages.Count; languageIndex++)
@@ -91,21 +99,24 @@ public sealed class LanguageService : ILanguageService
         return translations;
     }
 
-    private static List<string> ReadKeys()
+    private SupportedLanguage ResolveInitialLanguage()
     {
-        var keys = new List<string>();
-        ResourceSet? neutralSet = Strings.ResourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
-        if (neutralSet is null)
-        {
-            return keys;
-        }
+        SupportedLanguage? savedLanguage = LanguageCatalog.FindByCultureName(_languagePreferenceStore.LoadCultureName());
+        SupportedLanguage? systemLanguage = LanguageCatalog.FindClosest(CultureInfo.CurrentUICulture);
+        return savedLanguage ?? systemLanguage ?? LanguageCatalog.Default;
+    }
 
-        foreach (DictionaryEntry entry in neutralSet)
-        {
-            keys.Add((string)entry.Key);
-        }
+    private void ApplyLanguage(SupportedLanguage language)
+    {
+        var culture = new CultureInfo(language.CultureName);
+        CultureInfo.CurrentCulture = culture;
+        CultureInfo.CurrentUICulture = culture;
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
 
-        return keys;
+        CurrentLanguage = language;
+        _textDatabase.CurrentLanguage = IndexOf(language);
+        LanguageChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private int IndexOf(SupportedLanguage language)
