@@ -48,7 +48,7 @@ public sealed class PrivateMessageRowView : StackPanel
 
     private static Panel CreateDayLabel(string dayLabel)
     {
-        Label day = ViewFactory.CreateUntranslatedLabel(dayLabel, TextStyles.SectionLabel);
+        Label day = ViewFactory.CreateUntranslatedLabel(dayLabel, TextStyleCatalog.SectionLabel);
         ViewFactory.CenterHorizontally(day);
 
         var holder = new Panel
@@ -82,7 +82,7 @@ public sealed class PrivateMessageRowView : StackPanel
 
     private static Panel CreateBubble(PrivateMessageRowViewModel row)
     {
-        Label text = ViewFactory.CreateUntranslatedLabel(row.Text, TextStyles.NoticeMessage);
+        Label text = ViewFactory.CreateUntranslatedLabel(row.Text, TextStyleCatalog.NoticeMessage);
         text.WidthUnits = DimensionUnitType.RelativeToChildren;
         text.Visual.MaxWidth = BubbleTextMaxWidth;
         text.X = BubblePaddingX;
@@ -96,21 +96,21 @@ public sealed class PrivateMessageRowView : StackPanel
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
         Color fill = row.IsOwn ? Palette.WarningSoft : Palette.White;
-        Shapes.InsertBehindContent(bubble.Visual, Shapes.CreateRounded(fill, BubbleRadius));
+        ShapeFactory.InsertBehindContent(bubble.Visual, ShapeFactory.CreateRounded(fill, BubbleRadius));
         bubble.AddChild(text);
         return bubble;
     }
 
     private static StackPanel CreateMeta()
     {
-        Label time = ViewFactory.CreateBoundUntranslatedLabel(nameof(PrivateMessageRowViewModel.TimeText), TextStyles.Hint);
+        Label time = ViewFactory.CreateBoundUntranslatedLabel(nameof(PrivateMessageRowViewModel.TimeText), TextStyleCatalog.Hint);
         Label pending = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(PrivateMessageRowViewModel.StateText),
-            TextStyles.Hint);
+            TextStyleCatalog.Hint);
         pending.SetBinding(nameof(IsVisible), nameof(PrivateMessageRowViewModel.IsPending));
         Label failed = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(PrivateMessageRowViewModel.StateText),
-            TextStyles.FieldError);
+            TextStyleCatalog.FieldError);
         failed.SetBinding(nameof(IsVisible), nameof(PrivateMessageRowViewModel.HasFailed));
 
         var meta = new StackPanel

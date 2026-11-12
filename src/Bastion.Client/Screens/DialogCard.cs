@@ -21,7 +21,7 @@ public abstract class DialogCard : Panel
         };
         AddChild(content);
         Content = content;
-        Skins.ApplyCard(Visual);
+        CardSkin.Apply(Visual);
     }
 
     protected StackPanel Content { get; }

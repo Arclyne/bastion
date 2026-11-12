@@ -42,7 +42,7 @@ public sealed class MatchPlayersPanel : Panel
         }
 
         AddChild(rows);
-        Skins.ApplyCard(Visual);
+        CardSkin.Apply(Visual);
     }
 
     private static Panel CreatePlayerRow(MatchPlayerViewModel player)
@@ -52,10 +52,10 @@ public sealed class MatchPlayersPanel : Panel
             Width = NameWidth,
             WidthUnits = DimensionUnitType.Absolute,
         };
-        nameColumn.AddChild(ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyles.IdentityName));
+        nameColumn.AddChild(ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyleCatalog.IdentityName));
         Label detail = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchPlayerViewModel.DetailText),
-            TextStyles.IdentityDetail,
+            TextStyleCatalog.IdentityDetail,
             NameWidth);
         detail.BindingContext = player;
         nameColumn.AddChild(detail);
@@ -68,8 +68,8 @@ public sealed class MatchPlayersPanel : Panel
         };
         content.AddChild(CreatePawn(player));
         content.AddChild(nameColumn);
-        content.AddChild(ViewFactory.CreateUntranslatedLabel(player.WallsText, TextStyles.IdentityDetail));
-        content.AddChild(ViewFactory.CreateUntranslatedLabel(player.ClockText, TextStyles.IdentityName));
+        content.AddChild(ViewFactory.CreateUntranslatedLabel(player.WallsText, TextStyleCatalog.IdentityDetail));
+        content.AddChild(ViewFactory.CreateUntranslatedLabel(player.ClockText, TextStyleCatalog.IdentityName));
         ViewFactory.CenterVertically(content);
 
         var row = new Panel
@@ -81,7 +81,7 @@ public sealed class MatchPlayersPanel : Panel
         };
         if (player.HasFirstTurn())
         {
-            Shapes.InsertBehindContent(row.Visual, Shapes.CreateRounded(Palette.Selected, RowRadius));
+            ShapeFactory.InsertBehindContent(row.Visual, ShapeFactory.CreateRounded(Palette.Selected, RowRadius));
         }
 
         row.AddChild(content);
@@ -97,8 +97,8 @@ public sealed class MatchPlayersPanel : Panel
             Height = PawnSize,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        RectangleRuntime circle = Shapes.CreateCircle(Palette.GetPawnColor(player.PawnSymbol), PawnSize);
-        Shapes.InsertBehindContent(pawn.Visual, circle);
+        RectangleRuntime circle = ShapeFactory.CreateCircle(Palette.GetPawnColor(player.PawnSymbol), PawnSize);
+        ShapeFactory.InsertBehindContent(pawn.Visual, circle);
         ViewFactory.CenterVertically(pawn);
         return pawn;
     }

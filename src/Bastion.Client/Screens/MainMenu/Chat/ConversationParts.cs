@@ -26,7 +26,7 @@ public static class ConversationParts
         ArgumentNullException.ThrowIfNull(detail);
 
         Button back = ViewFactory.CreateButton(nameof(Strings.ChatBack), BackButtonWidth, BackButtonHeight);
-        ButtonSkin.CreateAndAttach(back, ButtonLooks.Pill);
+        ButtonSkin.CreateAndAttach(back, ButtonLookCatalog.Pill);
         back.Click += handleBackClick;
 
         var titleLines = new StackPanel
@@ -90,7 +90,7 @@ public static class ConversationParts
         input.SetBinding(nameof(FrameworkElement.IsEnabled), nameof(ChatComposerViewModel.CanWrite));
 
         Button send = ViewFactory.CreateButton(nameof(Strings.ChatSend), SendButtonWidth, InputHeight);
-        ButtonSkin.CreateAndAttach(send, ButtonLooks.Primary);
+        ButtonSkin.CreateAndAttach(send, ButtonLookCatalog.Primary);
         send.SetBinding(nameof(FrameworkElement.IsEnabled), nameof(ChatComposerViewModel.CanSend));
         send.Click += handleSendClick;
 

@@ -10,8 +10,9 @@ public sealed class FieldSkin : InteractiveSkin
 {
     private const float Radius = 13;
     private const float BorderWidth = 1.8f;
-    private const float HaloSpread = 4;
     private const float PaddingX = 14;
+    private const float TextOffsetX = 0;
+    private const int HorizontalSideCount = 2;
 
     private readonly RectangleRuntime _halo;
     private readonly RectangleRuntime _surface;
@@ -20,13 +21,14 @@ public sealed class FieldSkin : InteractiveSkin
 
     private FieldSkin(TextBoxBase field)
     {
-        _halo = Shapes.CreateHalo(Radius, HaloSpread);
-        _surface = Shapes.CreateRounded(Palette.White, Radius);
+        _halo = ShapeFactory.CreateHalo(Radius);
+        _surface = ShapeFactory.CreateRounded(Palette.White, Radius);
         _surface.StrokeWidth = BorderWidth;
 
-        Shapes.HideDefaultParts(field);
-        Shapes.InsertBehindContent(field.Visual, _halo, _surface);
-        StyleText((TextBoxBaseVisual)field.Visual);
+        ShapeFactory.HideDefaultParts(field);
+        ShapeFactory.InsertBehindContent(field.Visual, _halo, _surface);
+        var fieldVisual = (TextBoxBaseVisual)field.Visual;
+        StyleText(fieldVisual);
     }
 
     public bool HasError
@@ -59,6 +61,19 @@ public sealed class FieldSkin : InteractiveSkin
         _halo.Visible = _hasError || isFocused;
     }
 
+    private static void StyleText(TextBoxBaseVisual visual)
+    {
+        visual.ClipContainer.Width = -(PaddingX * HorizontalSideCount);
+        visual.TextInstance.X = TextOffsetX;
+        visual.TextInstance.LocalizeText = false;
+        visual.PlaceholderTextInstance.X = TextOffsetX;
+        TextStyleCatalog.FieldText.ApplyTo(visual.TextInstance);
+        TextStyleCatalog.Placeholder.ApplyTo(visual.PlaceholderTextInstance);
+        visual.ForegroundColor = TextStyleCatalog.FieldText.Color;
+        visual.PlaceholderColor = TextStyleCatalog.Placeholder.Color;
+        visual.CaretColor = Palette.Accent;
+    }
+
     private Color PickBorder(InteractionFlags flags)
     {
         if (_hasError)
@@ -71,19 +86,11 @@ public sealed class FieldSkin : InteractiveSkin
             return Palette.Accent;
         }
 
-        return flags.HasFlag(InteractionFlags.Hovered) ? Palette.BorderHover : Palette.Border;
-    }
+        if (flags.HasFlag(InteractionFlags.Hovered))
+        {
+            return Palette.BorderHover;
+        }
 
-    private static void StyleText(TextBoxBaseVisual visual)
-    {
-        visual.ClipContainer.Width = -PaddingX * 2;
-        visual.TextInstance.X = 0;
-        visual.TextInstance.LocalizeText = false;
-        visual.PlaceholderTextInstance.X = 0;
-        TextStyles.FieldText.ApplyTo(visual.TextInstance);
-        TextStyles.Placeholder.ApplyTo(visual.PlaceholderTextInstance);
-        visual.ForegroundColor = TextStyles.FieldText.Color;
-        visual.PlaceholderColor = TextStyles.Placeholder.Color;
-        visual.CaretColor = Palette.Accent;
+        return Palette.Border;
     }
 }

@@ -63,7 +63,7 @@ public sealed class LoginView : ScreenView
         card.Anchor(Gum.Wireframe.Anchor.Left);
         card.X = CardX;
         card.AddChild(CreateCardContent());
-        Skins.ApplyCard(card.Visual);
+        CardSkin.Apply(card.Visual);
         return card;
     }
 
@@ -82,7 +82,7 @@ public sealed class LoginView : ScreenView
         content.AddChild(CreatePasswordField());
         content.AddChild(CreateNotice());
         content.AddChild(CreateLogInButton());
-        content.AddChild(ViewFactory.CreateLabel(nameof(Strings.LoginNoAccount), TextStyles.Divider));
+        content.AddChild(ViewFactory.CreateLabel(nameof(Strings.LoginNoAccount), TextStyleCatalog.Divider));
         content.AddChild(CreateCreateAccountButton());
         content.AddChild(CreateTwoFactorHint());
         return content;
@@ -94,8 +94,8 @@ public sealed class LoginView : ScreenView
         {
             Spacing = HeaderSpacing,
         };
-        brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.AppName), TextStyles.Title));
-        brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.LoginTagline), TextStyles.Tagline));
+        brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.AppName), TextStyleCatalog.Title));
+        brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.LoginTagline), TextStyleCatalog.Tagline));
 
         var header = new Panel
         {
@@ -142,7 +142,7 @@ public sealed class LoginView : ScreenView
 
     private static Label CreateWarning(string textKey, string visibilityPath)
     {
-        Label warning = ViewFactory.CreateLabel(textKey, TextStyles.FieldError);
+        Label warning = ViewFactory.CreateLabel(textKey, TextStyleCatalog.FieldError);
         warning.SetBinding(nameof(IsVisible), visibilityPath);
         return warning;
     }
@@ -153,7 +153,7 @@ public sealed class LoginView : ScreenView
         {
             Spacing = FieldSpacing,
         };
-        group.AddChild(ViewFactory.CreateLabel(captionKey, TextStyles.FieldLabel));
+        group.AddChild(ViewFactory.CreateLabel(captionKey, TextStyleCatalog.FieldLabel));
         group.AddChild(input);
         foreach (Label warning in warnings)
         {
@@ -204,7 +204,7 @@ public sealed class LoginView : ScreenView
             HeightUnits = DimensionUnitType.Absolute,
         };
         revealButton.SetBinding(nameof(ToggleButton.IsChecked), nameof(LoginViewModel.IsPasswordRevealed));
-        ButtonSkin.CreateAndAttach(revealButton, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(revealButton, ButtonLookCatalog.Secondary);
         BindEnabledToIdle(revealButton);
 
         var row = new StackPanel
@@ -231,7 +231,7 @@ public sealed class LoginView : ScreenView
     private Button CreateLogInButton()
     {
         Button button = ViewFactory.CreateButton(nameof(Strings.LoginButton), ContentWidth, PrimaryButtonHeight);
-        ButtonSkin.CreateAndAttach(button, ButtonLooks.Primary);
+        ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Primary);
         button.SetBinding(nameof(Button.Text), nameof(LoginViewModel.LogInButtonTextKey));
         button.Click += HandleLogInClick;
         return button;
@@ -243,14 +243,14 @@ public sealed class LoginView : ScreenView
             nameof(Strings.LoginCreateAccountButton),
             ContentWidth,
             SecondaryButtonHeight);
-        ButtonSkin.CreateAndAttach(button, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Secondary);
         BindEnabledToIdle(button);
         return button;
     }
 
     private static Label CreateTwoFactorHint()
     {
-        Label hint = ViewFactory.CreateLabel(nameof(Strings.LoginTwoFactorHint), TextStyles.Hint);
+        Label hint = ViewFactory.CreateLabel(nameof(Strings.LoginTwoFactorHint), TextStyleCatalog.Hint);
         hint.Width = ContentWidth;
         hint.WidthUnits = DimensionUnitType.Absolute;
         return hint;
@@ -259,7 +259,7 @@ public sealed class LoginView : ScreenView
     private static Button CreateExitButton()
     {
         Button button = ViewFactory.CreateButton(nameof(Strings.CommonExitButton), ExitButtonWidth, ExitButtonHeight);
-        ButtonSkin.CreateAndAttach(button, ButtonLooks.Pill);
+        ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Pill);
         button.Anchor(Gum.Wireframe.Anchor.TopRight);
         button.X = -ScreenMetrics.MarginX;
         button.Y = ScreenMetrics.MarginY;

@@ -36,18 +36,18 @@ public sealed class ConversationRowView : Panel
         WidthUnits = DimensionUnitType.Absolute;
         Height = RowHeight;
         HeightUnits = DimensionUnitType.Absolute;
-        Shapes.InsertBehindContent(Visual, Shapes.CreateRounded(Palette.Selected, RowRadius));
+        ShapeFactory.InsertBehindContent(Visual, ShapeFactory.CreateRounded(Palette.Selected, RowRadius));
         AddChild(CreateText(row));
         AddChild(CreateSide());
     }
 
     private static StackPanel CreateText(ConversationRowViewModel row)
     {
-        Label nickname = ViewFactory.CreateUntranslatedLabel(row.Partner.Nickname, TextStyles.IdentityName);
+        Label nickname = ViewFactory.CreateUntranslatedLabel(row.Partner.Nickname, TextStyleCatalog.IdentityName);
 
         Label preview = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(ConversationRowViewModel.PreviewText),
-            TextStyles.Hint,
+            TextStyleCatalog.Hint,
             TextWidth);
         var previewVisual = (LabelVisual)preview.Visual;
         previewVisual.MaxNumberOfLines = PreviewLines;
@@ -66,7 +66,7 @@ public sealed class ConversationRowView : Panel
     private StackPanel CreateSide()
     {
         Button open = ViewFactory.CreateButton(nameof(Strings.ChatOpen), OpenButtonWidth, OpenButtonHeight);
-        ButtonSkin.CreateAndAttach(open, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(open, ButtonLookCatalog.Secondary);
         ViewFactory.CenterVertically(open);
         open.Click += HandleOpenClick;
 
@@ -85,7 +85,7 @@ public sealed class ConversationRowView : Panel
 
     private static Label CreateTime()
     {
-        Label time = ViewFactory.CreateBoundUntranslatedLabel(nameof(ConversationRowViewModel.TimeText), TextStyles.Hint);
+        Label time = ViewFactory.CreateBoundUntranslatedLabel(nameof(ConversationRowViewModel.TimeText), TextStyleCatalog.Hint);
         ViewFactory.CenterVertically(time);
         return time;
     }

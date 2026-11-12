@@ -13,7 +13,7 @@ public sealed class ModalLayer : Panel
     public ModalLayer()
     {
         Dock(Gum.Wireframe.Dock.Fill);
-        Shapes.InsertBehindContent(Visual, Shapes.CreateRounded(Palette.Overlay, OverlayCornerRadius));
+        ShapeFactory.InsertBehindContent(Visual, ShapeFactory.CreateRounded(Palette.Overlay, OverlayCornerRadius));
     }
 
     public bool IsOpen

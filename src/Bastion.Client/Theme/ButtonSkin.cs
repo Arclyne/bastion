@@ -10,8 +10,7 @@ namespace Bastion.Client.Theme;
 public sealed class ButtonSkin : InteractiveSkin
 {
     private const float BorderWidth = 1.8f;
-    private const float HaloSpread = 4;
-    private const float FullPercentage = 100;
+    private const float RestingOffsetY = 0;
 
     private readonly ButtonLook _look;
     private readonly RectangleRuntime _halo;
@@ -21,10 +20,10 @@ public sealed class ButtonSkin : InteractiveSkin
     private ButtonSkin(ButtonBase button, ButtonLook look)
     {
         _look = look;
-        _halo = Shapes.CreateHalo(look.Radius, HaloSpread);
-        _surface = Shapes.CreateRounded(look.Fill, look.Radius);
-        _surface.StrokeWidth = look.Border is null ? 0 : BorderWidth;
-        _surface.GradientY2 = FullPercentage;
+        _halo = ShapeFactory.CreateHalo(look.Radius);
+        _surface = ShapeFactory.CreateRounded(look.Fill, look.Radius);
+        _surface.StrokeWidth = look.Border is null ? ShapeFactory.NoStrokeWidth : BorderWidth;
+        _surface.GradientY2 = ShapeFactory.FullPercentage;
         _surface.GradientY2Units = GeneralUnitType.Percentage;
         _surface.HasDropshadow = true;
         _surface.DropshadowColor = look.ShadowColor;
@@ -32,8 +31,8 @@ public sealed class ButtonSkin : InteractiveSkin
         _text = FindText(button);
         look.Text.ApplyTo(_text);
 
-        Shapes.HideDefaultParts(button);
-        Shapes.InsertBehindContent(button.Visual, _halo, _surface);
+        ShapeFactory.HideDefaultParts(button);
+        ShapeFactory.InsertBehindContent(button.Visual, _halo, _surface);
     }
 
     public static ButtonSkin CreateAndAttach(ButtonBase button, ButtonLook look)
@@ -50,7 +49,7 @@ public sealed class ButtonSkin : InteractiveSkin
     {
         bool isDisabled = flags.HasFlag(InteractionFlags.Disabled);
         bool isHovered = flags.HasFlag(InteractionFlags.Hovered);
-        float sink = IsSinking(flags) ? _look.ShadowOffsetY : 0;
+        float sink = IsSinking(flags) ? _look.ShadowOffsetY : RestingOffsetY;
 
         _surface.FillColor = PickFill(flags);
         ApplyGradient(isHovered ? _look.HoverFillEnd : _look.FillEnd, isDisabled);
@@ -61,6 +60,19 @@ public sealed class ButtonSkin : InteractiveSkin
         _text.Color = isDisabled ? Palette.Muted : _look.Text.Color;
         _halo.Y = sink;
         _halo.Visible = flags.HasFlag(InteractionFlags.Focused) && !isDisabled;
+    }
+
+    private static TextRuntime FindText(ButtonBase button)
+    {
+        switch (button.Visual)
+        {
+            case ButtonVisual buttonVisual:
+                return buttonVisual.TextInstance;
+            case ToggleButtonVisual toggleVisual:
+                return toggleVisual.TextInstance;
+            default:
+                throw new ArgumentException("The button does not use a default Gum visual.", nameof(button));
+        }
     }
 
     private bool IsSinking(InteractionFlags flags)
@@ -80,28 +92,20 @@ public sealed class ButtonSkin : InteractiveSkin
             return _look.SelectedFill;
         }
 
-        return flags.HasFlag(InteractionFlags.Hovered) ? _look.HoverFill : _look.Fill;
+        if (flags.HasFlag(InteractionFlags.Hovered))
+        {
+            return _look.HoverFill;
+        }
+
+        return _look.Fill;
     }
 
     private void ApplyGradient(Color? fillEnd, bool isDisabled)
     {
         _surface.UseGradient = fillEnd is not null && !isDisabled;
-        if (fillEnd is not null)
+        if (fillEnd is Color end)
         {
-            _surface.Color2 = fillEnd.Value;
-        }
-    }
-
-    private static TextRuntime FindText(ButtonBase button)
-    {
-        switch (button.Visual)
-        {
-            case ButtonVisual buttonVisual:
-                return buttonVisual.TextInstance;
-            case ToggleButtonVisual toggleVisual:
-                return toggleVisual.TextInstance;
-            default:
-                throw new ArgumentException("The button does not use a default Gum visual.", nameof(button));
+            _surface.Color2 = end;
         }
     }
 }

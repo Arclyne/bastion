@@ -23,8 +23,8 @@ public sealed class RemoveFriendDialogView : DialogCard
         _actions = actions;
         BindingContext = actions;
         Anchor(Gum.Wireframe.Anchor.Center);
-        Content.AddChild(CreateBoundLabel(nameof(FriendActionsViewModel.DialogTitle), TextStyles.DialogTitle));
-        Content.AddChild(CreateBoundLabel(nameof(FriendActionsViewModel.DialogMessage), TextStyles.DialogMessage));
+        Content.AddChild(CreateBoundLabel(nameof(FriendActionsViewModel.DialogTitle), TextStyleCatalog.DialogTitle));
+        Content.AddChild(CreateBoundLabel(nameof(FriendActionsViewModel.DialogMessage), TextStyleCatalog.DialogMessage));
         Content.AddChild(CreateKeepsHistoryNotice());
         Content.AddChild(CreateError());
         Content.AddChild(CreateButtons());
@@ -37,7 +37,7 @@ public sealed class RemoveFriendDialogView : DialogCard
 
     private static Label CreateKeepsHistoryNotice()
     {
-        Label keepsHistory = ViewFactory.CreateLabel(nameof(Strings.FriendsRemoveKeepsHistory), TextStyles.DialogMessage);
+        Label keepsHistory = ViewFactory.CreateLabel(nameof(Strings.FriendsRemoveKeepsHistory), TextStyleCatalog.DialogMessage);
         keepsHistory.Width = DialogMetrics.ContentWidth;
         keepsHistory.WidthUnits = DimensionUnitType.Absolute;
         return keepsHistory;
@@ -45,7 +45,7 @@ public sealed class RemoveFriendDialogView : DialogCard
 
     private static Label CreateError()
     {
-        Label error = CreateBoundLabel(nameof(FriendActionsViewModel.ErrorText), TextStyles.FieldError);
+        Label error = CreateBoundLabel(nameof(FriendActionsViewModel.ErrorText), TextStyleCatalog.FieldError);
         error.SetBinding(nameof(IsVisible), nameof(FriendActionsViewModel.HasError));
         return error;
     }
@@ -55,11 +55,11 @@ public sealed class RemoveFriendDialogView : DialogCard
         float buttonWidth = (DialogMetrics.ContentWidth - ButtonSpacing) / ButtonsPerRow;
 
         Button cancel = ViewFactory.CreateButton(nameof(Strings.FriendsCancelRequest), buttonWidth, DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(cancel, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(cancel, ButtonLookCatalog.Secondary);
         cancel.Click += HandleCancelClick;
 
         Button remove = ViewFactory.CreateButton(nameof(Strings.FriendsRemove), buttonWidth, DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(remove, ButtonLooks.Primary);
+        ButtonSkin.CreateAndAttach(remove, ButtonLookCatalog.Primary);
         remove.SetBinding(nameof(IsEnabled), nameof(FriendActionsViewModel.CanConfirm));
         remove.Click += HandleRemoveClick;
 

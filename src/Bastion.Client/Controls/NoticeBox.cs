@@ -31,8 +31,8 @@ public sealed class NoticeBox : Panel
         HeightUnits = DimensionUnitType.RelativeToChildren;
 
         float textWidth = width - (PaddingX * HorizontalSideCount);
-        _title = CreateLabel(TextStyles.NoticeTitle, textWidth);
-        _message = CreateLabel(TextStyles.NoticeMessage, textWidth);
+        _title = CreateLabel(TextStyleCatalog.NoticeTitle, textWidth);
+        _message = CreateLabel(TextStyleCatalog.NoticeMessage, textWidth);
         var content = new StackPanel
         {
             X = PaddingX,
@@ -43,9 +43,9 @@ public sealed class NoticeBox : Panel
         content.AddChild(_message);
         AddChild(content);
 
-        _surface = Shapes.CreateRounded(Palette.Card, Radius);
+        _surface = ShapeFactory.CreateRounded(Palette.Card, Radius);
         _surface.StrokeWidth = BorderWidth;
-        Shapes.InsertBehindContent(Visual, _surface);
+        ShapeFactory.InsertBehindContent(Visual, _surface);
         Tone = NoticeTone.None;
     }
 
@@ -87,8 +87,7 @@ public sealed class NoticeBox : Panel
             Width = width,
             WidthUnits = DimensionUnitType.Absolute,
         };
-        var labelVisual = (LabelVisual)label.Visual;
-        style.ApplyTo(labelVisual);
+        style.ApplyTo(label);
         return label;
     }
 

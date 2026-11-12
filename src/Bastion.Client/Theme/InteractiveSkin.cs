@@ -30,15 +30,6 @@ public abstract class InteractiveSkin
         ShowState(InteractionFlags.None);
     }
 
-    private void ReplaceStates(StateSaveCategory category)
-    {
-        foreach (StateSave state in category.States)
-        {
-            var handler = new StateHandler(this, ReadFlags(state.Name));
-            state.Apply = handler.ApplyState;
-        }
-    }
-
     private static bool IsInteractionCategory(StateSaveCategory category)
     {
         foreach (StateSave state in category.States)
@@ -50,6 +41,16 @@ public abstract class InteractiveSkin
         }
 
         return false;
+    }
+
+    private void ReplaceStates(StateSaveCategory category)
+    {
+        foreach (StateSave state in category.States)
+        {
+            InteractionFlags flags = ReadFlags(state.Name);
+            var skinState = new SkinState(this, flags);
+            state.Apply = skinState.Show;
+        }
     }
 
     private static InteractionFlags ReadFlags(string stateName)
@@ -69,6 +70,11 @@ public abstract class InteractiveSkin
 
     private static InteractionFlags ReadFlag(string stateName, string marker, InteractionFlags flag)
     {
-        return stateName.Contains(marker, StringComparison.Ordinal) ? flag : InteractionFlags.None;
+        if (!stateName.Contains(marker, StringComparison.Ordinal))
+        {
+            return InteractionFlags.None;
+        }
+
+        return flag;
     }
 }

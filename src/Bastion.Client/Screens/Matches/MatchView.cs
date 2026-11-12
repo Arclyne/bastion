@@ -63,11 +63,11 @@ public sealed class MatchView : ScreenView
         pill.Anchor(Gum.Wireframe.Anchor.TopRight);
         pill.X = -ScreenMetrics.MarginX;
         pill.Y = ScreenMetrics.MarginY;
-        Label turnLabel = ViewFactory.CreateUntranslatedLabel(matchViewModel.TurnText, TextStyles.IdentityName);
+        Label turnLabel = ViewFactory.CreateUntranslatedLabel(matchViewModel.TurnText, TextStyleCatalog.IdentityName);
         turnLabel.X = TurnPillPaddingX;
         ViewFactory.CenterVertically(turnLabel);
         pill.AddChild(turnLabel);
-        Skins.ApplyCard(pill.Visual);
+        CardSkin.Apply(pill.Visual);
         return pill;
     }
 
@@ -86,7 +86,7 @@ public sealed class MatchView : ScreenView
             nameof(Strings.MatchAbandonButton),
             AbandonButtonWidth,
             ScreenMetrics.MenuPillHeight);
-        ButtonSkin.CreateAndAttach(button, ButtonLooks.Pill);
+        ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Pill);
         button.BindingContext = _abandonmentViewModel;
         button.SetBinding(nameof(IsEnabled), nameof(MatchAbandonmentViewModel.CanAbandon));
         button.Anchor(Gum.Wireframe.Anchor.BottomLeft);
@@ -101,7 +101,7 @@ public sealed class MatchView : ScreenView
         Label status = ViewFactory.CreateBoundNotice(
             nameof(MatchAbandonmentViewModel.StatusText),
             nameof(MatchAbandonmentViewModel.HasStatus),
-            TextStyles.FieldError);
+            TextStyleCatalog.FieldError);
         status.Width = AbandonButtonWidth;
         status.WidthUnits = DimensionUnitType.Absolute;
         status.BindingContext = _abandonmentViewModel;
@@ -116,7 +116,7 @@ public sealed class MatchView : ScreenView
         Label notice = ViewFactory.CreateBoundNotice(
             nameof(MatchAbandonmentViewModel.PlayerLeftText),
             nameof(MatchAbandonmentViewModel.HasPlayerLeft),
-            TextStyles.IdentityName);
+            TextStyleCatalog.IdentityName);
         notice.Width = PlayerLeftNoticeWidth;
         notice.WidthUnits = DimensionUnitType.Absolute;
         notice.BindingContext = _abandonmentViewModel;

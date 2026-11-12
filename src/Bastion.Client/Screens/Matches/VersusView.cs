@@ -37,11 +37,11 @@ public sealed class VersusView : ScreenView
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = SectionSpacing,
         };
-        content.AddChild(ViewFactory.CreateUntranslatedLabel(viewModel.ModeText, TextStyles.SectionLabel));
+        content.AddChild(ViewFactory.CreateUntranslatedLabel(viewModel.ModeText, TextStyleCatalog.SectionLabel));
         content.AddChild(CreatePlayersRow(viewModel));
         content.AddChild(ViewFactory.CreateBoundUntranslatedLabel(
             nameof(VersusViewModel.CountdownText),
-            TextStyles.DialogTitle,
+            TextStyleCatalog.DialogTitle,
             contentWidth));
 
         var card = new Panel
@@ -53,13 +53,13 @@ public sealed class VersusView : ScreenView
         };
         card.Anchor(Gum.Wireframe.Anchor.Center);
         card.AddChild(content);
-        Skins.ApplyCard(card.Visual);
+        CardSkin.Apply(card.Visual);
         AddChild(card);
     }
 
     private static StackPanel CreatePlayersRow(VersusViewModel viewModel)
     {
-        Label versus = ViewFactory.CreateLabel(nameof(Strings.VersusLabel), TextStyles.MenuTitle);
+        Label versus = ViewFactory.CreateLabel(nameof(Strings.VersusLabel), TextStyleCatalog.MenuTitle);
         versus.Width = VersusWidth;
         versus.WidthUnits = DimensionUnitType.Absolute;
         ViewFactory.CenterVertically(versus);
@@ -87,10 +87,10 @@ public sealed class VersusView : ScreenView
             Height = AvatarSize,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        RectangleRuntime circle = Shapes.CreateCircle(Palette.AvatarFill, AvatarSize);
+        RectangleRuntime circle = ShapeFactory.CreateCircle(Palette.AvatarFill, AvatarSize);
         circle.StrokeColor = Palette.GetPawnColor(player.PawnSymbol);
         circle.StrokeWidth = AvatarRingWidth;
-        Shapes.InsertBehindContent(avatar.Visual, circle);
+        ShapeFactory.InsertBehindContent(avatar.Visual, circle);
 
         var card = new StackPanel
         {
@@ -99,8 +99,8 @@ public sealed class VersusView : ScreenView
             Spacing = PlayerSpacing,
         };
         card.AddChild(avatar);
-        card.AddChild(ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyles.IdentityName));
-        card.AddChild(ViewFactory.CreateUntranslatedLabel(player.EloText, TextStyles.IdentityDetail));
+        card.AddChild(ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyleCatalog.IdentityName));
+        card.AddChild(ViewFactory.CreateUntranslatedLabel(player.EloText, TextStyleCatalog.IdentityDetail));
         return card;
     }
 }

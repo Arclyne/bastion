@@ -24,11 +24,11 @@ public sealed class ServerFailureDialogView : DialogCard
         Anchor(Gum.Wireframe.Anchor.Center);
         Content.AddChild(ViewFactory.CreateBoundLabel(
             nameof(LoginViewModel.DialogTitleKey),
-            TextStyles.DialogTitle,
+            TextStyleCatalog.DialogTitle,
             DialogMetrics.ContentWidth));
         Content.AddChild(ViewFactory.CreateBoundLabel(
             nameof(LoginViewModel.DialogMessageKey),
-            TextStyles.DialogMessage,
+            TextStyleCatalog.DialogMessage,
             DialogMetrics.ContentWidth));
         Content.AddChild(CreateButtons());
     }
@@ -37,11 +37,11 @@ public sealed class ServerFailureDialogView : DialogCard
     {
         float buttonWidth = (DialogMetrics.ContentWidth - ButtonSpacing) / ButtonsPerRow;
 
-        Button retryButton = CreateButton(nameof(Strings.CommonRetryButton), buttonWidth, ButtonLooks.Primary);
+        Button retryButton = CreateButton(nameof(Strings.CommonRetryButton), buttonWidth, ButtonLookCatalog.Primary);
         retryButton.SetBinding(nameof(IsVisible), nameof(LoginViewModel.CanRetry));
         retryButton.Click += HandleRetryClick;
 
-        Button acceptButton = CreateButton(nameof(Strings.CommonAcceptButton), buttonWidth, ButtonLooks.Secondary);
+        Button acceptButton = CreateButton(nameof(Strings.CommonAcceptButton), buttonWidth, ButtonLookCatalog.Secondary);
         acceptButton.Click += HandleAcceptClick;
 
         var row = new StackPanel

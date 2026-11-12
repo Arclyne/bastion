@@ -25,7 +25,7 @@ public sealed class FriendCodeFooter : StackPanel
 
     private static Label CreateCodeLabel()
     {
-        Label label = ViewFactory.CreateBoundUntranslatedLabel(nameof(FriendsPanelViewModel.OwnFriendCodeText), TextStyles.IdentityDetail);
+        Label label = ViewFactory.CreateBoundUntranslatedLabel(nameof(FriendsPanelViewModel.OwnFriendCodeText), TextStyleCatalog.IdentityDetail);
         ViewFactory.CenterVertically(label);
         return label;
     }
@@ -33,7 +33,7 @@ public sealed class FriendCodeFooter : StackPanel
     private Button CreateCopyButton()
     {
         Button button = ViewFactory.CreateButton(string.Empty, CopyButtonWidth, CopyButtonHeight);
-        ButtonSkin.CreateAndAttach(button, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Secondary);
         button.SetBinding(nameof(Button.Text), nameof(FriendsPanelViewModel.CopyButtonKey));
         button.Click += HandleCopyClick;
         return button;

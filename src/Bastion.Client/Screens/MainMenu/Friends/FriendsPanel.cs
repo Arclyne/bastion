@@ -54,13 +54,13 @@ public sealed class FriendsPanel : Panel
         AddChild(content);
         AddChild(CreateFooter(viewModel));
         AddChild(CreateActionsMenu(viewModel));
-        Skins.ApplyCard(Visual);
+        CardSkin.Apply(Visual);
     }
 
     private StackPanel CreateTabRow()
     {
         Button close = ViewFactory.CreateButton(nameof(Strings.FriendsCloseButton), CloseButtonSize, CloseButtonSize);
-        ButtonSkin.CreateAndAttach(close, ButtonLooks.Pill);
+        ButtonSkin.CreateAndAttach(close, ButtonLookCatalog.Pill);
         close.Click += HandleCloseClick;
 
         var row = new StackPanel
@@ -87,7 +87,7 @@ public sealed class FriendsPanel : Panel
     private static TabButton CreateTab(string textKey, string selectedProperty, EventHandler handleClick)
     {
         Button button = ViewFactory.CreateButton(textKey, TabWidth, TabHeight);
-        ButtonSkin.CreateAndAttach(button, ButtonLooks.Pill);
+        ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Pill);
         button.Click += handleClick;
         return new TabButton(button, selectedProperty, TabSpacing);
     }
@@ -97,7 +97,7 @@ public sealed class FriendsPanel : Panel
         return ViewFactory.CreateBoundNotice(
             nameof(FriendsPanelViewModel.HeaderText),
             nameof(FriendsPanelViewModel.IsFriendListVisible),
-            TextStyles.SectionLabel);
+            TextStyleCatalog.SectionLabel);
     }
 
     private static FriendListView CreateFriendList(FriendsPanelViewModel viewModel)

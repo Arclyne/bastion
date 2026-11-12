@@ -27,8 +27,7 @@ public static class ViewFactory
         {
             Text = textKey,
         };
-        var labelVisual = (LabelVisual)label.Visual;
-        style.ApplyTo(labelVisual);
+        style.ApplyTo(label);
         return label;
     }
 
@@ -127,7 +126,7 @@ public static class ViewFactory
             Height = height,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        Shapes.HideDefaultParts(list);
+        ShapeFactory.HideDefaultParts(list);
         return list;
     }
 
@@ -158,7 +157,7 @@ public static class ViewFactory
         string version = typeof(ViewFactory).Assembly.GetName().Version?.ToString(VersionFieldCount) ?? string.Empty;
         string text = string.Format(CultureInfo.CurrentCulture, Strings.AppVersionFormat, version);
 
-        Label label = CreateLabel(string.Empty, TextStyles.Version);
+        Label label = CreateLabel(string.Empty, TextStyleCatalog.Version);
         label.SetTextNoTranslate(text);
         label.Anchor(Gum.Wireframe.Anchor.BottomRight);
         label.X = -ScreenMetrics.MarginX;
@@ -173,8 +172,7 @@ public static class ViewFactory
             Width = width,
             WidthUnits = DimensionUnitType.Absolute,
         };
-        var labelVisual = (LabelVisual)label.Visual;
-        style.ApplyTo(labelVisual);
+        style.ApplyTo(label);
         return label;
     }
 

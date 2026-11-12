@@ -47,12 +47,12 @@ public sealed class MatchChatPanel : Panel
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = ContentSpacing,
         };
-        content.AddChild(ViewFactory.CreateLabel(nameof(Strings.MatchChatTitle), TextStyles.SectionLabel));
+        content.AddChild(ViewFactory.CreateLabel(nameof(Strings.MatchChatTitle), TextStyleCatalog.SectionLabel));
         content.AddChild(_messageScroller);
         content.AddChild(CreateStatus());
         content.AddChild(ConversationParts.CreateInputRow(HandleSendClick, ContentWidth));
         AddChild(content);
-        Skins.ApplyCard(Visual);
+        CardSkin.Apply(Visual);
 
         _viewModel.Messages.CollectionChanged += HandleMessagesChanged;
     }
@@ -70,7 +70,7 @@ public sealed class MatchChatPanel : Panel
         Label status = ViewFactory.CreateBoundNotice(
             nameof(MatchChatViewModel.StatusText),
             nameof(MatchChatViewModel.HasStatus),
-            TextStyles.FieldError);
+            TextStyleCatalog.FieldError);
         status.Width = ContentWidth;
         status.WidthUnits = DimensionUnitType.Absolute;
         return status;

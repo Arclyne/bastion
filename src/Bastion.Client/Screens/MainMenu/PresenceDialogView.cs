@@ -18,10 +18,10 @@ public sealed class PresenceDialogView : DialogCard
 
         _viewModel = viewModel;
         Anchor(Gum.Wireframe.Anchor.Center);
-        Content.AddChild(ViewFactory.CreateLabel(nameof(Strings.MatchSearchPresenceTitle), TextStyles.DialogTitle));
+        Content.AddChild(ViewFactory.CreateLabel(nameof(Strings.MatchSearchPresenceTitle), TextStyleCatalog.DialogTitle));
         Content.AddChild(ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchSearchViewModel.PresenceMessage),
-            TextStyles.DialogMessage,
+            TextStyleCatalog.DialogMessage,
             DialogMetrics.ContentWidth));
         Content.AddChild(CreateConfirmButton());
     }
@@ -32,7 +32,7 @@ public sealed class PresenceDialogView : DialogCard
             nameof(Strings.MatchSearchPresenceConfirmButton),
             DialogMetrics.ContentWidth,
             DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(confirmButton, ButtonLooks.Primary);
+        ButtonSkin.CreateAndAttach(confirmButton, ButtonLookCatalog.Primary);
         confirmButton.Click += HandleConfirmClick;
         return confirmButton;
     }

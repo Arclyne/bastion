@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 
 namespace Bastion.Client.Theme;
 
-public sealed class ButtonLook
+public sealed record ButtonLook
 {
     public required Color Fill { get; init; }
 

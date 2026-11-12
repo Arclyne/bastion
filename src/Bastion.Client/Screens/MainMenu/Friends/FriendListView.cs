@@ -59,7 +59,7 @@ public sealed class FriendListView : StackPanel
             nameof(Strings.FriendsAddFriend),
             AddFriendButtonWidth,
             FilterHeight);
-        ButtonSkin.CreateAndAttach(addFriend, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(addFriend, ButtonLookCatalog.Secondary);
         addFriend.Click += HandleAddFriendClick;
 
         var row = new StackPanel
@@ -78,19 +78,19 @@ public sealed class FriendListView : StackPanel
         groups.InnerPanel.AddChild(ViewFactory.CreateBoundNotice(
             nameof(FriendsPanelViewModel.ConnectedGroupTitle),
             nameof(FriendsPanelViewModel.HasConnectedFriends),
-            TextStyles.SectionLabel).Visual);
+            TextStyleCatalog.SectionLabel).Visual);
         groups.InnerPanel.AddChild(_connectedRows.Visual);
         groups.InnerPanel.AddChild(ViewFactory.CreateBoundNotice(
             nameof(FriendsPanelViewModel.OfflineGroupTitle),
             nameof(FriendsPanelViewModel.HasOfflineFriends),
-            TextStyles.SectionLabel).Visual);
+            TextStyleCatalog.SectionLabel).Visual);
         groups.InnerPanel.AddChild(_offlineRows.Visual);
         return groups;
     }
 
     private static Label CreateVisibleLabel(string textKey, string visibilityProperty)
     {
-        Label label = ViewFactory.CreateLabel(textKey, TextStyles.NoticeTitle);
+        Label label = ViewFactory.CreateLabel(textKey, TextStyleCatalog.NoticeTitle);
         label.SetBinding(nameof(IsVisible), visibilityProperty);
         return label;
     }
@@ -100,20 +100,20 @@ public sealed class FriendListView : StackPanel
         return ViewFactory.CreateBoundNotice(
             nameof(FriendsPanelViewModel.NoMatchText),
             nameof(FriendsPanelViewModel.HasNoMatch),
-            TextStyles.NoticeTitle);
+            TextStyleCatalog.NoticeTitle);
     }
 
     private StackPanel CreateLoadFailure()
     {
         Button retry = ViewFactory.CreateButton(nameof(Strings.FriendsRetry), RetryButtonWidth, RetryButtonHeight);
-        ButtonSkin.CreateAndAttach(retry, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(retry, ButtonLookCatalog.Secondary);
         retry.Click += HandleRetryClick;
 
         var failure = new StackPanel
         {
             Spacing = ListSpacing,
         };
-        failure.AddChild(ViewFactory.CreateLabel(nameof(Strings.FriendsLoadFailed), TextStyles.FieldError));
+        failure.AddChild(ViewFactory.CreateLabel(nameof(Strings.FriendsLoadFailed), TextStyleCatalog.FieldError));
         failure.AddChild(retry);
         failure.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.HasLoadFailed));
         return failure;

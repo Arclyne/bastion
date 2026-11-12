@@ -58,8 +58,8 @@ public sealed class FriendRowView : Panel
             HeightUnits = DimensionUnitType.Absolute,
         };
         Color color = isConnected ? Palette.Success : Palette.Muted;
-        RectangleRuntime circle = Shapes.CreateCircle(color, DotSize);
-        Shapes.InsertBehindContent(dot.Visual, circle);
+        RectangleRuntime circle = ShapeFactory.CreateCircle(color, DotSize);
+        ShapeFactory.InsertBehindContent(dot.Visual, circle);
         ViewFactory.CenterVertically(dot);
         return dot;
     }
@@ -70,8 +70,8 @@ public sealed class FriendRowView : Panel
         {
             Spacing = TextSpacing,
         };
-        text.AddChild(CreateBoundLabel(nameof(FriendRowViewModel.Nickname), TextStyles.IdentityName));
-        text.AddChild(CreateBoundLabel(nameof(FriendRowViewModel.StatusText), TextStyles.Hint));
+        text.AddChild(CreateBoundLabel(nameof(FriendRowViewModel.Nickname), TextStyleCatalog.IdentityName));
+        text.AddChild(CreateBoundLabel(nameof(FriendRowViewModel.StatusText), TextStyleCatalog.Hint));
         ViewFactory.CenterVertically(text);
         return text;
     }
@@ -84,7 +84,7 @@ public sealed class FriendRowView : Panel
     private Button CreateMoreButton()
     {
         Button more = ViewFactory.CreateButton(nameof(Strings.FriendsMoreOptions), MoreButtonWidth, MoreButtonHeight);
-        ButtonSkin.CreateAndAttach(more, ButtonLooks.Pill);
+        ButtonSkin.CreateAndAttach(more, ButtonLookCatalog.Pill);
         more.Anchor(Gum.Wireframe.Anchor.Right);
         more.Click += HandleMoreClick;
         return more;

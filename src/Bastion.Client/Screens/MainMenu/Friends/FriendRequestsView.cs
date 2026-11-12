@@ -34,11 +34,11 @@ public sealed class FriendRequestsView : StackPanel
         AddChild(ViewFactory.CreateBoundNotice(
             nameof(FriendRequestsViewModel.StatusText),
             nameof(FriendRequestsViewModel.HasStatus),
-            TextStyles.FieldError));
+            TextStyleCatalog.FieldError));
         AddChild(ViewFactory.CreateBoundNotice(
             nameof(FriendRequestsViewModel.EmptyText),
             nameof(FriendRequestsViewModel.HasEmptyText),
-            TextStyles.NoticeTitle));
+            TextStyleCatalog.NoticeTitle));
         AddChild(CreateRequestList());
     }
 
@@ -63,7 +63,7 @@ public sealed class FriendRequestsView : StackPanel
     private static TabButton CreateSubtab(string titleProperty, string selectedProperty, EventHandler handleClick)
     {
         Button button = ViewFactory.CreateButton(string.Empty, SubtabWidth, SubtabHeight);
-        ButtonSkin.CreateAndAttach(button, ButtonLooks.Pill);
+        ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Pill);
         var buttonVisual = (ButtonVisual)button.Visual;
         buttonVisual.TextInstance.LocalizeText = false;
         button.SetBinding(nameof(Button.Text), titleProperty);

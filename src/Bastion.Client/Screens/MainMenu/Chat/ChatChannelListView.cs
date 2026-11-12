@@ -39,7 +39,7 @@ public sealed class ChatChannelListView : StackPanel
         Spacing = ListSpacing;
         AddChild(CreateGlobalRow());
         AddChild(CreateLobbyLoadFailure());
-        AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatWithFriendsTitle), TextStyles.SectionLabel));
+        AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatWithFriendsTitle), TextStyleCatalog.SectionLabel));
         AddChild(CreateNoConversations());
         AddChild(CreateConversationsLoadFailure());
         AddChild(CreateConversations());
@@ -48,7 +48,7 @@ public sealed class ChatChannelListView : StackPanel
     private Panel CreateGlobalRow()
     {
         Button open = ViewFactory.CreateButton(nameof(Strings.ChatOpen), OpenButtonWidth, OpenButtonHeight);
-        ButtonSkin.CreateAndAttach(open, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(open, ButtonLookCatalog.Secondary);
         open.Anchor(Gum.Wireframe.Anchor.Right);
         open.X = -RowPaddingX;
         open.Click += HandleOpenGlobalClick;
@@ -61,8 +61,8 @@ public sealed class ChatChannelListView : StackPanel
             HeightUnits = DimensionUnitType.Absolute,
             BindingContext = _chatTab.LobbyChat,
         };
-        RectangleRuntime background = Shapes.CreateRounded(Palette.Selected, RowRadius);
-        Shapes.InsertBehindContent(row.Visual, background);
+        RectangleRuntime background = ShapeFactory.CreateRounded(Palette.Selected, RowRadius);
+        ShapeFactory.InsertBehindContent(row.Visual, background);
         row.AddChild(CreateGlobalText());
         row.AddChild(open);
         return row;
@@ -70,14 +70,14 @@ public sealed class ChatChannelListView : StackPanel
 
     private static StackPanel CreateGlobalText()
     {
-        Label detail = ViewFactory.CreateBoundUntranslatedLabel(nameof(LobbyChatViewModel.ChannelDetail), TextStyles.Hint);
+        Label detail = ViewFactory.CreateBoundUntranslatedLabel(nameof(LobbyChatViewModel.ChannelDetail), TextStyleCatalog.Hint);
 
         var text = new StackPanel
         {
             Spacing = TextSpacing,
             X = RowPaddingX,
         };
-        text.AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatGlobalChannel), TextStyles.IdentityName));
+        text.AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatGlobalChannel), TextStyleCatalog.IdentityName));
         text.AddChild(detail);
         ViewFactory.CenterVertically(text);
         return text;
@@ -94,14 +94,14 @@ public sealed class ChatChannelListView : StackPanel
     private StackPanel CreateLoadFailure(EventHandler handleRetryClick)
     {
         Button retry = ViewFactory.CreateButton(nameof(Strings.ChatRetry), RetryButtonWidth, RetryButtonHeight);
-        ButtonSkin.CreateAndAttach(retry, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(retry, ButtonLookCatalog.Secondary);
         retry.Click += handleRetryClick;
 
         var failure = new StackPanel
         {
             Spacing = ListSpacing,
         };
-        failure.AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatLoadFailed), TextStyles.FieldError));
+        failure.AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatLoadFailed), TextStyleCatalog.FieldError));
         failure.AddChild(retry);
         return failure;
     }
@@ -112,8 +112,8 @@ public sealed class ChatChannelListView : StackPanel
         {
             Spacing = TextSpacing,
         };
-        empty.AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatNoConversationsTitle), TextStyles.NoticeTitle));
-        Label hint = ViewFactory.CreateLabel(nameof(Strings.ChatNoConversationsHint), TextStyles.Hint);
+        empty.AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatNoConversationsTitle), TextStyleCatalog.NoticeTitle));
+        Label hint = ViewFactory.CreateLabel(nameof(Strings.ChatNoConversationsHint), TextStyleCatalog.Hint);
         hint.Width = ListWidth;
         hint.WidthUnits = DimensionUnitType.Absolute;
         empty.AddChild(hint);

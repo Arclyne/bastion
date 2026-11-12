@@ -15,10 +15,10 @@ public sealed class RivalAbandonedDialogView : DialogCard
 
         _viewModel = viewModel;
         Anchor(Gum.Wireframe.Anchor.Center);
-        Content.AddChild(ViewFactory.CreateLabel(nameof(Strings.MatchOverTitle), TextStyles.DialogTitle));
+        Content.AddChild(ViewFactory.CreateLabel(nameof(Strings.MatchOverTitle), TextStyleCatalog.DialogTitle));
         Content.AddChild(ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchAbandonmentViewModel.RivalAbandonedText),
-            TextStyles.DialogMessage,
+            TextStyleCatalog.DialogMessage,
             DialogMetrics.ContentWidth));
         Content.AddChild(CreateMenuButton());
     }
@@ -29,7 +29,7 @@ public sealed class RivalAbandonedDialogView : DialogCard
             nameof(Strings.MatchBackToMenuButton),
             DialogMetrics.ContentWidth,
             DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(menuButton, ButtonLooks.Primary);
+        ButtonSkin.CreateAndAttach(menuButton, ButtonLookCatalog.Primary);
         menuButton.Click += HandleMenuClick;
         return menuButton;
     }

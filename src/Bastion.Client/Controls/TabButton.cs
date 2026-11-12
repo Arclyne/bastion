@@ -23,7 +23,7 @@ public sealed class TabButton : StackPanel
 
     private static Panel CreateMarker(float width, string selectedProperty)
     {
-        RectangleRuntime marker = Shapes.CreateRounded(Palette.Accent, MarkerRadius);
+        RectangleRuntime marker = ShapeFactory.CreateRounded(Palette.Accent, MarkerRadius);
         var markerHolder = new Panel
         {
             Width = width,

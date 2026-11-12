@@ -18,13 +18,13 @@ public sealed class CountBadge : Panel
         WidthUnits = DimensionUnitType.Absolute;
         Height = Size;
         HeightUnits = DimensionUnitType.Absolute;
-        Shapes.InsertBehindContent(Visual, Shapes.CreateCircle(Palette.PlayerOne, Size));
+        ShapeFactory.InsertBehindContent(Visual, ShapeFactory.CreateCircle(Palette.PlayerOne, Size));
         AddChild(CreateCount(countProperty));
     }
 
     private static Label CreateCount(string countProperty)
     {
-        Label count = ViewFactory.CreateBoundUntranslatedLabel(countProperty, TextStyles.PrimaryButton);
+        Label count = ViewFactory.CreateBoundUntranslatedLabel(countProperty, TextStyleCatalog.PrimaryButton);
         ViewFactory.CenterHorizontally(count);
         ViewFactory.CenterVertically(count);
         return count;

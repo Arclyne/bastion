@@ -30,20 +30,20 @@ public sealed class FriendActionsMenu : Panel
         HeightUnits = DimensionUnitType.RelativeToChildren;
         this.SetBinding(nameof(IsVisible), nameof(FriendActionsViewModel.IsMenuOpen));
         AddChild(CreateContent());
-        Skins.ApplyCard(Visual);
+        CardSkin.Apply(Visual);
     }
 
     private StackPanel CreateContent()
     {
-        Label nickname = ViewFactory.CreateBoundUntranslatedLabel(nameof(FriendActionsViewModel.Nickname), TextStyles.IdentityName);
+        Label nickname = ViewFactory.CreateBoundUntranslatedLabel(nameof(FriendActionsViewModel.Nickname), TextStyleCatalog.IdentityName);
 
-        Button viewProfile = CreateItem(nameof(Strings.FriendsViewProfile), ButtonLooks.Secondary);
+        Button viewProfile = CreateItem(nameof(Strings.FriendsViewProfile), ButtonLookCatalog.Secondary);
         viewProfile.IsEnabled = false;
-        Button sendMessage = CreateItem(nameof(Strings.FriendsSendMessage), ButtonLooks.Secondary);
+        Button sendMessage = CreateItem(nameof(Strings.FriendsSendMessage), ButtonLookCatalog.Secondary);
         sendMessage.Click += HandleSendMessageClick;
-        Button remove = CreateItem(nameof(Strings.FriendsRemoveFriend), ButtonLooks.Secondary);
+        Button remove = CreateItem(nameof(Strings.FriendsRemoveFriend), ButtonLookCatalog.Secondary);
         remove.Click += HandleRemoveClick;
-        Button cancel = CreateItem(nameof(Strings.FriendsCancelRequest), ButtonLooks.Pill);
+        Button cancel = CreateItem(nameof(Strings.FriendsCancelRequest), ButtonLookCatalog.Pill);
         cancel.Click += HandleCancelClick;
 
         var content = new StackPanel

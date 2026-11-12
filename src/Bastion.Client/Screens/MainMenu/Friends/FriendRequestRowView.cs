@@ -46,8 +46,8 @@ public sealed class FriendRequestRowView : Panel
             X = ContentPaddingX,
             Spacing = TextSpacing,
         };
-        text.AddChild(CreateBoundLabel(nameof(FriendRequestRowViewModel.Nickname), TextStyles.IdentityName));
-        text.AddChild(CreateBoundLabel(nameof(FriendRequestRowViewModel.DetailText), TextStyles.Hint));
+        text.AddChild(CreateBoundLabel(nameof(FriendRequestRowViewModel.Nickname), TextStyleCatalog.IdentityName));
+        text.AddChild(CreateBoundLabel(nameof(FriendRequestRowViewModel.DetailText), TextStyleCatalog.Hint));
         ViewFactory.CenterVertically(text);
         return text;
     }
@@ -59,9 +59,9 @@ public sealed class FriendRequestRowView : Panel
 
     private StackPanel CreateReceivedActions()
     {
-        Button reject = CreateActionButton(nameof(Strings.FriendsReject), ButtonLooks.Secondary);
+        Button reject = CreateActionButton(nameof(Strings.FriendsReject), ButtonLookCatalog.Secondary);
         reject.Click += HandleRejectClick;
-        Button accept = CreateActionButton(nameof(Strings.FriendsAccept), ButtonLooks.Primary);
+        Button accept = CreateActionButton(nameof(Strings.FriendsAccept), ButtonLookCatalog.Primary);
         accept.Click += HandleAcceptClick;
         return CreateActionRow(reject, accept);
     }
@@ -92,7 +92,7 @@ public sealed class FriendRequestRowView : Panel
 
     private StackPanel CreateSentActions()
     {
-        Button cancel = CreateActionButton(nameof(Strings.FriendsCancelRequest), ButtonLooks.Secondary);
+        Button cancel = CreateActionButton(nameof(Strings.FriendsCancelRequest), ButtonLookCatalog.Secondary);
         cancel.Click += HandleCancelClick;
         return CreateActionRow(cancel);
     }

@@ -21,10 +21,10 @@ public sealed class MatchSearchPanel : DialogCard
         _viewModel = viewModel;
         BindingContext = viewModel;
         SetBinding(nameof(IsVisible), nameof(MatchSearchViewModel.IsSearching));
-        Content.AddChild(ViewFactory.CreateLabel(nameof(Strings.MatchSearchSearchingTitle), TextStyles.DialogTitle));
+        Content.AddChild(ViewFactory.CreateLabel(nameof(Strings.MatchSearchSearchingTitle), TextStyleCatalog.DialogTitle));
         Content.AddChild(ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchSearchViewModel.SearchDetail),
-            TextStyles.DialogMessage,
+            TextStyleCatalog.DialogMessage,
             DialogMetrics.ContentWidth));
         Content.AddChild(CreateCancelButton());
     }
@@ -35,7 +35,7 @@ public sealed class MatchSearchPanel : DialogCard
             nameof(Strings.CommonCancelButton),
             ButtonWidth,
             DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(cancelButton, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(cancelButton, ButtonLookCatalog.Secondary);
         cancelButton.SetBinding(nameof(IsEnabled), nameof(MatchSearchViewModel.CanCancelSearch));
         cancelButton.Click += HandleCancelClick;
         return cancelButton;

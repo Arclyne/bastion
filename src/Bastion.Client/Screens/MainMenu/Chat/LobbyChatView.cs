@@ -38,22 +38,22 @@ public sealed class LobbyChatView : StackPanel
         _messages = CreateMessages();
 
         AddChild(CreateHeader());
-        AddChild(ConversationParts.CreateWrappedLabel(nameof(Strings.ChatSystemNotice), TextStyles.Hint));
+        AddChild(ConversationParts.CreateWrappedLabel(nameof(Strings.ChatSystemNotice), TextStyleCatalog.Hint));
         AddChild(CreateEmptyLabel());
         AddChild(_messages);
         AddChild(CreateUnreadButton());
         AddChild(ConversationParts.CreateNoticeLabel(
             nameof(LobbyChatViewModel.MuteText),
             nameof(LobbyChatViewModel.IsMuted),
-            TextStyles.FieldError));
+            TextStyleCatalog.FieldError));
         AddChild(ConversationParts.CreateNoticeLabel(
             nameof(LobbyChatViewModel.StatusText),
             nameof(LobbyChatViewModel.HasStatus),
-            TextStyles.FieldError));
+            TextStyleCatalog.FieldError));
         AddChild(ConversationParts.CreateNoticeLabel(
             nameof(LobbyChatViewModel.CounterText),
             nameof(LobbyChatViewModel.IsCounterVisible),
-            TextStyles.Hint));
+            TextStyleCatalog.Hint));
         AddChild(ConversationParts.CreateInputRow(HandleSendClick, ConversationParts.ViewWidth));
 
         _chat.Messages.CollectionChanged += HandleMessagesChanged;
@@ -77,14 +77,14 @@ public sealed class LobbyChatView : StackPanel
 
     private StackPanel CreateHeader()
     {
-        Label title = ViewFactory.CreateLabel(nameof(Strings.ChatGlobalChannel), TextStyles.IdentityName);
-        Label detail = ViewFactory.CreateBoundUntranslatedLabel(nameof(LobbyChatViewModel.ChannelDetail), TextStyles.Hint);
+        Label title = ViewFactory.CreateLabel(nameof(Strings.ChatGlobalChannel), TextStyleCatalog.IdentityName);
+        Label detail = ViewFactory.CreateBoundUntranslatedLabel(nameof(LobbyChatViewModel.ChannelDetail), TextStyleCatalog.Hint);
         return ConversationParts.CreateHeader(HandleBackClick, title, detail);
     }
 
     private static Label CreateEmptyLabel()
     {
-        Label empty = ViewFactory.CreateLabel(nameof(Strings.ChatEmpty), TextStyles.NoticeTitle);
+        Label empty = ViewFactory.CreateLabel(nameof(Strings.ChatEmpty), TextStyleCatalog.NoticeTitle);
         empty.SetBinding(nameof(IsVisible), nameof(LobbyChatViewModel.IsEmpty));
         return empty;
     }
@@ -92,7 +92,7 @@ public sealed class LobbyChatView : StackPanel
     private Button CreateUnreadButton()
     {
         Button unread = ViewFactory.CreateButton(string.Empty, UnreadButtonWidth, UnreadButtonHeight);
-        ButtonSkin.CreateAndAttach(unread, ButtonLooks.Pill);
+        ButtonSkin.CreateAndAttach(unread, ButtonLookCatalog.Pill);
         var unreadVisual = (ButtonVisual)unread.Visual;
         unreadVisual.TextInstance.LocalizeText = false;
         unread.SetBinding(nameof(Button.Text), nameof(LobbyChatViewModel.UnreadText));

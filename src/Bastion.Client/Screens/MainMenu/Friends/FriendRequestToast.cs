@@ -34,12 +34,12 @@ public sealed class FriendRequestToast : Panel
         this.SetBinding(nameof(IsVisible), nameof(FriendRequestsViewModel.IsToastVisible));
         AddChild(CreateMessage());
         AddChild(CreateActions());
-        Skins.ApplyCard(Visual);
+        CardSkin.Apply(Visual);
     }
 
     private static Label CreateMessage()
     {
-        Label message = ViewFactory.CreateBoundUntranslatedLabel(nameof(FriendRequestsViewModel.ToastText), TextStyles.NoticeTitle);
+        Label message = ViewFactory.CreateBoundUntranslatedLabel(nameof(FriendRequestsViewModel.ToastText), TextStyleCatalog.NoticeTitle);
         message.X = PaddingX;
         ViewFactory.CenterVertically(message);
         return message;
@@ -47,9 +47,9 @@ public sealed class FriendRequestToast : Panel
 
     private StackPanel CreateActions()
     {
-        Button reject = CreateActionButton(nameof(Strings.FriendsReject), ButtonLooks.Secondary);
+        Button reject = CreateActionButton(nameof(Strings.FriendsReject), ButtonLookCatalog.Secondary);
         reject.Click += HandleRejectClick;
-        Button accept = CreateActionButton(nameof(Strings.FriendsAccept), ButtonLooks.Primary);
+        Button accept = CreateActionButton(nameof(Strings.FriendsAccept), ButtonLookCatalog.Primary);
         accept.Click += HandleAcceptClick;
 
         var actions = new StackPanel

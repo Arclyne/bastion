@@ -35,7 +35,7 @@ public sealed class AddFriendView : StackPanel
 
         AddChild(CreateBackButton());
         AddChild(CreateSearchRow());
-        AddChild(ViewFactory.CreateLabel(nameof(Strings.FriendsSearchHint), TextStyles.Hint));
+        AddChild(ViewFactory.CreateLabel(nameof(Strings.FriendsSearchHint), TextStyleCatalog.Hint));
         AddChild(CreateStatus());
         AddChild(CreateResults());
     }
@@ -43,7 +43,7 @@ public sealed class AddFriendView : StackPanel
     private Button CreateBackButton()
     {
         Button back = ViewFactory.CreateButton(nameof(Strings.FriendsBack), BackButtonWidth, ControlHeight);
-        ButtonSkin.CreateAndAttach(back, ButtonLooks.Pill);
+        ButtonSkin.CreateAndAttach(back, ButtonLookCatalog.Pill);
         back.Click += HandleBackClick;
         return back;
     }
@@ -59,7 +59,7 @@ public sealed class AddFriendView : StackPanel
         input.SetBinding(nameof(TextField.Text), nameof(AddFriendViewModel.SearchText));
 
         Button search = ViewFactory.CreateButton(nameof(Strings.FriendsSearch), SearchButtonWidth, ControlHeight);
-        ButtonSkin.CreateAndAttach(search, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(search, ButtonLookCatalog.Secondary);
         search.SetBinding(nameof(IsEnabled), nameof(AddFriendViewModel.CanSearch));
         search.Click += HandleSearchClick;
 
@@ -78,7 +78,7 @@ public sealed class AddFriendView : StackPanel
         return ViewFactory.CreateBoundNotice(
             nameof(AddFriendViewModel.StatusText),
             nameof(AddFriendViewModel.HasStatus),
-            TextStyles.FieldError);
+            TextStyleCatalog.FieldError);
     }
 
     private ItemsControl CreateResults()

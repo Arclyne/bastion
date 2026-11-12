@@ -37,7 +37,7 @@ public sealed class FoundPlayerRowView : Panel
 
     private static Label CreateNickname()
     {
-        Label nickname = ViewFactory.CreateBoundUntranslatedLabel(nameof(FoundPlayerRowViewModel.Nickname), TextStyles.IdentityName);
+        Label nickname = ViewFactory.CreateBoundUntranslatedLabel(nameof(FoundPlayerRowViewModel.Nickname), TextStyleCatalog.IdentityName);
         nickname.X = ContentPaddingX;
         ViewFactory.CenterVertically(nickname);
         return nickname;
@@ -46,7 +46,7 @@ public sealed class FoundPlayerRowView : Panel
     private Button CreateActionButton()
     {
         Button button = ViewFactory.CreateButton(string.Empty, ActionButtonWidth, ActionButtonHeight);
-        ButtonSkin.CreateAndAttach(button, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Secondary);
         button.SetBinding(nameof(Button.Text), nameof(FoundPlayerRowViewModel.ActionKey));
         button.SetBinding(nameof(IsEnabled), nameof(FoundPlayerRowViewModel.CanPress));
         button.Anchor(Gum.Wireframe.Anchor.Right);

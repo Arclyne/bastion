@@ -123,14 +123,14 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         };
         chip.AddChild(content);
 
-        RectangleRuntime surface = Shapes.CreateRounded(Palette.Card, ChipRadius);
+        RectangleRuntime surface = ShapeFactory.CreateRounded(Palette.Card, ChipRadius);
         surface.StrokeColor = Palette.Border;
         surface.StrokeWidth = ChipBorderWidth;
         surface.HasDropshadow = true;
         surface.DropshadowColor = Palette.Shadow;
         surface.DropshadowOffsetY = ChipShadowOffsetY;
         surface.DropshadowBlur = ChipShadowBlur;
-        Shapes.InsertBehindContent(chip.Visual, surface);
+        ShapeFactory.InsertBehindContent(chip.Visual, surface);
         return chip;
     }
 
@@ -143,10 +143,10 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
             Height = AvatarSize,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        RectangleRuntime circle = Shapes.CreateCircle(Palette.AvatarFill, AvatarSize);
+        RectangleRuntime circle = ShapeFactory.CreateCircle(Palette.AvatarFill, AvatarSize);
         circle.StrokeColor = Palette.PlayerOne;
         circle.StrokeWidth = AvatarRingWidth;
-        Shapes.InsertBehindContent(avatar.Visual, circle);
+        ShapeFactory.InsertBehindContent(avatar.Visual, circle);
         return avatar;
     }
 
@@ -154,14 +154,14 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
     {
         Label nickname = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MainMenuViewModel.Nickname),
-            TextStyles.IdentityName);
+            TextStyleCatalog.IdentityName);
 
         var text = new StackPanel
         {
             Spacing = IdentitySpacing,
         };
         text.AddChild(nickname);
-        text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuClassicMode), TextStyles.IdentityDetail));
+        text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuClassicMode), TextStyleCatalog.IdentityDetail));
         ViewFactory.CenterVertically(text);
         return text;
     }
@@ -183,7 +183,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
     private static Button CreatePillButton(string textKey, float width)
     {
         Button button = ViewFactory.CreateButton(textKey, width, ScreenMetrics.MenuPillHeight);
-        ButtonSkin.CreateAndAttach(button, ButtonLooks.Pill);
+        ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Pill);
         return button;
     }
 
@@ -229,7 +229,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         content.AddChild(CreateMatchSearchStatus());
         content.AddChild(CreateCenteredRow(ViewFactory.CreateLabel(
             nameof(Strings.MainMenuPrivateMatch),
-            TextStyles.SectionLabel)));
+            TextStyleCatalog.SectionLabel)));
         content.AddChild(CreatePrivateMatchButtons());
 
         var card = new Panel
@@ -242,7 +242,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         card.Anchor(Gum.Wireframe.Anchor.Top);
         card.Y = MenuCardY;
         card.AddChild(content);
-        Skins.ApplyCard(card.Visual);
+        CardSkin.Apply(card.Visual);
         return card;
     }
 
@@ -252,8 +252,8 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         {
             Spacing = BrandSpacing,
         };
-        brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.AppName), TextStyles.MenuTitle));
-        brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.LoginTagline), TextStyles.MenuTagline));
+        brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.AppName), TextStyleCatalog.MenuTitle));
+        brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.LoginTagline), TextStyleCatalog.MenuTagline));
         return CreateCenteredRow(brand);
     }
 
@@ -274,13 +274,13 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
     private Button CreateFindMatchButton()
     {
         Button button = ViewFactory.CreateButton(string.Empty, MenuCardContentWidth, HeroHeight);
-        ButtonSkin.CreateAndAttach(button, ButtonLooks.Hero);
+        ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Hero);
         button.BindingContext = _matchSearchViewModel;
         button.SetBinding(nameof(IsEnabled), nameof(MatchSearchViewModel.CanStartSearch));
         button.Click += HandleFindMatchClick;
 
         button.Visual.ExposeChildrenEvents = false;
-        RectangleRuntime icon = Shapes.CreateRounded(Palette.HeroIconFill, HeroIconRadius);
+        RectangleRuntime icon = ShapeFactory.CreateRounded(Palette.HeroIconFill, HeroIconRadius);
         icon.Anchor(Gum.Wireframe.Anchor.Left);
         icon.X = HeroPaddingX;
         icon.Width = HeroIconSize;
@@ -294,8 +294,8 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
             X = HeroTextX,
             Spacing = HeroTextSpacing,
         };
-        text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatch), TextStyles.HeroTitle));
-        text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatchDetail), TextStyles.HeroDetail));
+        text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatch), TextStyleCatalog.HeroTitle));
+        text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatchDetail), TextStyleCatalog.HeroDetail));
         ViewFactory.CenterVertically(text);
         button.AddChild(text);
         return button;
@@ -305,7 +305,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
     {
         Label status = ViewFactory.CreateBoundLabel(
             nameof(MatchSearchViewModel.StatusKey),
-            TextStyles.FieldError,
+            TextStyleCatalog.FieldError,
             MenuCardContentWidth);
         status.BindingContext = _matchSearchViewModel;
         status.SetBinding(nameof(IsVisible), nameof(MatchSearchViewModel.HasStatus));
@@ -327,7 +327,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
     private static Button CreatePrivateMatchButton(string textKey)
     {
         Button button = ViewFactory.CreateButton(textKey, PrivateButtonWidth, PrivateButtonHeight);
-        ButtonSkin.CreateAndAttach(button, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Secondary);
         return button;
     }
 
