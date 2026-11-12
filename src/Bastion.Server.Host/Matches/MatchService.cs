@@ -14,7 +14,7 @@ namespace Bastion.Server.Host.Matches;
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class MatchService : IMatchService
 {
-    private const string ServerFailureReason = "The server could not record the match abandonment.";
+    private const string ServerFailureReason = "The server could not record the match change.";
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchService));
 
@@ -38,6 +38,29 @@ public sealed class MatchService : IMatchService
         TranslateMatchFailures(nameof(AbandonMatch), matchId, abandonMatch);
     }
 
+    /// <inheritdoc/>
+    public void MovePawn(string? sessionToken, PawnMove? move)
+    {
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
+        if (move is null)
+        {
+            _logger.Warn("A pawn move arrived without its data.");
+            throw MatchTranslator.ToFault(new IllegalMoveException());
+        }
+
+        var chosenMove = MatchTranslator.ToChosenPawnMove(move);
+        Action movePawn = () => MovePawnInRequestScope(token, chosenMove);
+        TranslateMatchFailures(nameof(MovePawn), move.MatchId, movePawn);
+    }
+
+    private void MovePawnInRequestScope(string token, ChosenPawnMove move)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IPawnMoveService pawnMoveService = scope.ServiceProvider.GetRequiredService<IPawnMoveService>();
+        DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
+        pawnMoveService.MovePawn(token, move, now);
+    }
+
     private void AbandonMatchInRequestScope(string token, int matchId)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
@@ -58,6 +81,14 @@ public sealed class MatchService : IMatchService
             throw SessionTranslator.ToFault(ex);
         }
         catch (MatchNotJoinedException ex)
+        {
+            throw MatchTranslator.ToFault(ex);
+        }
+        catch (NotYourTurnException ex)
+        {
+            throw MatchTranslator.ToFault(ex);
+        }
+        catch (IllegalMoveException ex)
         {
             throw MatchTranslator.ToFault(ex);
         }

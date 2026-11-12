@@ -84,8 +84,13 @@ public class Match
 
     public bool CanBeAbandonedBy(int accountId)
     {
-        Participation? participation = FindParticipation(accountId);
-        return Status == MatchStatus.InProgress && participation is not null && !participation.Result.HasValue;
+        return IsPlayedBy(accountId);
+    }
+
+    public bool IsPlayedBy(int accountId)
+    {
+        Participation? participation = FindActiveParticipation(accountId);
+        return participation is not null;
     }
 
     public void Abandon(int abandoningAccountId, DateTime abandonedAt)
