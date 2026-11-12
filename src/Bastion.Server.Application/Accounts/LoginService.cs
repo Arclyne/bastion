@@ -40,7 +40,7 @@ public sealed class LoginService : ILoginService
         {
             _passwordHasher.SimulatePasswordCheck(password);
             throw Reject(
-                new AccessLog(AccessLogResult.AccountNotFound, attempt, null),
+                new AccessLog(AccessLogResult.AccountNotFound, attempt, accountId: null),
                 new InvalidCredentialsException());
         }
 

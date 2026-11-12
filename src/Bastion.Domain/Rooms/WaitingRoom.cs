@@ -21,7 +21,7 @@ public sealed class WaitingRoom
         Settings = settings;
         HostAccountId = host.AccountId;
         host.TakeSeat(FirstSeatIndex);
-        host.SetReady(true);
+        host.SetReady(isReady: true);
         _members.Add(host);
     }
 
@@ -74,7 +74,7 @@ public sealed class WaitingRoom
         }
 
         member.TakeSeat(FindFirstFreeSeat());
-        member.SetReady(false);
+        member.SetReady(isReady: false);
         _members.Add(member);
         _members.Sort(CompareSeats);
     }

@@ -3,13 +3,12 @@ using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
 
 namespace Bastion.Client.Screens.MainMenu.Friends;
 
 public sealed class FriendActionsMenu : Panel
 {
-    private const float MenuWidth = 360;
+    private const float MenuWidth = PanelMetrics.ContentWidth;
     private const float PaddingX = 16;
     private const float PaddingTop = 14;
     private const float PaddingBottom = 16;
@@ -31,7 +30,34 @@ public sealed class FriendActionsMenu : Panel
         HeightUnits = DimensionUnitType.RelativeToChildren;
         this.SetBinding(nameof(IsVisible), nameof(FriendActionsViewModel.IsMenuOpen));
         AddChild(CreateContent());
-        Skins.ApplyCard(Visual);
+        CardSkin.Apply(Visual);
+    }
+
+    private StackPanel CreateContent()
+    {
+        Label nickname = ViewFactory.CreateBoundUntranslatedLabel(nameof(FriendActionsViewModel.Nickname), TextStyleCatalog.IdentityName);
+
+        Button viewProfile = CreateItem(nameof(Strings.FriendsViewProfile), ButtonLookCatalog.Secondary);
+        viewProfile.IsEnabled = false;
+        Button sendMessage = CreateItem(nameof(Strings.FriendsSendMessage), ButtonLookCatalog.Secondary);
+        sendMessage.Click += HandleSendMessageClick;
+        Button remove = CreateItem(nameof(Strings.FriendsRemoveFriend), ButtonLookCatalog.Secondary);
+        remove.Click += HandleRemoveClick;
+        Button cancel = CreateItem(nameof(Strings.FriendsCancelRequest), ButtonLookCatalog.Pill);
+        cancel.Click += HandleCancelClick;
+
+        var content = new StackPanel
+        {
+            X = PaddingX,
+            Y = PaddingTop,
+            Spacing = ItemSpacing,
+        };
+        content.AddChild(nickname);
+        content.AddChild(viewProfile);
+        content.AddChild(sendMessage);
+        content.AddChild(remove);
+        content.AddChild(cancel);
+        return content;
     }
 
     private static Button CreateItem(string textKey, ButtonLook look)
@@ -39,30 +65,6 @@ public sealed class FriendActionsMenu : Panel
         Button item = ViewFactory.CreateButton(textKey, MenuWidth - (PaddingX * HorizontalSideCount), ItemHeight);
         ButtonSkin.CreateAndAttach(item, look);
         return item;
-    }
-
-    private StackPanel CreateContent()
-    {
-        Label nickname = ViewFactory.CreateLabel(string.Empty, TextStyles.IdentityName);
-        ((LabelVisual)nickname.Visual).LocalizeText = false;
-        nickname.SetBinding(nameof(Label.Text), nameof(FriendActionsViewModel.Nickname));
-
-        Button viewProfile = CreateItem(nameof(Strings.FriendsViewProfile), ButtonLooks.Secondary);
-        viewProfile.IsEnabled = false;
-        Button sendMessage = CreateItem(nameof(Strings.FriendsSendMessage), ButtonLooks.Secondary);
-        sendMessage.Click += HandleSendMessageClick;
-        Button remove = CreateItem(nameof(Strings.FriendsRemoveFriend), ButtonLooks.Secondary);
-        remove.Click += HandleRemoveClick;
-        Button cancel = CreateItem(nameof(Strings.FriendsCancelRequest), ButtonLooks.Pill);
-        cancel.Click += HandleCancelClick;
-
-        var content = new StackPanel { X = PaddingX, Y = PaddingTop, Spacing = ItemSpacing };
-        content.AddChild(nickname);
-        content.AddChild(viewProfile);
-        content.AddChild(sendMessage);
-        content.AddChild(remove);
-        content.AddChild(cancel);
-        return content;
     }
 
     private void HandleSendMessageClick(object? sender, EventArgs e)

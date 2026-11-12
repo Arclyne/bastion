@@ -33,7 +33,7 @@ public sealed class WallControlsPanel : StackPanel
     {
         Label hint = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(WallPlacementViewModel.HintText),
-            TextStyles.IdentityDetail,
+            TextStyleCatalog.IdentityDetail,
             HintWidth);
         hint.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.HasHint));
         return hint;
@@ -41,21 +41,21 @@ public sealed class WallControlsPanel : StackPanel
 
     private StackPanel CreateButtonRow()
     {
-        Button start = CreateWallButton(nameof(Strings.MatchPlaceWallButton), ButtonLooks.Pill);
+        Button start = CreateWallButton(nameof(Strings.MatchPlaceWallButton), ButtonLookCatalog.Pill);
         start.SetBinding(nameof(IsEnabled), nameof(WallPlacementViewModel.CanStart));
         start.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.IsIdle));
         start.Click += HandleStartClick;
 
-        Button rotate = CreateWallButton(nameof(Strings.MatchRotateWallButton), ButtonLooks.Secondary);
+        Button rotate = CreateWallButton(nameof(Strings.MatchRotateWallButton), ButtonLookCatalog.Secondary);
         rotate.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.IsActive));
         rotate.Click += HandleRotateClick;
 
-        Button confirm = CreateWallButton(nameof(Strings.MatchConfirmWallButton), ButtonLooks.Primary);
+        Button confirm = CreateWallButton(nameof(Strings.MatchConfirmWallButton), ButtonLookCatalog.Primary);
         confirm.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.IsActive));
         confirm.SetBinding(nameof(IsEnabled), nameof(WallPlacementViewModel.HasPendingWall));
         confirm.Click += HandleConfirmClick;
 
-        Button cancel = CreateWallButton(nameof(Strings.MatchCancelWallButton), ButtonLooks.Secondary);
+        Button cancel = CreateWallButton(nameof(Strings.MatchCancelWallButton), ButtonLookCatalog.Secondary);
         cancel.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.IsActive));
         cancel.Click += HandleCancelClick;
 

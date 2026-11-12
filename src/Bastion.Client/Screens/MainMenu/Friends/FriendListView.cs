@@ -6,14 +6,13 @@ using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
 using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Friends;
 
 public sealed class FriendListView : StackPanel
 {
-    private const float ListWidth = 360;
+    private const float ListWidth = PanelMetrics.ContentWidth;
     private const float FilterHeight = 44;
     private const float AddFriendButtonWidth = 150;
     private const float ScrollHeight = 460;
@@ -24,7 +23,7 @@ public sealed class FriendListView : StackPanel
     private static readonly ILog _logger = LogManager.GetLogger(typeof(FriendListView));
 
     private readonly FriendsPanelViewModel _viewModel;
-    private readonly StackPanel _menuRows = new StackPanel();
+    private readonly StackPanel _connectedRows = new StackPanel();
     private readonly StackPanel _offlineRows = new StackPanel();
 
     public FriendListView(FriendsPanelViewModel viewModel)
@@ -42,7 +41,7 @@ public sealed class FriendListView : StackPanel
         AddChild(CreateNoMatchLabel());
         AddChild(CreateLoadFailure());
 
-        _viewModel.MenuFriends.CollectionChanged += HandleMenuFriendsChanged;
+        _viewModel.ConnectedFriends.CollectionChanged += HandleConnectedFriendsChanged;
         _viewModel.OfflineFriends.CollectionChanged += HandleOfflineFriendsChanged;
     }
 
@@ -60,101 +59,79 @@ public sealed class FriendListView : StackPanel
             nameof(Strings.FriendsAddFriend),
             AddFriendButtonWidth,
             FilterHeight);
-        ButtonSkin.CreateAndAttach(addFriend, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(addFriend, ButtonLookCatalog.Secondary);
         addFriend.Click += HandleAddFriendClick;
 
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = ListSpacing };
+        var row = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = ListSpacing,
+        };
         row.AddChild(filter);
         row.AddChild(addFriend);
         return row;
     }
 
-    private void HandleAddFriendClick(object? sender, EventArgs e)
+    private ScrollViewer CreateGroups()
     {
-        _viewModel.OpenAddFriend();
+        ScrollViewer groups = ViewFactory.CreateScrollList<ScrollViewer>(ListWidth, ScrollHeight);
+        groups.InnerPanel.AddChild(ViewFactory.CreateBoundNotice(
+            nameof(FriendsPanelViewModel.ConnectedGroupTitle),
+            nameof(FriendsPanelViewModel.HasConnectedFriends),
+            TextStyleCatalog.SectionLabel).Visual);
+        groups.InnerPanel.AddChild(_connectedRows.Visual);
+        groups.InnerPanel.AddChild(ViewFactory.CreateBoundNotice(
+            nameof(FriendsPanelViewModel.OfflineGroupTitle),
+            nameof(FriendsPanelViewModel.HasOfflineFriends),
+            TextStyleCatalog.SectionLabel).Visual);
+        groups.InnerPanel.AddChild(_offlineRows.Visual);
+        return groups;
     }
 
     private static Label CreateVisibleLabel(string textKey, string visibilityProperty)
     {
-        Label label = ViewFactory.CreateLabel(textKey, TextStyles.NoticeTitle);
-        label.SetBinding(nameof(IsVisible), visibilityProperty);
-        return label;
-    }
-
-    private static Label CreateBoundLabel(string textProperty, string visibilityProperty, TextStyle style)
-    {
-        Label label = ViewFactory.CreateLabel(string.Empty, style);
-        ((LabelVisual)label.Visual).LocalizeText = false;
-        label.SetBinding(nameof(Label.Text), textProperty);
+        Label label = ViewFactory.CreateLabel(textKey, TextStyleCatalog.NoticeTitle);
         label.SetBinding(nameof(IsVisible), visibilityProperty);
         return label;
     }
 
     private static Label CreateNoMatchLabel()
     {
-        return CreateBoundLabel(
+        return ViewFactory.CreateBoundNotice(
             nameof(FriendsPanelViewModel.NoMatchText),
             nameof(FriendsPanelViewModel.HasNoMatch),
-            TextStyles.NoticeTitle);
-    }
-
-    private void RebuildRows(StackPanel rows, IEnumerable<FriendRowViewModel> friends)
-    {
-        while (rows.Visual.Children.Count > 0)
-        {
-            rows.Visual.Children.RemoveAt(rows.Visual.Children.Count - 1);
-        }
-
-        foreach (FriendRowViewModel friend in friends)
-        {
-            rows.AddChild(new FriendRowView(friend, _viewModel.Actions));
-        }
-    }
-
-    private ScrollViewer CreateGroups()
-    {
-        var groups = new ScrollViewer
-        {
-            Width = ListWidth,
-            WidthUnits = DimensionUnitType.Absolute,
-            Height = ScrollHeight,
-            HeightUnits = DimensionUnitType.Absolute,
-        };
-        Shapes.HideDefaultParts(groups);
-        groups.InnerPanel.AddChild(CreateBoundLabel(
-            nameof(FriendsPanelViewModel.MenuGroupTitle),
-            nameof(FriendsPanelViewModel.HasMenuFriends),
-            TextStyles.SectionLabel).Visual);
-        groups.InnerPanel.AddChild(_menuRows.Visual);
-        groups.InnerPanel.AddChild(CreateBoundLabel(
-            nameof(FriendsPanelViewModel.OfflineGroupTitle),
-            nameof(FriendsPanelViewModel.HasOfflineFriends),
-            TextStyles.SectionLabel).Visual);
-        groups.InnerPanel.AddChild(_offlineRows.Visual);
-        return groups;
+            TextStyleCatalog.NoticeTitle);
     }
 
     private StackPanel CreateLoadFailure()
     {
         Button retry = ViewFactory.CreateButton(nameof(Strings.FriendsRetry), RetryButtonWidth, RetryButtonHeight);
-        ButtonSkin.CreateAndAttach(retry, ButtonLooks.Secondary);
+        ButtonSkin.CreateAndAttach(retry, ButtonLookCatalog.Secondary);
         retry.Click += HandleRetryClick;
 
-        var failure = new StackPanel { Spacing = ListSpacing };
-        failure.AddChild(ViewFactory.CreateLabel(nameof(Strings.FriendsLoadFailed), TextStyles.FieldError));
+        var failure = new StackPanel
+        {
+            Spacing = ListSpacing,
+        };
+        failure.AddChild(ViewFactory.CreateLabel(nameof(Strings.FriendsLoadFailed), TextStyleCatalog.FieldError));
         failure.AddChild(retry);
         failure.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.HasLoadFailed));
         return failure;
     }
 
-    private void HandleMenuFriendsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void RebuildRows(StackPanel rows, IEnumerable<FriendRowViewModel> friends)
     {
-        RebuildRows(_menuRows, _viewModel.MenuFriends);
+        ViewFactory.ClearRows(rows.Visual);
+        foreach (FriendRowViewModel friend in friends)
+        {
+            var friendRow = new FriendRowView(friend, _viewModel.Actions);
+            rows.AddChild(friendRow);
+        }
     }
 
-    private void HandleOfflineFriendsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void HandleAddFriendClick(object? sender, EventArgs e)
     {
-        RebuildRows(_offlineRows, _viewModel.OfflineFriends);
+        _viewModel.OpenAddFriend();
     }
 
     private async void HandleRetryClick(object? sender, EventArgs e)
@@ -167,5 +144,15 @@ public sealed class FriendListView : StackPanel
         {
             _logger.Warn("The friend list could not be reloaded because the connection is closed.", ex);
         }
+    }
+
+    private void HandleConnectedFriendsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        RebuildRows(_connectedRows, _viewModel.ConnectedFriends);
+    }
+
+    private void HandleOfflineFriendsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        RebuildRows(_offlineRows, _viewModel.OfflineFriends);
     }
 }

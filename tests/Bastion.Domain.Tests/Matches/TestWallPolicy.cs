@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Matches;
 
-public class TestWallPolicy
+public sealed class TestWallPolicy
 {
     private const byte ClassicBoardSize = 9;
     private const int FirstIndex = 0;
@@ -46,20 +46,22 @@ public class TestWallPolicy
     {
         Board board = CreateBoard(_firstStart);
         var wall = new Wall(_lastColumnGroove, WallOrientation.Horizontal);
+        var expectedRejection = new WallRejection(WallRejectionReason.OutOfBoard, BlockedTurnOrder: null);
 
         WallRejection? rejection = WallPolicy.FindRejection(board, wall);
 
-        Assert.Equal(new WallRejection(WallRejectionReason.OutOfBoard, null), rejection);
+        Assert.Equal(expectedRejection, rejection);
     }
 
     [Fact]
     public void FindRejection_SameWallPlaced_RejectsGrooveTaken()
     {
         Board board = CreateBoard(_firstStart, _centerHorizontal);
+        var expectedRejection = new WallRejection(WallRejectionReason.GrooveTaken, BlockedTurnOrder: null);
 
         WallRejection? rejection = WallPolicy.FindRejection(board, _centerHorizontal);
 
-        Assert.Equal(new WallRejection(WallRejectionReason.GrooveTaken, null), rejection);
+        Assert.Equal(expectedRejection, rejection);
     }
 
     [Fact]
@@ -67,10 +69,11 @@ public class TestWallPolicy
     {
         Board board = CreateBoard(_firstStart, _centerHorizontal);
         var crossingWall = new Wall(_centerGroove, WallOrientation.Vertical);
+        var expectedRejection = new WallRejection(WallRejectionReason.GrooveTaken, BlockedTurnOrder: null);
 
         WallRejection? rejection = WallPolicy.FindRejection(board, crossingWall);
 
-        Assert.Equal(new WallRejection(WallRejectionReason.GrooveTaken, null), rejection);
+        Assert.Equal(expectedRejection, rejection);
     }
 
     [Fact]
@@ -78,10 +81,11 @@ public class TestWallPolicy
     {
         Board board = CreateBoard(_firstStart, _centerHorizontal);
         var overlappingWall = new Wall(_rightOfCenterGroove, WallOrientation.Horizontal);
+        var expectedRejection = new WallRejection(WallRejectionReason.GrooveTaken, BlockedTurnOrder: null);
 
         WallRejection? rejection = WallPolicy.FindRejection(board, overlappingWall);
 
-        Assert.Equal(new WallRejection(WallRejectionReason.GrooveTaken, null), rejection);
+        Assert.Equal(expectedRejection, rejection);
     }
 
     [Fact]
@@ -101,10 +105,11 @@ public class TestWallPolicy
         var placedWall = new Wall(_lowColumnGroove, WallOrientation.Vertical);
         Board board = CreateBoard(_firstStart, placedWall);
         var overlappingWall = new Wall(_highColumnGroove, WallOrientation.Vertical);
+        var expectedRejection = new WallRejection(WallRejectionReason.GrooveTaken, BlockedTurnOrder: null);
 
         WallRejection? rejection = WallPolicy.FindRejection(board, overlappingWall);
 
-        Assert.Equal(new WallRejection(WallRejectionReason.GrooveTaken, null), rejection);
+        Assert.Equal(expectedRejection, rejection);
     }
 
     [Fact]
@@ -113,10 +118,11 @@ public class TestWallPolicy
         var roofWall = new Wall(_corner, WallOrientation.Horizontal);
         Board board = CreateBoard(_corner, roofWall);
         var closingWall = new Wall(_secondColumnGroove, WallOrientation.Vertical);
+        var expectedRejection = new WallRejection(WallRejectionReason.WouldBlockPlayer, Match.FirstTurnOrder);
 
         WallRejection? rejection = WallPolicy.FindRejection(board, closingWall);
 
-        Assert.Equal(new WallRejection(WallRejectionReason.WouldBlockPlayer, Match.FirstTurnOrder), rejection);
+        Assert.Equal(expectedRejection, rejection);
     }
 
     private static Board CreateBoard(BoardCoordinates firstPawn, params Wall[] walls)

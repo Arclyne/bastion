@@ -11,8 +11,6 @@ namespace Bastion.Client.Screens.Matches;
 
 public sealed class MatchViewModel : ViewModel, IDisposable
 {
-    private const int TwoPlayers = 2;
-
     private readonly MatchAbandonmentViewModel _abandonmentViewModel;
     private readonly string _ownNickname;
     private List<BoardPawn> _pawns = new List<BoardPawn>();
@@ -30,10 +28,10 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         Play = play;
         WallPlacement = new WallPlacementViewModel(play);
         FoundMatchFormat format = joinedMatch.FoundMatch.Format;
-        IEnumerable<MatchPlayerViewModel> playerQuery = joinedMatch.FoundMatch.Participants
+        IEnumerable<MatchPlayerViewModel> orderedPlayers = joinedMatch.FoundMatch.Participants
             .OrderBy(participant => participant.TurnOrder)
             .Select(participant => CreatePlayerViewModel(joinedMatch, participant, format));
-        Players = new List<MatchPlayerViewModel>(playerQuery);
+        Players = new List<MatchPlayerViewModel>(orderedPlayers);
         BoardSize = format.BoardSize;
         MatchPlayerViewModel ownPlayer = Players.First(player => player.IsOwn);
         OwnTurnOrder = ownPlayer.TurnOrder;
@@ -79,7 +77,8 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         FoundMatchParticipant participant,
         FoundMatchFormat format)
     {
-        return new MatchPlayerViewModel(participant, format, joinedMatch.IsOwnParticipant(participant));
+        bool isOwn = joinedMatch.IsOwnParticipant(participant);
+        return new MatchPlayerViewModel(participant, format, isOwn);
     }
 
     private void MarkPlayerLeft(string nickname)
@@ -102,7 +101,8 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         {
             if (!player.HasLeft && Play.Pawns.TryGetValue(player.TurnOrder, out BoardCoordinates? coordinates))
             {
-                pawns.Add(new BoardPawn(coordinates, player.PawnSymbol));
+                var pawn = new BoardPawn(coordinates, player.PawnSymbol);
+                pawns.Add(pawn);
             }
         }
 
@@ -167,7 +167,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
             return Strings.MatchYourTurn;
         }
 
-        if (playerCount == TwoPlayers)
+        if (playerCount == Match.TwoPlayerCount)
         {
             return Strings.MatchRivalTurn;
         }

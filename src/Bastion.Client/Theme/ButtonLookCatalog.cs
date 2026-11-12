@@ -1,6 +1,6 @@
 namespace Bastion.Client.Theme;
 
-public static class ButtonLooks
+public static class ButtonLookCatalog
 {
     private const float ButtonRadius = 14;
     private const float PillRadius = 21;
@@ -21,7 +21,7 @@ public static class ButtonLooks
         ShadowOffsetY = PrimaryEdge,
         ShouldSinkWhenPressed = true,
         Radius = ButtonRadius,
-        Text = TextStyles.PrimaryButton,
+        Text = TextStyleCatalog.PrimaryButton,
     };
 
     public static ButtonLook Hero { get; } = new ButtonLook
@@ -34,7 +34,7 @@ public static class ButtonLooks
         ShadowOffsetY = HeroEdge,
         ShouldSinkWhenPressed = true,
         Radius = HeroRadius,
-        Text = TextStyles.HeroTitle,
+        Text = TextStyleCatalog.HeroTitle,
     };
 
     public static ButtonLook Secondary { get; } = new ButtonLook
@@ -48,7 +48,7 @@ public static class ButtonLooks
         ShadowOffsetY = SecondaryEdge,
         ShouldSinkWhenPressed = true,
         Radius = ButtonRadius,
-        Text = TextStyles.SecondaryButton,
+        Text = TextStyleCatalog.SecondaryButton,
     };
 
     public static ButtonLook Pill { get; } = new ButtonLook
@@ -61,6 +61,6 @@ public static class ButtonLooks
         ShadowOffsetY = PillShadowOffsetY,
         ShadowBlur = PillShadowBlur,
         Radius = PillRadius,
-        Text = TextStyles.SmallButton,
+        Text = TextStyleCatalog.SmallButton,
     };
 }

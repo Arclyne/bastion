@@ -76,7 +76,8 @@ public sealed class FakeMatchClient : IMatchClient
     {
         ArgumentNullException.ThrowIfNull(abandoningNickname);
 
-        MatchAbandoned?.Invoke(this, new MatchAbandonedEventArgs(matchId, abandoningNickname, isMatchOver));
+        var abandonment = new MatchAbandonedEventArgs(matchId, abandoningNickname, isMatchOver);
+        MatchAbandoned?.Invoke(this, abandonment);
     }
 
     public void RaisePawnMoved(PawnMovedEventArgs e)

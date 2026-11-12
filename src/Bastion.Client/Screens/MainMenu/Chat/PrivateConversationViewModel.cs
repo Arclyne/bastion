@@ -1,6 +1,5 @@
 using System;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
@@ -15,10 +14,8 @@ using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
-public sealed class PrivateConversationViewModel : ViewModel
+public sealed class PrivateConversationViewModel : ChatComposerViewModel
 {
-    private const int CounterVisibleFromLength = 180;
-
     private static readonly ILog _logger = LogManager.GetLogger(typeof(PrivateConversationViewModel));
 
     private readonly LoggedInSession _session;
@@ -26,30 +23,21 @@ public sealed class PrivateConversationViewModel : ViewModel
     private PlayerTag _partner = new PlayerTag(string.Empty, string.Empty);
     private DateTime? _lastDay;
 
-    public PrivateConversationViewModel(LoggedInSession session, IConversationClient conversations)
+    public PrivateConversationViewModel(ChatContext context)
+        : base(GetTimeProvider(context))
     {
-        ArgumentNullException.ThrowIfNull(session);
-        ArgumentNullException.ThrowIfNull(conversations);
-
-        _session = session;
-        _conversations = conversations;
+        _session = context.Session;
+        _conversations = context.Clients.Conversations;
+        Messages = new ObservableCollection<PrivateMessageRowViewModel>();
         PartnerNickname = string.Empty;
         PresenceText = string.Empty;
         GreetingText = string.Empty;
         OfflineText = string.Empty;
         MuteText = string.Empty;
-        StatusText = string.Empty;
-        CounterText = string.Empty;
-        Draft = string.Empty;
         IsFriend = true;
     }
 
-    public event EventHandler<ConversationUpdatedEventArgs>? MessageSent;
-
-    public event EventHandler? Closed;
-
-    public ObservableCollection<PrivateMessageRowViewModel> Messages { get; } =
-        new ObservableCollection<PrivateMessageRowViewModel>();
+    public ObservableCollection<PrivateMessageRowViewModel> Messages { get; }
 
     public bool IsOpen { get; private set; }
 
@@ -141,54 +129,20 @@ public sealed class PrivateConversationViewModel : ViewModel
     [DependsOn(nameof(IsMuted))]
     [DependsOn(nameof(IsLoading))]
     [DependsOn(nameof(HasLoadFailed))]
-    public bool CanWrite => IsFriend && !IsMuted && !IsLoading && !HasLoadFailed;
-
-    public bool IsSending
-    {
-        get => Get<bool>();
-        private set => Set(value);
-    }
+    public override bool CanWrite => IsFriend && !IsMuted && !IsLoading && !HasLoadFailed;
 
     [DependsOn(nameof(CanWrite))]
     [DependsOn(nameof(IsSending))]
-    public bool CanSend => CanWrite && !IsSending;
+    public override bool CanSend => CanWrite && !IsSending;
 
-    public string Draft
-    {
-        get => Get<string>();
-        set
-        {
-            if (Set(value))
-            {
-                StatusText = string.Empty;
-                UpdateCounter();
-            }
-        }
-    }
+    public event EventHandler<ConversationUpdatedEventArgs>? MessageSent;
 
-    public string CounterText
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
-
-    public bool IsCounterVisible
-    {
-        get => Get<bool>();
-        private set => Set(value);
-    }
-
-    public string StatusText
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
-
-    [DependsOn(nameof(StatusText))]
-    public bool HasStatus => StatusText.Length > 0;
+    public event EventHandler? Closed;
 
     public bool IsShowing(string friendCode)
     {
+        ArgumentNullException.ThrowIfNull(friendCode);
+
         return IsOpen && string.Equals(_partner.FriendCode, friendCode, StringComparison.Ordinal);
     }
 
@@ -241,11 +195,11 @@ public sealed class PrivateConversationViewModel : ViewModel
         }
         catch (ChatMessageRejectedException ex)
         {
-            ReportLoadFailure(ex);
+            ReportLoadRejection(ex);
         }
         catch (InvalidSessionException ex)
         {
-            ReportLoadFailure(ex);
+            ReportLoadRejection(ex);
         }
         catch (ServerUnreachableException ex)
         {
@@ -280,7 +234,9 @@ public sealed class PrivateConversationViewModel : ViewModel
         }
 
         PlayerTag partner = _partner;
-        var draftMessage = new PrivateMessage(text.Trim(), DateTime.UtcNow, true);
+        string trimmedText = text.Trim();
+        DateTime createdAt = GetUtcNow();
+        var draftMessage = new PrivateMessage(trimmedText, createdAt, isOwn: true);
         PrivateMessageRowViewModel row = AddMessage(draftMessage, isPending: true);
         Draft = string.Empty;
         IsSending = true;
@@ -289,16 +245,19 @@ public sealed class PrivateConversationViewModel : ViewModel
             DateTime sentAt = await Task.Run(
                 () => _conversations.SendMessage(_session.Token, partner.FriendCode, text));
             row.Confirm(sentAt);
-            MessageSent?.Invoke(this, new ConversationUpdatedEventArgs(partner, draftMessage with { SentAt = sentAt }));
+            PrivateMessage sentMessage = draftMessage with { SentAt = sentAt };
+            var update = new ConversationUpdatedEventArgs(partner, sentMessage);
+            MessageSent?.Invoke(this, update);
         }
         catch (ChatMessageRejectedException ex)
         {
-            _logger.Info($"The server turned down the private message. Rejection={ex.Rejection}");
-            ShowRejection(row, ex);
+            _logger.Warn($"The server turned down the private message. Rejection={ex.Rejection}", ex);
+            ShowRejection(row, ex.Rejection, ex.MutedUntil);
         }
         catch (InvalidSessionException ex)
         {
-            ReportSendFailure(row, ex);
+            _logger.Warn("The private message could not be sent because the session is no longer valid.", ex);
+            row.Fail(Strings.ChatSendFailed);
         }
         catch (ServerUnreachableException ex)
         {
@@ -318,9 +277,25 @@ public sealed class PrivateConversationViewModel : ViewModel
         }
     }
 
-    private static string FormatText(string format, params object[] arguments)
+    private void ClearMessages()
     {
-        return string.Format(CultureInfo.CurrentCulture, format, arguments);
+        Messages.Clear();
+        _lastDay = null;
+        IsEmpty = true;
+    }
+
+    private PrivateMessageRowViewModel AddMessage(PrivateMessage message, bool isPending)
+    {
+        DateTime day = ChatTimeText.GetLocalDay(message.SentAt);
+        DateTime today = GetLocalToday();
+        string dayLabel = day == _lastDay ? string.Empty : ChatTimeText.DescribeDay(message.SentAt, today);
+        _lastDay = day;
+        PrivateMessageRowViewModel row = isPending
+            ? PrivateMessageRowViewModel.CreatePending(message, dayLabel)
+            : new PrivateMessageRowViewModel(message, dayLabel);
+        Messages.Add(row);
+        IsEmpty = false;
+        return row;
     }
 
     private async Task MarkRead()
@@ -332,11 +307,11 @@ public sealed class PrivateConversationViewModel : ViewModel
         }
         catch (ChatMessageRejectedException ex)
         {
-            ReportMarkReadFailure(ex);
+            ReportMarkReadRejection(ex);
         }
         catch (InvalidSessionException ex)
         {
-            ReportMarkReadFailure(ex);
+            ReportMarkReadRejection(ex);
         }
         catch (ServerUnreachableException ex)
         {
@@ -352,6 +327,16 @@ public sealed class PrivateConversationViewModel : ViewModel
         }
     }
 
+    private void ReportMarkReadRejection(Exception ex)
+    {
+        _logger.Warn("The server turned down marking the private conversation as read.", ex);
+    }
+
+    private void ReportMarkReadFailure(Exception ex)
+    {
+        _logger.Error("The private conversation could not be marked as read.", ex);
+    }
+
     private void ShowTranscript(ConversationTranscript transcript)
     {
         ClearMessages();
@@ -363,70 +348,45 @@ public sealed class PrivateConversationViewModel : ViewModel
         IsFriend = transcript.Contact.IsFriend;
         if (!IsFriend)
         {
-            ApplyPresence(null);
+            ApplyPresence(presence: null);
         }
 
         IsMuted = transcript.Mute.IsMuted;
         MuteText = ChatRejectionText.DescribeMute(transcript.Mute);
     }
 
-    private void ClearMessages()
+    private void ReportLoadRejection(Exception ex)
     {
-        Messages.Clear();
-        _lastDay = null;
-        IsEmpty = true;
-    }
-
-    private PrivateMessageRowViewModel AddMessage(PrivateMessage message, bool isPending)
-    {
-        DateTime day = ChatTimeText.ToLocalDay(message.SentAt);
-        string dayLabel = day == _lastDay ? string.Empty : ChatTimeText.DescribeDay(message.SentAt, DateTime.Now.Date);
-        _lastDay = day;
-        PrivateMessageRowViewModel row = isPending
-            ? PrivateMessageRowViewModel.CreatePending(message, dayLabel)
-            : new PrivateMessageRowViewModel(message, dayLabel);
-        Messages.Add(row);
-        IsEmpty = false;
-        return row;
-    }
-
-    private void ShowRejection(PrivateMessageRowViewModel row, ChatMessageRejectedException rejection)
-    {
-        row.Fail(ChatRejectionText.Describe(rejection.Rejection));
-        if (rejection.Rejection == ChatRejection.Muted)
-        {
-            IsMuted = true;
-            MuteText = ChatRejectionText.DescribeMute(new ChatMute(true, rejection.MutedUntil));
-        }
-
-        if (rejection.Rejection == ChatRejection.NotFriends)
-        {
-            IsFriend = false;
-            ApplyPresence(null);
-        }
-    }
-
-    private void UpdateCounter()
-    {
-        int length = Draft.Length;
-        IsCounterVisible = length >= CounterVisibleFromLength;
-        CounterText = FormatText(Strings.ChatCounterFormat, length, ChatPolicy.MaximumMessageLength);
+        _logger.Warn("The server turned down the private conversation.", ex);
+        HasLoadFailed = true;
     }
 
     private void ReportLoadFailure(Exception ex)
     {
-        _logger.Warn("The private conversation could not be loaded.", ex);
+        _logger.Error("The private conversation could not be loaded.", ex);
         HasLoadFailed = true;
+    }
+
+    private void ShowRejection(PrivateMessageRowViewModel row, ChatRejection rejection, DateTime? mutedUntil)
+    {
+        row.Fail(ChatRejectionText.Describe(rejection));
+        if (rejection == ChatRejection.Muted)
+        {
+            var mute = new ChatMute(IsMuted: true, mutedUntil);
+            IsMuted = true;
+            MuteText = ChatRejectionText.DescribeMute(mute);
+        }
+
+        if (rejection == ChatRejection.NotFriends)
+        {
+            IsFriend = false;
+            ApplyPresence(presence: null);
+        }
     }
 
     private void ReportSendFailure(PrivateMessageRowViewModel row, Exception ex)
     {
-        _logger.Warn("The private message could not be sent.", ex);
+        _logger.Error("The private message could not be sent.", ex);
         row.Fail(Strings.ChatSendFailed);
-    }
-
-    private void ReportMarkReadFailure(Exception ex)
-    {
-        _logger.Warn("The private conversation could not be marked as read.", ex);
     }
 }

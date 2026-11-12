@@ -9,7 +9,7 @@ public static class PawnMovePolicy
     {
         ArgumentNullException.ThrowIfNull(board);
 
-        BoardCoordinates pawn = board.GetPawn(turnOrder);
+        BoardCoordinates pawn = board.GetPawnCoordinates(turnOrder);
         var reachableSquares = new List<BoardCoordinates>();
         foreach (BoardStep step in BoardStep.OrthogonalSteps)
         {
@@ -49,9 +49,10 @@ public static class PawnMovePolicy
         BoardStep step)
     {
         var firstSide = new BoardStep(step.RowStep, step.ColumnStep);
-        var secondSide = new BoardStep(-step.RowStep, -step.ColumnStep);
+        BoardStep secondSide = firstSide.GetOpposite();
+        BoardStep[] sides = { firstSide, secondSide };
         var diagonalLandings = new List<BoardCoordinates>();
-        foreach (BoardStep side in new BoardStep[] { firstSide, secondSide })
+        foreach (BoardStep side in sides)
         {
             if (CanStepTo(board, jumpedPawn, side))
             {

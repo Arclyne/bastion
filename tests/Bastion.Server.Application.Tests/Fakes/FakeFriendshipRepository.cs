@@ -16,7 +16,7 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
 
     public List<int> RemovedFriendAccountIds { get; } = new List<int>();
 
-    public void Store(int accountId, FriendSummary friend)
+    public void AddFriendSummary(int accountId, FriendSummary friend)
     {
         ArgumentNullException.ThrowIfNull(friend);
 
@@ -41,7 +41,9 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
 
     public IReadOnlyList<int> ListFriendAccountIds(int accountId)
     {
-        return ListFriends(accountId).Select(friend => friend.Friend.AccountId).ToList();
+        IReadOnlyList<FriendSummary> friends = ListFriends(accountId);
+        IEnumerable<int> friendAccountIds = friends.Select(friend => friend.Friend.AccountId);
+        return new List<int>(friendAccountIds);
     }
 
     public void Add(Friendship friendship)
@@ -49,25 +51,29 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
         ArgumentNullException.ThrowIfNull(friendship);
 
         AddedFriendships.Add(friendship);
-        Store(friendship.SmallerAccountId, CreateSummary(friendship.LargerAccountId));
-        Store(friendship.LargerAccountId, CreateSummary(friendship.SmallerAccountId));
+        FriendSummary largerFriend = CreateSummary(friendship.LargerAccountId);
+        FriendSummary smallerFriend = CreateSummary(friendship.SmallerAccountId);
+        AddFriendSummary(friendship.SmallerAccountId, largerFriend);
+        AddFriendSummary(friendship.LargerAccountId, smallerFriend);
     }
 
     public bool Remove(int firstAccountId, int secondAccountId)
     {
         bool removedFirst = RemoveSummary(firstAccountId, secondAccountId);
         bool removedSecond = RemoveSummary(secondAccountId, firstAccountId);
-        if (removedFirst || removedSecond)
+        bool isRemoved = removedFirst || removedSecond;
+        if (isRemoved)
         {
             RemovedFriendAccountIds.Add(secondAccountId);
         }
 
-        return removedFirst || removedSecond;
+        return isRemoved;
     }
 
     private static FriendSummary CreateSummary(int friendAccountId)
     {
-        return new FriendSummary(new PlayerIdentity(friendAccountId, string.Empty, string.Empty), null);
+        var friend = new PlayerIdentity(friendAccountId, string.Empty, string.Empty);
+        return new FriendSummary(friend, lastSeenAt: null);
     }
 
     private bool RemoveSummary(int accountId, int friendAccountId)
@@ -77,6 +83,7 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
             return false;
         }
 
-        return friends.RemoveAll(friend => friend.Friend.AccountId == friendAccountId) > 0;
+        int removedCount = friends.RemoveAll(friend => friend.Friend.AccountId == friendAccountId);
+        return removedCount > 0;
     }
 }

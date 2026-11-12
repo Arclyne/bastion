@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Rooms;
 
-public class TestFailedCodeAttemptHistory
+public sealed class TestFailedCodeAttemptHistory
 {
     private const int SecondsBetweenAttempts = 10;
 
@@ -13,7 +13,8 @@ public class TestFailedCodeAttemptHistory
     [Fact]
     public void IsLimitReached_AttemptsBelowLimit_ReturnsFalse()
     {
-        FailedCodeAttemptHistory attempts = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts - 1);
+        int attemptsBelowLimit = RoomPolicy.MaximumFailedCodeAttempts - 1;
+        FailedCodeAttemptHistory attempts = RecordAttempts(attemptsBelowLimit);
 
         bool isLimitReached = attempts.IsLimitReached(_firstAttemptAt);
 
@@ -45,11 +46,13 @@ public class TestFailedCodeAttemptHistory
     public void GetRetryDelay_LimitReached_WaitsUntilFirstAttemptExpires()
     {
         FailedCodeAttemptHistory attempts = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts);
-        DateTime now = _firstAttemptAt.AddSeconds(SecondsBetweenAttempts);
+        var elapsed = TimeSpan.FromSeconds(SecondsBetweenAttempts);
+        DateTime now = _firstAttemptAt + elapsed;
+        TimeSpan expectedDelay = RoomPolicy.FailedCodeWindow - elapsed;
 
         TimeSpan retryDelay = attempts.GetRetryDelay(now);
 
-        Assert.Equal(RoomPolicy.FailedCodeWindow - TimeSpan.FromSeconds(SecondsBetweenAttempts), retryDelay);
+        Assert.Equal(expectedDelay, retryDelay);
     }
 
     private static FailedCodeAttemptHistory RecordAttempts(int attemptCount)

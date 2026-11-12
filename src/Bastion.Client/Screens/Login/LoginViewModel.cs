@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Networking.Channels;
+using Bastion.Domain.Accounts;
 using Gum.Mvvm;
 using log4net;
 
@@ -59,10 +60,13 @@ public sealed class LoginViewModel : ViewModel
         get => Get<string>();
         set
         {
-            if (Set(value))
+            if (!Set(value))
             {
-                IsIdentifierMissing = false;
+                return;
             }
+
+            IsIdentifierMissing = false;
+            IsIdentifierMalformed = false;
         }
     }
 
@@ -78,20 +82,30 @@ public sealed class LoginViewModel : ViewModel
         }
     }
 
-    public bool IsPasswordVisible
+    public bool IsPasswordRevealed
     {
         get => Get<bool>();
         set => Set(value);
     }
 
-    [DependsOn(nameof(IsPasswordVisible))]
-    public bool IsPasswordHidden => !IsPasswordVisible;
+    [DependsOn(nameof(IsPasswordRevealed))]
+    public bool IsPasswordMasked => !IsPasswordRevealed;
 
     public bool IsIdentifierMissing
     {
         get => Get<bool>();
         private set => Set(value);
     }
+
+    public bool IsIdentifierMalformed
+    {
+        get => Get<bool>();
+        private set => Set(value);
+    }
+
+    [DependsOn(nameof(IsIdentifierMissing))]
+    [DependsOn(nameof(IsIdentifierMalformed))]
+    public bool HasIdentifierError => IsIdentifierMissing || IsIdentifierMalformed;
 
     public bool IsPasswordMissing
     {
@@ -158,7 +172,13 @@ public sealed class LoginViewModel : ViewModel
 
     public async Task LogIn()
     {
-        if (IsBusy || !AreFieldsComplete())
+        if (IsBusy)
+        {
+            return;
+        }
+
+        MarkInvalidFields();
+        if (IsIdentifierMissing || IsIdentifierMalformed || IsPasswordMissing)
         {
             return;
         }
@@ -186,11 +206,29 @@ public sealed class LoginViewModel : ViewModel
         IsDialogOpen = false;
     }
 
-    private bool AreFieldsComplete()
+    private void MarkInvalidFields()
     {
         IsIdentifierMissing = string.IsNullOrWhiteSpace(Identifier);
+        IsIdentifierMalformed = !IsIdentifierMissing && !IsWellFormedIdentifier();
         IsPasswordMissing = Password.Length == 0;
-        return !IsIdentifierMissing && !IsPasswordMissing;
+    }
+
+    private bool IsWellFormedIdentifier()
+    {
+        string identifier = Identifier.Trim();
+        return AccountPolicy.IsValidLoginIdentifier(identifier);
+    }
+
+    private void ClearNotice()
+    {
+        ShowNotice(NoticeTone.None, string.Empty, string.Empty);
+    }
+
+    private void ShowNotice(NoticeTone tone, string title, string message)
+    {
+        NoticeTitle = title;
+        NoticeMessage = message;
+        NoticeTone = tone;
     }
 
     private async Task RequestSession()
@@ -210,53 +248,31 @@ public sealed class LoginViewModel : ViewModel
         catch (AccountRestrictedException ex)
         {
             _logger.Warn($"The server turned down a restricted account. Restriction={ex.Restriction}", ex);
-            ShowRestriction(ex);
+            ShowRestriction(ex.Restriction, ex.LockMinutes);
         }
         catch (ServerUnreachableException ex)
         {
-            _logger.Warn("The server could not be reached.", ex);
+            _logger.Error("The server could not be reached.", ex);
             ShowDialog(
                 nameof(Strings.DialogServerUnreachableTitle),
                 nameof(Strings.DialogServerUnreachableMessage),
-                true);
+                canRetry: true);
         }
         catch (ConnectionLostException ex)
         {
-            _logger.Warn("The connection with the server was lost.", ex);
+            _logger.Error("The connection with the server was lost.", ex);
             ShowDialog(
                 nameof(Strings.DialogConnectionLostTitle),
                 nameof(Strings.DialogConnectionLostMessage),
-                false);
+                canRetry: false);
         }
         catch (ServerErrorException ex)
         {
-            _logger.Warn("The server could not complete the sign-in.", ex);
-            ShowServerErrorDialog();
-        }
-    }
-
-    private void ShowRestriction(AccountRestrictedException restriction)
-    {
-        switch (restriction.Restriction)
-        {
-            case AccountRestriction.Locked:
-                ShowNotice(
-                    NoticeTone.Warning,
-                    FormatWithCurrentCulture(Strings.LoginAccountLockedTitleFormat, restriction.LockMinutes),
-                    Strings.LoginAccountLockedMessage);
-                break;
-            case AccountRestriction.Pending:
-                ShowNotice(NoticeTone.Warning, string.Empty, Strings.LoginAccountPending);
-                break;
-            case AccountRestriction.Suspended:
-            case AccountRestriction.Banned:
-                ShowNotice(NoticeTone.Error, string.Empty, Strings.LoginAccountSanctioned);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(
-                    nameof(restriction),
-                    restriction.Restriction,
-                    "Unsupported account restriction.");
+            _logger.Error("The server could not complete the login.", ex);
+            ShowDialog(
+                nameof(Strings.DialogServerErrorTitle),
+                nameof(Strings.DialogServerErrorMessage),
+                canRetry: false);
         }
     }
 
@@ -273,28 +289,42 @@ public sealed class LoginViewModel : ViewModel
             return;
         }
 
-        SupportedLanguage? language = LanguageCatalog.FindClosest(new CultureInfo(preferredLanguage));
+        var preferredCulture = new CultureInfo(preferredLanguage);
+        SupportedLanguage? language = LanguageCatalog.FindClosest(preferredCulture);
         if (language is not null)
         {
             SelectedLanguage = language;
         }
     }
 
-    private void ShowNotice(NoticeTone tone, string title, string message)
+    private void ShowRestriction(AccountRestriction restriction, int lockMinutes)
     {
-        NoticeTitle = title;
-        NoticeMessage = message;
-        NoticeTone = tone;
+        switch (restriction)
+        {
+            case AccountRestriction.Locked:
+                ShowNotice(
+                    NoticeTone.Warning,
+                    FormatWithCurrentCulture(Strings.LoginAccountLockedTitleFormat, lockMinutes),
+                    Strings.LoginAccountLockedMessage);
+                break;
+            case AccountRestriction.Pending:
+                ShowNotice(NoticeTone.Warning, string.Empty, Strings.LoginAccountPending);
+                break;
+            case AccountRestriction.Suspended:
+            case AccountRestriction.Banned:
+                ShowNotice(NoticeTone.Error, string.Empty, Strings.LoginAccountSanctioned);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(restriction),
+                    restriction,
+                    "Unsupported account restriction.");
+        }
     }
 
-    private void ClearNotice()
+    private static string FormatWithCurrentCulture(string format, object? argument)
     {
-        ShowNotice(NoticeTone.None, string.Empty, string.Empty);
-    }
-
-    private void ShowServerErrorDialog()
-    {
-        ShowDialog(nameof(Strings.DialogServerErrorTitle), nameof(Strings.DialogServerErrorMessage), false);
+        return string.Format(CultureInfo.CurrentCulture, format, argument);
     }
 
     private void ShowDialog(string titleKey, string messageKey, bool canRetry)
@@ -303,10 +333,5 @@ public sealed class LoginViewModel : ViewModel
         DialogMessageKey = messageKey;
         CanRetry = canRetry;
         IsDialogOpen = true;
-    }
-
-    private static string FormatWithCurrentCulture(string format, object? argument)
-    {
-        return string.Format(CultureInfo.CurrentCulture, format, argument);
     }
 }

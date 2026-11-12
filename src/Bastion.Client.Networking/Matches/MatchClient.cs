@@ -42,18 +42,7 @@ public sealed class MatchClient : IMatchClient
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        try
-        {
-            _channel.Call(service => service.AbandonMatch(sessionToken, matchId));
-        }
-        catch (CommunicationException ex)
-        {
-            throw ToClientException(ex);
-        }
-        catch (TimeoutException ex)
-        {
-            throw ToClientException(ex);
-        }
+        Call(service => service.AbandonMatch(sessionToken, matchId));
     }
 
     public void MovePawn(string sessionToken, ChosenPawnMove move)
@@ -62,18 +51,7 @@ public sealed class MatchClient : IMatchClient
         ArgumentNullException.ThrowIfNull(move);
 
         PawnMove contractMove = ToContractMove(move);
-        try
-        {
-            _channel.Call(service => service.MovePawn(sessionToken, contractMove));
-        }
-        catch (CommunicationException ex)
-        {
-            throw ToClientException(ex);
-        }
-        catch (TimeoutException ex)
-        {
-            throw ToClientException(ex);
-        }
+        Call(service => service.MovePawn(sessionToken, contractMove));
     }
 
     public void PlaceWall(string sessionToken, ChosenWall wall)
@@ -82,9 +60,14 @@ public sealed class MatchClient : IMatchClient
         ArgumentNullException.ThrowIfNull(wall);
 
         var contractWall = MatchContractTranslator.ToWallPlacement(wall);
+        Call(service => service.PlaceWall(sessionToken, contractWall));
+    }
+
+    private void Call(Action<IMatchService> operation)
+    {
         try
         {
-            _channel.Call(service => service.PlaceWall(sessionToken, contractWall));
+            _channel.Call(operation);
         }
         catch (CommunicationException ex)
         {

@@ -15,7 +15,8 @@ public sealed class FakeMatchMoveNotifier : IMatchMoveNotifier
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
         ArgumentNullException.ThrowIfNull(notice);
 
-        NotifiedPawnMoves.Add(new NotifiedPawnMove(matchId, recipientAccountIds, notice));
+        var notifiedPawnMove = new NotifiedPawnMove(matchId, recipientAccountIds, notice);
+        NotifiedPawnMoves.Add(notifiedPawnMove);
     }
 
     public void NotifyWallPlaced(int matchId, IReadOnlyCollection<int> recipientAccountIds, WallPlacementNotice notice)
@@ -23,6 +24,7 @@ public sealed class FakeMatchMoveNotifier : IMatchMoveNotifier
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
         ArgumentNullException.ThrowIfNull(notice);
 
-        NotifiedWallPlacements.Add(new NotifiedWallPlacement(matchId, recipientAccountIds, notice));
+        var notifiedWallPlacement = new NotifiedWallPlacement(matchId, recipientAccountIds, notice);
+        NotifiedWallPlacements.Add(notifiedWallPlacement);
     }
 }

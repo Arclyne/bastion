@@ -10,7 +10,7 @@ public sealed class FakeSanctionRepository : ISanctionRepository
 {
     private readonly List<Sanction> _sanctions = new List<Sanction>();
 
-    public void Store(Sanction sanction)
+    public void AddSanction(Sanction sanction)
     {
         ArgumentNullException.ThrowIfNull(sanction);
 

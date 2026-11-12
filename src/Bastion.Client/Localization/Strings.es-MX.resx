@@ -15,11 +15,23 @@
   <data name="CommonExitButton" xml:space="preserve">
     <value>Salir</value>
   </data>
+  <data name="FriendsRejectedNotFriends" xml:space="preserve">
+    <value>Ya no son amigos.</value>
+  </data>
+  <data name="FriendsRespondFailed" xml:space="preserve">
+    <value>No se pudo responder la solicitud. Vuelve a intentarlo.</value>
+  </data>
+  <data name="FriendsSendRequestFailed" xml:space="preserve">
+    <value>No se pudo enviar la solicitud. Vuelve a intentarlo.</value>
+  </data>
   <data name="LoginTagline" xml:space="preserve">
     <value>Laberinto de muros</value>
   </data>
   <data name="LoginIdentifierLabel" xml:space="preserve">
     <value>Nickname o correo</value>
+  </data>
+  <data name="LoginIdentifierMalformed" xml:space="preserve">
+    <value>Escribe un nickname o correo válido.</value>
   </data>
   <data name="LoginIdentifierPlaceholder" xml:space="preserve">
     <value>Escribe tu nickname o correo</value>

@@ -72,17 +72,20 @@ public sealed class FakeMatchmakingClient : IMatchmakingClient
     {
         ArgumentNullException.ThrowIfNull(participants);
 
-        MatchFound?.Invoke(this, new MatchFoundEventArgs(FoundMatchId, _classicFormat, participants));
+        var matchFound = new MatchFoundEventArgs(FoundMatchId, _classicFormat, participants);
+        MatchFound?.Invoke(this, matchFound);
     }
 
     public void RaisePresenceRequested(TimeSpan responseWindow)
     {
-        PresenceRequested?.Invoke(this, new PresenceRequestedEventArgs(responseWindow));
+        var presenceRequest = new PresenceRequestedEventArgs(responseWindow);
+        PresenceRequested?.Invoke(this, presenceRequest);
     }
 
     public void RaiseSearchEnded(SearchEndReason reason)
     {
-        SearchEnded?.Invoke(this, new SearchEndedEventArgs(reason));
+        var searchEnd = new SearchEndedEventArgs(reason);
+        SearchEnded?.Invoke(this, searchEnd);
     }
 
     public void RaiseDisconnected()

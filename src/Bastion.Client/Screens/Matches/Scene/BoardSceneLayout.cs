@@ -14,9 +14,9 @@ public static class BoardSceneLayout
     private const char FirstColumnName = 'A';
     private const int FirstRowNumber = 1;
     private const int FirstIndex = 0;
-    private const int TwoPlayers = 2;
     private const float BoardHalves = 2f;
     private const float SurfaceHeight = 0f;
+    private const float BoardCenter = 0f;
     private const float CameraHeight = 16f;
     private const float CameraDistance = 12.5f;
     private const float GrooveOffset = 0.5f;
@@ -28,16 +28,15 @@ public static class BoardSceneLayout
     {
         ArgumentNullException.ThrowIfNull(coordinates);
 
-        float centerIndex = (boardSize - 1) / BoardHalves;
-        return new Vector3(
-            coordinates.ColumnIndex - centerIndex,
-            SurfaceHeight,
-            centerIndex - coordinates.RowIndex);
+        float centerIndex = GetCenterIndex(boardSize);
+        float columnOffset = coordinates.ColumnIndex - centerIndex;
+        float rowOffset = centerIndex - coordinates.RowIndex;
+        return new Vector3(columnOffset, SurfaceHeight, rowOffset);
     }
 
     public static bool TryGetCoordinates(byte boardSize, Vector3 surfacePoint, out BoardCoordinates coordinates)
     {
-        float centerIndex = (boardSize - 1) / BoardHalves;
+        float centerIndex = GetCenterIndex(boardSize);
         float columnPosition = surfacePoint.X + centerIndex;
         float rowPosition = centerIndex - surfacePoint.Z;
         float roundedColumn = MathF.Round(columnPosition);
@@ -52,7 +51,7 @@ public static class BoardSceneLayout
 
     public static bool TryGetGroove(byte boardSize, Vector3 surfacePoint, out BoardCoordinates groove)
     {
-        float centerIndex = (boardSize - 1) / BoardHalves;
+        float centerIndex = GetCenterIndex(boardSize);
         float columnPosition = surfacePoint.X + centerIndex;
         float rowPosition = centerIndex - surfacePoint.Z;
         float flooredColumn = MathF.Floor(columnPosition);
@@ -70,7 +69,7 @@ public static class BoardSceneLayout
     {
         ArgumentNullException.ThrowIfNull(wall);
 
-        float centerIndex = (boardSize - 1) / BoardHalves;
+        float centerIndex = GetCenterIndex(boardSize);
         float centerX = wall.Groove.ColumnIndex + GrooveOffset - centerIndex;
         float centerZ = centerIndex - wall.Groove.RowIndex - GrooveOffset;
         bool isHorizontal = wall.Orientation == WallOrientation.Horizontal;
@@ -87,13 +86,13 @@ public static class BoardSceneLayout
         switch (ownTurnOrder)
         {
             case Match.FirstTurnOrder:
-                return new Vector3(0f, CameraHeight, CameraDistance);
+                return new Vector3(BoardCenter, CameraHeight, CameraDistance);
             case Match.SecondTurnOrder:
-                return new Vector3(0f, CameraHeight, -CameraDistance);
+                return new Vector3(BoardCenter, CameraHeight, -CameraDistance);
             case Match.ThirdTurnOrder:
-                return new Vector3(-CameraDistance, CameraHeight, 0f);
+                return new Vector3(-CameraDistance, CameraHeight, BoardCenter);
             case Match.FourthTurnOrder:
-                return new Vector3(CameraDistance, CameraHeight, 0f);
+                return new Vector3(CameraDistance, CameraHeight, BoardCenter);
             default:
                 throw new ArgumentOutOfRangeException(nameof(ownTurnOrder), ownTurnOrder, "Unsupported turn order.");
         }
@@ -102,7 +101,7 @@ public static class BoardSceneLayout
     public static string GetGoalMeshName(byte boardSize, byte turnOrder, int playerCount)
     {
         BoardCoordinates startingCoordinates = BoardLayout.GetStartingCoordinates(boardSize, turnOrder);
-        if (playerCount == TwoPlayers)
+        if (playerCount == Match.TwoPlayerCount)
         {
             int goalRowNumber = boardSize - startingCoordinates.RowIndex;
             return string.Create(CultureInfo.InvariantCulture, $"{TwoPlayerGoalMeshPrefix}{goalRowNumber}");
@@ -111,9 +110,23 @@ public static class BoardSceneLayout
         return GetFourPlayerGoalMeshName(boardSize, startingCoordinates);
     }
 
+    public static bool IsGoalMesh(string meshName)
+    {
+        ArgumentNullException.ThrowIfNull(meshName);
+
+        return meshName.StartsWith(GoalMeshPrefix, StringComparison.Ordinal);
+    }
+
+    private static float GetCenterIndex(byte boardSize)
+    {
+        int lastIndex = BoardLayout.GetLastIndex(boardSize);
+        float centerIndex = lastIndex / BoardHalves;
+        return centerIndex;
+    }
+
     private static string GetFourPlayerGoalMeshName(byte boardSize, BoardCoordinates startingCoordinates)
     {
-        int lastIndex = boardSize - FirstRowNumber;
+        int lastIndex = BoardLayout.GetLastIndex(boardSize);
         if (startingCoordinates.RowIndex == FirstIndex)
         {
             return string.Create(CultureInfo.InvariantCulture, $"{FourPlayerGoalRowPrefix}{boardSize}");
@@ -128,12 +141,5 @@ public static class BoardSceneLayout
             ? (char)(FirstColumnName + lastIndex)
             : FirstColumnName;
         return string.Create(CultureInfo.InvariantCulture, $"{FourPlayerGoalColumnPrefix}{goalColumn}");
-    }
-
-    public static bool IsGoalMesh(string meshName)
-    {
-        ArgumentNullException.ThrowIfNull(meshName);
-
-        return meshName.StartsWith(GoalMeshPrefix, StringComparison.Ordinal);
     }
 }

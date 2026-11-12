@@ -3,7 +3,7 @@ using Bastion.Domain.Matches;
 
 namespace Bastion.Client.Tests.Screens.Matches;
 
-public static class PawnMovedSamples
+public static class PawnMovedSampleFactory
 {
     public const short SecondMoveNumber = 2;
 
@@ -28,7 +28,7 @@ public static class PawnMovedSamples
     {
         return new PawnMovedEventArgs
         {
-            MatchId = JoinedMatchSamples.MatchId,
+            MatchId = JoinedMatchSampleFactory.MatchId,
             MoverNickname = moverNickname,
             FromSquare = StartingSquare,
             ToSquare = toSquare,

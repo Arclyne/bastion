@@ -13,22 +13,33 @@ public static class ChatTimeText
 
     public static string FormatTime(DateTime sentAt)
     {
-        return sentAt.ToLocalTime().ToString(TimeFormat, CultureInfo.CurrentCulture);
+        DateTime localTime = sentAt.ToLocalTime();
+        return localTime.ToString(TimeFormat, CultureInfo.CurrentCulture);
     }
 
     public static string FormatMoment(DateTime moment)
     {
-        return moment.ToLocalTime().ToString(MomentFormat, CultureInfo.CurrentCulture);
+        DateTime localMoment = moment.ToLocalTime();
+        return localMoment.ToString(MomentFormat, CultureInfo.CurrentCulture);
     }
 
-    public static DateTime ToLocalDay(DateTime moment)
+    public static DateTime GetLocalToday(TimeProvider timeProvider)
     {
-        return moment.ToLocalTime().Date;
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
+        DateTimeOffset now = timeProvider.GetLocalNow();
+        return now.Date;
+    }
+
+    public static DateTime GetLocalDay(DateTime moment)
+    {
+        DateTime localMoment = moment.ToLocalTime();
+        return localMoment.Date;
     }
 
     public static string DescribeDay(DateTime sentAt, DateTime today)
     {
-        DateTime day = ToLocalDay(sentAt);
+        DateTime day = GetLocalDay(sentAt);
         if (day == today)
         {
             return Strings.ChatToday;
@@ -44,6 +55,12 @@ public static class ChatTimeText
 
     public static string DescribeLastActivity(DateTime sentAt, DateTime today)
     {
-        return ToLocalDay(sentAt) == today ? FormatTime(sentAt) : DescribeDay(sentAt, today);
+        DateTime day = GetLocalDay(sentAt);
+        if (day == today)
+        {
+            return FormatTime(sentAt);
+        }
+
+        return DescribeDay(sentAt, today);
     }
 }

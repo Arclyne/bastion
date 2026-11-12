@@ -9,7 +9,7 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public sealed class ConversationRowViewModel : ViewModel
 {
-    public ConversationRowViewModel(ConversationPreview preview)
+    public ConversationRowViewModel(ConversationPreview preview, DateTime today)
     {
         ArgumentNullException.ThrowIfNull(preview);
 
@@ -18,16 +18,12 @@ public sealed class ConversationRowViewModel : ViewModel
         PreviewText = string.Empty;
         TimeText = string.Empty;
         UnreadText = string.Empty;
-        ShowMessage(preview.LastMessage, preview.UnreadCount);
+        ShowMessage(preview.LastMessage, preview.UnreadCount, today);
     }
 
     public PlayerTag Partner { get; }
 
-    public string Nickname => Partner.Nickname;
-
     public bool IsFriend { get; }
-
-    public DateTime LastSentAt { get; private set; }
 
     public int UnreadCount { get; private set; }
 
@@ -52,21 +48,20 @@ public sealed class ConversationRowViewModel : ViewModel
     [DependsOn(nameof(UnreadText))]
     public bool HasUnread => UnreadText.Length > 0;
 
-    public void ShowMessage(PrivateMessage message, int unreadCount)
+    public void ShowMessage(PrivateMessage message, int unreadCount, DateTime today)
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        LastSentAt = message.SentAt;
         PreviewText = message.IsOwn
             ? string.Format(CultureInfo.CurrentCulture, Strings.ChatOwnPreviewFormat, message.Text)
             : message.Text;
-        TimeText = ChatTimeText.DescribeLastActivity(message.SentAt, DateTime.Now.Date);
+        TimeText = ChatTimeText.DescribeLastActivity(message.SentAt, today);
         UpdateUnread(unreadCount);
     }
 
     public void UpdateUnread(int unreadCount)
     {
         UnreadCount = unreadCount;
-        UnreadText = unreadCount > 0 ? unreadCount.ToString(CultureInfo.CurrentCulture) : string.Empty;
+        UnreadText = BadgeText.FormatCount(unreadCount);
     }
 }

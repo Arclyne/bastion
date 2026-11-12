@@ -68,13 +68,13 @@ public static class Palette
 
     public static Color PlayerOne { get; } = new Color(0xD8, 0x5A, 0x30);
 
-    public static Color PawnBlue { get; } = new Color(0x2F, 0x6F, 0xB8);
+    private static Color PawnBlue { get; } = new Color(0x2F, 0x6F, 0xB8);
 
-    public static Color PawnRed { get; } = new Color(0xC2, 0x3B, 0x2E);
+    private static Color PawnRed { get; } = new Color(0xC2, 0x3B, 0x2E);
 
-    public static Color PawnGreen { get; } = new Color(0x2E, 0x8B, 0x57);
+    private static Color PawnGreen { get; } = new Color(0x2E, 0x8B, 0x57);
 
-    public static Color PawnYellow { get; } = new Color(0xD9, 0xA4, 0x1C);
+    private static Color PawnYellow { get; } = new Color(0xD9, 0xA4, 0x1C);
 
     public static Color ReachableSquare { get; } = new Color(0xF0, 0xC4, 0x88, 0xC8);
 

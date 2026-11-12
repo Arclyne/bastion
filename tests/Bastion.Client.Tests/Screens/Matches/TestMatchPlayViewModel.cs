@@ -14,7 +14,7 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Screens.Matches;
 
-public class TestMatchPlayViewModel : IDisposable
+public sealed class TestMatchPlayViewModel : IDisposable
 {
     private const int OtherMatchId = 40;
     private const string ForwardSquare = "e2";
@@ -34,12 +34,21 @@ public class TestMatchPlayViewModel : IDisposable
     private static readonly BoardCoordinates _firstStart = new BoardCoordinates(CenterColumnIndex, FirstRowIndex);
     private static readonly BoardCoordinates _secondStart = new BoardCoordinates(CenterColumnIndex, LastRowIndex);
     private static readonly BoardCoordinates _forward = new BoardCoordinates(CenterColumnIndex, SecondRowIndex);
+    private static readonly BoardCoordinates _rightOfFirstStart = new BoardCoordinates(RightColumnIndex, FirstRowIndex);
+    private static readonly BoardCoordinates _leftOfFirstStart = new BoardCoordinates(LeftColumnIndex, FirstRowIndex);
     private static readonly BoardCoordinates _secondForward =
         new BoardCoordinates(CenterColumnIndex, BeforeLastRowIndex);
     private static readonly BoardCoordinates _centerGrooveCoordinates =
         new BoardCoordinates(CenterColumnIndex, FourthRowIndex);
     private static readonly BoardCoordinates _twoSquaresForward =
         new BoardCoordinates(CenterColumnIndex, ThirdRowIndex);
+    private static readonly BoardCoordinates[] _firstStartReachableSquares =
+    {
+        _forward,
+        _rightOfFirstStart,
+        _leftOfFirstStart,
+    };
+    private static readonly Wall _centerWall = new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal);
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
     private readonly List<MatchPlayViewModel> _viewModels = new List<MatchPlayViewModel>();
@@ -52,17 +61,11 @@ public class TestMatchPlayViewModel : IDisposable
     [Fact]
     public async Task SelectSquare_OwnPawnOnOwnTurn_ListsReachableSquares()
     {
-        var expectedSquares = new BoardCoordinates[]
-        {
-            _forward,
-            new BoardCoordinates(RightColumnIndex, FirstRowIndex),
-            new BoardCoordinates(LeftColumnIndex, FirstRowIndex),
-        };
         MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
 
         await viewModel.SelectSquare(_firstStart);
 
-        Assert.Equal(expectedSquares, viewModel.ReachableSquares);
+        Assert.Equal(_firstStartReachableSquares, viewModel.ReachableSquares);
     }
 
     [Fact]
@@ -89,7 +92,7 @@ public class TestMatchPlayViewModel : IDisposable
     [Fact]
     public async Task SelectSquare_ReachableSquare_SendsMoveWithNextMoveNumber()
     {
-        var expectedMove = new ChosenPawnMove(JoinedMatchSamples.MatchId, Match.FirstMoveNumber, ForwardSquare);
+        var expectedMove = new ChosenPawnMove(JoinedMatchSampleFactory.MatchId, Match.FirstMoveNumber, ForwardSquare);
         MatchPlayViewModel viewModel = await CreateViewModelWithSelectedPawn();
 
         await viewModel.SelectSquare(_forward);
@@ -121,14 +124,16 @@ public class TestMatchPlayViewModel : IDisposable
     public async Task SelectSquare_NotYourTurn_TakesServerMoveNumber()
     {
         MatchPlayViewModel viewModel = await CreateViewModelWithSelectedPawn();
-        _matchClient.MoveFailure = new NotYourTurnException(
+        var cause = new InvalidOperationException();
+        var notYourTurn = new NotYourTurnException(
             Match.SecondTurnOrder,
-            PawnMovedSamples.SecondMoveNumber,
-            new InvalidOperationException());
+            PawnMovedSampleFactory.SecondMoveNumber,
+            cause);
+        _matchClient.MoveFailure = notYourTurn;
 
         await viewModel.SelectSquare(_forward);
 
-        Assert.Equal(PawnMovedSamples.SecondMoveNumber, viewModel.NextMoveNumber);
+        Assert.Equal(PawnMovedSampleFactory.SecondMoveNumber, viewModel.NextMoveNumber);
     }
 
     [Fact]
@@ -168,18 +173,21 @@ public class TestMatchPlayViewModel : IDisposable
     public void PawnMoved_RivalMoved_MovesRivalPawn()
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+        PawnMovedEventArgs rivalMove = CreateRivalFirstMove(JoinedMatchSampleFactory.MatchId);
 
-        _matchClient.RaisePawnMoved(CreateRivalFirstMove(JoinedMatchSamples.MatchId));
+        _matchClient.RaisePawnMoved(rivalMove);
 
-        Assert.Equal(_forward, viewModel.Pawns[Match.FirstTurnOrder]);
+        BoardCoordinates rivalPawn = viewModel.Pawns[Match.FirstTurnOrder];
+        Assert.Equal(_forward, rivalPawn);
     }
 
     [Fact]
     public void PawnMoved_RivalMoved_GivesTurnToOwnPawn()
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+        PawnMovedEventArgs rivalMove = CreateRivalFirstMove(JoinedMatchSampleFactory.MatchId);
 
-        _matchClient.RaisePawnMoved(CreateRivalFirstMove(JoinedMatchSamples.MatchId));
+        _matchClient.RaisePawnMoved(rivalMove);
 
         Assert.Equal(Match.SecondTurnOrder, viewModel.CurrentTurnOrder);
     }
@@ -188,21 +196,24 @@ public class TestMatchPlayViewModel : IDisposable
     public void PawnMoved_OtherMatch_KeepsRivalPawn()
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+        PawnMovedEventArgs otherMatchMove = CreateRivalFirstMove(OtherMatchId);
 
-        _matchClient.RaisePawnMoved(CreateRivalFirstMove(OtherMatchId));
+        _matchClient.RaisePawnMoved(otherMatchMove);
 
-        Assert.Equal(_firstStart, viewModel.Pawns[Match.FirstTurnOrder]);
+        BoardCoordinates rivalPawn = viewModel.Pawns[Match.FirstTurnOrder];
+        Assert.Equal(_firstStart, rivalPawn);
     }
 
     [Fact]
     public void PawnMoved_RivalReachedGoal_NamesRivalWinner()
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+        PawnMovedEventArgs winningMove =
+            PawnMovedSampleFactory.CreateWinningMove(JoinedMatchSampleFactory.RivalNickname, FirstGoalSquare);
 
-        _matchClient.RaisePawnMoved(
-            PawnMovedSamples.CreateWinningMove(JoinedMatchSamples.RivalNickname, FirstGoalSquare));
+        _matchClient.RaisePawnMoved(winningMove);
 
-        Assert.Equal(JoinedMatchSamples.RivalNickname, viewModel.WinnerNickname);
+        Assert.Equal(JoinedMatchSampleFactory.RivalNickname, viewModel.WinnerNickname);
     }
 
     [Fact]
@@ -210,7 +221,10 @@ public class TestMatchPlayViewModel : IDisposable
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
 
-        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.RivalNickname, true);
+        _matchClient.RaiseMatchAbandoned(
+            JoinedMatchSampleFactory.MatchId,
+            JoinedMatchSampleFactory.RivalNickname,
+            isMatchOver: true);
 
         Assert.True(viewModel.IsMatchOver);
     }
@@ -218,30 +232,34 @@ public class TestMatchPlayViewModel : IDisposable
     [Fact]
     public void WallPlaced_RivalPlacedWall_AddsWall()
     {
-        var expectedWall = new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal);
         MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+        WallPlacedEventArgs rivalWall = CreateRivalFirstWall(CenterGroove);
 
-        _matchClient.RaiseWallPlaced(WallPlacedSamples.CreateFirstWall(JoinedMatchSamples.RivalNickname, CenterGroove));
+        _matchClient.RaiseWallPlaced(rivalWall);
 
-        Assert.Equal(expectedWall, viewModel.Walls.Single());
+        Wall placedWall = viewModel.Walls.Single();
+        Assert.Equal(_centerWall, placedWall);
     }
 
     [Fact]
     public void WallPlaced_RivalPlacedWall_UpdatesRivalWallsLeft()
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+        WallPlacedEventArgs rivalWall = CreateRivalFirstWall(CenterGroove);
 
-        _matchClient.RaiseWallPlaced(WallPlacedSamples.CreateFirstWall(JoinedMatchSamples.RivalNickname, CenterGroove));
+        _matchClient.RaiseWallPlaced(rivalWall);
 
-        Assert.Equal(WallPlacedSamples.WallsLeftAfterOne, viewModel.GetRemainingWalls(Match.FirstTurnOrder));
+        byte rivalWallsLeft = viewModel.GetRemainingWalls(Match.FirstTurnOrder);
+        Assert.Equal(WallPlacedSampleFactory.WallsLeftAfterOne, rivalWallsLeft);
     }
 
     [Fact]
     public void WallPlaced_RivalPlacedWall_GivesTurnToOwnPawn()
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+        WallPlacedEventArgs rivalWall = CreateRivalFirstWall(CenterGroove);
 
-        _matchClient.RaiseWallPlaced(WallPlacedSamples.CreateFirstWall(JoinedMatchSamples.RivalNickname, CenterGroove));
+        _matchClient.RaiseWallPlaced(rivalWall);
 
         Assert.Equal(Match.SecondTurnOrder, viewModel.CurrentTurnOrder);
     }
@@ -250,8 +268,8 @@ public class TestMatchPlayViewModel : IDisposable
     public async Task SelectSquare_WallAheadOfOwnPawn_ExcludesSquareBehindWall()
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
-        _matchClient.RaiseWallPlaced(
-            WallPlacedSamples.CreateFirstWall(JoinedMatchSamples.RivalNickname, GrooveAheadOfSecondPawn));
+        WallPlacedEventArgs rivalWall = CreateRivalFirstWall(GrooveAheadOfSecondPawn);
+        _matchClient.RaiseWallPlaced(rivalWall);
 
         await viewModel.SelectSquare(_secondStart);
 
@@ -263,14 +281,14 @@ public class TestMatchPlayViewModel : IDisposable
     {
         var expectedWall = new ChosenWall
         {
-            MatchId = JoinedMatchSamples.MatchId,
+            MatchId = JoinedMatchSampleFactory.MatchId,
             MoveNumber = Match.FirstMoveNumber,
             Groove = CenterGroove,
             Orientation = PlacedWallOrientation.Horizontal,
         };
         MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
 
-        await viewModel.PlaceWall(new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal));
+        await viewModel.PlaceWall(_centerWall);
 
         Assert.Equal(expectedWall, _matchClient.LastWall);
     }
@@ -280,7 +298,7 @@ public class TestMatchPlayViewModel : IDisposable
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
 
-        await viewModel.PlaceWall(new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal));
+        await viewModel.PlaceWall(_centerWall);
 
         Assert.Null(_matchClient.LastWall);
     }
@@ -289,12 +307,9 @@ public class TestMatchPlayViewModel : IDisposable
     public async Task PlaceWall_GrooveTaken_ShowsGrooveTaken()
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
-        _matchClient.WallFailure = new IllegalWallException(
-            WallPlacementRejection.GrooveTaken,
-            null,
-            new InvalidOperationException());
+        _matchClient.WallFailure = CreateIllegalWall(WallPlacementRejection.GrooveTaken, blockedTurnOrder: null);
 
-        await viewModel.PlaceWall(new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal));
+        await viewModel.PlaceWall(_centerWall);
 
         Assert.Equal(Strings.MatchWallGrooveTaken, viewModel.NoticeText);
     }
@@ -305,14 +320,11 @@ public class TestMatchPlayViewModel : IDisposable
         string expectedText = string.Format(
             CultureInfo.CurrentCulture,
             Strings.MatchWallWouldBlockFormat,
-            JoinedMatchSamples.RivalNickname);
+            JoinedMatchSampleFactory.RivalNickname);
         MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
-        _matchClient.WallFailure = new IllegalWallException(
-            WallPlacementRejection.WouldBlockPlayer,
-            Match.SecondTurnOrder,
-            new InvalidOperationException());
+        _matchClient.WallFailure = CreateIllegalWall(WallPlacementRejection.WouldBlockPlayer, Match.SecondTurnOrder);
 
-        await viewModel.PlaceWall(new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal));
+        await viewModel.PlaceWall(_centerWall);
 
         Assert.Equal(expectedText, viewModel.NoticeText);
     }
@@ -324,17 +336,13 @@ public class TestMatchPlayViewModel : IDisposable
 
         viewModel.Dispose();
 
-        Assert.False(_matchClient.HasPawnMovedSubscribers());
+        bool hasSubscribers = _matchClient.HasPawnMovedSubscribers();
+        Assert.False(hasSubscribers);
     }
 
     private static void DisposeViewModel(MatchPlayViewModel viewModel)
     {
         viewModel.Dispose();
-    }
-
-    private static PawnMovedEventArgs CreateRivalFirstMove(int matchId)
-    {
-        return PawnMovedSamples.CreateFirstMove(matchId, JoinedMatchSamples.RivalNickname, ForwardSquare);
     }
 
     private async Task<MatchPlayViewModel> CreateViewModelWithSelectedPawn()
@@ -346,10 +354,26 @@ public class TestMatchPlayViewModel : IDisposable
 
     private MatchPlayViewModel CreateViewModel(byte ownTurnOrder)
     {
-        JoinedMatch joinedMatch = JoinedMatchSamples.CreateWithOwnTurnOrder(ownTurnOrder);
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
         MatchPlayViewModel viewModel =
             InlineUiContext.CreateViewModel(() => new MatchPlayViewModel(joinedMatch, _matchClient));
         _viewModels.Add(viewModel);
         return viewModel;
+    }
+
+    private static PawnMovedEventArgs CreateRivalFirstMove(int matchId)
+    {
+        return PawnMovedSampleFactory.CreateFirstMove(matchId, JoinedMatchSampleFactory.RivalNickname, ForwardSquare);
+    }
+
+    private static WallPlacedEventArgs CreateRivalFirstWall(string groove)
+    {
+        return WallPlacedSampleFactory.CreateFirstWall(JoinedMatchSampleFactory.RivalNickname, groove);
+    }
+
+    private static IllegalWallException CreateIllegalWall(WallPlacementRejection rejection, byte? blockedTurnOrder)
+    {
+        var cause = new InvalidOperationException();
+        return new IllegalWallException(rejection, blockedTurnOrder, cause);
     }
 }

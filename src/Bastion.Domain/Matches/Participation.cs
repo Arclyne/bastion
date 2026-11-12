@@ -4,8 +4,9 @@ namespace Bastion.Domain.Matches;
 
 public class Participation
 {
+    public const byte NoWallsLeft = 0;
+
     private const int NoClockLeft = 0;
-    private const byte NoWallsLeft = 0;
 
     private static readonly PawnSymbol[] _pawnSymbolsInTurnOrder = new PawnSymbol[]
     {
@@ -97,8 +98,6 @@ public class Participation
 
     internal void MoveTo(string square)
     {
-        ArgumentNullException.ThrowIfNull(square);
-
         CurrentSquare = square;
     }
 

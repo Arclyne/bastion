@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Matches;
 
-public class TestParticipation
+public sealed class TestParticipation
 {
     private const byte ZeroTurnOrder = 0;
     private const byte FifthTurnOrder = 5;
@@ -28,12 +28,16 @@ public class TestParticipation
     [Fact]
     public void GetPawnSymbol_ZeroTurnOrder_ThrowsArgumentOutOfRangeException()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => Participation.GetPawnSymbol(ZeroTurnOrder));
+        Action getPawnSymbol = () => Participation.GetPawnSymbol(ZeroTurnOrder);
+
+        Assert.Throws<ArgumentOutOfRangeException>(getPawnSymbol);
     }
 
     [Fact]
     public void GetPawnSymbol_FifthTurnOrder_ThrowsArgumentOutOfRangeException()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => Participation.GetPawnSymbol(FifthTurnOrder));
+        Action getPawnSymbol = () => Participation.GetPawnSymbol(FifthTurnOrder);
+
+        Assert.Throws<ArgumentOutOfRangeException>(getPawnSymbol);
     }
 }

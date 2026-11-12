@@ -2,7 +2,7 @@ using System;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
+using Gum.Wireframe;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
@@ -21,21 +21,29 @@ public sealed class ChatMessageRowView : StackPanel
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = RowSpacing;
         AddChild(CreateHeader(row));
-        AddChild(CreateFixedLabel(row.Text, TextStyles.NoticeMessage));
-        AddChild(CreateStateLabel(nameof(ChatMessageRowViewModel.IsPending), TextStyles.Hint));
-        AddChild(CreateStateLabel(nameof(ChatMessageRowViewModel.HasFailed), TextStyles.FieldError));
+        AddChild(CreateFixedLabel(row.Text, TextStyleCatalog.NoticeMessage));
+        AddChild(CreateStateLabel(nameof(ChatMessageRowViewModel.IsPending), TextStyleCatalog.Hint));
+        AddChild(CreateStateLabel(nameof(ChatMessageRowViewModel.HasFailed), TextStyleCatalog.FieldError));
+    }
+
+    public static GraphicalUiElement CreateVisual(object? item)
+    {
+        ChatMessageRowViewModel row = ViewFactory.RequireRow<ChatMessageRowViewModel>(item);
+        var rowView = new ChatMessageRowView(row);
+        return rowView.Visual;
     }
 
     private static StackPanel CreateHeader(ChatMessageRowViewModel row)
     {
-        TextStyle authorStyle = row.IsOwn ? TextStyles.ChatOwnAuthor : TextStyles.ChatAuthor;
-        Label time = CreateUnlocalizedLabel(TextStyles.Hint);
-        time.SetBinding(nameof(Label.Text), nameof(ChatMessageRowViewModel.TimeText));
+        TextStyle authorStyle = row.IsOwn ? TextStyleCatalog.ChatOwnAuthor : TextStyleCatalog.ChatAuthor;
+        Label time = ViewFactory.CreateBoundUntranslatedLabel(nameof(ChatMessageRowViewModel.TimeText), TextStyleCatalog.Hint);
+        Label author = ViewFactory.CreateUntranslatedLabel(row.AuthorText, authorStyle);
 
-        Label author = CreateUnlocalizedLabel(authorStyle);
-        author.Text = row.AuthorText;
-
-        var header = new StackPanel { Orientation = Orientation.Horizontal, Spacing = HeaderSpacing };
+        var header = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = HeaderSpacing,
+        };
         header.AddChild(author);
         header.AddChild(time);
         return header;
@@ -43,8 +51,7 @@ public sealed class ChatMessageRowView : StackPanel
 
     private static Label CreateFixedLabel(string text, TextStyle style)
     {
-        Label label = CreateUnlocalizedLabel(style);
-        label.Text = text;
+        Label label = ViewFactory.CreateUntranslatedLabel(text, style);
         label.Width = RowWidth;
         label.WidthUnits = DimensionUnitType.Absolute;
         return label;
@@ -52,18 +59,11 @@ public sealed class ChatMessageRowView : StackPanel
 
     private static Label CreateStateLabel(string visibilityProperty, TextStyle style)
     {
-        Label label = CreateUnlocalizedLabel(style);
-        label.Width = RowWidth;
-        label.WidthUnits = DimensionUnitType.Absolute;
-        label.SetBinding(nameof(Label.Text), nameof(ChatMessageRowViewModel.StateText));
+        Label label = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(ChatMessageRowViewModel.StateText),
+            style,
+            RowWidth);
         label.SetBinding(nameof(IsVisible), visibilityProperty);
-        return label;
-    }
-
-    private static Label CreateUnlocalizedLabel(TextStyle style)
-    {
-        Label label = ViewFactory.CreateLabel(string.Empty, style);
-        ((LabelVisual)label.Visual).LocalizeText = false;
         return label;
     }
 }

@@ -15,10 +15,10 @@ public static class ThemeInitializer
 
     private static readonly Dictionary<string, string> _fontFiles = new Dictionary<string, string>
     {
-        [FontFamilies.SemiBold] = "Nunito-SemiBold.woff",
-        [FontFamilies.Bold] = "Nunito-Bold.woff",
-        [FontFamilies.ExtraBold] = "Nunito-ExtraBold.woff",
-        [FontFamilies.Display] = "Fredoka-Bold.woff",
+        [FontCatalog.SemiBold] = "Nunito-SemiBold.woff",
+        [FontCatalog.Bold] = "Nunito-Bold.woff",
+        [FontCatalog.ExtraBold] = "Nunito-ExtraBold.woff",
+        [FontCatalog.Display] = "Fredoka-Bold.woff",
     };
 
     public static void Initialize(Game game)
@@ -29,7 +29,7 @@ public static class ThemeInitializer
         foreach (KeyValuePair<string, string> fontFile in _fontFiles)
         {
             byte[] fontData = File.ReadAllBytes(Path.Combine(fontsPath, fontFile.Value));
-            KernSmithFontCreator.RegisterFont(fontFile.Key, fontData, null, SingleFaceIndex);
+            KernSmithFontCreator.RegisterFont(fontFile.Key, fontData, style: null, SingleFaceIndex);
         }
 
         CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(game.GraphicsDevice);

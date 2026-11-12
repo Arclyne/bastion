@@ -19,7 +19,6 @@ public sealed class MatchPlayersPanel : Panel
     private const float RowContentX = 12;
     private const float PawnSize = 18;
     private const float NameWidth = 150;
-    private const int PawnHalves = 2;
     private const int HorizontalSideCount = 2;
 
     public MatchPlayersPanel(MatchViewModel viewModel)
@@ -43,7 +42,7 @@ public sealed class MatchPlayersPanel : Panel
         }
 
         AddChild(rows);
-        Skins.ApplyCard(Visual);
+        CardSkin.Apply(Visual);
     }
 
     private static Panel CreatePlayerRow(MatchPlayerViewModel player)
@@ -53,10 +52,10 @@ public sealed class MatchPlayersPanel : Panel
             Width = NameWidth,
             WidthUnits = DimensionUnitType.Absolute,
         };
-        nameColumn.AddChild(ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyles.IdentityName));
+        nameColumn.AddChild(ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyleCatalog.IdentityName));
         Label detail = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchPlayerViewModel.DetailText),
-            TextStyles.IdentityDetail,
+            TextStyleCatalog.IdentityDetail,
             NameWidth);
         detail.BindingContext = player;
         nameColumn.AddChild(detail);
@@ -70,7 +69,7 @@ public sealed class MatchPlayersPanel : Panel
         content.AddChild(CreatePawn(player));
         content.AddChild(nameColumn);
         content.AddChild(CreateWallsLabel(player));
-        content.AddChild(ViewFactory.CreateUntranslatedLabel(player.ClockText, TextStyles.IdentityName));
+        content.AddChild(ViewFactory.CreateUntranslatedLabel(player.ClockText, TextStyleCatalog.IdentityName));
         ViewFactory.CenterVertically(content);
 
         var row = new Panel
@@ -87,9 +86,10 @@ public sealed class MatchPlayersPanel : Panel
 
     private static Label CreateWallsLabel(MatchPlayerViewModel player)
     {
-        Label walls = ViewFactory.CreateUntranslatedLabel(player.WallsText, TextStyles.IdentityDetail);
+        Label walls = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(MatchPlayerViewModel.WallsText),
+            TextStyleCatalog.IdentityDetail);
         walls.BindingContext = player;
-        walls.SetBinding(nameof(Label.Text), nameof(MatchPlayerViewModel.WallsText));
         return walls;
     }
 
@@ -102,8 +102,8 @@ public sealed class MatchPlayersPanel : Panel
             Height = PawnSize,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        RectangleRuntime circle = Shapes.CreateRounded(Palette.GetPawnColor(player.PawnSymbol), PawnSize / PawnHalves);
-        Shapes.InsertBehindContent(pawn.Visual, circle);
+        RectangleRuntime circle = ShapeFactory.CreateCircle(Palette.GetPawnColor(player.PawnSymbol), PawnSize);
+        ShapeFactory.InsertBehindContent(pawn.Visual, circle);
         ViewFactory.CenterVertically(pawn);
         return pawn;
     }
@@ -116,7 +116,7 @@ public sealed class MatchPlayersPanel : Panel
         };
         highlight.Dock(Gum.Wireframe.Dock.Fill);
         highlight.SetBinding(nameof(IsVisible), nameof(MatchPlayerViewModel.HasTurn));
-        Shapes.InsertBehindContent(highlight.Visual, Shapes.CreateRounded(Palette.Selected, RowRadius));
+        ShapeFactory.InsertBehindContent(highlight.Visual, ShapeFactory.CreateRounded(Palette.Selected, RowRadius));
         return highlight;
     }
 }

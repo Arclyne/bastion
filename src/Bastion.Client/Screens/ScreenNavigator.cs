@@ -17,7 +17,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 {
     private readonly ServerConnection _connection;
     private readonly ILanguageService _languages;
-    private readonly IClipboard _clipboard;
+    private readonly LocalServices _localServices;
     private readonly TimeProvider _timeProvider;
     private readonly IScreenHost _screenHost;
     private readonly List<IDisposable> _screenViewModels = new List<IDisposable>();
@@ -34,7 +34,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 
         _connection = connection;
         _languages = localServices.Languages;
-        _clipboard = localServices.Clipboard;
+        _localServices = localServices;
         _timeProvider = localServices.TimeProvider;
         _screenHost = screenHost;
     }
@@ -44,7 +44,8 @@ public sealed class ScreenNavigator : INavigator, IDisposable
     public void ShowLogin()
     {
         var loginViewModel = new LoginViewModel(_languages, _connection.Accounts, this);
-        ShowScreen(new LoginView(loginViewModel, _languages));
+        var loginView = new LoginView(loginViewModel, _languages);
+        ShowScreen(loginView);
     }
 
     public void ShowMainMenu(LoggedInSession session)
@@ -75,13 +76,11 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         var mainMenuViewModel = new MainMenuViewModel(session, _connection.Notifications);
         var chatClients = new ChatClients(_connection.Chat, _connection.Conversations, _connection.Notifications);
         var clients = new SocialClients(_connection.Friends, chatClients, _connection.Notifications);
-        var friendsPanel = new FriendsPanelViewModel(session, clients, _clipboard);
+        var friendsPanel = new FriendsPanelViewModel(session, clients, _localServices);
         var matchSearchViewModel = new MatchSearchViewModel(session, _connection.Matchmaking, _timeProvider);
         matchSearchViewModel.MatchFound += HandleMatchFound;
-        ShowScreen(
-            new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel),
-            friendsPanel,
-            matchSearchViewModel);
+        var mainMenuView = new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel);
+        ShowScreen(mainMenuView, friendsPanel, matchSearchViewModel);
         _loggedInSession = session;
         _ = friendsPanel.LoadFriends();
         _ = friendsPanel.Requests.LoadRequests();
@@ -97,12 +96,8 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         var matchPlayViewModel = new MatchPlayViewModel(joinedMatch, _connection.Matches);
         var versusViewModel = new VersusViewModel(joinedMatch, _timeProvider);
         versusViewModel.CountdownFinished += HandleCountdownFinished;
-        ShowScreen(
-            new VersusView(versusViewModel),
-            versusViewModel,
-            matchChatViewModel,
-            matchAbandonmentViewModel,
-            matchPlayViewModel);
+        var versusView = new VersusView(versusViewModel);
+        ShowScreen(versusView, versusViewModel, matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel);
         _joinedMatch = joinedMatch;
         _joinedMatchViewModels =
             new JoinedMatchViewModels(matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel);
@@ -114,8 +109,9 @@ public sealed class ScreenNavigator : INavigator, IDisposable
             joinedMatch,
             joinedMatchViewModels.Abandonment,
             joinedMatchViewModels.Play);
+        var matchView = new MatchView(matchViewModel, joinedMatchViewModels.Chat, joinedMatchViewModels.Abandonment);
         ShowScreen(
-            new MatchView(matchViewModel, joinedMatchViewModels.Chat, joinedMatchViewModels.Abandonment),
+            matchView,
             joinedMatchViewModels.Chat,
             joinedMatchViewModels.Abandonment,
             joinedMatchViewModels.Play,
@@ -150,7 +146,8 @@ public sealed class ScreenNavigator : INavigator, IDisposable
             return;
         }
 
-        ShowVersus(new JoinedMatch(_loggedInSession, e));
+        var joinedMatch = new JoinedMatch(_loggedInSession, e);
+        ShowVersus(joinedMatch);
     }
 
     private void HandleCountdownFinished(object? sender, EventArgs e)

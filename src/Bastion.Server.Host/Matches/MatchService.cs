@@ -45,7 +45,8 @@ public sealed class MatchService : IMatchService
         if (move is null)
         {
             _logger.Warn("A pawn move arrived without its data.");
-            throw MatchTranslator.ToFault(new IllegalMoveException());
+            var missingMove = new IllegalMoveException();
+            throw MatchTranslator.ToFault(missingMove);
         }
 
         var chosenMove = MatchTranslator.ToChosenPawnMove(move);
@@ -68,6 +69,15 @@ public sealed class MatchService : IMatchService
         TranslateMatchFailures(nameof(PlaceWall), wall.MatchId, placeWall);
     }
 
+    private void AbandonMatchInRequestScope(string token, int matchId)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchAbandonmentService abandonmentService =
+            scope.ServiceProvider.GetRequiredService<IMatchAbandonmentService>();
+        DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
+        abandonmentService.AbandonMatch(token, matchId, now);
+    }
+
     private void MovePawnInRequestScope(string token, ChosenPawnMove move)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
@@ -76,21 +86,12 @@ public sealed class MatchService : IMatchService
         matchMoveService.MovePawn(token, move, now);
     }
 
-    private void PlaceWallInRequestScope(string token, ChosenWall wall)
+    private void PlaceWallInRequestScope(string token, ChosenWall chosenWall)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         IMatchMoveService matchMoveService = scope.ServiceProvider.GetRequiredService<IMatchMoveService>();
         DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
-        matchMoveService.PlaceWall(token, wall, now);
-    }
-
-    private void AbandonMatchInRequestScope(string token, int matchId)
-    {
-        using IServiceScope scope = _scopeFactory.CreateScope();
-        IMatchAbandonmentService abandonmentService =
-            scope.ServiceProvider.GetRequiredService<IMatchAbandonmentService>();
-        DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
-        abandonmentService.AbandonMatch(token, matchId, now);
+        matchMoveService.PlaceWall(token, chosenWall, now);
     }
 
     private void TranslateMatchFailures(string operationName, int matchId, Action operation)

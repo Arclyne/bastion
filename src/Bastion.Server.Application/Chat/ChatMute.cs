@@ -7,7 +7,7 @@ namespace Bastion.Server.Application.Chat;
 
 public sealed record ChatMute(bool IsMuted, DateTime? EndsAt)
 {
-    public static ChatMute None { get; } = new ChatMute(false, null);
+    public static ChatMute None { get; } = new ChatMute(IsMuted: false, EndsAt: null);
 
     public static ChatMute FromSanctionsInEffect(IReadOnlyCollection<Sanction> sanctions)
     {
@@ -20,10 +20,10 @@ public sealed record ChatMute(bool IsMuted, DateTime? EndsAt)
 
         if (sanctions.Any(sanction => sanction.IsPermanent()))
         {
-            return new ChatMute(true, null);
+            return new ChatMute(IsMuted: true, EndsAt: null);
         }
 
         DateTime? latestEnd = sanctions.Max(sanction => sanction.EndsAt);
-        return new ChatMute(true, latestEnd);
+        return new ChatMute(IsMuted: true, latestEnd);
     }
 }

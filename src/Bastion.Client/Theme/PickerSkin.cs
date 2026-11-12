@@ -11,34 +11,35 @@ namespace Bastion.Client.Theme;
 public sealed class PickerSkin : InteractiveSkin
 {
     private const float BorderWidth = 1.5f;
-    private const float HaloSpread = 4;
     private const float PaddingX = 12;
     private const float ListRadius = 12;
     private const float ListItemHeight = 36;
     private const float ListShadowOffsetY = 6;
     private const float ListShadowBlur = 16;
+    private const float MiddleOffsetY = 0;
+    private const int RadiiPerHeight = 2;
 
     private readonly RectangleRuntime _halo;
     private readonly RectangleRuntime _surface;
 
     private PickerSkin(ComboBox picker)
     {
-        float radius = picker.Height / 2;
-        _halo = Shapes.CreateHalo(radius, HaloSpread);
-        _surface = Shapes.CreateRounded(Palette.Card, radius);
+        float radius = picker.Height / RadiiPerHeight;
+        _halo = ShapeFactory.CreateHalo(radius);
+        _surface = ShapeFactory.CreateRounded(Palette.Card, radius);
         _surface.StrokeWidth = BorderWidth;
 
-        Shapes.HideDefaultParts(picker);
-        Shapes.InsertBehindContent(picker.Visual, _halo, _surface);
+        ShapeFactory.HideDefaultParts(picker);
+        ShapeFactory.InsertBehindContent(picker.Visual, _halo, _surface);
 
         var visual = (ComboBoxVisual)picker.Visual;
-        TextStyles.Picker.ApplyTo(visual.TextInstance);
+        TextStyleCatalog.Picker.ApplyTo(visual.TextInstance);
         visual.TextInstance.LocalizeText = false;
         visual.TextInstance.X = PaddingX;
-        visual.ForegroundColor = TextStyles.Picker.Color;
-        visual.DropdownIndicatorColor = TextStyles.Picker.Color;
+        visual.ForegroundColor = TextStyleCatalog.Picker.Color;
+        visual.DropdownIndicatorColor = TextStyleCatalog.Picker.Color;
         visual.DropdownIndicator.YUnits = GeneralUnitType.PixelsFromMiddle;
-        visual.DropdownIndicator.Y = 0;
+        visual.DropdownIndicator.Y = MiddleOffsetY;
 
         StyleList(picker.ListBox);
     }
@@ -65,9 +66,9 @@ public sealed class PickerSkin : InteractiveSkin
     {
         list.VerticalSizeMode = SizeMode.Auto;
         list.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
-        list.ItemsCollectionChanged += OnListItemsChanged;
+        list.ItemsCollectionChanged += HandleListItemsChanged;
 
-        RectangleRuntime surface = Shapes.CreateRounded(Palette.Card, ListRadius);
+        RectangleRuntime surface = ShapeFactory.CreateRounded(Palette.Card, ListRadius);
         surface.StrokeColor = Palette.Border;
         surface.StrokeWidth = BorderWidth;
         surface.HasDropshadow = true;
@@ -75,11 +76,30 @@ public sealed class PickerSkin : InteractiveSkin
         surface.DropshadowOffsetY = ListShadowOffsetY;
         surface.DropshadowBlur = ListShadowBlur;
 
-        Shapes.HideDefaultParts(list);
-        Shapes.InsertBehindContent(list.Visual, surface);
+        ShapeFactory.HideDefaultParts(list);
+        ShapeFactory.InsertBehindContent(list.Visual, surface);
     }
 
-    private static void OnListItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private static void StyleListItem(ListBoxItemVisual item)
+    {
+        TextStyleCatalog.Picker.ApplyTo(item.TextInstance);
+        DisableTranslationKeepingText(item.TextInstance);
+        item.TextInstance.X = PaddingX;
+        item.ForegroundColor = TextStyleCatalog.Picker.Color;
+        item.HighlightedBackgroundColor = Palette.SurfaceHover;
+        item.SelectedBackgroundColor = Palette.Selected;
+        item.Height = ListItemHeight;
+        item.HeightUnits = DimensionUnitType.Absolute;
+    }
+
+    private static void DisableTranslationKeepingText(TextRuntime text)
+    {
+        string? shownText = text.Text;
+        text.LocalizeText = false;
+        text.Text = shownText;
+    }
+
+    private static void HandleListItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (sender is not ListBox list)
         {
@@ -88,19 +108,8 @@ public sealed class PickerSkin : InteractiveSkin
 
         foreach (ListBoxItem item in list.ListBoxItems)
         {
-            StyleListItem((ListBoxItemVisual)item.Visual);
+            var itemVisual = (ListBoxItemVisual)item.Visual;
+            StyleListItem(itemVisual);
         }
-    }
-
-    private static void StyleListItem(ListBoxItemVisual item)
-    {
-        TextStyles.Picker.ApplyTo(item.TextInstance);
-        item.TextInstance.LocalizeText = false;
-        item.TextInstance.X = PaddingX;
-        item.ForegroundColor = TextStyles.Picker.Color;
-        item.HighlightedBackgroundColor = Palette.SurfaceHover;
-        item.SelectedBackgroundColor = Palette.Selected;
-        item.Height = ListItemHeight;
-        item.HeightUnits = DimensionUnitType.Absolute;
     }
 }

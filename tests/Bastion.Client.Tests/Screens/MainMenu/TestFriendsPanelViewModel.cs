@@ -1,4 +1,6 @@
+using System;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Screens;
 using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Screens.MainMenu.Friends;
 using Bastion.Client.Tests.Fakes;
@@ -6,11 +8,13 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Screens.MainMenu;
 
-public class TestFriendsPanelViewModel
+public sealed class TestFriendsPanelViewModel
 {
     private const string SessionToken = "session-token";
     private const string OwnNickname = "marta_muros";
     private const string PreferredLanguage = "es-MX";
+
+    private static readonly DateTimeOffset _now = new DateTimeOffset(2026, 11, 12, 10, 0, 0, TimeSpan.Zero);
 
     private readonly FakeNotificationClient _notifications = new FakeNotificationClient();
     private readonly FakeClipboard _clipboard = new FakeClipboard();
@@ -20,7 +24,8 @@ public class TestFriendsPanelViewModel
     {
         using FriendsPanelViewModel viewModel = CreateViewModel();
 
-        Assert.True(_notifications.HasAnySubscribers());
+        bool hasSubscribers = _notifications.HasAnySubscribers();
+        Assert.True(hasSubscribers);
     }
 
     [Fact]
@@ -30,7 +35,8 @@ public class TestFriendsPanelViewModel
 
         viewModel.Dispose();
 
-        Assert.False(_notifications.HasAnySubscribers());
+        bool hasSubscribers = _notifications.HasAnySubscribers();
+        Assert.False(hasSubscribers);
     }
 
     [Fact]
@@ -57,8 +63,14 @@ public class TestFriendsPanelViewModel
     private FriendsPanelViewModel CreateViewModel()
     {
         var session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
-        var chatClients = new ChatClients(new FakeChatClient(), new FakeConversationClient(), _notifications);
-        var clients = new SocialClients(new FakeFriendClient(), chatClients, _notifications);
-        return InlineUiContext.CreateViewModel(() => new FriendsPanelViewModel(session, clients, _clipboard));
+        var chatClient = new FakeChatClient();
+        var conversationClient = new FakeConversationClient();
+        var chatClients = new ChatClients(chatClient, conversationClient, _notifications);
+        var friendClient = new FakeFriendClient();
+        var clients = new SocialClients(friendClient, chatClients, _notifications);
+        var languages = new FakeLanguageService();
+        var timeProvider = new ManualTimeProvider(_now);
+        var localServices = new LocalServices(languages, _clipboard, timeProvider);
+        return InlineUiContext.CreateViewModel(() => new FriendsPanelViewModel(session, clients, localServices));
     }
 }

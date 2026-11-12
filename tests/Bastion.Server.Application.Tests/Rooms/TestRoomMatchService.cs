@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
@@ -11,7 +12,7 @@ using Xunit;
 
 namespace Bastion.Server.Application.Tests.Rooms;
 
-public class TestRoomMatchService
+public sealed class TestRoomMatchService
 {
     private const int HostAccountId = 7;
     private const string HostNickname = "marta_muros";
@@ -25,12 +26,16 @@ public class TestRoomMatchService
     private const int FirstMatchId = 100;
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
+    private static readonly ConnectedPlayer _host = new ConnectedPlayer(HostAccountId, HostNickname);
+    private static readonly ConnectedPlayer _guest = new ConnectedPlayer(GuestAccountId, GuestNickname);
 
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
     private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
+    private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
     private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
     private readonly FakeRoomCodeGenerator _codeGenerator = new FakeRoomCodeGenerator();
     private readonly FakeRoomRepository _roomRepository = new FakeRoomRepository();
+    private readonly FakeRoomNotifier _roomNotifier = new FakeRoomNotifier();
     private readonly FakeTurnOrderShuffler _turnOrderShuffler = new FakeTurnOrderShuffler();
     private readonly RoomRegistry _roomRegistry;
     private readonly PrivateRoomService _privateRoomService;
@@ -39,48 +44,52 @@ public class TestRoomMatchService
     public TestRoomMatchService()
     {
         _roomRegistry = new RoomRegistry(_codeGenerator);
-        var playerActivity = new PlayerActivity(_matchmakingNotifier, new MatchmakingQueue(), _roomRegistry);
+        var playerActivity = new PlayerActivity(_matchmakingNotifier, _matchmakingQueue, _roomRegistry);
         var playerVerifier = new RoomPlayerVerifier(_sessionVerifier, _matchRepository, playerActivity);
-        var roomKeeper = new RoomKeeper(_roomRegistry, _roomRepository, new FakeRoomNotifier());
+        var roomKeeper = new RoomKeeper(_roomRegistry, _roomRepository, _roomNotifier);
         var settingsValidator = new RoomSettingsValidator(_matchRepository);
         _privateRoomService = new PrivateRoomService(playerVerifier, settingsValidator, roomKeeper);
         var matchCreator = new PrivateMatchCreator(_matchRepository, _roomRepository, _turnOrderShuffler);
         var matchStarter = new RoomMatchStarter(_roomRegistry, matchCreator, _matchmakingNotifier);
         _roomMatchService = new RoomMatchService(playerVerifier, matchStarter);
-        AddPlayer(HostToken, HostAccountId, HostNickname);
-        AddPlayer(GuestToken, GuestAccountId, GuestNickname);
-        _codeGenerator.Codes.Enqueue(Code);
     }
 
     [Fact]
     public void StartMatch_FreeSeat_RejectsNotReadyToStart()
     {
         OpenRoom();
+        Action start = () => _roomMatchService.StartMatch(HostToken, _now);
 
-        RoomRejection rejection = CatchRejection(() => _roomMatchService.StartMatch(HostToken, _now));
+        Exception? exception = Record.Exception(start);
 
-        Assert.Equal(RoomRejection.NotReadyToStart, rejection);
+        var rejection = exception as RoomRejectedException;
+        Assert.Equal(RoomRejection.NotReadyToStart, rejection?.Rejection);
     }
 
     [Fact]
     public void StartMatch_GuestNotReady_RejectsNotReadyToStart()
     {
         OpenRoom();
+        AddPlayer(GuestToken, _guest);
         _privateRoomService.JoinRoom(GuestToken, Code, _now);
+        Action start = () => _roomMatchService.StartMatch(HostToken, _now);
 
-        RoomRejection rejection = CatchRejection(() => _roomMatchService.StartMatch(HostToken, _now));
+        Exception? exception = Record.Exception(start);
 
-        Assert.Equal(RoomRejection.NotReadyToStart, rejection);
+        var rejection = exception as RoomRejectedException;
+        Assert.Equal(RoomRejection.NotReadyToStart, rejection?.Rejection);
     }
 
     [Fact]
     public void StartMatch_Guest_RejectsNotHost()
     {
         FillRoom();
+        Action start = () => _roomMatchService.StartMatch(GuestToken, _now);
 
-        RoomRejection rejection = CatchRejection(() => _roomMatchService.StartMatch(GuestToken, _now));
+        Exception? exception = Record.Exception(start);
 
-        Assert.Equal(RoomRejection.NotHost, rejection);
+        var rejection = exception as RoomRejectedException;
+        Assert.Equal(RoomRejection.NotHost, rejection?.Rejection);
     }
 
     [Fact]
@@ -90,18 +99,21 @@ public class TestRoomMatchService
 
         _roomMatchService.StartMatch(HostToken, _now);
 
-        Assert.Equal(MatchType.Private, _roomRepository.SavedMatchesByRoomId[roomId].MatchType);
+        Match savedMatch = _roomRepository.SavedMatchesByRoomId[roomId];
+        Assert.Equal(MatchType.Private, savedMatch.MatchType);
     }
 
     [Fact]
     public void StartMatch_ReadyRoom_GivesWallsOfRoomToEveryPlayer()
     {
         int roomId = FillRoom();
+        byte[] expectedWalls = { RoomWallsPerPlayer, RoomWallsPerPlayer };
 
         _roomMatchService.StartMatch(HostToken, _now);
 
-        Match match = _roomRepository.SavedMatchesByRoomId[roomId];
-        Assert.True(match.Participations.All(participation => participation.RemainingWalls == RoomWallsPerPlayer));
+        Match savedMatch = _roomRepository.SavedMatchesByRoomId[roomId];
+        IEnumerable<byte> remainingWalls = savedMatch.Participations.Select(participation => participation.RemainingWalls);
+        Assert.Equal(expectedWalls, remainingWalls);
     }
 
     [Fact]
@@ -119,11 +131,13 @@ public class TestRoomMatchService
     {
         FillRoom();
         _turnOrderShuffler.ShouldReverseOrder = true;
+        (int AccountId, byte TurnOrder) expectedFirstPlayer = (GuestAccountId, Match.FirstTurnOrder);
 
         _roomMatchService.StartMatch(HostToken, _now);
 
-        CreatedMatchParticipant firstPlayer = _matchmakingNotifier.CreatedMatches.Single().Participants[0];
-        Assert.Equal((GuestAccountId, Match.FirstTurnOrder), (firstPlayer.Player.AccountId, firstPlayer.TurnOrder));
+        CreatedMatch createdMatch = _matchmakingNotifier.CreatedMatches.Single();
+        CreatedMatchParticipant firstPlayer = createdMatch.Participants[0];
+        Assert.Equal(expectedFirstPlayer, (firstPlayer.Player.AccountId, firstPlayer.TurnOrder));
     }
 
     [Fact]
@@ -133,7 +147,8 @@ public class TestRoomMatchService
 
         _roomMatchService.StartMatch(HostToken, _now);
 
-        Assert.Equal(RoomWallsPerPlayer, _matchmakingNotifier.CreatedMatches.Single().Format.WallsPerPlayer);
+        CreatedMatch createdMatch = _matchmakingNotifier.CreatedMatches.Single();
+        Assert.Equal(RoomWallsPerPlayer, createdMatch.Format.WallsPerPlayer);
     }
 
     [Fact]
@@ -143,7 +158,8 @@ public class TestRoomMatchService
 
         _roomMatchService.StartMatch(HostToken, _now);
 
-        Assert.False(_roomRegistry.IsInRoom(GuestAccountId));
+        bool isGuestInRoom = _roomRegistry.IsInRoom(GuestAccountId);
+        Assert.False(isGuestInRoom);
     }
 
     [Fact]
@@ -151,44 +167,35 @@ public class TestRoomMatchService
     {
         FillRoom();
         _roomRepository.MatchSaveFailure = new RoomRepositoryException();
+        Action start = () => _roomMatchService.StartMatch(HostToken, _now);
 
-        Record.Exception(() => _roomMatchService.StartMatch(HostToken, _now));
+        Record.Exception(start);
 
-        Assert.True(_roomRegistry.IsInRoom(GuestAccountId));
-    }
-
-    [Fact]
-    public void JoinRoom_RoomAlreadyInMatch_RejectsMatchStarted()
-    {
-        _roomRepository.CodesInMatch.Add(Code);
-
-        RoomRejection rejection = CatchRejection(() => _privateRoomService.JoinRoom(GuestToken, Code, _now));
-
-        Assert.Equal(RoomRejection.MatchStarted, rejection);
-    }
-
-    private static RoomRejection CatchRejection(Action request)
-    {
-        return Assert.Throws<RoomRejectedException>(request).Rejection;
+        bool isGuestInRoom = _roomRegistry.IsInRoom(GuestAccountId);
+        Assert.True(isGuestInRoom);
     }
 
     private int OpenRoom()
     {
+        AddPlayer(HostToken, _host);
+        _codeGenerator.Codes.Enqueue(Code);
         var settings = new RequestedRoomSettings(GameModeCode.Classic, RoomWallsPerPlayer, FiveMinuteClock);
-        return _privateRoomService.CreateRoom(HostToken, settings, _now).Identity.RoomId;
+        RoomSnapshot room = _privateRoomService.CreateRoom(HostToken, settings, _now);
+        return room.Identity.RoomId;
+    }
+
+    private void AddPlayer(string sessionToken, ConnectedPlayer player)
+    {
+        _sessionVerifier.Add(sessionToken, player);
+        _matchmakingNotifier.SubscribedAccountIds.Add(player.AccountId);
     }
 
     private int FillRoom()
     {
         int roomId = OpenRoom();
+        AddPlayer(GuestToken, _guest);
         _privateRoomService.JoinRoom(GuestToken, Code, _now);
-        _privateRoomService.SetReady(GuestToken, true, _now);
+        _privateRoomService.SetReady(GuestToken, isReady: true, _now);
         return roomId;
-    }
-
-    private void AddPlayer(string sessionToken, int accountId, string nickname)
-    {
-        _sessionVerifier.Add(sessionToken, new ConnectedPlayer(accountId, nickname));
-        _matchmakingNotifier.SubscribedAccountIds.Add(accountId);
     }
 }

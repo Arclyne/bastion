@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Channels;
 
-public class TestServiceFailureTranslator
+public sealed class TestServiceFailureTranslator
 {
     private const string FailureMessage = "The service could not be reached.";
 
@@ -24,7 +24,8 @@ public class TestServiceFailureTranslator
     [Fact]
     public void ToClientException_InvalidSessionFault_ReturnsInvalidSession()
     {
-        var failure = new FaultException<InvalidSessionFault>(new InvalidSessionFault());
+        var fault = new InvalidSessionFault();
+        var failure = new FaultException<InvalidSessionFault>(fault);
 
         Exception translated = ServiceFailureTranslator.ToClientException(failure);
 

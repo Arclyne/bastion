@@ -47,13 +47,13 @@ public sealed class FoundPlayerRowViewModel : ViewModel
         FriendRelationship.RequestReceived => nameof(Strings.FriendsAccept),
         FriendRelationship.RequestSent => nameof(Strings.FriendsRequestSent),
         FriendRelationship.AlreadyFriends => nameof(Strings.FriendsAlreadyFriend),
-        _ => nameof(Strings.FriendsItsYou),
+        FriendRelationship.OwnAccount => nameof(Strings.FriendsItsYou),
+        _ => throw new InvalidOperationException("Unsupported friend relationship."),
     };
 
     [DependsOn(nameof(Relationship))]
     [DependsOn(nameof(IsSending))]
-    public bool CanPress =>
-        !IsSending && (Relationship == FriendRelationship.None || Relationship == FriendRelationship.RequestReceived);
+    public bool CanPress => !IsSending && HasPendingAction();
 
     public void ApplyOutcome(FriendRequestOutcome outcome)
     {
@@ -65,5 +65,10 @@ public sealed class FoundPlayerRowViewModel : ViewModel
     public void MarkRequestSent()
     {
         Relationship = FriendRelationship.RequestSent;
+    }
+
+    private bool HasPendingAction()
+    {
+        return Relationship == FriendRelationship.None || Relationship == FriendRelationship.RequestReceived;
     }
 }

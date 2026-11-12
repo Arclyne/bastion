@@ -8,7 +8,7 @@ public sealed class FakeChatClient : IChatClient
 {
     private const string LobbyChatNotSupported = "The tests that use this fake never use the lobby chat.";
 
-    public static DateTime ConfirmedSentAt { get; } = new DateTime(2026, 11, 5, 18, 2, 0, DateTimeKind.Utc);
+    private static readonly DateTime _confirmedSentAt = new DateTime(2026, 11, 5, 18, 2, 0, DateTimeKind.Utc);
 
     public Exception? MatchChatSendFailure { get; set; }
 
@@ -38,7 +38,7 @@ public sealed class FakeChatClient : IChatClient
 
         MatchChatSendCount++;
         LastSentMatchId = matchId;
-        return ConfirmedSentAt;
+        return _confirmedSentAt;
     }
 
     public LobbyChatTranscript OpenLobbyChat(string sessionToken)
@@ -57,6 +57,7 @@ public sealed class FakeChatClient : IChatClient
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        MatchChatMessageReceived?.Invoke(this, new MatchChatMessageReceivedEventArgs(matchId, message));
+        var receivedMessage = new MatchChatMessageReceivedEventArgs(matchId, message);
+        MatchChatMessageReceived?.Invoke(this, receivedMessage);
     }
 }

@@ -3,8 +3,10 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Accounts;
 
-public class TestAccountPolicy
+public sealed class TestAccountPolicy
 {
+    private const string IncompleteEmail = "marta@";
+
     [Theory]
     [InlineData("marta_muros")]
     [InlineData("Ana")]
@@ -63,7 +65,7 @@ public class TestAccountPolicy
     [Fact]
     public void IsValidLoginIdentifier_NeitherNicknameNorEmail_ReturnsFalse()
     {
-        bool isValidLoginIdentifier = AccountPolicy.IsValidLoginIdentifier("marta@");
+        bool isValidLoginIdentifier = AccountPolicy.IsValidLoginIdentifier(IncompleteEmail);
 
         Assert.False(isValidLoginIdentifier);
     }

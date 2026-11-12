@@ -16,6 +16,7 @@ public sealed class FakeMatchChatNotifier : IMatchChatNotifier
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
         ArgumentNullException.ThrowIfNull(postedLine);
 
-        NotifiedMessages.Add(new NotifiedMatchChatMessage(matchId, recipientAccountIds, postedLine));
+        var notifiedMessage = new NotifiedMatchChatMessage(matchId, recipientAccountIds, postedLine);
+        NotifiedMessages.Add(notifiedMessage);
     }
 }

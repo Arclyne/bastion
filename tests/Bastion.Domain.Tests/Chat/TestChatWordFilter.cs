@@ -3,9 +3,12 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Chat;
 
-public class TestChatWordFilter
+public sealed class TestChatWordFilter
 {
+    private const string CleanText = "hola";
+
     private static readonly string[] _bannedTerms = { "tonto", "estúpido", "mala palabra" };
+    private static readonly string[] _blankTerms = { "  " };
 
     [Theory]
     [InlineData("eres un tonto")]
@@ -35,7 +38,7 @@ public class TestChatWordFilter
     [Fact]
     public void HasBannedTerm_BlankTerm_ReturnsFalse()
     {
-        bool hasBannedTerm = ChatWordFilter.HasBannedTerm("hola", new[] { "  " });
+        bool hasBannedTerm = ChatWordFilter.HasBannedTerm(CleanText, _blankTerms);
 
         Assert.False(hasBannedTerm);
     }

@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Friends;
 
-public class TestFriendContractTranslator
+public sealed class TestFriendContractTranslator
 {
     private const string OwnFriendCode = "QU7K2P";
     private const string FriendNickname = "marta_muros";
@@ -17,11 +17,13 @@ public class TestFriendContractTranslator
     [Fact]
     public void ToFriendListing_ConnectedEntry_MapsConnectedPresence()
     {
-        FriendList list = CreateList(CreateEntry(FriendCode));
+        FriendListEntry entry = CreateEntry(FriendCode);
+        FriendList list = CreateList(entry);
 
         var listing = FriendContractTranslator.ToFriendListing(list);
 
-        Assert.Equal(FriendPresence.Connected, listing.Friends[0].Presence);
+        ListedFriend friend = listing.Friends[0];
+        Assert.Equal(FriendPresence.Connected, friend.Presence);
     }
 
     [Fact]
@@ -41,17 +43,20 @@ public class TestFriendContractTranslator
     [Fact]
     public void ToFriendListing_NullFriendCode_UsesEmptyText()
     {
-        FriendList list = CreateList(CreateEntry(null));
+        FriendListEntry entry = CreateEntry(friendCode: null);
+        FriendList list = CreateList(entry);
 
         var listing = FriendContractTranslator.ToFriendListing(list);
 
-        Assert.Equal(string.Empty, listing.Friends[0].Friend.FriendCode);
+        ListedFriend friend = listing.Friends[0];
+        Assert.Equal(string.Empty, friend.Friend.FriendCode);
     }
 
     [Fact]
     public void ToFriendListing_AnyList_KeepsListedAt()
     {
-        FriendList list = CreateList(CreateEntry(FriendCode));
+        FriendListEntry entry = CreateEntry(FriendCode);
+        FriendList list = CreateList(entry);
 
         var listing = FriendContractTranslator.ToFriendListing(list);
 
@@ -61,25 +66,24 @@ public class TestFriendContractTranslator
     [Fact]
     public void ToFoundPlayers_SelfEntry_MapsOwnAccount()
     {
-        var entries = new PlayerSearchEntry[]
+        var selfEntry = new PlayerSearchEntry
         {
-            new PlayerSearchEntry
-            {
-                Nickname = FriendNickname,
-                FriendCode = FriendCode,
-                Relationship = PlayerRelationship.Self,
-            },
+            Nickname = FriendNickname,
+            FriendCode = FriendCode,
+            Relationship = PlayerRelationship.Self,
         };
+        PlayerSearchEntry[] entries = { selfEntry };
 
         IReadOnlyList<FoundPlayer> foundPlayers = FriendContractTranslator.ToFoundPlayers(entries);
 
-        Assert.Equal(FriendRelationship.OwnAccount, foundPlayers[0].Relationship);
+        FoundPlayer foundPlayer = foundPlayers[0];
+        Assert.Equal(FriendRelationship.OwnAccount, foundPlayer.Relationship);
     }
 
     [Fact]
     public void ToFoundPlayers_NullEntries_ReturnsEmptyList()
     {
-        IReadOnlyList<FoundPlayer> foundPlayers = FriendContractTranslator.ToFoundPlayers(null);
+        IReadOnlyList<FoundPlayer> foundPlayers = FriendContractTranslator.ToFoundPlayers(entries: null);
 
         Assert.Empty(foundPlayers);
     }
@@ -103,16 +107,6 @@ public class TestFriendContractTranslator
         Assert.Empty(listing.ReceivedRequests);
     }
 
-    private static FriendList CreateList(FriendListEntry entry)
-    {
-        return new FriendList
-        {
-            OwnFriendCode = OwnFriendCode,
-            Friends = new[] { entry },
-            ListedAt = _listedAt,
-        };
-    }
-
     private static FriendListEntry CreateEntry(string? friendCode)
     {
         return new FriendListEntry
@@ -120,6 +114,17 @@ public class TestFriendContractTranslator
             Nickname = FriendNickname,
             FriendCode = friendCode,
             Presence = PresenceState.Connected,
+        };
+    }
+
+    private static FriendList CreateList(FriendListEntry entry)
+    {
+        FriendListEntry[] friends = { entry };
+        return new FriendList
+        {
+            OwnFriendCode = OwnFriendCode,
+            Friends = friends,
+            ListedAt = _listedAt,
         };
     }
 }

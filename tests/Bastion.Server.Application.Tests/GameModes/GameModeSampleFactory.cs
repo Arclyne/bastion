@@ -1,16 +1,15 @@
 using Bastion.Domain.GameModes;
 
-namespace Bastion.Server.Application.Tests.Fakes;
+namespace Bastion.Server.Application.Tests.GameModes;
 
-public static class GameModeSamples
+public static class GameModeSampleFactory
 {
-    public const byte ClassicWallsPerPlayer = 10;
-
     private const byte ClassicGameModeId = 1;
     private const byte FourPlayersGameModeId = 2;
     private const byte BoardSize = 9;
     private const byte TwoPlayers = 2;
     private const byte FourPlayers = 4;
+    private const byte ClassicWallsPerPlayer = 10;
     private const byte FourPlayersWallsPerPlayer = 5;
 
     public static GameMode CreateClassic()

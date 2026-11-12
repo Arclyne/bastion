@@ -14,7 +14,13 @@ public sealed class FakePasswordHasher : IPasswordHasher
 
     public bool IsPasswordCorrect(string enteredPassword, byte[]? storedHash, byte[]? storedSalt)
     {
-        return storedHash is not null && Encoding.UTF8.GetString(storedHash) == enteredPassword;
+        if (storedHash is null)
+        {
+            return false;
+        }
+
+        string storedPassword = Encoding.UTF8.GetString(storedHash);
+        return storedPassword == enteredPassword;
     }
 
     public void SimulatePasswordCheck(string enteredPassword)

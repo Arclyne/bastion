@@ -11,12 +11,12 @@ public sealed class FakeAccountRepository : IAccountRepository
     private readonly List<Account> _accounts = new List<Account>();
     private readonly List<PlayerIdentity> _playerIdentities = new List<PlayerIdentity>();
 
-    public void Store(Account account)
+    public void AddAccount(Account account)
     {
         _accounts.Add(account);
     }
 
-    public void StorePlayerIdentity(PlayerIdentity playerIdentity)
+    public void AddPlayerIdentity(PlayerIdentity playerIdentity)
     {
         _playerIdentities.Add(playerIdentity);
     }
@@ -53,16 +53,18 @@ public sealed class FakeAccountRepository : IAccountRepository
 
     public IReadOnlyList<PlayerIdentity> SearchPlayerIdentities(string nicknamePrefix, int limit)
     {
-        return _playerIdentities
+        IEnumerable<PlayerIdentity> matchingIdentities = _playerIdentities
             .Where(playerIdentity =>
                 playerIdentity.Nickname.StartsWith(nicknamePrefix, StringComparison.OrdinalIgnoreCase))
             .OrderBy(playerIdentity => playerIdentity.Nickname, StringComparer.OrdinalIgnoreCase)
-            .Take(limit)
-            .ToList();
+            .Take(limit);
+        return new List<PlayerIdentity>(matchingIdentities);
     }
 
     public IReadOnlyList<PlayerIdentity> ListPlayerIdentities(IReadOnlyCollection<int> accountIds)
     {
-        return _playerIdentities.Where(playerIdentity => accountIds.Contains(playerIdentity.AccountId)).ToList();
+        IEnumerable<PlayerIdentity> listedIdentities = _playerIdentities
+            .Where(playerIdentity => accountIds.Contains(playerIdentity.AccountId));
+        return new List<PlayerIdentity>(listedIdentities);
     }
 }

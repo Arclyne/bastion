@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Matches;
+using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Screens.Matches;
 using Bastion.Client.Tests.Fakes;
 using Bastion.Domain.Matches;
@@ -10,7 +11,7 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Screens.Matches;
 
-public class TestWallPlacementViewModel : IDisposable
+public sealed class TestWallPlacementViewModel : IDisposable
 {
     private const int CenterColumnIndex = 4;
     private const int FourthRowIndex = 3;
@@ -20,6 +21,8 @@ public class TestWallPlacementViewModel : IDisposable
 
     private static readonly BoardCoordinates _centerGroove = new BoardCoordinates(CenterColumnIndex, FourthRowIndex);
     private static readonly BoardCoordinates _lastColumnGroove = new BoardCoordinates(LastColumnIndex, FirstRowIndex);
+    private static readonly Wall _centerHorizontalWall = new Wall(_centerGroove, WallOrientation.Horizontal);
+    private static readonly Wall _centerVerticalWall = new Wall(_centerGroove, WallOrientation.Vertical);
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
     private readonly List<IDisposable> _viewModels = new List<IDisposable>();
@@ -76,14 +79,16 @@ public class TestWallPlacementViewModel : IDisposable
 
         viewModel.ChooseGroove(_centerGroove);
 
-        Assert.Equal(new Wall(_centerGroove, WallOrientation.Horizontal), viewModel.PendingWall);
+        Assert.Equal(_centerHorizontalWall, viewModel.PendingWall);
     }
 
     [Fact]
     public void ChooseGroove_GrooveTaken_ShowsGrooveTaken()
     {
         WallPlacementViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
-        _matchClient.RaiseWallPlaced(WallPlacedSamples.CreateFirstWall(JoinedMatchSamples.RivalNickname, CenterGroove));
+        WallPlacedEventArgs rivalWall =
+            WallPlacedSampleFactory.CreateFirstWall(JoinedMatchSampleFactory.RivalNickname, CenterGroove);
+        _matchClient.RaiseWallPlaced(rivalWall);
         viewModel.Start();
 
         viewModel.ChooseGroove(_centerGroove);
@@ -99,7 +104,7 @@ public class TestWallPlacementViewModel : IDisposable
 
         viewModel.Rotate();
 
-        Assert.Equal(new Wall(_centerGroove, WallOrientation.Vertical), viewModel.PendingWall);
+        Assert.Equal(_centerVerticalWall, viewModel.PendingWall);
     }
 
     [Fact]
@@ -129,10 +134,9 @@ public class TestWallPlacementViewModel : IDisposable
     {
         WallPlacementViewModel viewModel = CreateActiveViewModel();
         viewModel.ChooseGroove(_centerGroove);
-        _matchClient.WallFailure = new IllegalWallException(
-            WallPlacementRejection.GrooveTaken,
-            null,
-            new InvalidOperationException());
+        var cause = new InvalidOperationException();
+        var grooveTaken = new IllegalWallException(WallPlacementRejection.GrooveTaken, blockedTurnOrder: null, cause);
+        _matchClient.WallFailure = grooveTaken;
 
         await viewModel.Confirm();
 
@@ -154,8 +158,10 @@ public class TestWallPlacementViewModel : IDisposable
     public void WallPlaced_TurnPassed_LeavesWallMode()
     {
         WallPlacementViewModel viewModel = CreateActiveViewModel();
+        WallPlacedEventArgs ownWall =
+            WallPlacedSampleFactory.CreateFirstWall(JoinedMatchSampleFactory.OwnNickname, CenterGroove);
 
-        _matchClient.RaiseWallPlaced(WallPlacedSamples.CreateFirstWall(JoinedMatchSamples.OwnNickname, CenterGroove));
+        _matchClient.RaiseWallPlaced(ownWall);
 
         Assert.False(viewModel.IsActive);
     }
@@ -174,7 +180,7 @@ public class TestWallPlacementViewModel : IDisposable
 
     private WallPlacementViewModel CreateViewModel(byte ownTurnOrder)
     {
-        JoinedMatch joinedMatch = JoinedMatchSamples.CreateWithOwnTurnOrder(ownTurnOrder);
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
         MatchPlayViewModel play =
             InlineUiContext.CreateViewModel(() => new MatchPlayViewModel(joinedMatch, _matchClient));
         var viewModel = new WallPlacementViewModel(play);

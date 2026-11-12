@@ -4,10 +4,18 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Accounts;
 
-public class TestAccount
+public sealed class TestAccount
 {
     private const string Nickname = "marta_muros";
     private const string Email = "marta@example.com";
+    private const int FailuresBelowLock = 2;
+    private const int FailuresThatLock = 3;
+    private const int FirstLockMinutes = 5;
+    private const int HoursAfterResetPeriod = 25;
+    private const byte FailuresAfterReset = 1;
+    private const int PartialMinuteSeconds = 30;
+    private const int MinutesAfterLockEnds = 6;
+    private const int NoMinutesLeft = 0;
 
     private static readonly DateTime _now = new DateTime(2026, 10, 15, 12, 0, 0, DateTimeKind.Utc);
 
@@ -25,7 +33,7 @@ public class TestAccount
     public void RecordFailedLogin_TwoFailures_DoesNotLock()
     {
         Account account = CreateActiveAccount();
-        RecordFailures(account, 2);
+        RecordFailures(account, FailuresBelowLock);
 
         bool isLocked = account.IsLockedAt(_now);
 
@@ -36,54 +44,56 @@ public class TestAccount
     public void RecordFailedLogin_ThirdFailure_LocksForFiveMinutes()
     {
         Account account = CreateActiveAccount();
+        DateTime expectedLockEnd = _now.AddMinutes(FirstLockMinutes);
 
-        RecordFailures(account, 3);
+        RecordFailures(account, FailuresThatLock);
 
-        Assert.Equal(_now.AddMinutes(5), account.LockedUntil);
+        Assert.Equal(expectedLockEnd, account.LockedUntil);
     }
 
     [Fact]
     public void RecordFailedLogin_AfterResetPeriod_RestartsCounter()
     {
         Account account = CreateActiveAccount();
-        RecordFailures(account, 2);
+        RecordFailures(account, FailuresBelowLock);
+        DateTime afterResetPeriod = _now.AddHours(HoursAfterResetPeriod);
 
-        account.RecordFailedLogin(_now.AddHours(25));
+        account.RecordFailedLogin(afterResetPeriod);
 
-        Assert.Equal(1, account.FailedLoginCount);
+        Assert.Equal(FailuresAfterReset, account.FailedLoginCount);
     }
 
     [Fact]
     public void RecordSuccessfulLogin_LockedAccount_RemovesLock()
     {
-        Account account = CreateActiveAccount();
-        RecordFailures(account, 3);
+        Account account = CreateLockedAccount();
 
         account.RecordSuccessfulLogin();
 
-        Assert.False(account.IsLockedAt(_now));
+        bool isLocked = account.IsLockedAt(_now);
+        Assert.False(isLocked);
     }
 
     [Fact]
     public void GetRemainingLockMinutes_PartialMinuteLeft_RoundsUp()
     {
-        Account account = CreateActiveAccount();
-        RecordFailures(account, 3);
+        Account account = CreateLockedAccount();
+        DateTime partialMinuteLater = _now.AddSeconds(PartialMinuteSeconds);
 
-        int remainingMinutes = account.GetRemainingLockMinutes(_now.AddSeconds(30));
+        int remainingMinutes = account.GetRemainingLockMinutes(partialMinuteLater);
 
-        Assert.Equal(5, remainingMinutes);
+        Assert.Equal(FirstLockMinutes, remainingMinutes);
     }
 
     [Fact]
     public void GetRemainingLockMinutes_LockExpired_ReturnsZero()
     {
-        Account account = CreateActiveAccount();
-        RecordFailures(account, 3);
+        Account account = CreateLockedAccount();
+        DateTime afterLockEnds = _now.AddMinutes(MinutesAfterLockEnds);
 
-        int remainingMinutes = account.GetRemainingLockMinutes(_now.AddMinutes(6));
+        int remainingMinutes = account.GetRemainingLockMinutes(afterLockEnds);
 
-        Assert.Equal(0, remainingMinutes);
+        Assert.Equal(NoMinutesLeft, remainingMinutes);
     }
 
     [Fact]
@@ -109,5 +119,12 @@ public class TestAccount
         {
             account.RecordFailedLogin(_now);
         }
+    }
+
+    private static Account CreateLockedAccount()
+    {
+        Account account = CreateActiveAccount();
+        RecordFailures(account, FailuresThatLock);
+        return account;
     }
 }

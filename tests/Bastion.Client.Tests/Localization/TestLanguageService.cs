@@ -13,12 +13,19 @@ public sealed class TestLanguageService : IDisposable
 {
     private const string SavedCultureName = "es-MX";
 
+    public void Dispose()
+    {
+        Strings.Culture = null;
+        CultureInfo.DefaultThreadCurrentCulture = null;
+        CultureInfo.DefaultThreadCurrentUICulture = null;
+    }
+
     [Fact]
     public async Task ChangeLanguage_InsideAsyncFlow_KeepsTextsInNewLanguageAfterward()
     {
-        var languages = new LanguageService(
-            new FakeLanguagePreferenceStore(SavedCultureName),
-            new LocalizationService());
+        var preferenceStore = new FakeLanguagePreferenceStore(SavedCultureName);
+        var localizationService = new LocalizationService();
+        var languages = new LanguageService(preferenceStore, localizationService);
         languages.LoadInitialLanguage();
         var englishCulture = new CultureInfo(LanguageCatalog.English.CultureName);
         string? englishTagline = Strings.ResourceManager.GetString(nameof(Strings.LoginTagline), englishCulture);
@@ -26,13 +33,6 @@ public sealed class TestLanguageService : IDisposable
         await ChangeLanguageAfterAwait(languages, LanguageCatalog.English);
 
         Assert.Equal(englishTagline, Strings.LoginTagline);
-    }
-
-    public void Dispose()
-    {
-        Strings.Culture = null;
-        CultureInfo.DefaultThreadCurrentCulture = null;
-        CultureInfo.DefaultThreadCurrentUICulture = null;
     }
 
     private static async Task ChangeLanguageAfterAwait(ILanguageService languages, SupportedLanguage language)

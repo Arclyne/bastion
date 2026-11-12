@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Bastion.Client.Localization;
@@ -9,37 +10,34 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Screens.Matches;
 
-public class TestVersusViewModel : IDisposable
+public sealed class TestVersusViewModel
 {
     private const int CountdownTickSeconds = 1;
+    private const int OneCountdownFinished = 1;
+    private const int NoCountdownFinished = 0;
+    private const int NoActiveTimers = 0;
 
     private static readonly DateTimeOffset _shownAt = new DateTimeOffset(2026, 11, 5, 18, 1, 0, TimeSpan.Zero);
+    private static readonly TimeSpan _countdownTick = TimeSpan.FromSeconds(CountdownTickSeconds);
 
     private readonly ManualTimeProvider _timeProvider = new ManualTimeProvider(_shownAt);
-    private readonly VersusViewModel _viewModel;
     private int _countdownFinishedCount;
-
-    public TestVersusViewModel()
-    {
-        _viewModel = CreateViewModel(Match.FirstTurnOrder);
-        _viewModel.CountdownFinished += HandleCountdownFinished;
-    }
-
-    public void Dispose()
-    {
-        _viewModel.Dispose();
-    }
 
     [Fact]
     public void Constructor_RivalListedFirst_ShowsOwnNickname()
     {
-        Assert.Equal(JoinedMatchSamples.OwnNickname, _viewModel.Own.Nickname);
+        using VersusViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+
+        Assert.Equal(JoinedMatchSampleFactory.OwnNickname, viewModel.Own.Nickname);
     }
 
     [Fact]
     public void Constructor_RivalListedFirst_ShowsRivalNickname()
     {
-        Assert.Equal(JoinedMatchSamples.RivalNickname, _viewModel.Rivals.Single().Nickname);
+        using VersusViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+
+        VersusPlayer rival = viewModel.Rivals.Single();
+        Assert.Equal(JoinedMatchSampleFactory.RivalNickname, rival.Nickname);
     }
 
     [Fact]
@@ -48,9 +46,12 @@ public class TestVersusViewModel : IDisposable
         string expectedText = string.Format(
             CultureInfo.CurrentCulture,
             Strings.MatchEloFormat,
-            JoinedMatchSamples.RivalEloRating);
+            JoinedMatchSampleFactory.RivalEloRating);
 
-        Assert.Equal(expectedText, _viewModel.Rivals.Single().EloText);
+        using VersusViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+
+        VersusPlayer rival = viewModel.Rivals.Single();
+        Assert.Equal(expectedText, rival.EloText);
     }
 
     [Fact]
@@ -59,10 +60,12 @@ public class TestVersusViewModel : IDisposable
         string expectedText = string.Format(
             CultureInfo.CurrentCulture,
             Strings.VersusModeFormat,
-            JoinedMatchSamples.BoardSize,
-            JoinedMatchSamples.WallsPerPlayer);
+            JoinedMatchSampleFactory.BoardSize,
+            JoinedMatchSampleFactory.WallsPerPlayer);
 
-        Assert.Equal(expectedText, _viewModel.ModeText);
+        using VersusViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+
+        Assert.Equal(expectedText, viewModel.ModeText);
     }
 
     [Fact]
@@ -78,22 +81,25 @@ public class TestVersusViewModel : IDisposable
     {
         using VersusViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
 
-        Assert.Equal(PawnSymbol.Blue, viewModel.Rivals.Single().PawnSymbol);
+        VersusPlayer rival = viewModel.Rivals.Single();
+        Assert.Equal(PawnSymbol.Blue, rival.PawnSymbol);
     }
 
     [Fact]
     public void Constructor_FourPlayers_ShowsRivalsInTurnOrder()
     {
-        string[] expectedNicknames = new string[]
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateFourPlayerWithOwnThirdTurn();
+        string[] expectedNicknames =
         {
-            JoinedMatchSamples.RivalNickname,
-            JoinedMatchSamples.ThirdNickname,
-            JoinedMatchSamples.FourthNickname,
+            JoinedMatchSampleFactory.RivalNickname,
+            JoinedMatchSampleFactory.SecondRivalNickname,
+            JoinedMatchSampleFactory.ThirdRivalNickname,
         };
 
-        using var viewModel = new VersusViewModel(JoinedMatchSamples.CreateFourPlayerWithOwnThirdTurn(), _timeProvider);
+        using var viewModel = new VersusViewModel(joinedMatch, _timeProvider);
 
-        Assert.Equal(expectedNicknames, viewModel.Rivals.Select(rival => rival.Nickname));
+        IEnumerable<string> nicknames = viewModel.Rivals.Select(rival => rival.Nickname);
+        Assert.Equal(expectedNicknames, nicknames);
     }
 
     [Fact]
@@ -101,59 +107,84 @@ public class TestVersusViewModel : IDisposable
     {
         string expectedText = FormatCountdown(VersusViewModel.CountdownSeconds);
 
-        Assert.Equal(expectedText, _viewModel.CountdownText);
+        using VersusViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+
+        Assert.Equal(expectedText, viewModel.CountdownText);
     }
 
     [Fact]
     public void CountdownTick_OneSecond_ShowsOneSecondLess()
     {
-        string expectedText = FormatCountdown(VersusViewModel.CountdownSeconds - CountdownTickSeconds);
+        using VersusViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        int secondsLeft = VersusViewModel.CountdownSeconds - CountdownTickSeconds;
+        string expectedText = FormatCountdown(secondsLeft);
 
         AdvanceSeconds(CountdownTickSeconds);
 
-        Assert.Equal(expectedText, _viewModel.CountdownText);
+        Assert.Equal(expectedText, viewModel.CountdownText);
     }
 
     [Fact]
     public void CountdownTick_AllSeconds_RaisesCountdownFinished()
     {
+        using VersusViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        viewModel.CountdownFinished += HandleCountdownFinished;
+
         AdvanceSeconds(VersusViewModel.CountdownSeconds);
 
-        Assert.Equal(1, _countdownFinishedCount);
+        Assert.Equal(OneCountdownFinished, _countdownFinishedCount);
     }
 
     [Fact]
     public void CountdownTick_PastTheEnd_RaisesCountdownFinishedOnce()
     {
-        AdvanceSeconds(VersusViewModel.CountdownSeconds + CountdownTickSeconds);
+        using VersusViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        viewModel.CountdownFinished += HandleCountdownFinished;
+        int secondsPastTheEnd = VersusViewModel.CountdownSeconds + CountdownTickSeconds;
 
-        Assert.Equal(1, _countdownFinishedCount);
+        AdvanceSeconds(secondsPastTheEnd);
+
+        Assert.Equal(OneCountdownFinished, _countdownFinishedCount);
     }
 
     [Fact]
     public void CountdownTick_AllSeconds_StopsTimer()
     {
+        using VersusViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+
         AdvanceSeconds(VersusViewModel.CountdownSeconds);
 
-        Assert.Equal(0, _timeProvider.CountActiveTimers());
+        int activeTimers = _timeProvider.CountActiveTimers();
+        Assert.Equal(NoActiveTimers, activeTimers);
     }
 
     [Fact]
     public void Dispose_Counting_StopsTimer()
     {
-        _viewModel.Dispose();
+        VersusViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
 
-        Assert.Equal(0, _timeProvider.CountActiveTimers());
+        viewModel.Dispose();
+
+        int activeTimers = _timeProvider.CountActiveTimers();
+        Assert.Equal(NoActiveTimers, activeTimers);
     }
 
     [Fact]
     public void Dispose_Counting_NeverRaisesCountdownFinished()
     {
-        _viewModel.Dispose();
+        VersusViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        viewModel.CountdownFinished += HandleCountdownFinished;
+        viewModel.Dispose();
 
         AdvanceSeconds(VersusViewModel.CountdownSeconds);
 
-        Assert.Equal(0, _countdownFinishedCount);
+        Assert.Equal(NoCountdownFinished, _countdownFinishedCount);
+    }
+
+    private VersusViewModel CreateViewModel(byte ownTurnOrder)
+    {
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
+        return InlineUiContext.CreateViewModel(() => new VersusViewModel(joinedMatch, _timeProvider));
     }
 
     private static string FormatCountdown(int secondsLeft)
@@ -161,17 +192,11 @@ public class TestVersusViewModel : IDisposable
         return string.Format(CultureInfo.CurrentCulture, Strings.VersusStartsInFormat, secondsLeft);
     }
 
-    private VersusViewModel CreateViewModel(byte ownTurnOrder)
-    {
-        JoinedMatch joinedMatch = JoinedMatchSamples.CreateWithOwnTurnOrder(ownTurnOrder);
-        return InlineUiContext.CreateViewModel(() => new VersusViewModel(joinedMatch, _timeProvider));
-    }
-
     private void AdvanceSeconds(int seconds)
     {
         for (int second = 0; second < seconds; second++)
         {
-            _timeProvider.Advance(TimeSpan.FromSeconds(CountdownTickSeconds));
+            _timeProvider.Advance(_countdownTick);
         }
     }
 

@@ -7,8 +7,7 @@ namespace Bastion.Client.Screens.Matches.Scene;
 
 public static class WallMesh
 {
-    public const int TriangleCount = 12;
-
+    private const int TriangleCount = 12;
     private const float HalfSide = 0.5f;
 
     private static readonly VertexPositionNormalTexture[] _vertices = CreateUnitBox();

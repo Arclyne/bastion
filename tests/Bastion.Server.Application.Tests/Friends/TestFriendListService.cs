@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Bastion.Server.Application.Tests.Friends;
 
-public class TestFriendListService
+public sealed class TestFriendListService
 {
     private const int AccountId = 3;
     private const string Nickname = "luis_quo";
@@ -15,12 +15,18 @@ public class TestFriendListService
     private const string Token = "luis-token";
     private const string UnknownToken = "unknown-token";
     private const int FriendAccountId = 4;
+    private const string FriendNickname = "marta_muros";
     private const int SecondFriendAccountId = 5;
+    private const string SecondFriendNickname = "Pedro_peon";
     private const int ThirdFriendAccountId = 6;
+    private const string ThirdFriendNickname = "sofia_salto";
     private const string StoredFriendCode = "AB2CD9";
+    private const string HyphenatedStoredFriendCode = "ab-2cd9";
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _lastSeenAt = new DateTime(2026, 11, 5, 16, 0, 0, DateTimeKind.Utc);
+    private static readonly PlayerIdentity _caller = new PlayerIdentity(AccountId, Nickname, FriendCode);
+    private static readonly ConnectedPlayer _unknownCaller = new ConnectedPlayer(ThirdFriendAccountId, ThirdFriendNickname);
 
     private readonly FakeUnitOfWork _unitOfWork = new FakeUnitOfWork();
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
@@ -30,27 +36,31 @@ public class TestFriendListService
     public TestFriendListService()
     {
         _friendListService = new FriendListService(_unitOfWork, _sessionVerifier, _playerPresence);
-        _sessionVerifier.Add(Token, new PlayerIdentity(AccountId, Nickname, FriendCode));
-        _unitOfWork.AccountStore.StorePlayerIdentity(new PlayerIdentity(AccountId, Nickname, FriendCode));
     }
 
     [Fact]
     public void ListFriends_InvalidSession_ThrowsInvalidSession()
     {
-        Assert.Throws<InvalidSessionException>(() => _friendListService.ListFriends(UnknownToken, _now));
+        Action list = () => _friendListService.ListFriends(UnknownToken, _now);
+
+        Assert.Throws<InvalidSessionException>(list);
     }
 
     [Fact]
     public void ListFriends_UnknownCallerAccount_ThrowsInvalidSession()
     {
-        _sessionVerifier.Add(UnknownToken, new ConnectedPlayer(ThirdFriendAccountId, "sofia_salto"));
+        _sessionVerifier.Add(UnknownToken, _unknownCaller);
 
-        Assert.Throws<InvalidSessionException>(() => _friendListService.ListFriends(UnknownToken, _now));
+        Action list = () => _friendListService.ListFriends(UnknownToken, _now);
+
+        Assert.Throws<InvalidSessionException>(list);
     }
 
     [Fact]
     public void ListFriends_NoFriends_ReturnsEmptyList()
     {
+        AddCaller();
+
         FriendRoster roster = _friendListService.ListFriends(Token, _now);
 
         Assert.Empty(roster.Friends);
@@ -59,37 +69,45 @@ public class TestFriendListService
     [Fact]
     public void ListFriends_ConnectedFriend_ReturnsConnectedPresence()
     {
-        StoreFriend(FriendAccountId, "marta_muros");
+        AddCaller();
+        AddFriend(FriendAccountId, FriendNickname);
         _playerPresence.ConnectedAccountIds.Add(FriendAccountId);
 
         FriendRoster roster = _friendListService.ListFriends(Token, _now);
 
-        Assert.Equal(FriendPresence.Connected, roster.Friends[0].Presence);
+        FriendStatus friend = roster.Friends[0];
+        Assert.Equal(FriendPresence.Connected, friend.Presence);
     }
 
     [Fact]
     public void ListFriends_DisconnectedFriend_ReturnsDisconnectedPresence()
     {
-        StoreFriend(FriendAccountId, "marta_muros");
+        AddCaller();
+        AddFriend(FriendAccountId, FriendNickname);
 
         FriendRoster roster = _friendListService.ListFriends(Token, _now);
 
-        Assert.Equal(FriendPresence.Disconnected, roster.Friends[0].Presence);
+        FriendStatus friend = roster.Friends[0];
+        Assert.Equal(FriendPresence.Disconnected, friend.Presence);
     }
 
     [Fact]
     public void ListFriends_DisconnectedFriend_ReturnsLastSeen()
     {
-        StoreFriend(FriendAccountId, "marta_muros");
+        AddCaller();
+        AddFriend(FriendAccountId, FriendNickname);
 
         FriendRoster roster = _friendListService.ListFriends(Token, _now);
 
-        Assert.Equal(_lastSeenAt, roster.Friends[0].Summary.LastSeenAt);
+        FriendStatus friend = roster.Friends[0];
+        Assert.Equal(_lastSeenAt, friend.Summary.LastSeenAt);
     }
 
     [Fact]
     public void ListFriends_AnyCaller_ReturnsOwnFriendCode()
     {
+        AddCaller();
+
         FriendRoster roster = _friendListService.ListFriends(Token, _now);
 
         Assert.Equal(FriendCode, roster.OwnFriendCode);
@@ -98,6 +116,8 @@ public class TestFriendListService
     [Fact]
     public void ListFriends_AnyCaller_ReturnsListedAtNow()
     {
+        AddCaller();
+
         FriendRoster roster = _friendListService.ListFriends(Token, _now);
 
         Assert.Equal(_now, roster.ListedAt);
@@ -106,44 +126,59 @@ public class TestFriendListService
     [Fact]
     public void ListFriends_UnsortedFriends_ReturnsAlphabeticalFirst()
     {
-        StoreFriend(ThirdFriendAccountId, "sofia_salto");
-        StoreFriend(SecondFriendAccountId, "Pedro_peon");
-        StoreFriend(FriendAccountId, "marta_muros");
+        AddCaller();
+        AddFriend(ThirdFriendAccountId, ThirdFriendNickname);
+        AddFriend(SecondFriendAccountId, SecondFriendNickname);
+        AddFriend(FriendAccountId, FriendNickname);
 
         FriendRoster roster = _friendListService.ListFriends(Token, _now);
 
-        Assert.Equal("marta_muros", roster.Friends[0].Summary.Friend.Nickname);
+        FriendStatus first = roster.Friends[0];
+        Assert.Equal(FriendNickname, first.Summary.Friend.Nickname);
     }
 
     [Fact]
     public void RemoveFriend_InvalidSession_ThrowsInvalidSession()
     {
-        Assert.Throws<InvalidSessionException>(
-            () => _friendListService.RemoveFriend(UnknownToken, StoredFriendCode, _now));
+        Action remove = () => _friendListService.RemoveFriend(UnknownToken, StoredFriendCode, _now);
+
+        Assert.Throws<InvalidSessionException>(remove);
     }
 
     [Fact]
     public void RemoveFriend_Stranger_RejectsNotFriends()
     {
-        var rejection = Record.Exception(() => _friendListService.RemoveFriend(Token, StoredFriendCode, _now))
-            as FriendshipRejectedException;
+        AddCaller();
+        Action remove = () => _friendListService.RemoveFriend(Token, StoredFriendCode, _now);
 
+        Exception? exception = Record.Exception(remove);
+
+        var rejection = exception as FriendshipRejectedException;
         Assert.Equal(FriendshipRejection.NotFriends, rejection?.Rejection);
     }
 
     [Fact]
     public void RemoveFriend_HyphenatedCode_RemovesFriendship()
     {
-        StoreFriend(FriendAccountId, "marta_muros");
+        AddCaller();
+        AddFriend(FriendAccountId, FriendNickname);
+        int[] expectedRemovedAccountIds = { FriendAccountId };
 
-        _friendListService.RemoveFriend(Token, "ab-2cd9", _now);
+        _friendListService.RemoveFriend(Token, HyphenatedStoredFriendCode, _now);
 
-        Assert.Equal(new[] { FriendAccountId }, _unitOfWork.FriendshipStore.RemovedFriendAccountIds);
+        Assert.Equal(expectedRemovedAccountIds, _unitOfWork.FriendshipRepository.RemovedFriendAccountIds);
     }
 
-    private void StoreFriend(int friendAccountId, string friendNickname)
+    private void AddCaller()
+    {
+        _sessionVerifier.Add(Token, _caller);
+        _unitOfWork.AccountRepository.AddPlayerIdentity(_caller);
+    }
+
+    private void AddFriend(int friendAccountId, string friendNickname)
     {
         var friend = new PlayerIdentity(friendAccountId, friendNickname, StoredFriendCode);
-        _unitOfWork.FriendshipStore.Store(AccountId, new FriendSummary(friend, _lastSeenAt));
+        var summary = new FriendSummary(friend, _lastSeenAt);
+        _unitOfWork.FriendshipRepository.AddFriendSummary(AccountId, summary);
     }
 }

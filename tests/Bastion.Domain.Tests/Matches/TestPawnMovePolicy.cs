@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Matches;
 
-public class TestPawnMovePolicy
+public sealed class TestPawnMovePolicy
 {
     private const byte ClassicBoardSize = 9;
     private const int OpenBoardReachableCount = 4;
@@ -33,7 +33,7 @@ public class TestPawnMovePolicy
     {
         Board board = CreateBoard(_center, _corner);
 
-        IReadOnlyList<BoardCoordinates> reachableSquares = ListFirstPlayerSquares(board);
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 
         Assert.Equal(OpenBoardReachableCount, reachableSquares.Count);
     }
@@ -43,7 +43,7 @@ public class TestPawnMovePolicy
     {
         Board board = CreateBoard(_corner, _center);
 
-        IReadOnlyList<BoardCoordinates> reachableSquares = ListFirstPlayerSquares(board);
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 
         Assert.Equal(CornerReachableCount, reachableSquares.Count);
     }
@@ -53,7 +53,7 @@ public class TestPawnMovePolicy
     {
         Board board = CreateBoard(_center, _aheadOfCenter);
 
-        IReadOnlyList<BoardCoordinates> reachableSquares = ListFirstPlayerSquares(board);
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 
         Assert.Contains(_twoAheadOfCenter, reachableSquares);
     }
@@ -63,7 +63,7 @@ public class TestPawnMovePolicy
     {
         Board board = CreateBoard(_center, _aheadOfCenter);
 
-        IReadOnlyList<BoardCoordinates> reachableSquares = ListFirstPlayerSquares(board);
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 
         Assert.DoesNotContain(_aheadOfCenter, reachableSquares);
     }
@@ -73,7 +73,7 @@ public class TestPawnMovePolicy
     {
         Board board = CreateBoard(_beforeLastRow, _lastRow);
 
-        IReadOnlyList<BoardCoordinates> reachableSquares = ListFirstPlayerSquares(board);
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 
         Assert.Contains(_leftOfLastRow, reachableSquares);
     }
@@ -87,9 +87,10 @@ public class TestPawnMovePolicy
             [Match.SecondTurnOrder] = _aheadOfCenter,
             [Match.ThirdTurnOrder] = _twoAheadOfCenter,
         };
-        var board = new Board(ClassicBoardSize, pawnsByTurnOrder, Array.Empty<Wall>());
+        Wall[] noWalls = Array.Empty<Wall>();
+        var board = new Board(ClassicBoardSize, pawnsByTurnOrder, noWalls);
 
-        IReadOnlyList<BoardCoordinates> reachableSquares = ListFirstPlayerSquares(board);
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 
         Assert.Contains(_leftOfAhead, reachableSquares);
     }
@@ -100,7 +101,7 @@ public class TestPawnMovePolicy
         var wallAhead = new Wall(_center, WallOrientation.Horizontal);
         Board board = CreateBoard(_center, _corner, wallAhead);
 
-        IReadOnlyList<BoardCoordinates> reachableSquares = ListFirstPlayerSquares(board);
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 
         Assert.DoesNotContain(_aheadOfCenter, reachableSquares);
     }
@@ -111,7 +112,7 @@ public class TestPawnMovePolicy
         var wallBehindRival = new Wall(_aheadOfCenter, WallOrientation.Horizontal);
         Board board = CreateBoard(_center, _aheadOfCenter, wallBehindRival);
 
-        IReadOnlyList<BoardCoordinates> reachableSquares = ListFirstPlayerSquares(board);
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 
         Assert.DoesNotContain(_twoAheadOfCenter, reachableSquares);
     }
@@ -122,7 +123,7 @@ public class TestPawnMovePolicy
         var wallBehindRival = new Wall(_aheadOfCenter, WallOrientation.Horizontal);
         Board board = CreateBoard(_center, _aheadOfCenter, wallBehindRival);
 
-        IReadOnlyList<BoardCoordinates> reachableSquares = ListFirstPlayerSquares(board);
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 
         Assert.Contains(_leftOfAhead, reachableSquares);
     }
@@ -133,7 +134,7 @@ public class TestPawnMovePolicy
         var wallBesideRival = new Wall(_leftOfBeforeLastRow, WallOrientation.Vertical);
         Board board = CreateBoard(_beforeLastRow, _lastRow, wallBesideRival);
 
-        IReadOnlyList<BoardCoordinates> reachableSquares = ListFirstPlayerSquares(board);
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 
         Assert.DoesNotContain(_leftOfLastRow, reachableSquares);
     }
@@ -146,10 +147,5 @@ public class TestPawnMovePolicy
             [Match.SecondTurnOrder] = secondPawn,
         };
         return new Board(ClassicBoardSize, pawnsByTurnOrder, walls);
-    }
-
-    private static IReadOnlyList<BoardCoordinates> ListFirstPlayerSquares(Board board)
-    {
-        return PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
     }
 }

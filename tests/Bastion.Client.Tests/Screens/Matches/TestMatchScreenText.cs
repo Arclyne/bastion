@@ -3,7 +3,7 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Screens.Matches;
 
-public class TestMatchScreenText
+public sealed class TestMatchScreenText
 {
     private const byte TenMinutes = 10;
     private const string TenMinuteClockText = "10:00";
@@ -11,7 +11,7 @@ public class TestMatchScreenText
     [Fact]
     public void FormatElo_NoRating_ReturnsEmptyText()
     {
-        string text = MatchScreenText.FormatElo(null);
+        string text = MatchScreenText.FormatElo(eloRating: null);
 
         Assert.Empty(text);
     }

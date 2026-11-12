@@ -32,6 +32,7 @@ public sealed class BoardScene : IDisposable
     private const float GhostAlpha = 0.55f;
 
     private static readonly Plane _boardSurface = new Plane(Vector3.Up, BoardSurfaceDistance);
+    private static readonly BoardCoordinates _offBoardCoordinates = new BoardCoordinates(OffBoardIndex, OffBoardIndex);
 
     private readonly GraphicsDevice _graphicsDevice;
     private readonly SceneModel _classicBoardModel;
@@ -50,9 +51,9 @@ public sealed class BoardScene : IDisposable
         ArgumentNullException.ThrowIfNull(content);
 
         _graphicsDevice = graphicsDevice;
-        _classicBoardModel = new SceneModel(content.Load<Model>(ClassicBoardAssetName));
-        _quickBoardModel = new SceneModel(content.Load<Model>(QuickBoardAssetName));
-        _pawnModel = new SceneModel(content.Load<Model>(PawnAssetName));
+        _classicBoardModel = LoadSceneModel(content, ClassicBoardAssetName);
+        _quickBoardModel = LoadSceneModel(content, QuickBoardAssetName);
+        _pawnModel = LoadSceneModel(content, PawnAssetName);
         _highlightEffect = new BasicEffect(graphicsDevice)
         {
             VertexColorEnabled = true,
@@ -86,7 +87,7 @@ public sealed class BoardScene : IDisposable
 
         if (!TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint))
         {
-            square = new BoardCoordinates(OffBoardIndex, OffBoardIndex);
+            square = _offBoardCoordinates;
             return false;
         }
 
@@ -99,7 +100,7 @@ public sealed class BoardScene : IDisposable
 
         if (!TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint))
         {
-            groove = new BoardCoordinates(OffBoardIndex, OffBoardIndex);
+            groove = _offBoardCoordinates;
             return false;
         }
 
@@ -112,15 +113,22 @@ public sealed class BoardScene : IDisposable
         _wallEffect.Dispose();
     }
 
+    private static SceneModel LoadSceneModel(ContentManager content, string assetName)
+    {
+        Model model = content.Load<Model>(assetName);
+        return new SceneModel(model);
+    }
+
     private void PrepareGoalColors(MatchViewModel match)
     {
-        if (ReferenceEquals(_preparedMatch, match) && _preparedPawnCount == match.Pawns.Count)
+        if (AreGoalColorsCurrent(match))
         {
             return;
         }
 
         _goalColorsByMeshName.Clear();
-        foreach (MatchPlayerViewModel player in match.Players.Where(candidate => !candidate.HasLeft))
+        IEnumerable<MatchPlayerViewModel> remainingPlayers = match.Players.Where(candidate => !candidate.HasLeft);
+        foreach (MatchPlayerViewModel player in remainingPlayers)
         {
             string goalMeshName =
                 BoardSceneLayout.GetGoalMeshName(match.BoardSize, player.TurnOrder, match.Players.Count);
@@ -129,6 +137,11 @@ public sealed class BoardScene : IDisposable
 
         _preparedMatch = match;
         _preparedPawnCount = match.Pawns.Count;
+    }
+
+    private bool AreGoalColorsCurrent(MatchViewModel match)
+    {
+        return ReferenceEquals(_preparedMatch, match) && _preparedPawnCount == match.Pawns.Count;
     }
 
     private SceneCamera CreateCamera(byte ownTurnOrder)

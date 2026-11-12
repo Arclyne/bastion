@@ -28,10 +28,9 @@ public sealed class AddFriendViewModel : ViewModel
         _session = session;
         _friends = friends;
         SearchText = string.Empty;
+        Results = new ObservableCollection<FoundPlayerRowViewModel>();
         StatusText = string.Empty;
     }
-
-    public event EventHandler? FriendshipStarted;
 
     public string SearchText
     {
@@ -57,8 +56,9 @@ public sealed class AddFriendViewModel : ViewModel
     [DependsOn(nameof(StatusText))]
     public bool HasStatus => StatusText.Length > 0;
 
-    public ObservableCollection<FoundPlayerRowViewModel> Results { get; } =
-        new ObservableCollection<FoundPlayerRowViewModel>();
+    public ObservableCollection<FoundPlayerRowViewModel> Results { get; }
+
+    public event EventHandler? FriendshipStarted;
 
     public void Reset()
     {
@@ -85,19 +85,20 @@ public sealed class AddFriendViewModel : ViewModel
         }
         catch (InvalidSessionException ex)
         {
-            ReportFailure(ex);
+            _logger.Warn("The friend search was turned down because the session is no longer valid.", ex);
+            StatusText = Strings.FriendsSearchFailed;
         }
         catch (ServerUnreachableException ex)
         {
-            ReportFailure(ex);
+            ReportSearchFailure(ex);
         }
         catch (ConnectionLostException ex)
         {
-            ReportFailure(ex);
+            ReportSearchFailure(ex);
         }
         catch (ServerErrorException ex)
         {
-            ReportFailure(ex);
+            ReportSearchFailure(ex);
         }
         finally
         {
@@ -124,44 +125,29 @@ public sealed class AddFriendViewModel : ViewModel
         }
         catch (FriendshipRejectedException ex)
         {
-            ShowRejection(row, ex);
+            _logger.Warn($"The server turned down the friend request. Rejection={ex.Rejection}", ex);
+            ShowRejection(row, ex.Rejection);
         }
         catch (InvalidSessionException ex)
         {
-            ReportFailure(ex);
+            _logger.Warn("The friend request was turned down because the session is no longer valid.", ex);
+            StatusText = Strings.FriendsSendRequestFailed;
         }
         catch (ServerUnreachableException ex)
         {
-            ReportFailure(ex);
+            ReportSendFailure(ex);
         }
         catch (ConnectionLostException ex)
         {
-            ReportFailure(ex);
+            ReportSendFailure(ex);
         }
         catch (ServerErrorException ex)
         {
-            ReportFailure(ex);
+            ReportSendFailure(ex);
         }
         finally
         {
             row.IsSending = false;
-        }
-    }
-
-    private static string ToRejectionText(FriendshipRejection rejection)
-    {
-        switch (rejection)
-        {
-            case FriendshipRejection.PlayerNotFound:
-                return Strings.FriendsRejectedNotFound;
-            case FriendshipRejection.RequestAlreadySent:
-                return Strings.FriendsRejectedAlreadySent;
-            case FriendshipRejection.FriendLimitReached:
-                return Strings.FriendsRejectedOwnLimit;
-            case FriendshipRejection.RecipientFriendLimitReached:
-                return Strings.FriendsRejectedTheirLimit;
-            default:
-                return Strings.FriendsSearchFailed;
         }
     }
 
@@ -170,13 +156,20 @@ public sealed class AddFriendViewModel : ViewModel
         Results.Clear();
         foreach (FoundPlayer player in players)
         {
-            Results.Add(new FoundPlayerRowViewModel(player));
+            var row = new FoundPlayerRowViewModel(player);
+            Results.Add(row);
         }
 
         if (Results.Count == 0)
         {
             StatusText = string.Format(CultureInfo.CurrentCulture, Strings.FriendsSearchNoResultsFormat, searchText);
         }
+    }
+
+    private void ReportSearchFailure(Exception ex)
+    {
+        _logger.Error("The friend search could not reach the server.", ex);
+        StatusText = Strings.FriendsSearchFailed;
     }
 
     private void ApplyOutcome(FoundPlayerRowViewModel row, FriendRequestOutcome outcome)
@@ -188,20 +181,20 @@ public sealed class AddFriendViewModel : ViewModel
         }
     }
 
-    private void ShowRejection(FoundPlayerRowViewModel row, FriendshipRejectedException ex)
+    private void ShowRejection(FoundPlayerRowViewModel row, FriendshipRejection rejection)
     {
-        _logger.Warn("The server turned down the friend request.", ex);
-        if (ex.Rejection == FriendshipRejection.RequestAlreadySent)
+        if (rejection == FriendshipRejection.RequestAlreadySent)
         {
             row.MarkRequestSent();
         }
 
-        StatusText = ToRejectionText(ex.Rejection);
+        StatusText = FriendRejectionText.Describe(rejection);
     }
 
-    private void ReportFailure(Exception ex)
+    private void ReportSendFailure(Exception ex)
     {
-        _logger.Warn("The friend search could not reach the server.", ex);
-        StatusText = Strings.FriendsSearchFailed;
+        _logger.Error("The friend request could not reach the server.", ex);
+        StatusText = Strings.FriendsSendRequestFailed;
     }
+
 }

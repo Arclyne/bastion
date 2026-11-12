@@ -29,7 +29,7 @@ public sealed class PasswordHasher : IPasswordHasher
     {
         ArgumentNullException.ThrowIfNull(enteredPassword);
 
-        IsHashEqualWithoutTimingLeak(enteredPassword, null, null);
+        IsHashEqualWithoutTimingLeak(enteredPassword, storedHash: null, storedSalt: null);
     }
 
     private static bool IsHashEqualWithoutTimingLeak(string enteredPassword, byte[]? storedHash, byte[]? storedSalt)

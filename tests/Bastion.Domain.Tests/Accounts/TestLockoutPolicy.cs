@@ -4,8 +4,10 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Accounts;
 
-public class TestLockoutPolicy
+public sealed class TestLockoutPolicy
 {
+    private const int FailedLoginCountResetHours = 24;
+
     [Theory]
     [InlineData(1, 0)]
     [InlineData(2, 0)]
@@ -17,16 +19,20 @@ public class TestLockoutPolicy
     [InlineData(12, 60)]
     public void GetLockDuration_ConsecutiveFailures_ReturnsEscalatingMinutes(int failures, int expectedMinutes)
     {
+        var expectedDuration = TimeSpan.FromMinutes(expectedMinutes);
+
         TimeSpan duration = LockoutPolicy.GetLockDuration(failures);
 
-        Assert.Equal(TimeSpan.FromMinutes(expectedMinutes), duration);
+        Assert.Equal(expectedDuration, duration);
     }
 
     [Fact]
     public void FailedLoginCountResetPeriod_Always_IsTwentyFourHours()
     {
+        var expectedPeriod = TimeSpan.FromHours(FailedLoginCountResetHours);
+
         TimeSpan period = LockoutPolicy.FailedLoginCountResetPeriod;
 
-        Assert.Equal(TimeSpan.FromHours(24), period);
+        Assert.Equal(expectedPeriod, period);
     }
 }

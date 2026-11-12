@@ -76,9 +76,9 @@ public sealed class SceneModel
     private static Vector3 ConvertLinearToDisplay(Vector3 linearColor)
     {
         float inverseGamma = 1f / DisplayGamma;
-        return new Vector3(
-            MathF.Pow(linearColor.X, inverseGamma),
-            MathF.Pow(linearColor.Y, inverseGamma),
-            MathF.Pow(linearColor.Z, inverseGamma));
+        float red = MathF.Pow(linearColor.X, inverseGamma);
+        float green = MathF.Pow(linearColor.Y, inverseGamma);
+        float blue = MathF.Pow(linearColor.Z, inverseGamma);
+        return new Vector3(red, green, blue);
     }
 }

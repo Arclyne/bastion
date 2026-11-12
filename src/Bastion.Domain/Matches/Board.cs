@@ -28,7 +28,7 @@ public sealed record Board
 
     public IReadOnlyCollection<Wall> Walls => _walls;
 
-    public BoardCoordinates GetPawn(byte turnOrder)
+    public BoardCoordinates GetPawnCoordinates(byte turnOrder)
     {
         if (!_pawnsByTurnOrder.TryGetValue(turnOrder, out BoardCoordinates? pawn))
         {
@@ -72,7 +72,7 @@ public sealed record Board
         ArgumentNullException.ThrowIfNull(from);
         ArgumentNullException.ThrowIfNull(step);
 
-        if (step.RowStep != 0)
+        if (step.IsBetweenRows())
         {
             int lowerRowIndex = Math.Min(from.RowIndex, from.RowIndex + step.RowStep);
             return HasWallAlongRow(from.ColumnIndex, lowerRowIndex);

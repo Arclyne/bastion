@@ -30,7 +30,7 @@ public sealed class FriendPresenceService : IFriendPresenceService
             return;
         }
 
-        NotifyFriends(new FriendPresenceChange(identity, FriendPresence.Connected, null));
+        NotifyFriends(new FriendPresenceChange(identity, FriendPresence.Connected, lastSeenAt: null));
     }
 
     /// <inheritdoc/>

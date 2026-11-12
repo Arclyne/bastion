@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Channels;
@@ -12,9 +11,11 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Screens.Matches;
 
-public class TestMatchAbandonmentViewModel : IDisposable
+public sealed class TestMatchAbandonmentViewModel : IDisposable
 {
     private const int OtherMatchId = 40;
+    private const int OneReturnRequest = 1;
+    private const int NoReturnRequests = 0;
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
     private readonly MatchAbandonmentViewModel _viewModel;
@@ -22,9 +23,8 @@ public class TestMatchAbandonmentViewModel : IDisposable
 
     public TestMatchAbandonmentViewModel()
     {
-        JoinedMatch joinedMatch = JoinedMatchSamples.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
         _viewModel = InlineUiContext.CreateViewModel(() => new MatchAbandonmentViewModel(joinedMatch, _matchClient));
-        _viewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
     }
 
     public void Dispose()
@@ -37,25 +37,28 @@ public class TestMatchAbandonmentViewModel : IDisposable
     {
         await _viewModel.AbandonMatch();
 
-        Assert.Equal(JoinedMatchSamples.MatchId, _matchClient.LastAbandonedMatchId);
+        Assert.Equal(JoinedMatchSampleFactory.MatchId, _matchClient.LastAbandonedMatchId);
     }
 
     [Fact]
     public async Task AbandonMatch_Accepted_RequestsReturnToMenu()
     {
+        _viewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
+
         await _viewModel.AbandonMatch();
 
-        Assert.Equal(1, _returnToMenuRequestCount);
+        Assert.Equal(OneReturnRequest, _returnToMenuRequestCount);
     }
 
     [Fact]
     public async Task AbandonMatch_MatchAlreadyOver_RequestsReturnToMenu()
     {
+        _viewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
         _matchClient.AbandonFailure = new MatchNotJoinedException();
 
         await _viewModel.AbandonMatch();
 
-        Assert.Equal(1, _returnToMenuRequestCount);
+        Assert.Equal(OneReturnRequest, _returnToMenuRequestCount);
     }
 
     [Fact]
@@ -71,11 +74,12 @@ public class TestMatchAbandonmentViewModel : IDisposable
     [Fact]
     public async Task AbandonMatch_ServerUnreachable_StaysInMatch()
     {
+        _viewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
         _matchClient.AbandonFailure = new ServerUnreachableException();
 
         await _viewModel.AbandonMatch();
 
-        Assert.Equal(0, _returnToMenuRequestCount);
+        Assert.Equal(NoReturnRequests, _returnToMenuRequestCount);
     }
 
     [Fact]
@@ -94,9 +98,12 @@ public class TestMatchAbandonmentViewModel : IDisposable
         string expectedText = string.Format(
             CultureInfo.CurrentCulture,
             Strings.MatchRivalAbandonedFormat,
-            JoinedMatchSamples.RivalNickname, true);
+            JoinedMatchSampleFactory.RivalNickname);
 
-        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.RivalNickname, true);
+        _matchClient.RaiseMatchAbandoned(
+            JoinedMatchSampleFactory.MatchId,
+            JoinedMatchSampleFactory.RivalNickname,
+            isMatchOver: true);
 
         Assert.Equal(expectedText, _viewModel.RivalAbandonedText);
     }
@@ -104,7 +111,7 @@ public class TestMatchAbandonmentViewModel : IDisposable
     [Fact]
     public void MatchAbandoned_OtherMatch_IgnoresNotice()
     {
-        _matchClient.RaiseMatchAbandoned(OtherMatchId, JoinedMatchSamples.RivalNickname, true);
+        _matchClient.RaiseMatchAbandoned(OtherMatchId, JoinedMatchSampleFactory.RivalNickname, isMatchOver: true);
 
         Assert.False(_viewModel.HasRivalAbandoned);
     }
@@ -115,9 +122,12 @@ public class TestMatchAbandonmentViewModel : IDisposable
         string expectedText = string.Format(
             CultureInfo.CurrentCulture,
             Strings.MatchPlayerLeftFormat,
-            JoinedMatchSamples.RivalNickname);
+            JoinedMatchSampleFactory.RivalNickname);
 
-        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.RivalNickname, false);
+        _matchClient.RaiseMatchAbandoned(
+            JoinedMatchSampleFactory.MatchId,
+            JoinedMatchSampleFactory.RivalNickname,
+            isMatchOver: false);
 
         Assert.Equal(expectedText, _viewModel.PlayerLeftText);
     }
@@ -125,7 +135,10 @@ public class TestMatchAbandonmentViewModel : IDisposable
     [Fact]
     public void MatchAbandoned_MatchGoesOn_KeepsMatchOpen()
     {
-        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.RivalNickname, false);
+        _matchClient.RaiseMatchAbandoned(
+            JoinedMatchSampleFactory.MatchId,
+            JoinedMatchSampleFactory.RivalNickname,
+            isMatchOver: false);
 
         Assert.False(_viewModel.HasRivalAbandoned);
     }
@@ -133,19 +146,28 @@ public class TestMatchAbandonmentViewModel : IDisposable
     [Fact]
     public void MatchAbandoned_MatchGoesOn_RemembersLeftPlayer()
     {
-        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.RivalNickname, false);
+        string[] expectedLeftNicknames = { JoinedMatchSampleFactory.RivalNickname };
 
-        Assert.Equal(JoinedMatchSamples.RivalNickname, _viewModel.LeftNicknames.Single());
+        _matchClient.RaiseMatchAbandoned(
+            JoinedMatchSampleFactory.MatchId,
+            JoinedMatchSampleFactory.RivalNickname,
+            isMatchOver: false);
+
+        Assert.Equal(expectedLeftNicknames, _viewModel.LeftNicknames);
     }
 
     [Fact]
     public void RequestReturnToMenu_RivalAbandoned_RequestsReturnToMenu()
     {
-        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.RivalNickname, true);
+        _viewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
+        _matchClient.RaiseMatchAbandoned(
+            JoinedMatchSampleFactory.MatchId,
+            JoinedMatchSampleFactory.RivalNickname,
+            isMatchOver: true);
 
         _viewModel.RequestReturnToMenu();
 
-        Assert.Equal(1, _returnToMenuRequestCount);
+        Assert.Equal(OneReturnRequest, _returnToMenuRequestCount);
     }
 
     [Fact]
@@ -153,7 +175,8 @@ public class TestMatchAbandonmentViewModel : IDisposable
     {
         _viewModel.Dispose();
 
-        Assert.False(_matchClient.HasMatchAbandonedSubscribers());
+        bool hasSubscribers = _matchClient.HasMatchAbandonedSubscribers();
+        Assert.False(hasSubscribers);
     }
 
     private void HandleReturnToMenuRequested(object? sender, EventArgs e)

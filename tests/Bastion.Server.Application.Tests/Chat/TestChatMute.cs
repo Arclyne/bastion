@@ -5,16 +5,20 @@ using Xunit;
 
 namespace Bastion.Server.Application.Tests.Chat;
 
-public class TestChatMute
+public sealed class TestChatMute
 {
     private const int AccountId = 5;
+    private const int EarlierEndDays = 2;
+    private const int LatestEndDays = 5;
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 12, 0, 0, DateTimeKind.Utc);
 
     [Fact]
     public void FromSanctionsInEffect_NoSanctions_ReturnsNone()
     {
-        var mute = ChatMute.FromSanctionsInEffect(Array.Empty<Sanction>());
+        Sanction[] noSanctions = Array.Empty<Sanction>();
+
+        var mute = ChatMute.FromSanctionsInEffect(noSanctions);
 
         Assert.Equal(ChatMute.None, mute);
     }
@@ -22,28 +26,28 @@ public class TestChatMute
     [Fact]
     public void FromSanctionsInEffect_TwoTemporarySanctions_EndsWithTheLatest()
     {
-        Sanction[] sanctions =
-        {
-            new Sanction(AccountId, SanctionScope.Chat, _now.AddDays(2)),
-            new Sanction(AccountId, SanctionScope.Chat, _now.AddDays(5)),
-        };
+        DateTime earlierEnd = _now.AddDays(EarlierEndDays);
+        DateTime latestEnd = _now.AddDays(LatestEndDays);
+        var earlierSanction = new Sanction(AccountId, SanctionScope.Chat, earlierEnd);
+        var latestSanction = new Sanction(AccountId, SanctionScope.Chat, latestEnd);
+        Sanction[] sanctions = { earlierSanction, latestSanction };
 
         var mute = ChatMute.FromSanctionsInEffect(sanctions);
 
-        Assert.Equal(_now.AddDays(5), mute.EndsAt);
+        Assert.Equal(latestEnd, mute.EndsAt);
     }
 
     [Fact]
     public void FromSanctionsInEffect_TemporaryAndPermanent_ReturnsPermanent()
     {
-        Sanction[] sanctions =
-        {
-            new Sanction(AccountId, SanctionScope.Chat, _now.AddDays(2)),
-            new Sanction(AccountId, SanctionScope.Chat, null),
-        };
+        DateTime temporaryEnd = _now.AddDays(EarlierEndDays);
+        var temporarySanction = new Sanction(AccountId, SanctionScope.Chat, temporaryEnd);
+        var permanentSanction = new Sanction(AccountId, SanctionScope.Chat, endsAt: null);
+        Sanction[] sanctions = { temporarySanction, permanentSanction };
+        var expectedMute = new ChatMute(IsMuted: true, EndsAt: null);
 
         var mute = ChatMute.FromSanctionsInEffect(sanctions);
 
-        Assert.Equal(new ChatMute(true, null), mute);
+        Assert.Equal(expectedMute, mute);
     }
 }

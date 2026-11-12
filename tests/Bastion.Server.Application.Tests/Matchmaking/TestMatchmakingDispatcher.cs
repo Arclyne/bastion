@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Bastion.Server.Application.Tests.Matchmaking;
 
-public class TestMatchmakingDispatcher
+public sealed class TestMatchmakingDispatcher
 {
     private const int FirstAccountId = 1;
     private const int SecondAccountId = 2;
@@ -21,19 +21,21 @@ public class TestMatchmakingDispatcher
     private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
     private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
     private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
+    private readonly FakeTurnOrderShuffler _turnOrderShuffler = new FakeTurnOrderShuffler();
     private readonly MatchmakingDispatcher _matchmakingDispatcher;
 
     public TestMatchmakingDispatcher()
     {
-        var rankedMatchCreator = new RankedMatchCreator(_matchRepository, new FakeTurnOrderShuffler());
+        var rankedMatchCreator = new RankedMatchCreator(_matchRepository, _turnOrderShuffler);
         _matchmakingDispatcher = new MatchmakingDispatcher(_matchmakingQueue, _matchmakingNotifier, rankedMatchCreator);
-        _matchmakingQueue.TryAdd(new MatchSearch(FirstAccountId, FirstNickname, _startedAt));
+        var firstSearch = new MatchSearch(FirstAccountId, FirstNickname, _startedAt);
+        _matchmakingQueue.TryAdd(firstSearch);
     }
 
     [Fact]
     public void ReviewAndNotify_TwoWaitingPlayers_NotifiesMatchFound()
     {
-        _matchmakingQueue.TryAdd(new MatchSearch(SecondAccountId, SecondNickname, _startedAt));
+        AddSecondSearch();
 
         _matchmakingDispatcher.ReviewAndNotify(_startedAt);
 
@@ -43,12 +45,14 @@ public class TestMatchmakingDispatcher
     [Fact]
     public void ReviewAndNotify_MatchNotSaved_NotifiesMatchCreationFailed()
     {
-        _matchmakingQueue.TryAdd(new MatchSearch(SecondAccountId, SecondNickname, _startedAt));
-        _matchRepository.MatchSaveFailure = new MatchRepositoryException(new InvalidOperationException(RepositoryFailureMessage));
+        AddSecondSearch();
+        var cause = new InvalidOperationException(RepositoryFailureMessage);
+        _matchRepository.MatchSaveFailure = new MatchRepositoryException(cause);
 
         _matchmakingDispatcher.ReviewAndNotify(_startedAt);
 
-        Assert.Equal(SearchEndReason.MatchCreationFailed, _matchmakingNotifier.EndReasons[FirstAccountId]);
+        SearchEndReason reason = _matchmakingNotifier.EndReasons[FirstAccountId];
+        Assert.Equal(SearchEndReason.MatchCreationFailed, reason);
     }
 
     [Fact]
@@ -63,9 +67,17 @@ public class TestMatchmakingDispatcher
     public void ReviewAndNotify_PresenceUnanswered_NotifiesPresenceExpired()
     {
         _matchmakingDispatcher.ReviewAndNotify(_presenceCheckAt);
+        DateTime responseDeadline = _presenceCheckAt.Add(MatchmakingPolicy.PresenceResponseWindow);
 
-        _matchmakingDispatcher.ReviewAndNotify(_presenceCheckAt.Add(MatchmakingPolicy.PresenceResponseWindow));
+        _matchmakingDispatcher.ReviewAndNotify(responseDeadline);
 
-        Assert.Equal(SearchEndReason.PresenceExpired, _matchmakingNotifier.EndReasons[FirstAccountId]);
+        SearchEndReason reason = _matchmakingNotifier.EndReasons[FirstAccountId];
+        Assert.Equal(SearchEndReason.PresenceExpired, reason);
+    }
+
+    private void AddSecondSearch()
+    {
+        var secondSearch = new MatchSearch(SecondAccountId, SecondNickname, _startedAt);
+        _matchmakingQueue.TryAdd(secondSearch);
     }
 }

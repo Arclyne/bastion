@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Chat;
 
-public class TestChatContractTranslator
+public sealed class TestChatContractTranslator
 {
     private const string SenderNickname = "luis_quo";
     private const string Text = "hola";
@@ -17,12 +17,18 @@ public class TestChatContractTranslator
     [Fact]
     public void ToTranscript_OwnMessage_KeepsOwnFlag()
     {
-        var message = new LobbyChatMessage { SenderNickname = SenderNickname, Text = Text, IsOwn = true };
+        var message = new LobbyChatMessage
+        {
+            SenderNickname = SenderNickname,
+            Text = Text,
+            IsOwn = true,
+        };
         LobbyChatLog log = CreateLog(message);
 
         LobbyChatTranscript transcript = ChatContractTranslator.ToTranscript(log);
 
-        Assert.True(transcript.Messages[0].Author.IsOwn);
+        ChatMessage first = transcript.Messages[0];
+        Assert.True(first.Author.IsOwn);
     }
 
     [Fact]
@@ -38,11 +44,16 @@ public class TestChatContractTranslator
     [Fact]
     public void ToTranscript_MutedLog_MapsMuteEnd()
     {
-        var log = new LobbyChatLog { IsMuted = true, MutedUntil = _sentAt };
+        var log = new LobbyChatLog
+        {
+            IsMuted = true,
+            MutedUntil = _sentAt,
+        };
+        var expectedMute = new ChatMute(IsMuted: true, EndsAt: _sentAt);
 
         LobbyChatTranscript transcript = ChatContractTranslator.ToTranscript(log);
 
-        Assert.Equal(new ChatMute(true, _sentAt), transcript.Mute);
+        Assert.Equal(expectedMute, transcript.Mute);
     }
 
     [Fact]
@@ -75,9 +86,10 @@ public class TestChatContractTranslator
     private static LobbyChatLog CreateLog(LobbyChatMessage message)
     {
         message.SentAt = _sentAt;
+        LobbyChatMessage[] messages = { message };
         return new LobbyChatLog
         {
-            Messages = new[] { message },
+            Messages = messages,
             ConnectedPlayerCount = ConnectedPlayerCount,
         };
     }

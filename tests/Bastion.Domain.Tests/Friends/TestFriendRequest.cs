@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Friends;
 
-public class TestFriendRequest
+public sealed class TestFriendRequest
 {
     private const int RequesterId = 3;
     private const int RecipientId = 4;
@@ -15,8 +15,9 @@ public class TestFriendRequest
     public void IsExpiredAt_ThirtyDaysLater_ReturnsTrue()
     {
         var request = new FriendRequest(RequesterId, RecipientId, _requestedAt);
+        DateTime expiry = _requestedAt.AddDays(FriendshipPolicy.RequestLifetimeDays);
 
-        bool isExpired = request.IsExpiredAt(_requestedAt.AddDays(FriendshipPolicy.RequestLifetimeDays));
+        bool isExpired = request.IsExpiredAt(expiry);
 
         Assert.True(isExpired);
     }
@@ -25,8 +26,10 @@ public class TestFriendRequest
     public void IsExpiredAt_TwentyNineDaysLater_ReturnsFalse()
     {
         var request = new FriendRequest(RequesterId, RecipientId, _requestedAt);
+        int daysBeforeExpiry = FriendshipPolicy.RequestLifetimeDays - 1;
+        DateTime dayBeforeExpiry = _requestedAt.AddDays(daysBeforeExpiry);
 
-        bool isExpired = request.IsExpiredAt(_requestedAt.AddDays(FriendshipPolicy.RequestLifetimeDays - 1));
+        bool isExpired = request.IsExpiredAt(dayBeforeExpiry);
 
         Assert.False(isExpired);
     }
@@ -34,7 +37,9 @@ public class TestFriendRequest
     [Fact]
     public void Constructor_SameAccount_ThrowsArgument()
     {
-        Assert.Throws<ArgumentException>(() => new FriendRequest(RequesterId, RequesterId, _requestedAt));
+        Action requestSelf = () => new FriendRequest(RequesterId, RequesterId, _requestedAt);
+
+        Assert.Throws<ArgumentException>(requestSelf);
     }
 
     [Fact]
