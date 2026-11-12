@@ -13,6 +13,7 @@ public sealed class FakeMatchMoveNotifier : IMatchMoveNotifier
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
         ArgumentNullException.ThrowIfNull(notice);
 
-        NotifiedPawnMoves.Add(new NotifiedPawnMove(matchId, recipientAccountIds, notice));
+        var notifiedPawnMove = new NotifiedPawnMove(matchId, recipientAccountIds, notice);
+        NotifiedPawnMoves.Add(notifiedPawnMove);
     }
 }

@@ -45,20 +45,13 @@ public sealed class MatchService : IMatchService
         if (move is null)
         {
             _logger.Warn("A pawn move arrived without its data.");
-            throw MatchTranslator.ToFault(new IllegalMoveException());
+            var missingMove = new IllegalMoveException();
+            throw MatchTranslator.ToFault(missingMove);
         }
 
         var chosenMove = MatchTranslator.ToChosenPawnMove(move);
         Action movePawn = () => MovePawnInRequestScope(token, chosenMove);
         TranslateMatchFailures(nameof(MovePawn), move.MatchId, movePawn);
-    }
-
-    private void MovePawnInRequestScope(string token, ChosenPawnMove move)
-    {
-        using IServiceScope scope = _scopeFactory.CreateScope();
-        IPawnMoveService pawnMoveService = scope.ServiceProvider.GetRequiredService<IPawnMoveService>();
-        DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
-        pawnMoveService.MovePawn(token, move, now);
     }
 
     private void AbandonMatchInRequestScope(string token, int matchId)
@@ -68,6 +61,14 @@ public sealed class MatchService : IMatchService
             scope.ServiceProvider.GetRequiredService<IMatchAbandonmentService>();
         DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
         abandonmentService.AbandonMatch(token, matchId, now);
+    }
+
+    private void MovePawnInRequestScope(string token, ChosenPawnMove move)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IPawnMoveService pawnMoveService = scope.ServiceProvider.GetRequiredService<IPawnMoveService>();
+        DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
+        pawnMoveService.MovePawn(token, move, now);
     }
 
     private void TranslateMatchFailures(string operationName, int matchId, Action operation)

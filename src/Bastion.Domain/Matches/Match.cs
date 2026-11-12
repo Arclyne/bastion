@@ -189,6 +189,22 @@ public class Match
         }
     }
 
+    private Participation? FindActiveParticipation(int accountId)
+    {
+        Participation? participation = FindParticipation(accountId);
+        if (Status != MatchStatus.InProgress || participation is null || participation.Result.HasValue)
+        {
+            return null;
+        }
+
+        return participation;
+    }
+
+    private Participation? FindParticipation(int accountId)
+    {
+        return _participations.FirstOrDefault(participation => participation.AccountId == accountId);
+    }
+
     private void EndTwoPlayerMatchByAbandonment(int abandoningAccountId, DateTime endedAt)
     {
         foreach (Participation participation in _participations)
@@ -245,22 +261,6 @@ public class Match
             activeParticipations.FirstOrDefault(participation => participation.TurnOrder > leavingTurnOrder)
             ?? activeParticipations.First();
         CurrentTurnOrder = nextPlayer.TurnOrder;
-    }
-
-    private Participation? FindActiveParticipation(int accountId)
-    {
-        Participation? participation = FindParticipation(accountId);
-        if (Status != MatchStatus.InProgress || participation is null || participation.Result.HasValue)
-        {
-            return null;
-        }
-
-        return participation;
-    }
-
-    private Participation? FindParticipation(int accountId)
-    {
-        return _participations.FirstOrDefault(participation => participation.AccountId == accountId);
     }
 
     private BoardCoordinates FindPawnCoordinates(Participation participation, byte boardSize)

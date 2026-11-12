@@ -109,7 +109,12 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public GameMode? FindGameMode(byte gameModeId)
     {
-        return ActiveGameMode?.GameModeId == gameModeId ? ActiveGameMode : null;
+        if (ActiveGameMode?.GameModeId != gameModeId)
+        {
+            return null;
+        }
+
+        return ActiveGameMode;
     }
 
     public void SavePawnMove(Match match)
