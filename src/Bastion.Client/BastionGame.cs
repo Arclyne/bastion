@@ -1,14 +1,14 @@
 using System;
-using Gum;
-using Gum.Forms;
-using Gum.Forms.Input;
-using Microsoft.Xna.Framework;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking;
 using Bastion.Client.Screens;
 using Bastion.Client.Screens.Matches;
 using Bastion.Client.Screens.Matches.Scene;
 using Bastion.Client.Theme;
+using Gum;
+using Gum.Forms;
+using Gum.Forms.Input;
+using Microsoft.Xna.Framework;
 
 namespace Bastion.Client;
 
@@ -24,7 +24,7 @@ public sealed class BastionGame : Game
     private const float MaximumUiScale = 1.5f;
 
     private readonly GraphicsDeviceManager _graphics;
-    private readonly ServerConnection _serverConnection = new ServerConnection(TimeProvider.System);
+    private readonly ServerConnection _serverConnection;
     private ScreenNavigator? _screenNavigator;
     private BoardScene? _boardScene;
 
@@ -35,6 +35,7 @@ public sealed class BastionGame : Game
             PreferredBackBufferWidth = InitialWindowWidth,
             PreferredBackBufferHeight = InitialWindowHeight,
         };
+        _serverConnection = new ServerConnection(TimeProvider.System);
         Content.RootDirectory = ContentRootDirectory;
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
@@ -49,7 +50,7 @@ public sealed class BastionGame : Game
         languages.LoadInitialLanguage();
         _screenNavigator = new ScreenNavigator(languages, _serverConnection, TimeProvider.System);
         _screenNavigator.ShowLogin();
-        Window.ClientSizeChanged += OnClientSizeChanged;
+        Window.ClientSizeChanged += HandleClientSizeChanged;
         ApplyUiScale();
         base.Initialize();
     }
@@ -83,7 +84,7 @@ public sealed class BastionGame : Game
     {
         if (disposing)
         {
-            Window.ClientSizeChanged -= OnClientSizeChanged;
+            Window.ClientSizeChanged -= HandleClientSizeChanged;
             _screenNavigator?.Dispose();
             _serverConnection.Dispose();
         }
@@ -91,18 +92,7 @@ public sealed class BastionGame : Game
         base.Dispose(disposing);
     }
 
-    private void DrawShownMatchBoard()
-    {
-        MatchViewModel? shownMatch = _screenNavigator?.ShownMatch;
-        if (shownMatch is null || _boardScene is null)
-        {
-            return;
-        }
-
-        _boardScene.Draw(shownMatch);
-    }
-
-    private void OnClientSizeChanged(object? sender, EventArgs e)
+    private void HandleClientSizeChanged(object? sender, EventArgs e)
     {
         KeepMinimumWindowSize();
         ApplyUiScale();
@@ -133,5 +123,16 @@ public sealed class BastionGame : Game
         GumService.Default.CanvasWidth = windowWidth / uiScale;
         GumService.Default.CanvasHeight = windowHeight / uiScale;
         GumService.Default.Root.UpdateLayout();
+    }
+
+    private void DrawShownMatchBoard()
+    {
+        MatchViewModel? shownMatch = _screenNavigator?.ShownMatch;
+        if (shownMatch is null || _boardScene is null)
+        {
+            return;
+        }
+
+        _boardScene.Draw(shownMatch);
     }
 }
