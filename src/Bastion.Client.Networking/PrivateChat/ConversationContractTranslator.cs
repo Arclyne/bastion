@@ -12,44 +12,43 @@ public static class ConversationContractTranslator
 {
     public static IReadOnlyList<ConversationPreview> ToPreviews(ConversationEntry[]? entries)
     {
-        return (entries ?? Array.Empty<ConversationEntry>()).Select(ToPreview).ToList();
+        ConversationEntry[] conversationEntries = entries ?? Array.Empty<ConversationEntry>();
+        IEnumerable<ConversationPreview> previews = conversationEntries.Select(ToPreview);
+        return new List<ConversationPreview>(previews);
     }
 
     public static ConversationTranscript ToTranscript(PrivateConversationLog log)
     {
         ArgumentNullException.ThrowIfNull(log);
 
-        var contact = new ConversationContact(
-            new PlayerTag(log.PartnerNickname ?? string.Empty, log.PartnerFriendCode ?? string.Empty),
-            log.IsFriend);
+        var partner = FriendContractTranslator.ToPlayerTag(log.PartnerNickname, log.PartnerFriendCode);
+        var contact = new ConversationContact(partner, log.IsFriend);
         PrivateChatMessage[] messages = log.Messages ?? Array.Empty<PrivateChatMessage>();
-        return new ConversationTranscript(
-            contact,
-            messages.Select(ToPrivateMessage).ToList(),
-            new ChatMute(log.IsMuted, log.MutedUntil));
+        IEnumerable<PrivateMessage> privateMessages = messages.Select(ToPrivateMessage);
+        var messageList = new List<PrivateMessage>(privateMessages);
+        var mute = new ChatMute(log.IsMuted, log.MutedUntil);
+        return new ConversationTranscript(contact, messageList, mute);
     }
 
     public static PlayerTag ToSender(PrivateMessageNotification notification)
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        return new PlayerTag(
-            notification.SenderNickname ?? string.Empty,
-            notification.SenderFriendCode ?? string.Empty);
+        return FriendContractTranslator.ToPlayerTag(notification.SenderNickname, notification.SenderFriendCode);
     }
 
     public static PrivateMessage ToPrivateMessage(PrivateMessageNotification notification)
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        return new PrivateMessage(notification.Text ?? string.Empty, notification.OccurredAt, false);
+        string text = notification.Text ?? string.Empty;
+        return new PrivateMessage(text, notification.OccurredAt, false);
     }
 
     private static ConversationPreview ToPreview(ConversationEntry entry)
     {
-        var contact = new ConversationContact(
-            new PlayerTag(entry.PartnerNickname ?? string.Empty, entry.PartnerFriendCode ?? string.Empty),
-            entry.IsFriend);
+        var partner = FriendContractTranslator.ToPlayerTag(entry.PartnerNickname, entry.PartnerFriendCode);
+        var contact = new ConversationContact(partner, entry.IsFriend);
         PrivateMessage lastMessage = entry.LastMessage is null
             ? new PrivateMessage(string.Empty, DateTime.MinValue, false)
             : ToPrivateMessage(entry.LastMessage);
@@ -58,6 +57,7 @@ public static class ConversationContractTranslator
 
     private static PrivateMessage ToPrivateMessage(PrivateChatMessage message)
     {
-        return new PrivateMessage(message.Text ?? string.Empty, message.SentAt, message.IsOwn);
+        string text = message.Text ?? string.Empty;
+        return new PrivateMessage(text, message.SentAt, message.IsOwn);
     }
 }

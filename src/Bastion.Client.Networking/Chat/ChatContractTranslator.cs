@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ServiceModel;
 using Bastion.Contracts.Chat;
 using Bastion.Contracts.Notifications;
 
@@ -52,6 +53,14 @@ public static class ChatContractTranslator
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported rejection reason.");
         }
+    }
+
+    public static ChatMessageRejectedException ToMessageRejectedException(FaultException<ChatMessageRejectedFault> fault)
+    {
+        ArgumentNullException.ThrowIfNull(fault);
+
+        ChatRejection rejection = ToRejection(fault.Detail.Reason);
+        return new ChatMessageRejectedException(rejection, fault.Detail.MutedUntil, fault);
     }
 
     private static ChatMessage ToChatMessage(LobbyChatMessage message)

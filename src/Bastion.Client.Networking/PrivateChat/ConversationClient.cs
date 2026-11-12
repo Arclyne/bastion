@@ -51,24 +51,7 @@ public sealed class ConversationClient : IConversationClient
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(friendCode);
 
-        Call(service =>
-        {
-            service.MarkConversationRead(sessionToken, friendCode);
-            return true;
-        });
-    }
-
-    private static Exception ToClientException(Exception ex)
-    {
-        if (ex is FaultException<ChatMessageRejectedFault> rejected)
-        {
-            return new ChatMessageRejectedException(
-                ChatContractTranslator.ToRejection(rejected.Detail.Reason),
-                rejected.Detail.MutedUntil,
-                ex);
-        }
-
-        return ServiceFailureTranslator.ToClientException(ex);
+        Call(service => service.MarkConversationRead(sessionToken, friendCode));
     }
 
     private TResult Call<TResult>(Func<IConversationService, TResult> operation)
@@ -85,5 +68,27 @@ public sealed class ConversationClient : IConversationClient
         {
             throw ToClientException(ex);
         }
+    }
+
+    private static Exception ToClientException(Exception ex)
+    {
+        if (ex is FaultException<ChatMessageRejectedFault> rejected)
+        {
+            return ChatContractTranslator.ToMessageRejectedException(rejected);
+        }
+
+        return ServiceFailureTranslator.ToClientException(ex);
+    }
+
+    private void Call(Action<IConversationService> operation)
+    {
+        Func<IConversationService, bool> operationAsFunction = service => CompleteOperation(operation, service);
+        Call(operationAsFunction);
+    }
+
+    private static bool CompleteOperation(Action<IConversationService> operation, IConversationService service)
+    {
+        operation(service);
+        return true;
     }
 }

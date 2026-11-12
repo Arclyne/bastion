@@ -59,6 +59,13 @@ public static class FriendContractTranslator
         return ToPlayerTag(notification.FriendNickname, notification.FriendCode);
     }
 
+    public static PlayerTag ToPlayerTag(string? nickname, string? friendCode)
+    {
+        string tagNickname = nickname ?? string.Empty;
+        string tagFriendCode = friendCode ?? string.Empty;
+        return new PlayerTag(tagNickname, tagFriendCode);
+    }
+
     public static FriendRequestOutcome ToOutcome(FriendRequestResult result)
     {
         switch (result)
@@ -154,12 +161,5 @@ public static class FriendContractTranslator
     {
         PlayerTag player = ToPlayerTag(entry.Nickname, entry.FriendCode);
         return new PendingFriendRequest(player, entry.RequestedAt, entry.ExpiresAt);
-    }
-
-    private static PlayerTag ToPlayerTag(string? nickname, string? friendCode)
-    {
-        string tagNickname = nickname ?? string.Empty;
-        string tagFriendCode = friendCode ?? string.Empty;
-        return new PlayerTag(tagNickname, tagFriendCode);
     }
 }

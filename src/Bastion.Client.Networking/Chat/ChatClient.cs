@@ -72,8 +72,7 @@ public sealed class ChatClient : IChatClient
     {
         if (ex is FaultException<ChatMessageRejectedFault> rejected)
         {
-            ChatRejection rejection = ChatContractTranslator.ToRejection(rejected.Detail.Reason);
-            return new ChatMessageRejectedException(rejection, rejected.Detail.MutedUntil, ex);
+            return ChatContractTranslator.ToMessageRejectedException(rejected);
         }
 
         if (ex is FaultException<ChatChannelForbiddenFault>)
