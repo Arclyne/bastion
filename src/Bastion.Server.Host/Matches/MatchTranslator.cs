@@ -4,6 +4,8 @@ using Bastion.Contracts.Notifications;
 using Bastion.Server.Application.Matches;
 using Bastion.Server.Host.Common;
 using CoreWCF;
+using DomainWallOrientation = Bastion.Domain.Matches.WallOrientation;
+using DomainWallRejectionReason = Bastion.Domain.Matches.WallRejectionReason;
 
 namespace Bastion.Server.Host.Matches;
 
@@ -52,7 +54,7 @@ public static class MatchTranslator
 
     public static FaultException<IllegalWallFault> ToUnreadableWallFault()
     {
-        var rejection = new IllegalWallException(Bastion.Domain.Matches.WallRejectionReason.OutOfBoard, null);
+        var rejection = new IllegalWallException(DomainWallRejectionReason.OutOfBoard, blockedTurnOrder: null);
         return ToFault(rejection);
     }
 
@@ -69,7 +71,7 @@ public static class MatchTranslator
         ArgumentNullException.ThrowIfNull(wall);
 
         string groove = wall.Groove ?? string.Empty;
-        Bastion.Domain.Matches.WallOrientation orientation = ToDomainOrientation(wall.Orientation);
+        DomainWallOrientation orientation = ToDomainOrientation(wall.Orientation);
         return new ChosenWall
         {
             MatchId = wall.MatchId,
@@ -135,31 +137,31 @@ public static class MatchTranslator
         };
     }
 
-    private static WallRejectionReason ToContractReason(Bastion.Domain.Matches.WallRejectionReason reason)
+    private static WallRejectionReason ToContractReason(DomainWallRejectionReason reason)
     {
         switch (reason)
         {
-            case Bastion.Domain.Matches.WallRejectionReason.NoWallsLeft:
+            case DomainWallRejectionReason.NoWallsLeft:
                 return WallRejectionReason.NoWallsLeft;
-            case Bastion.Domain.Matches.WallRejectionReason.OutOfBoard:
+            case DomainWallRejectionReason.OutOfBoard:
                 return WallRejectionReason.OutOfBoard;
-            case Bastion.Domain.Matches.WallRejectionReason.GrooveTaken:
+            case DomainWallRejectionReason.GrooveTaken:
                 return WallRejectionReason.GrooveTaken;
-            case Bastion.Domain.Matches.WallRejectionReason.WouldBlockPlayer:
+            case DomainWallRejectionReason.WouldBlockPlayer:
                 return WallRejectionReason.WouldBlockPlayer;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported wall rejection reason.");
         }
     }
 
-    private static Bastion.Domain.Matches.WallOrientation ToDomainOrientation(WallOrientation orientation)
+    private static DomainWallOrientation ToDomainOrientation(WallOrientation orientation)
     {
         switch (orientation)
         {
             case WallOrientation.Horizontal:
-                return Bastion.Domain.Matches.WallOrientation.Horizontal;
+                return DomainWallOrientation.Horizontal;
             case WallOrientation.Vertical:
-                return Bastion.Domain.Matches.WallOrientation.Vertical;
+                return DomainWallOrientation.Vertical;
             default:
                 throw new ArgumentOutOfRangeException(
                     nameof(orientation),
@@ -168,13 +170,13 @@ public static class MatchTranslator
         }
     }
 
-    private static WallOrientation ToContractOrientation(Bastion.Domain.Matches.WallOrientation orientation)
+    private static WallOrientation ToContractOrientation(DomainWallOrientation orientation)
     {
         switch (orientation)
         {
-            case Bastion.Domain.Matches.WallOrientation.Horizontal:
+            case DomainWallOrientation.Horizontal:
                 return WallOrientation.Horizontal;
-            case Bastion.Domain.Matches.WallOrientation.Vertical:
+            case DomainWallOrientation.Vertical:
                 return WallOrientation.Vertical;
             default:
                 throw new ArgumentOutOfRangeException(

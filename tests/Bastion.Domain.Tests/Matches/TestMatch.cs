@@ -109,7 +109,7 @@ public sealed class TestMatch
 
         var match = Match.StartRanked(format, _entrants, _startedAt);
 
-        Participation first = FindParticipation(match, FirstAccountId);
+        Participation first = match.GetParticipation(FirstAccountId);
         Assert.Equal(ClassicFirstSquare, first.CurrentSquare);
     }
 
@@ -120,7 +120,7 @@ public sealed class TestMatch
 
         var match = Match.StartRanked(format, _entrants, _startedAt);
 
-        Participation second = FindParticipation(match, SecondAccountId);
+        Participation second = match.GetParticipation(SecondAccountId);
         Assert.Equal(ClassicSecondSquare, second.CurrentSquare);
     }
 
@@ -132,7 +132,7 @@ public sealed class TestMatch
 
         var match = Match.StartRanked(format, _entrants, _startedAt);
 
-        Participation second = FindParticipation(match, SecondAccountId);
+        Participation second = match.GetParticipation(SecondAccountId);
         Assert.Equal(QuickSecondSquare, second.CurrentSquare);
     }
 
@@ -143,7 +143,7 @@ public sealed class TestMatch
 
         var match = Match.StartRanked(format, _entrants, _startedAt);
 
-        Participation second = FindParticipation(match, SecondAccountId);
+        Participation second = match.GetParticipation(SecondAccountId);
         Assert.Equal(PawnSymbol.Red, second.PawnSymbol);
     }
 
@@ -156,7 +156,7 @@ public sealed class TestMatch
 
         var match = Match.StartRanked(format, _entrants, _startedAt);
 
-        Participation first = FindParticipation(match, FirstAccountId);
+        Participation first = match.GetParticipation(FirstAccountId);
         Assert.Equal(expectedWalls, first.RemainingWalls);
     }
 
@@ -167,7 +167,7 @@ public sealed class TestMatch
 
         var match = Match.StartRanked(format, _entrants, _startedAt);
 
-        Participation first = FindParticipation(match, FirstAccountId);
+        Participation first = match.GetParticipation(FirstAccountId);
         Assert.Equal(FiveMinutesInMilliseconds, first.RemainingClockMilliseconds);
     }
 
@@ -178,7 +178,7 @@ public sealed class TestMatch
 
         var match = Match.StartRanked(format, _entrants, _startedAt);
 
-        Participation first = FindParticipation(match, FirstAccountId);
+        Participation first = match.GetParticipation(FirstAccountId);
         Assert.Equal(FirstEloRating, first.InitialElo);
     }
 
@@ -210,7 +210,7 @@ public sealed class TestMatch
 
         match.Abandon(FirstAccountId, _endedAt);
 
-        Participation first = FindParticipation(match, FirstAccountId);
+        Participation first = match.GetParticipation(FirstAccountId);
         Assert.Equal(ParticipationResult.Lost, first.Result);
     }
 
@@ -221,7 +221,7 @@ public sealed class TestMatch
 
         match.Abandon(FirstAccountId, _endedAt);
 
-        Participation second = FindParticipation(match, SecondAccountId);
+        Participation second = match.GetParticipation(SecondAccountId);
         Assert.Equal(ParticipationResult.Won, second.Result);
     }
 
@@ -305,7 +305,7 @@ public sealed class TestMatch
 
         match.Abandon(FirstAccountId, _endedAt);
 
-        Participation leaver = FindParticipation(match, FirstAccountId);
+        Participation leaver = match.GetParticipation(FirstAccountId);
         Assert.Equal(expectedOutcome, (leaver.Result, leaver.EndReason, leaver.Placement));
     }
 
@@ -317,7 +317,7 @@ public sealed class TestMatch
 
         match.Abandon(ThirdAccountId, _endedAt);
 
-        Participation secondLeaver = FindParticipation(match, ThirdAccountId);
+        Participation secondLeaver = match.GetParticipation(ThirdAccountId);
         Assert.Equal(ThirdPlacement, secondLeaver.Placement);
     }
 
@@ -352,7 +352,7 @@ public sealed class TestMatch
 
         match.Abandon(ThirdAccountId, _endedAt);
 
-        Participation winner = FindParticipation(match, FourthAccountId);
+        Participation winner = match.GetParticipation(FourthAccountId);
         Assert.Equal(expectedOutcome, (winner.Result, winner.Placement, match.Status));
     }
 
@@ -394,7 +394,7 @@ public sealed class TestMatch
 
         match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
 
-        Participation first = FindParticipation(match, FirstAccountId);
+        Participation first = match.GetParticipation(FirstAccountId);
         Assert.Equal(ClassicForwardSquare, first.CurrentSquare);
     }
 
@@ -445,7 +445,7 @@ public sealed class TestMatch
 
         match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, playedAt);
 
-        Participation first = FindParticipation(match, FirstAccountId);
+        Participation first = match.GetParticipation(FirstAccountId);
         Assert.Equal(expectedClock, first.RemainingClockMilliseconds);
     }
 
@@ -543,7 +543,7 @@ public sealed class TestMatch
 
         match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _endedAt);
 
-        Participation first = FindParticipation(match, FirstAccountId);
+        Participation first = match.GetParticipation(FirstAccountId);
         Assert.Equal(ParticipationResult.Won, first.Result);
     }
 
@@ -555,7 +555,7 @@ public sealed class TestMatch
 
         match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _endedAt);
 
-        Participation second = FindParticipation(match, SecondAccountId);
+        Participation second = match.GetParticipation(SecondAccountId);
         Assert.Equal(ParticipationResult.Lost, second.Result);
     }
 
@@ -567,7 +567,7 @@ public sealed class TestMatch
 
         match.PlaceWall(placement, GameModeSampleFactory.ClassicBoardSize, _startedAt);
 
-        Participation first = FindParticipation(match, FirstAccountId);
+        Participation first = match.GetParticipation(FirstAccountId);
         Assert.Equal(ClassicWallsAfterOne, first.RemainingWalls);
     }
 
@@ -686,11 +686,6 @@ public sealed class TestMatch
     private static MatchEntrant CreateUnrankedEntrant(int accountId)
     {
         return new MatchEntrant(accountId, EloRating: null);
-    }
-
-    private static Participation FindParticipation(Match match, int accountId)
-    {
-        return match.Participations.First(participation => participation.AccountId == accountId);
     }
 
     private static Match StartClassicMatch()

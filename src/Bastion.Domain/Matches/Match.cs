@@ -93,6 +93,20 @@ public class Match
         return participation is not null;
     }
 
+    public Participation GetParticipation(int accountId)
+    {
+        Participation? participation = FindParticipation(accountId);
+        if (participation is null)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(accountId),
+                accountId,
+                "The account does not play this match.");
+        }
+
+        return participation;
+    }
+
     public void Abandon(int abandoningAccountId, DateTime abandonedAt)
     {
         if (!CanBeAbandonedBy(abandoningAccountId))
@@ -153,7 +167,7 @@ public class Match
         ArgumentNullException.ThrowIfNull(pawnMove);
 
         EnsurePawnCanMove(pawnMove, boardSize);
-        Participation mover = _participations.First(participation => participation.AccountId == pawnMove.AccountId);
+        Participation mover = GetParticipation(pawnMove.AccountId);
         MoveTiming timing = MeasureTurn(playedAt);
         var move = new Move(pawnMove, mover.CurrentSquare, timing);
         RecordMove(mover, move);
@@ -200,7 +214,7 @@ public class Match
             throw new InvalidOperationException($"The wall cannot be placed. Reason={rejection.Reason}");
         }
 
-        Participation placer = _participations.First(participation => participation.AccountId == placement.AccountId);
+        Participation placer = GetParticipation(placement.AccountId);
         MoveTiming timing = MeasureTurn(playedAt);
         var move = new Move(placement, timing);
         RecordMove(placer, move);

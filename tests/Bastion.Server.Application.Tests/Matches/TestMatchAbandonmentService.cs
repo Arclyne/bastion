@@ -110,8 +110,7 @@ public sealed class TestMatchAbandonmentService
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
         Match savedMatch = _matchRepository.SavedAbandonments.Single();
-        Participation abandoning = savedMatch.Participations
-            .Single(participation => participation.AccountId == AbandoningAccountId);
+        Participation abandoning = savedMatch.GetParticipation(AbandoningAccountId);
         Assert.Equal(ParticipationResult.Lost, abandoning.Result);
     }
 

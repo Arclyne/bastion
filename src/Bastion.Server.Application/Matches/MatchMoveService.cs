@@ -44,7 +44,7 @@ public sealed class MatchMoveService : IMatchMoveService
         var pawnMove = new PawnMove(player.AccountId, move.MoveNumber, destination);
         byte boardSize = FindBoardSize(match);
         EnsureReachable(match, pawnMove, boardSize);
-        Participation mover = match.Participations.Single(participation => participation.AccountId == player.AccountId);
+        Participation mover = match.GetParticipation(player.AccountId);
         string fromSquare = mover.CurrentSquare;
         match.MovePawn(pawnMove, boardSize, now);
         _matchRepository.SaveMove(match);
@@ -54,23 +54,37 @@ public sealed class MatchMoveService : IMatchMoveService
     }
 
     /// <inheritdoc/>
-    public void PlaceWall(string sessionToken, ChosenWall wall, DateTime now)
+    public void PlaceWall(string sessionToken, ChosenWall chosenWall, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
-        ArgumentNullException.ThrowIfNull(wall);
+        ArgumentNullException.ThrowIfNull(chosenWall);
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        Match match = FindPlayedMatch(player, wall.MatchId);
-        EnsureTurn(match, player, wall.MoveNumber);
-        Wall placedWall = ReadWall(player, wall);
-        var placement = new WallPlacement(player.AccountId, wall.MoveNumber, placedWall);
+        Match match = FindPlayedMatch(player, chosenWall.MatchId);
+        EnsureTurn(match, player, chosenWall.MoveNumber);
+        Wall wall = ReadWall(player, chosenWall);
+        var placement = new WallPlacement(player.AccountId, chosenWall.MoveNumber, wall);
         byte boardSize = FindBoardSize(match);
         EnsureWallFits(match, placement, boardSize);
         match.PlaceWall(placement, boardSize, now);
         _matchRepository.SaveMove(match);
         _logger.Info(
-            $"A wall was placed. AccountId={player.AccountId}; MatchId={match.MatchId}; MoveNumber={wall.MoveNumber}");
-        NotifyWallPlaced(match, player, placedWall);
+            "A wall was placed. "
+            + $"AccountId={player.AccountId}; MatchId={match.MatchId}; MoveNumber={chosenWall.MoveNumber}");
+        NotifyWallPlaced(match, player, wall);
+    }
+
+    private Match FindPlayedMatch(ConnectedPlayer player, int matchId)
+    {
+        Match? match = _matchRepository.FindMatch(matchId);
+        if (match is null || !match.IsPlayedBy(player.AccountId))
+        {
+            _logger.Warn(
+                $"A player tried to move in a match they do not play. AccountId={player.AccountId}; MatchId={matchId}");
+            throw new MatchNotJoinedException();
+        }
+
+        return match;
     }
 
     private static void EnsureTurn(Match match, ConnectedPlayer player, short moveNumber)
@@ -105,6 +119,17 @@ public sealed class MatchMoveService : IMatchMoveService
         return destination;
     }
 
+    private byte FindBoardSize(Match match)
+    {
+        GameMode? gameMode = _matchRepository.FindGameMode(match.GameModeId);
+        if (gameMode is null)
+        {
+            throw new InvalidOperationException($"The game mode of the match does not exist. MatchId={match.MatchId}");
+        }
+
+        return gameMode.BoardSize;
+    }
+
     private static void EnsureReachable(Match match, PawnMove pawnMove, byte boardSize)
     {
         IReadOnlyList<BoardCoordinates> reachableSquares = match.ListReachableSquares(pawnMove.AccountId, boardSize);
@@ -120,69 +145,9 @@ public sealed class MatchMoveService : IMatchMoveService
         throw new IllegalMoveException();
     }
 
-    private static Wall ReadWall(ConnectedPlayer player, ChosenWall wall)
-    {
-        if (!BoardLayout.TryParseSquare(wall.Groove, out BoardCoordinates groove))
-        {
-            _logger.Warn(
-                $"A wall arrived with a groove outside board notation. AccountId={player.AccountId}; "
-                + $"MatchId={wall.MatchId}; Groove={wall.Groove}");
-            throw new IllegalWallException(WallRejectionReason.OutOfBoard, null);
-        }
-
-        return new Wall(groove, wall.Orientation);
-    }
-
-    private static void EnsureWallFits(Match match, WallPlacement placement, byte boardSize)
-    {
-        WallRejection? rejection = match.FindWallRejection(placement, boardSize);
-        if (rejection is null)
-        {
-            return;
-        }
-
-        string groove = BoardLayout.ToSquare(placement.Wall.Groove);
-        string logMessage = $"The server rejected a wall. AccountId={placement.AccountId}; MatchId={match.MatchId}; "
-            + $"Groove={groove}; Orientation={placement.Wall.Orientation}; Reason={rejection.Reason}";
-        if (rejection.Reason == WallRejectionReason.NoWallsLeft)
-        {
-            _logger.Warn($"{logMessage}. The interface does not allow it; the client may be modified.");
-        }
-        else
-        {
-            _logger.Info(logMessage);
-        }
-
-        throw new IllegalWallException(rejection.Reason, rejection.BlockedTurnOrder);
-    }
-
-    private Match FindPlayedMatch(ConnectedPlayer player, int matchId)
-    {
-        Match? match = _matchRepository.FindMatch(matchId);
-        if (match is null || !match.IsPlayedBy(player.AccountId))
-        {
-            _logger.Warn(
-                $"A player tried to move in a match they do not play. AccountId={player.AccountId}; MatchId={matchId}");
-            throw new MatchNotJoinedException();
-        }
-
-        return match;
-    }
-
-    private byte FindBoardSize(Match match)
-    {
-        GameMode? gameMode = _matchRepository.FindGameMode(match.GameModeId);
-        if (gameMode is null)
-        {
-            throw new InvalidOperationException($"The game mode of the match does not exist. MatchId={match.MatchId}");
-        }
-
-        return gameMode.BoardSize;
-    }
-
     private void NotifyPawnMoved(Match match, ConnectedPlayer player, string fromSquare)
     {
-        Participation mover = match.Participations.Single(participation => participation.AccountId == player.AccountId);
+        Participation mover = match.GetParticipation(player.AccountId);
         short nextMoveNumber = match.GetNextMoveNumber();
         bool isMatchOver = match.Status == MatchStatus.Finished;
         var notice = new PawnMoveNotice
@@ -199,17 +164,54 @@ public sealed class MatchMoveService : IMatchMoveService
         _matchMoveNotifier.NotifyPawnMoved(match.MatchId, recipientAccountIds, notice);
     }
 
-    private void NotifyWallPlaced(Match match, ConnectedPlayer player, Wall placedWall)
+    private static Wall ReadWall(ConnectedPlayer player, ChosenWall chosenWall)
     {
-        Participation placer =
-            match.Participations.Single(participation => participation.AccountId == player.AccountId);
-        string groove = BoardLayout.ToSquare(placedWall.Groove);
+        if (!BoardLayout.TryParseSquare(chosenWall.Groove, out BoardCoordinates groove))
+        {
+            _logger.Warn(
+                $"A wall arrived with a groove outside board notation. AccountId={player.AccountId}; "
+                + $"MatchId={chosenWall.MatchId}; Groove={chosenWall.Groove}");
+            throw new IllegalWallException(WallRejectionReason.OutOfBoard, blockedTurnOrder: null);
+        }
+
+        return new Wall(groove, chosenWall.Orientation);
+    }
+
+    private static void EnsureWallFits(Match match, WallPlacement placement, byte boardSize)
+    {
+        WallRejection? rejection = match.FindWallRejection(placement, boardSize);
+        if (rejection is null)
+        {
+            return;
+        }
+
+        string groove = BoardLayout.ToSquare(placement.Wall.Groove);
+        string rejectionContext = $"AccountId={placement.AccountId}; MatchId={match.MatchId}; Groove={groove}; "
+            + $"Orientation={placement.Wall.Orientation}; Reason={rejection.Reason}";
+        if (rejection.Reason == WallRejectionReason.NoWallsLeft)
+        {
+            _logger.Warn(
+                "The server rejected a wall the interface does not allow; the client may be modified. "
+                + rejectionContext);
+        }
+        else
+        {
+            _logger.Info($"The server rejected a wall. {rejectionContext}");
+        }
+
+        throw new IllegalWallException(rejection.Reason, rejection.BlockedTurnOrder);
+    }
+
+    private void NotifyWallPlaced(Match match, ConnectedPlayer player, Wall wall)
+    {
+        Participation placer = match.GetParticipation(player.AccountId);
+        string groove = BoardLayout.ToSquare(wall.Groove);
         short nextMoveNumber = match.GetNextMoveNumber();
         var notice = new WallPlacementNotice
         {
             PlacerNickname = player.Nickname,
             Groove = groove,
-            Orientation = placedWall.Orientation,
+            Orientation = wall.Orientation,
             RemainingWalls = placer.RemainingWalls,
             NextTurnOrder = match.CurrentTurnOrder,
             NextMoveNumber = nextMoveNumber,

@@ -29,9 +29,9 @@ public interface IMatchService
     void AbandonMatch(string? sessionToken, int matchId);
 
     /// <summary>
-    /// Moves the pawn of the player of the session one square, or over the rival pawn, and passes the turn. Both
-    /// players learn the new position through the notification channel; with two players, a pawn that reaches its goal
-    /// row ends the match.
+    /// Moves the pawn of the player of the session one square, or over the rival pawn, and passes the turn. Every
+    /// player of the match learns the new position through the notification channel; with two players, a pawn that
+    /// reaches its goal row ends the match.
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
     /// <param name="move">The match, the expected move number and the destination square in board notation.</param>
@@ -57,9 +57,9 @@ public interface IMatchService
     void MovePawn(string? sessionToken, PawnMove? move);
 
     /// <summary>
-    /// Places one wall of the player of the session in a groove of the board and passes the turn. Both players learn
-    /// the new wall through the notification channel. A wall never overlaps or crosses another one, and never leaves a
-    /// player without a way to the goal.
+    /// Places one wall of the player of the session in a groove of the board and passes the turn. Every player of the
+    /// match learns the new wall through the notification channel. A wall never overlaps or crosses another one, and
+    /// never leaves a player without a way to the goal.
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
     /// <param name="wall">

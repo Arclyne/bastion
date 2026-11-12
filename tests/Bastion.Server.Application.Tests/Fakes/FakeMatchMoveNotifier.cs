@@ -24,6 +24,7 @@ public sealed class FakeMatchMoveNotifier : IMatchMoveNotifier
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
         ArgumentNullException.ThrowIfNull(notice);
 
-        NotifiedWallPlacements.Add(new NotifiedWallPlacement(matchId, recipientAccountIds, notice));
+        var notifiedWallPlacement = new NotifiedWallPlacement(matchId, recipientAccountIds, notice);
+        NotifiedWallPlacements.Add(notifiedWallPlacement);
     }
 }

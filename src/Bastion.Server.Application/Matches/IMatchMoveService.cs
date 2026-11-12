@@ -11,7 +11,7 @@ public interface IMatchMoveService
 {
     /// <summary>
     /// Moves the pawn of the player of the session to the chosen square, records the move, passes the turn and
-    /// notifies both players. With two players, a pawn that reaches its goal row ends the match.
+    /// notifies every player of the match. With two players, a pawn that reaches its goal row ends the match.
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
     /// <param name="move">The match, the move number the player expects and the destination square.</param>
@@ -32,13 +32,13 @@ public interface IMatchMoveService
 
     /// <summary>
     /// Places one wall of the player of the session in the chosen groove, records the move, spends the wall, passes
-    /// the turn and notifies both players.
+    /// the turn and notifies every player of the match.
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
-    /// <param name="wall">The match, the move number the player expects, the groove and the orientation.</param>
+    /// <param name="chosenWall">The match, the move number the player expects, the groove and the orientation.</param>
     /// <param name="now">The current UTC time, which closes the player's turn and dates the move.</param>
     /// <exception cref="ArgumentNullException">
-    /// <paramref name="sessionToken"/> or <paramref name="wall"/> is null.
+    /// <paramref name="sessionToken"/> or <paramref name="chosenWall"/> is null.
     /// </exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="MatchNotJoinedException">
@@ -52,5 +52,5 @@ public interface IMatchMoveService
     /// a player without a way to the goal.
     /// </exception>
     /// <exception cref="MatchRepositoryException">The match could not be read or saved.</exception>
-    void PlaceWall(string sessionToken, ChosenWall wall, DateTime now);
+    void PlaceWall(string sessionToken, ChosenWall chosenWall, DateTime now);
 }

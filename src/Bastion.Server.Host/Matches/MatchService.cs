@@ -86,12 +86,12 @@ public sealed class MatchService : IMatchService
         matchMoveService.MovePawn(token, move, now);
     }
 
-    private void PlaceWallInRequestScope(string token, ChosenWall wall)
+    private void PlaceWallInRequestScope(string token, ChosenWall chosenWall)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         IMatchMoveService matchMoveService = scope.ServiceProvider.GetRequiredService<IMatchMoveService>();
         DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
-        matchMoveService.PlaceWall(token, wall, now);
+        matchMoveService.PlaceWall(token, chosenWall, now);
     }
 
     private void TranslateMatchFailures(string operationName, int matchId, Action operation)
