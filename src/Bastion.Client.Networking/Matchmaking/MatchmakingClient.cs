@@ -65,11 +65,28 @@ public sealed class MatchmakingClient : IMatchmakingClient
         Call(service => service.ConfirmPresence(sessionToken));
     }
 
+    private void Call(Action<IMatchmakingService> operation)
+    {
+        try
+        {
+            _channel.Call(operation);
+        }
+        catch (CommunicationException ex)
+        {
+            throw ToClientException(ex);
+        }
+        catch (TimeoutException ex)
+        {
+            throw ToClientException(ex);
+        }
+    }
+
     private static Exception ToClientException(Exception ex)
     {
         if (ex is FaultException<SearchRejectedFault> rejected)
         {
-            return new SearchRejectedException(ToRejection(rejected.Detail.Reason), ex);
+            SearchRejection rejection = ToRejection(rejected.Detail.Reason);
+            return new SearchRejectedException(rejection, ex);
         }
 
         return ServiceFailureTranslator.ToClientException(ex);
@@ -87,22 +104,6 @@ public sealed class MatchmakingClient : IMatchmakingClient
                 return SearchRejection.InRoom;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported search rejection reason.");
-        }
-    }
-
-    private void Call(Action<IMatchmakingService> operation)
-    {
-        try
-        {
-            _channel.Call(operation);
-        }
-        catch (CommunicationException ex)
-        {
-            throw ToClientException(ex);
-        }
-        catch (TimeoutException ex)
-        {
-            throw ToClientException(ex);
         }
     }
 }
