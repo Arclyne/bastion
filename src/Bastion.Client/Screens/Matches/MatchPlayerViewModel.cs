@@ -26,7 +26,11 @@ public sealed class MatchPlayerViewModel : ViewModel
 
     public string Nickname { get; }
 
-    public string WallsText { get; }
+    public string WallsText
+    {
+        get => Get<string>();
+        private set => Set(value);
+    }
 
     public string ClockText { get; }
 
@@ -64,5 +68,10 @@ public sealed class MatchPlayerViewModel : ViewModel
     public void HideTurn()
     {
         HasTurn = false;
+    }
+
+    public void ShowWalls(byte remainingWalls)
+    {
+        WallsText = MatchScreenText.FormatWallCount(remainingWalls);
     }
 }

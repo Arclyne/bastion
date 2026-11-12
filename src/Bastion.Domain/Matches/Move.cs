@@ -15,6 +15,20 @@ public class Move
         PlayedAt = timing.PlayedAt;
     }
 
+    internal Move(WallPlacement placement, MoveTiming timing)
+    {
+        ArgumentNullException.ThrowIfNull(placement);
+        ArgumentNullException.ThrowIfNull(timing);
+
+        MoveNumber = placement.MoveNumber;
+        AccountId = placement.AccountId;
+        MoveType = MoveType.Wall;
+        Groove = BoardLayout.ToSquare(placement.Wall.Groove);
+        Orientation = placement.Wall.Orientation;
+        TimeSpentMilliseconds = timing.TimeSpentMilliseconds;
+        PlayedAt = timing.PlayedAt;
+    }
+
     private Move()
     {
     }
@@ -31,6 +45,10 @@ public class Move
 
     public string? ToSquare { get; private set; }
 
+    public string? Groove { get; private set; }
+
+    public WallOrientation? Orientation { get; private set; }
+
     public int TimeSpentMilliseconds { get; private set; }
 
     public DateTime PlayedAt { get; private set; }
@@ -44,5 +62,16 @@ public class Move
 
         BoardCoordinates destination = BoardLayout.ParseSquare(ToSquare);
         return destination;
+    }
+
+    public Wall GetWall()
+    {
+        if (MoveType != MoveType.Wall || Groove is null || Orientation is not WallOrientation orientation)
+        {
+            throw new InvalidOperationException("Only a wall move has a groove and an orientation.");
+        }
+
+        BoardCoordinates groove = BoardLayout.ParseSquare(Groove);
+        return new Wall(groove, orientation);
     }
 }

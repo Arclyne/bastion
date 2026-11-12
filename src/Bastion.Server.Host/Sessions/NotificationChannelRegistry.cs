@@ -146,6 +146,15 @@ public sealed class NotificationChannelRegistry
         NotifyPlayers(recipientAccountIds, notification);
     }
 
+    public void NotifyWallPlaced(int matchId, IReadOnlyCollection<int> recipientAccountIds, WallPlacementNotice notice)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+        ArgumentNullException.ThrowIfNull(notice);
+
+        var notification = MatchTranslator.ToWallPlacedNotification(matchId, notice, GetUtcNow());
+        NotifyPlayers(recipientAccountIds, notification);
+    }
+
     public void NotifyPresenceRequested(PresenceRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);

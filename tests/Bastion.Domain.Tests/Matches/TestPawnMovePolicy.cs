@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Bastion.Domain.Matches;
 using Xunit;
@@ -25,6 +26,7 @@ public sealed class TestPawnMovePolicy
     private static readonly BoardCoordinates _beforeLastRow = new BoardCoordinates(CenterIndex, BeforeLastIndex);
     private static readonly BoardCoordinates _lastRow = new BoardCoordinates(CenterIndex, LastIndex);
     private static readonly BoardCoordinates _leftOfLastRow = new BoardCoordinates(LeftIndex, LastIndex);
+    private static readonly BoardCoordinates _leftOfBeforeLastRow = new BoardCoordinates(LeftIndex, BeforeLastIndex);
 
     [Fact]
     public void ListReachableSquares_PawnInOpenBoard_ReturnsFourNeighbors()
@@ -85,20 +87,64 @@ public sealed class TestPawnMovePolicy
             [Match.SecondTurnOrder] = _aheadOfCenter,
             [Match.ThirdTurnOrder] = _twoAheadOfCenter,
         };
-        var board = new Board(ClassicBoardSize, pawnsByTurnOrder);
+        var board = new Board(ClassicBoardSize, pawnsByTurnOrder, Array.Empty<Wall>());
 
         IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 
         Assert.Contains(_leftOfAhead, reachableSquares);
     }
 
-    private static Board CreateBoard(BoardCoordinates firstPawn, BoardCoordinates secondPawn)
+    [Fact]
+    public void ListReachableSquares_WallAhead_ExcludesSquareBehindWall()
+    {
+        var wallAhead = new Wall(_center, WallOrientation.Horizontal);
+        Board board = CreateBoard(_center, _corner, wallAhead);
+
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
+
+        Assert.DoesNotContain(_aheadOfCenter, reachableSquares);
+    }
+
+    [Fact]
+    public void ListReachableSquares_WallBehindRival_ExcludesStraightJump()
+    {
+        var wallBehindRival = new Wall(_aheadOfCenter, WallOrientation.Horizontal);
+        Board board = CreateBoard(_center, _aheadOfCenter, wallBehindRival);
+
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
+
+        Assert.DoesNotContain(_twoAheadOfCenter, reachableSquares);
+    }
+
+    [Fact]
+    public void ListReachableSquares_WallBehindRival_IncludesDiagonalJump()
+    {
+        var wallBehindRival = new Wall(_aheadOfCenter, WallOrientation.Horizontal);
+        Board board = CreateBoard(_center, _aheadOfCenter, wallBehindRival);
+
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
+
+        Assert.Contains(_leftOfAhead, reachableSquares);
+    }
+
+    [Fact]
+    public void ListReachableSquares_WallBesideRival_ExcludesThatDiagonal()
+    {
+        var wallBesideRival = new Wall(_leftOfBeforeLastRow, WallOrientation.Vertical);
+        Board board = CreateBoard(_beforeLastRow, _lastRow, wallBesideRival);
+
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
+
+        Assert.DoesNotContain(_leftOfLastRow, reachableSquares);
+    }
+
+    private static Board CreateBoard(BoardCoordinates firstPawn, BoardCoordinates secondPawn, params Wall[] walls)
     {
         var pawnsByTurnOrder = new Dictionary<byte, BoardCoordinates>
         {
             [Match.FirstTurnOrder] = firstPawn,
             [Match.SecondTurnOrder] = secondPawn,
         };
-        return new Board(ClassicBoardSize, pawnsByTurnOrder);
+        return new Board(ClassicBoardSize, pawnsByTurnOrder, walls);
     }
 }

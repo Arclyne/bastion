@@ -19,6 +19,10 @@ public static class BoardSceneLayout
     private const float BoardCenter = 0f;
     private const float CameraHeight = 16f;
     private const float CameraDistance = 12.5f;
+    private const float GrooveOffset = 0.5f;
+    private const float WallLength = 1.8f;
+    private const float WallThickness = 0.14f;
+    private const float WallHeight = 0.45f;
 
     public static Vector3 GetCellCenter(byte boardSize, BoardCoordinates coordinates)
     {
@@ -43,6 +47,38 @@ public static class BoardSceneLayout
         bool isColumnInside = columnIndex >= FirstIndex && columnIndex < boardSize;
         bool isRowInside = rowIndex >= FirstIndex && rowIndex < boardSize;
         return isColumnInside && isRowInside;
+    }
+
+    public static bool TryGetGroove(byte boardSize, Vector3 surfacePoint, out BoardCoordinates groove)
+    {
+        float centerIndex = (boardSize - 1) / BoardHalves;
+        float columnPosition = surfacePoint.X + centerIndex;
+        float rowPosition = centerIndex - surfacePoint.Z;
+        float flooredColumn = MathF.Floor(columnPosition);
+        float flooredRow = MathF.Floor(rowPosition);
+        int columnIndex = (int)flooredColumn;
+        int rowIndex = (int)flooredRow;
+        groove = new BoardCoordinates(columnIndex, rowIndex);
+        int grooveCount = boardSize - FirstRowNumber;
+        bool isColumnInside = columnIndex >= FirstIndex && columnIndex < grooveCount;
+        bool isRowInside = rowIndex >= FirstIndex && rowIndex < grooveCount;
+        return isColumnInside && isRowInside;
+    }
+
+    public static Matrix GetWallTransform(byte boardSize, Wall wall)
+    {
+        ArgumentNullException.ThrowIfNull(wall);
+
+        float centerIndex = (boardSize - 1) / BoardHalves;
+        float centerX = wall.Groove.ColumnIndex + GrooveOffset - centerIndex;
+        float centerZ = centerIndex - wall.Groove.RowIndex - GrooveOffset;
+        bool isHorizontal = wall.Orientation == WallOrientation.Horizontal;
+        float scaleX = isHorizontal ? WallLength : WallThickness;
+        float scaleZ = isHorizontal ? WallThickness : WallLength;
+        var scale = Matrix.CreateScale(scaleX, WallHeight, scaleZ);
+        var translation = Matrix.CreateTranslation(centerX, WallHeight / BoardHalves, centerZ);
+        Matrix transform = scale * translation;
+        return transform;
     }
 
     public static Vector3 GetCameraPosition(byte ownTurnOrder)

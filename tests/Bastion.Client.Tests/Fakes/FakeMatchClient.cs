@@ -14,9 +14,15 @@ public sealed class FakeMatchClient : IMatchClient
 
     public ChosenPawnMove? LastMove { get; private set; }
 
+    public Exception? WallFailure { get; set; }
+
+    public ChosenWall? LastWall { get; private set; }
+
     public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
 
     public event EventHandler<PawnMovedEventArgs>? PawnMoved;
+
+    public event EventHandler<WallPlacedEventArgs>? WallPlaced;
 
     public void AbandonMatch(string sessionToken, int matchId)
     {
@@ -43,6 +49,19 @@ public sealed class FakeMatchClient : IMatchClient
         LastMove = move;
     }
 
+    public void PlaceWall(string sessionToken, ChosenWall wall)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(wall);
+
+        if (WallFailure is not null)
+        {
+            throw WallFailure;
+        }
+
+        LastWall = wall;
+    }
+
     public bool HasMatchAbandonedSubscribers()
     {
         return MatchAbandoned is not null;
@@ -66,5 +85,12 @@ public sealed class FakeMatchClient : IMatchClient
         ArgumentNullException.ThrowIfNull(e);
 
         PawnMoved?.Invoke(this, e);
+    }
+
+    public void RaiseWallPlaced(WallPlacedEventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+
+        WallPlaced?.Invoke(this, e);
     }
 }

@@ -516,4 +516,34 @@
   <data name="MatchPlayerWonFormat" xml:space="preserve">
     <value>Ganó {0}</value>
   </data>
+  <data name="MatchPlaceWallButton" xml:space="preserve">
+    <value>Colocar muro</value>
+  </data>
+  <data name="MatchRotateWallButton" xml:space="preserve">
+    <value>Rotar</value>
+  </data>
+  <data name="MatchConfirmWallButton" xml:space="preserve">
+    <value>Confirmar</value>
+  </data>
+  <data name="MatchCancelWallButton" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="MatchWallChooseHint" xml:space="preserve">
+    <value>Elige un surco. Clic derecho o R rota el muro.</value>
+  </data>
+  <data name="MatchWallPendingHint" xml:space="preserve">
+    <value>Confirma el muro o elige otro surco.</value>
+  </data>
+  <data name="MatchWallNoWallsLeft" xml:space="preserve">
+    <value>Ya no te quedan muros.</value>
+  </data>
+  <data name="MatchWallOutOfBoard" xml:space="preserve">
+    <value>El muro no cabe ahí.</value>
+  </data>
+  <data name="MatchWallGrooveTaken" xml:space="preserve">
+    <value>Ese surco ya está ocupado.</value>
+  </data>
+  <data name="MatchWallWouldBlockFormat" xml:space="preserve">
+    <value>Ese muro encerraría a {0}.</value>
+  </data>
 </root>

@@ -78,7 +78,7 @@ public sealed class MatchRepository : IMatchRepository
         return _newContextRunner.Run(context => LoadGameMode(context, gameModeId));
     }
 
-    public void SavePawnMove(Match match)
+    public void SaveMove(Match match)
     {
         ArgumentNullException.ThrowIfNull(match);
 

@@ -12,6 +12,8 @@ public interface INotificationClient
 
     event EventHandler<PawnMovedEventArgs>? PawnMoved;
 
+    event EventHandler<WallPlacedEventArgs>? WallPlaced;
+
     event EventHandler<MatchFoundEventArgs>? MatchFound;
 
     event EventHandler<PresenceRequestedEventArgs>? PresenceRequested;

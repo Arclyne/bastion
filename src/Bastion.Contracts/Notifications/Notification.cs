@@ -9,6 +9,7 @@ namespace Bastion.Contracts.Notifications;
 [KnownType(typeof(MatchChatMessageNotification))]
 [KnownType(typeof(MatchAbandonedNotification))]
 [KnownType(typeof(PawnMovedNotification))]
+[KnownType(typeof(WallPlacedNotification))]
 [KnownType(typeof(PresenceRequestedNotification))]
 [KnownType(typeof(SearchEndedNotification))]
 [KnownType(typeof(FriendPresenceNotification))]

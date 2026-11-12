@@ -26,6 +26,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
 
         _abandonmentViewModel = abandonmentViewModel;
         Play = play;
+        WallPlacement = new WallPlacementViewModel(play);
         FoundMatchFormat format = joinedMatch.FoundMatch.Format;
         IEnumerable<MatchPlayerViewModel> orderedPlayers = joinedMatch.FoundMatch.Participants
             .OrderBy(participant => participant.TurnOrder)
@@ -52,6 +53,8 @@ public sealed class MatchViewModel : ViewModel, IDisposable
 
     public MatchPlayViewModel Play { get; }
 
+    public WallPlacementViewModel WallPlacement { get; }
+
     public byte BoardSize { get; }
 
     public byte OwnTurnOrder { get; }
@@ -66,6 +69,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
     {
         _abandonmentViewModel.PlayerLeft -= HandlePlayerLeft;
         Play.StateChanged -= HandlePlayStateChanged;
+        WallPlacement.Dispose();
     }
 
     private static MatchPlayerViewModel CreatePlayerViewModel(
@@ -86,6 +90,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
     private void RefreshPlay()
     {
         RebuildPawns();
+        ShowWalls();
         ShowTurn();
     }
 
@@ -102,6 +107,15 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         }
 
         _pawns = pawns;
+    }
+
+    private void ShowWalls()
+    {
+        foreach (MatchPlayerViewModel player in Players)
+        {
+            byte remainingWalls = Play.GetRemainingWalls(player.TurnOrder);
+            player.ShowWalls(remainingWalls);
+        }
     }
 
     private void ShowTurn()

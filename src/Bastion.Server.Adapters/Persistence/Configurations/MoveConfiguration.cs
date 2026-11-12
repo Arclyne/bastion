@@ -9,6 +9,7 @@ public sealed class MoveConfiguration : IEntityTypeConfiguration<Move>
 {
     private const int MoveTypeLength = 10;
     private const int SquareLength = 3;
+    private const int OrientationLength = 10;
     private const string TimeSpentColumn = "TimeSpent";
 
     public void Configure(EntityTypeBuilder<Move> builder)
@@ -21,6 +22,8 @@ public sealed class MoveConfiguration : IEntityTypeConfiguration<Move>
         builder.Property(move => move.MoveType).HasUpperSnakeCaseConversion(MoveTypeLength);
         builder.Property(move => move.FromSquare).HasMaxLength(SquareLength).IsUnicode(false);
         builder.Property(move => move.ToSquare).HasMaxLength(SquareLength).IsUnicode(false);
+        builder.Property(move => move.Groove).HasMaxLength(SquareLength).IsUnicode(false);
+        builder.Property(move => move.Orientation).HasUpperSnakeCaseConversion(OrientationLength);
         builder.Property(move => move.TimeSpentMilliseconds).HasColumnName(TimeSpentColumn);
     }
 }

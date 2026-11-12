@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Channels;
@@ -24,10 +26,18 @@ public class TestMatchPlayViewModel : IDisposable
     private const int SecondRowIndex = 1;
     private const int ThirdRowIndex = 2;
     private const int LastRowIndex = 8;
+    private const int BeforeLastRowIndex = 7;
+    private const int FourthRowIndex = 3;
+    private const string GrooveAheadOfSecondPawn = "e8";
+    private const string CenterGroove = "e4";
 
     private static readonly BoardCoordinates _firstStart = new BoardCoordinates(CenterColumnIndex, FirstRowIndex);
     private static readonly BoardCoordinates _secondStart = new BoardCoordinates(CenterColumnIndex, LastRowIndex);
     private static readonly BoardCoordinates _forward = new BoardCoordinates(CenterColumnIndex, SecondRowIndex);
+    private static readonly BoardCoordinates _secondForward =
+        new BoardCoordinates(CenterColumnIndex, BeforeLastRowIndex);
+    private static readonly BoardCoordinates _centerGrooveCoordinates =
+        new BoardCoordinates(CenterColumnIndex, FourthRowIndex);
     private static readonly BoardCoordinates _twoSquaresForward =
         new BoardCoordinates(CenterColumnIndex, ThirdRowIndex);
 
@@ -203,6 +213,108 @@ public class TestMatchPlayViewModel : IDisposable
         _matchClient.RaiseMatchAbandoned(JoinedMatchSampleFactory.MatchId, JoinedMatchSampleFactory.RivalNickname, true);
 
         Assert.True(viewModel.IsMatchOver);
+    }
+
+    [Fact]
+    public void WallPlaced_RivalPlacedWall_AddsWall()
+    {
+        var expectedWall = new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal);
+        MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+
+        _matchClient.RaiseWallPlaced(WallPlacedSamples.CreateFirstWall(JoinedMatchSampleFactory.RivalNickname, CenterGroove));
+
+        Assert.Equal(expectedWall, viewModel.Walls.Single());
+    }
+
+    [Fact]
+    public void WallPlaced_RivalPlacedWall_UpdatesRivalWallsLeft()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+
+        _matchClient.RaiseWallPlaced(WallPlacedSamples.CreateFirstWall(JoinedMatchSampleFactory.RivalNickname, CenterGroove));
+
+        Assert.Equal(WallPlacedSamples.WallsLeftAfterOne, viewModel.GetRemainingWalls(Match.FirstTurnOrder));
+    }
+
+    [Fact]
+    public void WallPlaced_RivalPlacedWall_GivesTurnToOwnPawn()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+
+        _matchClient.RaiseWallPlaced(WallPlacedSamples.CreateFirstWall(JoinedMatchSampleFactory.RivalNickname, CenterGroove));
+
+        Assert.Equal(Match.SecondTurnOrder, viewModel.CurrentTurnOrder);
+    }
+
+    [Fact]
+    public async Task SelectSquare_WallAheadOfOwnPawn_ExcludesSquareBehindWall()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+        _matchClient.RaiseWallPlaced(
+            WallPlacedSamples.CreateFirstWall(JoinedMatchSampleFactory.RivalNickname, GrooveAheadOfSecondPawn));
+
+        await viewModel.SelectSquare(_secondStart);
+
+        Assert.DoesNotContain(_secondForward, viewModel.ReachableSquares);
+    }
+
+    [Fact]
+    public async Task PlaceWall_OwnTurn_SendsWallWithNextMoveNumber()
+    {
+        var expectedWall = new ChosenWall
+        {
+            MatchId = JoinedMatchSampleFactory.MatchId,
+            MoveNumber = Match.FirstMoveNumber,
+            Groove = CenterGroove,
+            Orientation = PlacedWallOrientation.Horizontal,
+        };
+        MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+
+        await viewModel.PlaceWall(new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal));
+
+        Assert.Equal(expectedWall, _matchClient.LastWall);
+    }
+
+    [Fact]
+    public async Task PlaceWall_RivalTurn_SendsNothing()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+
+        await viewModel.PlaceWall(new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal));
+
+        Assert.Null(_matchClient.LastWall);
+    }
+
+    [Fact]
+    public async Task PlaceWall_GrooveTaken_ShowsGrooveTaken()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        _matchClient.WallFailure = new IllegalWallException(
+            WallPlacementRejection.GrooveTaken,
+            null,
+            new InvalidOperationException());
+
+        await viewModel.PlaceWall(new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal));
+
+        Assert.Equal(Strings.MatchWallGrooveTaken, viewModel.NoticeText);
+    }
+
+    [Fact]
+    public async Task PlaceWall_WouldBlockRival_NamesRival()
+    {
+        string expectedText = string.Format(
+            CultureInfo.CurrentCulture,
+            Strings.MatchWallWouldBlockFormat,
+            JoinedMatchSampleFactory.RivalNickname);
+        MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        _matchClient.WallFailure = new IllegalWallException(
+            WallPlacementRejection.WouldBlockPlayer,
+            Match.SecondTurnOrder,
+            new InvalidOperationException());
+
+        await viewModel.PlaceWall(new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal));
+
+        Assert.Equal(expectedText, viewModel.NoticeText);
     }
 
     [Fact]

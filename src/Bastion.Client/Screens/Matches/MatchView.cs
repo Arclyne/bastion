@@ -15,6 +15,7 @@ public sealed class MatchView : ScreenView
     private const float AbandonStatusGap = 8;
     private const float PlayerLeftNoticeWidth = 420;
     private const float MoveNoticeWidth = 360;
+    private const float MoveNoticeHeight = 28;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchView));
 
@@ -33,6 +34,7 @@ public sealed class MatchView : ScreenView
         AddChild(CreatePlayersPanel(matchViewModel));
         AddChild(CreateTurnPill(matchViewModel));
         AddChild(CreateMoveNotice(matchViewModel.Play));
+        AddChild(CreateWallControls(matchViewModel.WallPlacement));
         AddChild(CreateChatPanel(chatViewModel));
         AddChild(CreateAbandonButton());
         AddChild(CreateAbandonStatus());
@@ -86,6 +88,14 @@ public sealed class MatchView : ScreenView
         notice.Anchor(Gum.Wireframe.Anchor.Bottom);
         notice.Y = -ScreenMetrics.MarginY;
         return notice;
+    }
+
+    private static WallControlsPanel CreateWallControls(WallPlacementViewModel wallPlacement)
+    {
+        var panel = new WallControlsPanel(wallPlacement);
+        panel.Anchor(Gum.Wireframe.Anchor.Bottom);
+        panel.Y = -(ScreenMetrics.MarginY + MoveNoticeHeight);
+        return panel;
     }
 
     private static MatchChatPanel CreateChatPanel(MatchChatViewModel chatViewModel)
