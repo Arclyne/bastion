@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Networking.Channels;
+using Bastion.Domain.Accounts;
 using Gum.Mvvm;
 using log4net;
 
@@ -59,10 +60,13 @@ public sealed class LoginViewModel : ViewModel
         get => Get<string>();
         set
         {
-            if (Set(value))
+            if (!Set(value))
             {
-                IsIdentifierMissing = false;
+                return;
             }
+
+            IsIdentifierMissing = false;
+            IsIdentifierMalformed = false;
         }
     }
 
@@ -92,6 +96,16 @@ public sealed class LoginViewModel : ViewModel
         get => Get<bool>();
         private set => Set(value);
     }
+
+    public bool IsIdentifierMalformed
+    {
+        get => Get<bool>();
+        private set => Set(value);
+    }
+
+    [DependsOn(nameof(IsIdentifierMissing))]
+    [DependsOn(nameof(IsIdentifierMalformed))]
+    public bool HasIdentifierError => IsIdentifierMissing || IsIdentifierMalformed;
 
     public bool IsPasswordMissing
     {
@@ -163,8 +177,8 @@ public sealed class LoginViewModel : ViewModel
             return;
         }
 
-        MarkMissingFields();
-        if (IsIdentifierMissing || IsPasswordMissing)
+        MarkInvalidFields();
+        if (IsIdentifierMissing || IsIdentifierMalformed || IsPasswordMissing)
         {
             return;
         }
@@ -192,10 +206,17 @@ public sealed class LoginViewModel : ViewModel
         IsDialogOpen = false;
     }
 
-    private void MarkMissingFields()
+    private void MarkInvalidFields()
     {
         IsIdentifierMissing = string.IsNullOrWhiteSpace(Identifier);
+        IsIdentifierMalformed = !IsIdentifierMissing && !IsWellFormedIdentifier();
         IsPasswordMissing = Password.Length == 0;
+    }
+
+    private bool IsWellFormedIdentifier()
+    {
+        string identifier = Identifier.Trim();
+        return AccountPolicy.IsValidLoginIdentifier(identifier);
     }
 
     private void ClearNotice()

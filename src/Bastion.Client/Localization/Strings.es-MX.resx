@@ -21,6 +21,9 @@
   <data name="LoginIdentifierLabel" xml:space="preserve">
     <value>Nickname o correo</value>
   </data>
+  <data name="LoginIdentifierMalformed" xml:space="preserve">
+    <value>Escribe un nickname o correo válido.</value>
+  </data>
   <data name="LoginIdentifierPlaceholder" xml:space="preserve">
     <value>Escribe tu nickname o correo</value>
   </data>

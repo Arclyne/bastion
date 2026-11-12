@@ -1066,6 +1066,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enter a valid nickname or email..
+        /// </summary>
+        internal static string LoginIdentifierMalformed {
+            get {
+                return ResourceManager.GetString("LoginIdentifierMalformed", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Enter your nickname or email.
         /// </summary>
         internal static string LoginIdentifierPlaceholder {

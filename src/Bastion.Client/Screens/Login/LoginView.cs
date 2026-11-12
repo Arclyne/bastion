@@ -127,13 +127,16 @@ public sealed class LoginView : ScreenView
             Height = FieldHeight,
         };
         input.SetBinding(nameof(TextField.Text), nameof(LoginViewModel.Identifier));
-        input.SetBinding(nameof(TextField.HasError), nameof(LoginViewModel.IsIdentifierMissing));
+        input.SetBinding(nameof(TextField.HasError), nameof(LoginViewModel.HasIdentifierError));
         BindEnabledToIdle(input);
 
-        Label warning = CreateWarning(
+        Label missingWarning = CreateWarning(
             nameof(Strings.LoginIdentifierRequired),
             nameof(LoginViewModel.IsIdentifierMissing));
-        return CreateFieldGroup(nameof(Strings.LoginIdentifierLabel), input, warning);
+        Label malformedWarning = CreateWarning(
+            nameof(Strings.LoginIdentifierMalformed),
+            nameof(LoginViewModel.IsIdentifierMalformed));
+        return CreateFieldGroup(nameof(Strings.LoginIdentifierLabel), input, missingWarning, malformedWarning);
     }
 
     private static Label CreateWarning(string textKey, string visibilityPath)
@@ -143,7 +146,7 @@ public sealed class LoginView : ScreenView
         return warning;
     }
 
-    private static StackPanel CreateFieldGroup(string captionKey, FrameworkElement input, Label warning)
+    private static StackPanel CreateFieldGroup(string captionKey, FrameworkElement input, params Label[] warnings)
     {
         var group = new StackPanel
         {
@@ -151,7 +154,11 @@ public sealed class LoginView : ScreenView
         };
         group.AddChild(ViewFactory.CreateLabel(captionKey, TextStyles.FieldLabel));
         group.AddChild(input);
-        group.AddChild(warning);
+        foreach (Label warning in warnings)
+        {
+            group.AddChild(warning);
+        }
+
         return group;
     }
 
