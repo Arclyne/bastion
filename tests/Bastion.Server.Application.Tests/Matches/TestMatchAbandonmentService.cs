@@ -5,11 +5,12 @@ using Bastion.Domain.Matches;
 using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Application.Tests.Fakes;
+using Bastion.Server.Application.Tests.GameModes;
 using Xunit;
 
 namespace Bastion.Server.Application.Tests.Matches;
 
-public class TestMatchAbandonmentService
+public sealed class TestMatchAbandonmentService
 {
     private const int MatchId = 16;
     private const int UnknownMatchId = 99;
@@ -22,21 +23,22 @@ public class TestMatchAbandonmentService
     private const string OutsiderToken = "outsider-token";
     private const string UnknownToken = "unknown-token";
     private const short StartingElo = 1000;
-    private const byte ClassicGameModeId = 1;
-    private const byte ClassicBoardSize = 9;
-    private const byte ClassicPlayerCount = 2;
-    private const byte ClassicWallsPerPlayer = 10;
     private const byte ClockMinutes = 5;
     private const int FourPlayerMatchId = 17;
     private const int ThirdAccountId = 14;
     private const int FourthAccountId = 15;
     private const string RivalNickname = "rival_uno";
     private const string RivalToken = "rival-token";
-    private const byte FourPlayers = 4;
     private const int RemainingAfterFirstLeaver = 3;
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 7, 0, DateTimeKind.Utc);
+    private static readonly ConnectedPlayer _abandoningPlayer = new ConnectedPlayer(AbandoningAccountId, AbandoningNickname);
+    private static readonly ConnectedPlayer _rival = new ConnectedPlayer(RivalAccountId, RivalNickname);
+    private static readonly ConnectedPlayer _outsider = new ConnectedPlayer(OutsiderAccountId, OutsiderNickname);
+    private static readonly MatchEntrant _abandoningEntrant = new MatchEntrant(AbandoningAccountId, StartingElo);
+    private static readonly MatchEntrant _rivalEntrant = new MatchEntrant(RivalAccountId, StartingElo);
+    private static readonly MatchEntrant[] _rankedEntrants = { _abandoningEntrant, _rivalEntrant };
 
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
     private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
@@ -46,24 +48,26 @@ public class TestMatchAbandonmentService
     public TestMatchAbandonmentService()
     {
         _abandonmentService = new MatchAbandonmentService(_sessionVerifier, _matchRepository, _matchEndNotifier);
-        _sessionVerifier.Add(AbandoningToken, new ConnectedPlayer(AbandoningAccountId, AbandoningNickname));
-        _sessionVerifier.Add(OutsiderToken, new ConnectedPlayer(OutsiderAccountId, OutsiderNickname));
-        _sessionVerifier.Add(RivalToken, new ConnectedPlayer(RivalAccountId, RivalNickname));
-        _matchRepository.MatchesById[MatchId] = StartMatch();
-        _matchRepository.MatchesById[FourPlayerMatchId] = StartFourPlayerMatch();
     }
 
     [Fact]
     public void AbandonMatch_FourPlayers_TellsOthersMatchGoesOn()
     {
+        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
+        AddFourPlayerMatch();
+
         _abandonmentService.AbandonMatch(AbandoningToken, FourPlayerMatchId, _now);
 
-        Assert.False(_matchEndNotifier.NotifiedAbandonments.Single().Notice.IsMatchOver);
+        NotifiedMatchAbandonment notified = _matchEndNotifier.NotifiedAbandonments.Single();
+        Assert.False(notified.Notice.IsMatchOver);
     }
 
     [Fact]
     public void AbandonMatch_FourPlayers_NotifiesRemainingPlayers()
     {
+        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
+        AddFourPlayerMatch();
+
         _abandonmentService.AbandonMatch(AbandoningToken, FourPlayerMatchId, _now);
 
         NotifiedMatchAbandonment notified = _matchEndNotifier.NotifiedAbandonments.Single();
@@ -73,27 +77,40 @@ public class TestMatchAbandonmentService
     [Fact]
     public void AbandonMatch_FourPlayersSecondLeaver_SkipsEarlierLeaver()
     {
+        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
+        _sessionVerifier.Add(RivalToken, _rival);
+        AddFourPlayerMatch();
         _abandonmentService.AbandonMatch(AbandoningToken, FourPlayerMatchId, _now);
+        int[] expectedRecipients = { ThirdAccountId, FourthAccountId };
 
         _abandonmentService.AbandonMatch(RivalToken, FourPlayerMatchId, _now);
 
-        Assert.DoesNotContain(AbandoningAccountId, _matchEndNotifier.NotifiedAbandonments.Last().RecipientAccountIds);
+        NotifiedMatchAbandonment secondNotice = _matchEndNotifier.NotifiedAbandonments.Last();
+        Assert.Equal(expectedRecipients, secondNotice.RecipientAccountIds);
     }
 
     [Fact]
     public void AbandonMatch_Player_SavesFinishedMatch()
     {
+        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
+        AddTwoPlayerMatch();
+
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Assert.Equal(MatchStatus.Finished, _matchRepository.SavedAbandonments.Single().Status);
+        Match savedMatch = _matchRepository.SavedAbandonments.Single();
+        Assert.Equal(MatchStatus.Finished, savedMatch.Status);
     }
 
     [Fact]
     public void AbandonMatch_Player_AbandoningPlayerLoses()
     {
+        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
+        AddTwoPlayerMatch();
+
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Participation abandoning = _matchRepository.SavedAbandonments.Single().Participations
+        Match savedMatch = _matchRepository.SavedAbandonments.Single();
+        Participation abandoning = savedMatch.Participations
             .Single(participation => participation.AccountId == AbandoningAccountId);
         Assert.Equal(ParticipationResult.Lost, abandoning.Result);
     }
@@ -101,83 +118,92 @@ public class TestMatchAbandonmentService
     [Fact]
     public void AbandonMatch_Player_NotifiesOnlyTheRival()
     {
+        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
+        AddTwoPlayerMatch();
+        int[] expectedRecipients = { RivalAccountId };
+
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Assert.Equal(RivalAccountId, _matchEndNotifier.NotifiedAbandonments.Single().RecipientAccountIds.Single());
+        NotifiedMatchAbandonment notified = _matchEndNotifier.NotifiedAbandonments.Single();
+        Assert.Equal(expectedRecipients, notified.RecipientAccountIds);
     }
 
     [Fact]
     public void AbandonMatch_Player_NotifiesAbandoningNickname()
     {
+        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
+        AddTwoPlayerMatch();
+
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Assert.Equal(AbandoningNickname, _matchEndNotifier.NotifiedAbandonments.Single().Notice.AbandoningNickname);
+        NotifiedMatchAbandonment notified = _matchEndNotifier.NotifiedAbandonments.Single();
+        Assert.Equal(AbandoningNickname, notified.Notice.AbandoningNickname);
     }
 
     [Fact]
     public void AbandonMatch_Outsider_ThrowsMatchNotJoinedException()
     {
-        Assert.Throws<MatchNotJoinedException>(() => _abandonmentService.AbandonMatch(OutsiderToken, MatchId, _now));
+        _sessionVerifier.Add(OutsiderToken, _outsider);
+        AddTwoPlayerMatch();
+
+        Action abandon = () => _abandonmentService.AbandonMatch(OutsiderToken, MatchId, _now);
+
+        Assert.Throws<MatchNotJoinedException>(abandon);
     }
 
     [Fact]
     public void AbandonMatch_UnknownMatch_ThrowsMatchNotJoinedException()
     {
-        Assert.Throws<MatchNotJoinedException>(
-            () => _abandonmentService.AbandonMatch(AbandoningToken, UnknownMatchId, _now));
+        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
+
+        Action abandon = () => _abandonmentService.AbandonMatch(AbandoningToken, UnknownMatchId, _now);
+
+        Assert.Throws<MatchNotJoinedException>(abandon);
     }
 
     [Fact]
     public void AbandonMatch_FinishedMatch_ThrowsMatchNotJoinedException()
     {
+        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
+        AddTwoPlayerMatch();
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Assert.Throws<MatchNotJoinedException>(() => _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now));
+        Action abandonAgain = () => _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
+
+        Assert.Throws<MatchNotJoinedException>(abandonAgain);
     }
 
     [Fact]
     public void AbandonMatch_UnknownSession_ThrowsInvalidSessionException()
     {
-        Assert.Throws<InvalidSessionException>(() => _abandonmentService.AbandonMatch(UnknownToken, MatchId, _now));
+        Action abandon = () => _abandonmentService.AbandonMatch(UnknownToken, MatchId, _now);
+
+        Assert.Throws<InvalidSessionException>(abandon);
     }
 
-    private static Match StartFourPlayerMatch()
+    private static MatchEntrant CreateUnrankedEntrant(int accountId)
     {
-        var gameMode = new GameMode
-        {
-            GameModeId = ClassicGameModeId,
-            Code = GameModeCode.FourPlayers,
-            BoardSize = ClassicBoardSize,
-            PlayerCount = FourPlayers,
-            WallsPerPlayer = ClassicWallsPerPlayer,
-            IsActive = true,
-        };
-        var entrants = new MatchEntrant[]
-        {
-            new MatchEntrant(AbandoningAccountId, null),
-            new MatchEntrant(RivalAccountId, null),
-            new MatchEntrant(ThirdAccountId, null),
-            new MatchEntrant(FourthAccountId, null),
-        };
-        return Match.StartPrivate(new MatchFormat(gameMode, ClockMinutes), entrants, _startedAt);
+        return new MatchEntrant(accountId, EloRating: null);
     }
 
-    private static Match StartMatch()
+    private void AddFourPlayerMatch()
     {
-        var gameMode = new GameMode
-        {
-            GameModeId = ClassicGameModeId,
-            Code = GameModeCode.Classic,
-            BoardSize = ClassicBoardSize,
-            PlayerCount = ClassicPlayerCount,
-            WallsPerPlayer = ClassicWallsPerPlayer,
-            IsActive = true,
-        };
-        var entrants = new MatchEntrant[]
-        {
-            new MatchEntrant(AbandoningAccountId, StartingElo),
-            new MatchEntrant(RivalAccountId, StartingElo),
-        };
-        return Match.StartRanked(new MatchFormat(gameMode, ClockMinutes), entrants, _startedAt);
+        GameMode fourPlayerMode = GameModeSampleFactory.CreateFourPlayers();
+        var format = new MatchFormat(fourPlayerMode, ClockMinutes);
+        MatchEntrant abandoning = CreateUnrankedEntrant(AbandoningAccountId);
+        MatchEntrant rival = CreateUnrankedEntrant(RivalAccountId);
+        MatchEntrant third = CreateUnrankedEntrant(ThirdAccountId);
+        MatchEntrant fourth = CreateUnrankedEntrant(FourthAccountId);
+        MatchEntrant[] entrants = { abandoning, rival, third, fourth };
+        var match = Match.StartPrivate(format, entrants, _startedAt);
+        _matchRepository.MatchesById[FourPlayerMatchId] = match;
+    }
+
+    private void AddTwoPlayerMatch()
+    {
+        GameMode classicMode = GameModeSampleFactory.CreateClassic();
+        var format = new MatchFormat(classicMode, ClockMinutes);
+        var match = Match.StartRanked(format, _rankedEntrants, _startedAt);
+        _matchRepository.MatchesById[MatchId] = match;
     }
 }

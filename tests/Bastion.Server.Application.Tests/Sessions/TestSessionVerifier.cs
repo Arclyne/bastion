@@ -7,12 +7,15 @@ using Xunit;
 
 namespace Bastion.Server.Application.Tests.Sessions;
 
-public class TestSessionVerifier
+public sealed class TestSessionVerifier
 {
     private const string Nickname = "marta_muros";
     private const string Email = "marta@example.com";
+    private const string UnknownToken = "otro-token";
+    private const int MinutesAfterIssue = 1;
 
     private static readonly DateTime _issuedAt = new DateTime(2026, 10, 15, 12, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime _beforeExpiry = _issuedAt.AddMinutes(MinutesAfterIssue);
     private static readonly ClientConnection _connection = new ClientConnection("10.0.0.7", "device-1", "0.1.0");
 
     private readonly FakeUnitOfWork _unitOfWork = new FakeUnitOfWork();
@@ -27,36 +30,41 @@ public class TestSessionVerifier
     [Fact]
     public void Verify_UnknownToken_ThrowsInvalidSession()
     {
-        StoreSession();
+        AddSession();
 
-        Assert.Throws<InvalidSessionException>(() => _verifier.Verify("otro-token", _issuedAt.AddMinutes(1)));
+        Action verify = () => _verifier.Verify(UnknownToken, _beforeExpiry);
+
+        Assert.Throws<InvalidSessionException>(verify);
     }
 
     [Fact]
     public void Verify_ExpiredSession_ThrowsInvalidSession()
     {
-        StoreSession();
+        AddSession();
         DateTime afterExpiry = _issuedAt.AddHours(Session.MaximumLifetimeHours);
 
-        Assert.Throws<InvalidSessionException>(() => _verifier.Verify(FakeSessionTokenGenerator.Token, afterExpiry));
+        Action verify = () => _verifier.Verify(FakeSessionTokenGenerator.Token, afterExpiry);
+
+        Assert.Throws<InvalidSessionException>(verify);
     }
 
     [Fact]
     public void Verify_ActiveSession_ReturnsNickname()
     {
-        StoreSession();
+        AddSession();
 
-        ConnectedPlayer player = _verifier.Verify(FakeSessionTokenGenerator.Token, _issuedAt.AddMinutes(1));
+        ConnectedPlayer player = _verifier.Verify(FakeSessionTokenGenerator.Token, _beforeExpiry);
 
         Assert.Equal(Nickname, player.Nickname);
     }
 
-    private void StoreSession()
+    private void AddSession()
     {
         var account = new Account(Nickname, Email);
-        _unitOfWork.AccountStore.Store(account);
+        _unitOfWork.AccountRepository.AddAccount(account);
         byte[] tokenHash = _tokenGenerator.Hash(FakeSessionTokenGenerator.Token);
         var ticket = new SessionTicket(tokenHash, _issuedAt);
-        _unitOfWork.SessionStore.Add(new Session(account.AccountId, ticket, _connection));
+        var session = new Session(account.AccountId, ticket, _connection);
+        _unitOfWork.SessionRepository.Add(session);
     }
 }

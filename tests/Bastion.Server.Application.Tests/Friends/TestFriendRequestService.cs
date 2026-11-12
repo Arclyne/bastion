@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Bastion.Server.Application.Tests.Friends;
 
-public class TestFriendRequestService
+public sealed class TestFriendRequestService
 {
     private const int AccountId = 3;
     private const string Nickname = "luis_quo";
@@ -19,11 +19,21 @@ public class TestFriendRequestService
     private const int OtherAccountId = 4;
     private const string OtherNickname = "marta_muros";
     private const string OtherFriendCode = "MA3R7T";
-    private const string OtherPrefix = "mar";
+    private const string HyphenatedOtherFriendCode = "ma-3r7t";
+    private const string OtherNicknamePrefix = "mar";
+    private const string ShortPrefix = "ma";
+    private const string OwnPrefix = "luis";
     private const string UnusedFriendCode = "AB2CD9";
+    private const string MalformedFriendCode = "no-es-codigo";
     private const int FirstFillerAccountId = 1000;
+    private const string FillerNicknamePrefix = "amigo_";
+    private const int DaysAgo = 1;
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime _yesterday = _now.AddDays(-DaysAgo);
+    private static readonly DateTime _expiredAt = _now.AddDays(-FriendshipPolicy.RequestLifetimeDays);
+    private static readonly PlayerIdentity _caller = new PlayerIdentity(AccountId, Nickname, FriendCode);
+    private static readonly PlayerIdentity _otherPlayer = new PlayerIdentity(OtherAccountId, OtherNickname, OtherFriendCode);
 
     private readonly FakeUnitOfWork _unitOfWork = new FakeUnitOfWork();
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
@@ -33,23 +43,22 @@ public class TestFriendRequestService
     public TestFriendRequestService()
     {
         _friendRequestService = new FriendRequestService(_unitOfWork, _sessionVerifier, _friendNotifier);
-        _sessionVerifier.Add(Token, new PlayerIdentity(AccountId, Nickname, FriendCode));
-        _unitOfWork.AccountStore.StorePlayerIdentity(new PlayerIdentity(AccountId, Nickname, FriendCode));
-        _unitOfWork.AccountStore.StorePlayerIdentity(
-            new PlayerIdentity(OtherAccountId, OtherNickname, OtherFriendCode));
     }
 
     [Fact]
     public void SearchPlayers_InvalidSession_ThrowsInvalidSession()
     {
-        Assert.Throws<InvalidSessionException>(
-            () => _friendRequestService.SearchPlayers(UnknownToken, OtherPrefix, _now));
+        Action search = () => _friendRequestService.SearchPlayers(UnknownToken, OtherNicknamePrefix, _now);
+
+        Assert.Throws<InvalidSessionException>(search);
     }
 
     [Fact]
     public void SearchPlayers_ShortText_ReturnsEmptyList()
     {
-        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, "ma", _now);
+        AddPlayers();
+
+        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, ShortPrefix, _now);
 
         Assert.Empty(results);
     }
@@ -57,150 +66,197 @@ public class TestFriendRequestService
     [Fact]
     public void SearchPlayers_NicknamePrefix_ReturnsMatchingPlayer()
     {
-        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherPrefix, _now);
+        AddPlayers();
 
-        Assert.Equal(OtherNickname, results[0].Player.Nickname);
+        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherNicknamePrefix, _now);
+
+        PlayerSearchResult first = results[0];
+        Assert.Equal(OtherNickname, first.Player.Nickname);
     }
 
     [Fact]
     public void SearchPlayers_HyphenatedFriendCode_ReturnsCodeOwner()
     {
-        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, "ma-3r7t", _now);
+        AddPlayers();
 
-        Assert.Equal(OtherNickname, results[0].Player.Nickname);
+        IReadOnlyList<PlayerSearchResult> results =
+            _friendRequestService.SearchPlayers(Token, HyphenatedOtherFriendCode, _now);
+
+        PlayerSearchResult first = results[0];
+        Assert.Equal(OtherNickname, first.Player.Nickname);
     }
 
     [Fact]
     public void SearchPlayers_OwnAccount_ReturnsOwnAccountRelationship()
     {
-        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, "luis", _now);
+        AddPlayers();
 
-        Assert.Equal(FriendRelationship.OwnAccount, results[0].Relationship);
+        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OwnPrefix, _now);
+
+        PlayerSearchResult first = results[0];
+        Assert.Equal(FriendRelationship.OwnAccount, first.Relationship);
     }
 
     [Fact]
     public void SearchPlayers_Friend_ReturnsAlreadyFriends()
     {
-        _unitOfWork.FriendshipStore.Add(new Friendship(AccountId, OtherAccountId, _now));
+        AddPlayers();
+        AddFriendship();
 
-        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherPrefix, _now);
+        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherNicknamePrefix, _now);
 
-        Assert.Equal(FriendRelationship.AlreadyFriends, results[0].Relationship);
+        PlayerSearchResult first = results[0];
+        Assert.Equal(FriendRelationship.AlreadyFriends, first.Relationship);
     }
 
     [Fact]
     public void SearchPlayers_SentRequest_ReturnsRequestSent()
     {
-        _unitOfWork.FriendRequestStore.Add(new FriendRequest(AccountId, OtherAccountId, _now.AddDays(-1)));
+        AddPlayers();
+        AddSentRequest(_yesterday);
 
-        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherPrefix, _now);
+        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherNicknamePrefix, _now);
 
-        Assert.Equal(FriendRelationship.RequestSent, results[0].Relationship);
+        PlayerSearchResult first = results[0];
+        Assert.Equal(FriendRelationship.RequestSent, first.Relationship);
     }
 
     [Fact]
     public void SearchPlayers_ReceivedRequest_ReturnsRequestReceived()
     {
-        _unitOfWork.FriendRequestStore.Add(new FriendRequest(OtherAccountId, AccountId, _now.AddDays(-1)));
+        AddPlayers();
+        AddReceivedRequest(_yesterday);
 
-        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherPrefix, _now);
+        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherNicknamePrefix, _now);
 
-        Assert.Equal(FriendRelationship.RequestReceived, results[0].Relationship);
+        PlayerSearchResult first = results[0];
+        Assert.Equal(FriendRelationship.RequestReceived, first.Relationship);
     }
 
     [Fact]
     public void SearchPlayers_ExpiredRequest_ReturnsNone()
     {
-        DateTime expiredAt = _now.AddDays(-FriendshipPolicy.RequestLifetimeDays);
-        _unitOfWork.FriendRequestStore.Add(new FriendRequest(OtherAccountId, AccountId, expiredAt));
+        AddPlayers();
+        AddReceivedRequest(_expiredAt);
 
-        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherPrefix, _now);
+        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherNicknamePrefix, _now);
 
-        Assert.Equal(FriendRelationship.None, results[0].Relationship);
+        PlayerSearchResult first = results[0];
+        Assert.Equal(FriendRelationship.None, first.Relationship);
     }
 
     [Fact]
     public void SearchPlayers_Stranger_ReturnsNone()
     {
-        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherPrefix, _now);
+        AddPlayers();
 
-        Assert.Equal(FriendRelationship.None, results[0].Relationship);
+        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherNicknamePrefix, _now);
+
+        PlayerSearchResult first = results[0];
+        Assert.Equal(FriendRelationship.None, first.Relationship);
     }
 
     [Fact]
     public void SendFriendRequest_InvalidSession_ThrowsInvalidSession()
     {
-        Assert.Throws<InvalidSessionException>(
-            () => _friendRequestService.SendFriendRequest(UnknownToken, OtherFriendCode, _now));
+        Action send = () => _friendRequestService.SendFriendRequest(UnknownToken, OtherFriendCode, _now);
+
+        Assert.Throws<InvalidSessionException>(send);
     }
 
     [Fact]
     public void SendFriendRequest_UnknownCode_RejectsPlayerNotFound()
     {
-        FriendshipRejectedException? rejection = RecordRejection(UnusedFriendCode);
+        AddPlayers();
+        Action send = () => _friendRequestService.SendFriendRequest(Token, UnusedFriendCode, _now);
 
+        Exception? exception = Record.Exception(send);
+
+        var rejection = exception as FriendshipRejectedException;
         Assert.Equal(FriendshipRejection.PlayerNotFound, rejection?.Rejection);
     }
 
     [Fact]
     public void SendFriendRequest_MalformedCode_RejectsPlayerNotFound()
     {
-        FriendshipRejectedException? rejection = RecordRejection("no-es-codigo");
+        AddPlayers();
+        Action send = () => _friendRequestService.SendFriendRequest(Token, MalformedFriendCode, _now);
 
+        Exception? exception = Record.Exception(send);
+
+        var rejection = exception as FriendshipRejectedException;
         Assert.Equal(FriendshipRejection.PlayerNotFound, rejection?.Rejection);
     }
 
     [Fact]
     public void SendFriendRequest_OwnCode_RejectsOwnAccount()
     {
-        FriendshipRejectedException? rejection = RecordRejection(FriendCode);
+        AddPlayers();
+        Action send = () => _friendRequestService.SendFriendRequest(Token, FriendCode, _now);
 
+        Exception? exception = Record.Exception(send);
+
+        var rejection = exception as FriendshipRejectedException;
         Assert.Equal(FriendshipRejection.OwnAccount, rejection?.Rejection);
     }
 
     [Fact]
     public void SendFriendRequest_ExistingFriend_RejectsAlreadyFriends()
     {
-        _unitOfWork.FriendshipStore.Add(new Friendship(AccountId, OtherAccountId, _now));
+        AddPlayers();
+        AddFriendship();
+        Action send = () => _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
-        FriendshipRejectedException? rejection = RecordRejection(OtherFriendCode);
+        Exception? exception = Record.Exception(send);
 
+        var rejection = exception as FriendshipRejectedException;
         Assert.Equal(FriendshipRejection.AlreadyFriends, rejection?.Rejection);
     }
 
     [Fact]
     public void SendFriendRequest_PendingOwnRequest_RejectsRequestAlreadySent()
     {
-        _unitOfWork.FriendRequestStore.Add(new FriendRequest(AccountId, OtherAccountId, _now.AddDays(-1)));
+        AddPlayers();
+        AddSentRequest(_yesterday);
+        Action send = () => _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
-        FriendshipRejectedException? rejection = RecordRejection(OtherFriendCode);
+        Exception? exception = Record.Exception(send);
 
+        var rejection = exception as FriendshipRejectedException;
         Assert.Equal(FriendshipRejection.RequestAlreadySent, rejection?.Rejection);
     }
 
     [Fact]
     public void SendFriendRequest_CallerAtLimit_RejectsFriendLimitReached()
     {
-        StoreFriendsUpToLimit(AccountId);
+        AddPlayers();
+        AddFriendsUpToLimit(AccountId);
+        Action send = () => _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
-        FriendshipRejectedException? rejection = RecordRejection(OtherFriendCode);
+        Exception? exception = Record.Exception(send);
 
+        var rejection = exception as FriendshipRejectedException;
         Assert.Equal(FriendshipRejection.FriendLimitReached, rejection?.Rejection);
     }
 
     [Fact]
     public void SendFriendRequest_RecipientAtLimit_RejectsRecipientFriendLimitReached()
     {
-        StoreFriendsUpToLimit(OtherAccountId);
+        AddPlayers();
+        AddFriendsUpToLimit(OtherAccountId);
+        Action send = () => _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
-        FriendshipRejectedException? rejection = RecordRejection(OtherFriendCode);
+        Exception? exception = Record.Exception(send);
 
+        var rejection = exception as FriendshipRejectedException;
         Assert.Equal(FriendshipRejection.RecipientFriendLimitReached, rejection?.Rejection);
     }
 
     [Fact]
     public void SendFriendRequest_NewPair_ReturnsRequestSent()
     {
+        AddPlayers();
+
         FriendRequestOutcome outcome = _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
         Assert.Equal(FriendRequestOutcome.RequestSent, outcome);
@@ -209,15 +265,19 @@ public class TestFriendRequestService
     [Fact]
     public void SendFriendRequest_NewPair_StoresRequest()
     {
+        AddPlayers();
+
         _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
-        Assert.NotNull(_unitOfWork.FriendRequestStore.FindBetween(AccountId, OtherAccountId));
+        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        Assert.NotNull(request);
     }
 
     [Fact]
     public void SendFriendRequest_CrossRequest_ReturnsFriendshipStarted()
     {
-        _unitOfWork.FriendRequestStore.Add(new FriendRequest(OtherAccountId, AccountId, _now.AddDays(-1)));
+        AddPlayers();
+        AddReceivedRequest(_yesterday);
 
         FriendRequestOutcome outcome = _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
@@ -227,56 +287,66 @@ public class TestFriendRequestService
     [Fact]
     public void SendFriendRequest_CrossRequest_StoresFriendship()
     {
-        _unitOfWork.FriendRequestStore.Add(new FriendRequest(OtherAccountId, AccountId, _now.AddDays(-1)));
+        AddPlayers();
+        AddReceivedRequest(_yesterday);
 
         _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
-        Assert.Single(_unitOfWork.FriendshipStore.AddedFriendships);
+        Assert.Single(_unitOfWork.FriendshipRepository.AddedFriendships);
     }
 
     [Fact]
     public void SendFriendRequest_CrossRequest_RemovesRequest()
     {
-        _unitOfWork.FriendRequestStore.Add(new FriendRequest(OtherAccountId, AccountId, _now.AddDays(-1)));
+        AddPlayers();
+        AddReceivedRequest(_yesterday);
 
         _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
-        Assert.Null(_unitOfWork.FriendRequestStore.FindBetween(AccountId, OtherAccountId));
+        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        Assert.Null(request);
     }
 
     [Fact]
     public void SendFriendRequest_ExpiredOwnRequest_ReplacesRequest()
     {
-        DateTime expiredAt = _now.AddDays(-FriendshipPolicy.RequestLifetimeDays);
-        _unitOfWork.FriendRequestStore.Add(new FriendRequest(AccountId, OtherAccountId, expiredAt));
+        AddPlayers();
+        AddSentRequest(_expiredAt);
 
         _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
-        Assert.Equal(_now, _unitOfWork.FriendRequestStore.FindBetween(AccountId, OtherAccountId)?.RequestedAt);
+        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        Assert.Equal(_now, request?.RequestedAt);
     }
 
     [Fact]
     public void SendFriendRequest_NewPair_NotifiesRecipient()
     {
+        AddPlayers();
+        int[] expectedRecipients = { OtherAccountId };
+
         _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
-        Assert.Equal(new[] { OtherAccountId }, _friendNotifier.RequestRecipientAccountIds);
+        Assert.Equal(expectedRecipients, _friendNotifier.RequestRecipientAccountIds);
     }
 
     [Fact]
     public void SendFriendRequest_CrossRequest_NotifiesRequester()
     {
-        StoreReceivedRequest(_now.AddDays(-1));
+        AddPlayers();
+        AddReceivedRequest(_yesterday);
+        int[] expectedRecipients = { OtherAccountId };
 
         _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
-        Assert.Equal(new[] { OtherAccountId }, _friendNotifier.FriendshipStartedAccountIds);
+        Assert.Equal(expectedRecipients, _friendNotifier.FriendshipStartedAccountIds);
     }
 
     [Fact]
     public void ListFriendRequests_ReceivedRequest_ListsReceived()
     {
-        StoreReceivedRequest(_now.AddDays(-1));
+        AddPlayers();
+        AddReceivedRequest(_yesterday);
 
         FriendRequestBoard board = _friendRequestService.ListFriendRequests(Token, _now);
 
@@ -286,17 +356,21 @@ public class TestFriendRequestService
     [Fact]
     public void ListFriendRequests_SentRequest_ReturnsExpiry()
     {
-        _unitOfWork.FriendRequestStore.Add(new FriendRequest(AccountId, OtherAccountId, _now));
+        AddPlayers();
+        AddSentRequest(_now);
+        DateTime expectedExpiry = _now.AddDays(FriendshipPolicy.RequestLifetimeDays);
 
         FriendRequestBoard board = _friendRequestService.ListFriendRequests(Token, _now);
 
-        Assert.Equal(_now.AddDays(FriendshipPolicy.RequestLifetimeDays), board.SentRequests[0].ExpiresAt);
+        FriendRequestSummary sentRequest = board.SentRequests[0];
+        Assert.Equal(expectedExpiry, sentRequest.ExpiresAt);
     }
 
     [Fact]
     public void ListFriendRequests_ExpiredRequest_IsLeftOut()
     {
-        StoreReceivedRequest(_now.AddDays(-FriendshipPolicy.RequestLifetimeDays));
+        AddPlayers();
+        AddReceivedRequest(_expiredAt);
 
         FriendRequestBoard board = _friendRequestService.ListFriendRequests(Token, _now);
 
@@ -306,89 +380,107 @@ public class TestFriendRequestService
     [Fact]
     public void AcceptFriendRequest_NoRequest_RejectsRequestNotFound()
     {
-        FriendshipRejectedException? rejection = RecordResponseRejection(
-            () => _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now));
+        AddPlayers();
+        Action accept = () => _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now);
 
+        Exception? exception = Record.Exception(accept);
+
+        var rejection = exception as FriendshipRejectedException;
         Assert.Equal(FriendshipRejection.RequestNotFound, rejection?.Rejection);
     }
 
     [Fact]
     public void AcceptFriendRequest_OwnSentRequest_RejectsRequestNotFound()
     {
-        _unitOfWork.FriendRequestStore.Add(new FriendRequest(AccountId, OtherAccountId, _now.AddDays(-1)));
+        AddPlayers();
+        AddSentRequest(_yesterday);
+        Action accept = () => _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now);
 
-        FriendshipRejectedException? rejection = RecordResponseRejection(
-            () => _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now));
+        Exception? exception = Record.Exception(accept);
 
+        var rejection = exception as FriendshipRejectedException;
         Assert.Equal(FriendshipRejection.RequestNotFound, rejection?.Rejection);
     }
 
     [Fact]
     public void AcceptFriendRequest_ExpiredRequest_RejectsRequestNotFound()
     {
-        StoreReceivedRequest(_now.AddDays(-FriendshipPolicy.RequestLifetimeDays));
+        AddPlayers();
+        AddReceivedRequest(_expiredAt);
+        Action accept = () => _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now);
 
-        FriendshipRejectedException? rejection = RecordResponseRejection(
-            () => _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now));
+        Exception? exception = Record.Exception(accept);
 
+        var rejection = exception as FriendshipRejectedException;
         Assert.Equal(FriendshipRejection.RequestNotFound, rejection?.Rejection);
     }
 
     [Fact]
     public void AcceptFriendRequest_CallerAtLimit_KeepsRequest()
     {
-        StoreReceivedRequest(_now.AddDays(-1));
-        StoreFriendsUpToLimit(AccountId);
+        AddPlayers();
+        AddReceivedRequest(_yesterday);
+        AddFriendsUpToLimit(AccountId);
+        Action accept = () => _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now);
 
-        Record.Exception(() => _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now));
+        Record.Exception(accept);
 
-        Assert.NotNull(_unitOfWork.FriendRequestStore.FindBetween(AccountId, OtherAccountId));
+        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        Assert.NotNull(request);
     }
 
     [Fact]
     public void AcceptFriendRequest_PendingRequest_StoresFriendship()
     {
-        StoreReceivedRequest(_now.AddDays(-1));
+        AddPlayers();
+        AddReceivedRequest(_yesterday);
 
         _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now);
 
-        Assert.Single(_unitOfWork.FriendshipStore.AddedFriendships);
+        Assert.Single(_unitOfWork.FriendshipRepository.AddedFriendships);
     }
 
     [Fact]
     public void AcceptFriendRequest_PendingRequest_RemovesRequest()
     {
-        StoreReceivedRequest(_now.AddDays(-1));
+        AddPlayers();
+        AddReceivedRequest(_yesterday);
 
         _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now);
 
-        Assert.Null(_unitOfWork.FriendRequestStore.FindBetween(AccountId, OtherAccountId));
+        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        Assert.Null(request);
     }
 
     [Fact]
     public void AcceptFriendRequest_PendingRequest_NotifiesRequester()
     {
-        StoreReceivedRequest(_now.AddDays(-1));
+        AddPlayers();
+        AddReceivedRequest(_yesterday);
+        int[] expectedRecipients = { OtherAccountId };
 
         _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now);
 
-        Assert.Equal(new[] { OtherAccountId }, _friendNotifier.FriendshipStartedAccountIds);
+        Assert.Equal(expectedRecipients, _friendNotifier.FriendshipStartedAccountIds);
     }
 
     [Fact]
     public void RejectFriendRequest_PendingRequest_RemovesRequest()
     {
-        StoreReceivedRequest(_now.AddDays(-1));
+        AddPlayers();
+        AddReceivedRequest(_yesterday);
 
         _friendRequestService.RejectFriendRequest(Token, OtherFriendCode, _now);
 
-        Assert.Null(_unitOfWork.FriendRequestStore.FindBetween(AccountId, OtherAccountId));
+        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        Assert.Null(request);
     }
 
     [Fact]
     public void RejectFriendRequest_PendingRequest_SendsNoNotification()
     {
-        StoreReceivedRequest(_now.AddDays(-1));
+        AddPlayers();
+        AddReceivedRequest(_yesterday);
 
         _friendRequestService.RejectFriendRequest(Token, OtherFriendCode, _now);
 
@@ -398,46 +490,62 @@ public class TestFriendRequestService
     [Fact]
     public void CancelFriendRequest_ReceivedRequest_RejectsRequestNotFound()
     {
-        StoreReceivedRequest(_now.AddDays(-1));
+        AddPlayers();
+        AddReceivedRequest(_yesterday);
+        Action cancel = () => _friendRequestService.CancelFriendRequest(Token, OtherFriendCode, _now);
 
-        FriendshipRejectedException? rejection = RecordResponseRejection(
-            () => _friendRequestService.CancelFriendRequest(Token, OtherFriendCode, _now));
+        Exception? exception = Record.Exception(cancel);
 
+        var rejection = exception as FriendshipRejectedException;
         Assert.Equal(FriendshipRejection.RequestNotFound, rejection?.Rejection);
     }
 
     [Fact]
     public void CancelFriendRequest_SentRequest_RemovesRequest()
     {
-        _unitOfWork.FriendRequestStore.Add(new FriendRequest(AccountId, OtherAccountId, _now.AddDays(-1)));
+        AddPlayers();
+        AddSentRequest(_yesterday);
 
         _friendRequestService.CancelFriendRequest(Token, OtherFriendCode, _now);
 
-        Assert.Null(_unitOfWork.FriendRequestStore.FindBetween(AccountId, OtherAccountId));
+        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        Assert.Null(request);
     }
 
-    private static FriendshipRejectedException? RecordResponseRejection(Action response)
+    private void AddPlayers()
     {
-        return Record.Exception(response) as FriendshipRejectedException;
+        _sessionVerifier.Add(Token, _caller);
+        _unitOfWork.AccountRepository.AddPlayerIdentity(_caller);
+        _unitOfWork.AccountRepository.AddPlayerIdentity(_otherPlayer);
     }
 
-    private void StoreReceivedRequest(DateTime requestedAt)
+    private void AddFriendship()
     {
-        _unitOfWork.FriendRequestStore.Add(new FriendRequest(OtherAccountId, AccountId, requestedAt));
+        var friendship = new Friendship(AccountId, OtherAccountId, _now);
+        _unitOfWork.FriendshipRepository.Add(friendship);
     }
 
-    private FriendshipRejectedException? RecordRejection(string friendCode)
+    private void AddSentRequest(DateTime requestedAt)
     {
-        return Record.Exception(() => _friendRequestService.SendFriendRequest(Token, friendCode, _now))
-            as FriendshipRejectedException;
+        var request = new FriendRequest(AccountId, OtherAccountId, requestedAt);
+        _unitOfWork.FriendRequestRepository.Add(request);
     }
 
-    private void StoreFriendsUpToLimit(int accountId)
+    private void AddReceivedRequest(DateTime requestedAt)
+    {
+        var request = new FriendRequest(OtherAccountId, AccountId, requestedAt);
+        _unitOfWork.FriendRequestRepository.Add(request);
+    }
+
+    private void AddFriendsUpToLimit(int accountId)
     {
         for (int index = 0; index < FriendshipPolicy.MaximumFriends; index++)
         {
-            var friend = new PlayerIdentity(FirstFillerAccountId + index, $"amigo_{index}", UnusedFriendCode);
-            _unitOfWork.FriendshipStore.Store(accountId, new FriendSummary(friend, null));
+            int friendAccountId = FirstFillerAccountId + index;
+            string friendNickname = $"{FillerNicknamePrefix}{index}";
+            var friend = new PlayerIdentity(friendAccountId, friendNickname, UnusedFriendCode);
+            var summary = new FriendSummary(friend, lastSeenAt: null);
+            _unitOfWork.FriendshipRepository.AddFriendSummary(accountId, summary);
         }
     }
 }

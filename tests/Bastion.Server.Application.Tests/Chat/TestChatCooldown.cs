@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Bastion.Server.Application.Tests.Chat;
 
-public class TestChatCooldown
+public sealed class TestChatCooldown
 {
     private const int AccountId = 4;
     private const int OtherAccountId = 5;
@@ -18,10 +18,11 @@ public class TestChatCooldown
     public void TryStartCooldown_AtCooldownEnd_ReturnsTrue()
     {
         _cooldown.TryStartCooldown(AccountId, _now);
+        DateTime cooldownEnd = _now.AddSeconds(ChatPolicy.MessageCooldownSeconds);
 
-        bool claimed = _cooldown.TryStartCooldown(AccountId, _now.AddSeconds(ChatPolicy.MessageCooldownSeconds));
+        bool isCooldownStarted = _cooldown.TryStartCooldown(AccountId, cooldownEnd);
 
-        Assert.True(claimed);
+        Assert.True(isCooldownStarted);
     }
 
     [Fact]
@@ -29,8 +30,8 @@ public class TestChatCooldown
     {
         _cooldown.TryStartCooldown(AccountId, _now);
 
-        bool claimed = _cooldown.TryStartCooldown(OtherAccountId, _now);
+        bool isCooldownStarted = _cooldown.TryStartCooldown(OtherAccountId, _now);
 
-        Assert.True(claimed);
+        Assert.True(isCooldownStarted);
     }
 }

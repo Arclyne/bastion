@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Bastion.Server.Application.Tests.Matchmaking;
 
-public class TestRankedMatchCreator
+public sealed class TestRankedMatchCreator
 {
     private const int FirstAccountId = 1;
     private const int SecondAccountId = 2;
@@ -31,13 +31,9 @@ public class TestRankedMatchCreator
     public TestRankedMatchCreator()
     {
         _rankedMatchCreator = new RankedMatchCreator(_matchRepository, _turnOrderShuffler);
-        _matchRepository.NextMatchId = GeneratedMatchId;
-        _matchRepository.EloRatingsByAccountId[FirstAccountId] = FirstEloRating;
-        var players = new MatchSearch[]
-        {
-            new MatchSearch(FirstAccountId, FirstNickname, _startedAt),
-            new MatchSearch(SecondAccountId, SecondNickname, _startedAt),
-        };
+        var firstSearch = new MatchSearch(FirstAccountId, FirstNickname, _startedAt);
+        var secondSearch = new MatchSearch(SecondAccountId, SecondNickname, _startedAt);
+        MatchSearch[] players = { firstSearch, secondSearch };
         _pairing = new MatchPairing(players);
     }
 
@@ -52,6 +48,8 @@ public class TestRankedMatchCreator
     [Fact]
     public void TryCreateMatch_ActiveGameMode_ReturnsSavedMatchId()
     {
+        _matchRepository.NextMatchId = GeneratedMatchId;
+
         _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out CreatedMatch? createdMatch);
 
         Assert.Equal(GeneratedMatchId, createdMatch?.MatchId);
@@ -64,15 +62,19 @@ public class TestRankedMatchCreator
 
         _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out CreatedMatch? createdMatch);
 
-        Assert.Equal(SecondNickname, FindParticipant(createdMatch, Match.FirstTurnOrder).Player.Nickname);
+        CreatedMatchParticipant firstPlayer = FindParticipant(createdMatch, Match.FirstTurnOrder);
+        Assert.Equal(SecondNickname, firstPlayer.Player.Nickname);
     }
 
     [Fact]
     public void TryCreateMatch_PlayerWithStatistic_KeepsTheirElo()
     {
+        _matchRepository.EloRatingsByAccountId[FirstAccountId] = FirstEloRating;
+
         _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out CreatedMatch? createdMatch);
 
-        Assert.Equal(FirstEloRating, FindParticipant(createdMatch, Match.FirstTurnOrder).EloRating);
+        CreatedMatchParticipant firstPlayer = FindParticipant(createdMatch, Match.FirstTurnOrder);
+        Assert.Equal(FirstEloRating, firstPlayer.EloRating);
     }
 
     [Fact]
@@ -80,7 +82,8 @@ public class TestRankedMatchCreator
     {
         _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out CreatedMatch? createdMatch);
 
-        Assert.Equal(ModeStatistic.DefaultEloRating, FindParticipant(createdMatch, Match.SecondTurnOrder).EloRating);
+        CreatedMatchParticipant secondPlayer = FindParticipant(createdMatch, Match.SecondTurnOrder);
+        Assert.Equal(ModeStatistic.DefaultEloRating, secondPlayer.EloRating);
     }
 
     [Fact]
@@ -96,7 +99,8 @@ public class TestRankedMatchCreator
     [Fact]
     public void TryCreateMatch_RepositoryFails_ReturnsFalse()
     {
-        _matchRepository.MatchSaveFailure = new MatchRepositoryException(new InvalidOperationException(RepositoryFailureMessage));
+        var cause = new InvalidOperationException(RepositoryFailureMessage);
+        _matchRepository.MatchSaveFailure = new MatchRepositoryException(cause);
 
         bool isCreated = _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out _);
 

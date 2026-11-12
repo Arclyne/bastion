@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Chat;
 using Bastion.Domain.Moderation;
@@ -9,7 +10,7 @@ using Xunit;
 
 namespace Bastion.Server.Application.Tests.Chat;
 
-public class TestLobbyChatService
+public sealed class TestLobbyChatService
 {
     private const int AccountId = 4;
     private const string Nickname = "marta_muros";
@@ -20,8 +21,25 @@ public class TestLobbyChatService
     private const string UnknownToken = "unknown-token";
     private const string BannedTerm = "tonto";
     private const int ListenerCount = 7;
+    private const string CleanText = "hola";
+    private const string PaddedText = "  hola  ";
+    private const string BlankText = "   ";
+    private const string ShoutedBannedText = "eres un TONTO";
+    private const string RepeatedText = "otra vez";
+    private const string ApologyText = "perdón";
+    private const string FirstText = "primero";
+    private const string SecondText = "segundo";
+    private const char FillerCharacter = 'a';
+    private const int SanctionDays = 1;
+    private const int SecondsWithinCooldown = 1;
+    private const int TwoBroadcastLines = 2;
+    private const string ManyPlayersTokenPrefix = "player-";
+    private const string ManyPlayersNicknamePrefix = "player_";
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 12, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime _withinCooldown = _now.AddSeconds(SecondsWithinCooldown);
+    private static readonly ConnectedPlayer _player = new ConnectedPlayer(AccountId, Nickname);
+    private static readonly ConnectedPlayer _otherPlayer = new ConnectedPlayer(OtherAccountId, OtherNickname);
 
     private readonly FakeUnitOfWork _unitOfWork = new FakeUnitOfWork();
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
@@ -30,87 +48,114 @@ public class TestLobbyChatService
 
     public TestLobbyChatService()
     {
-        _lobbyChatService = new LobbyChatService(_sessionVerifier, new ChatModerator(_unitOfWork), new LobbyChatRoom(_broadcaster));
-        _sessionVerifier.Add(Token, new ConnectedPlayer(AccountId, Nickname));
-        _sessionVerifier.Add(OtherToken, new ConnectedPlayer(OtherAccountId, OtherNickname));
-        _unitOfWork.BannedWordStore.ChatTerms.Add(BannedTerm);
-        _broadcaster.ListenerCount = ListenerCount;
+        var moderator = new ChatModerator(_unitOfWork);
+        var chatRoom = new LobbyChatRoom(_broadcaster);
+        _lobbyChatService = new LobbyChatService(_sessionVerifier, moderator, chatRoom);
     }
 
     [Fact]
     public void SendMessage_InvalidSession_ThrowsInvalidSession()
     {
-        Assert.Throws<InvalidSessionException>(() => _lobbyChatService.SendMessage(UnknownToken, "hola", _now));
+        Action send = () => _lobbyChatService.SendMessage(UnknownToken, CleanText, _now);
+
+        Assert.Throws<InvalidSessionException>(send);
     }
 
     [Fact]
     public void SendMessage_EmptyText_RejectsInvalidMessage()
     {
-        ChatMessageRejectedException? rejection = RecordRejection("   ", _now);
+        _sessionVerifier.Add(Token, _player);
+        Action send = () => _lobbyChatService.SendMessage(Token, BlankText, _now);
 
+        Exception? exception = Record.Exception(send);
+
+        var rejection = exception as ChatMessageRejectedException;
         Assert.Equal(ChatRejection.InvalidMessage, rejection?.Rejection);
     }
 
     [Fact]
     public void SendMessage_TooLongText_RejectsInvalidMessage()
     {
-        ChatMessageRejectedException? rejection = RecordRejection(
-            new string('a', ChatPolicy.MaximumMessageLength + 1),
-            _now);
+        _sessionVerifier.Add(Token, _player);
+        int tooLongLength = ChatPolicy.MaximumMessageLength + 1;
+        string tooLongText = new string(FillerCharacter, tooLongLength);
+        Action send = () => _lobbyChatService.SendMessage(Token, tooLongText, _now);
 
+        Exception? exception = Record.Exception(send);
+
+        var rejection = exception as ChatMessageRejectedException;
         Assert.Equal(ChatRejection.InvalidMessage, rejection?.Rejection);
     }
 
     [Fact]
     public void SendMessage_ValidText_BroadcastsTrimmedText()
     {
-        _lobbyChatService.SendMessage(Token, "  hola  ", _now);
+        _sessionVerifier.Add(Token, _player);
 
-        Assert.Equal("hola", _broadcaster.Lines[0].Line.Text);
+        _lobbyChatService.SendMessage(Token, PaddedText, _now);
+
+        PostedChatLine broadcastLine = _broadcaster.Lines[0];
+        Assert.Equal(CleanText, broadcastLine.Line.Text);
     }
 
     [Fact]
     public void SendMessage_ValidText_BroadcastsSender()
     {
-        _lobbyChatService.SendMessage(Token, "hola", _now);
+        _sessionVerifier.Add(Token, _player);
 
-        Assert.Equal(AccountId, _broadcaster.Lines[0].Line.Sender.AccountId);
+        _lobbyChatService.SendMessage(Token, CleanText, _now);
+
+        PostedChatLine broadcastLine = _broadcaster.Lines[0];
+        Assert.Equal(AccountId, broadcastLine.Line.Sender.AccountId);
     }
 
     [Fact]
     public void SendMessage_ValidText_ReturnsPostedLine()
     {
-        PostedChatLine postedLine = _lobbyChatService.SendMessage(Token, "hola", _now);
+        _sessionVerifier.Add(Token, _player);
 
-        Assert.Equal(_broadcaster.Lines[0], postedLine);
+        PostedChatLine postedLine = _lobbyChatService.SendMessage(Token, CleanText, _now);
+
+        PostedChatLine broadcastLine = _broadcaster.Lines[0];
+        Assert.Equal(broadcastLine, postedLine);
     }
 
     [Fact]
     public void SendMessage_TemporaryChatSanction_RejectsMuted()
     {
-        _unitOfWork.SanctionStore.Store(new Sanction(AccountId, SanctionScope.Chat, _now.AddDays(1)));
+        _sessionVerifier.Add(Token, _player);
+        DateTime muteEnd = _now.AddDays(SanctionDays);
+        AddSanction(SanctionScope.Chat, muteEnd);
+        Action send = () => _lobbyChatService.SendMessage(Token, CleanText, _now);
 
-        ChatMessageRejectedException? rejection = RecordRejection("hola", _now);
+        Exception? exception = Record.Exception(send);
 
+        var rejection = exception as ChatMessageRejectedException;
         Assert.Equal(ChatRejection.Muted, rejection?.Rejection);
     }
 
     [Fact]
     public void SendMessage_TemporaryChatSanction_ReportsMuteEnd()
     {
-        _unitOfWork.SanctionStore.Store(new Sanction(AccountId, SanctionScope.Chat, _now.AddDays(1)));
+        _sessionVerifier.Add(Token, _player);
+        DateTime muteEnd = _now.AddDays(SanctionDays);
+        AddSanction(SanctionScope.Chat, muteEnd);
+        Action send = () => _lobbyChatService.SendMessage(Token, CleanText, _now);
 
-        ChatMessageRejectedException? rejection = RecordRejection("hola", _now);
+        Exception? exception = Record.Exception(send);
 
-        Assert.Equal(_now.AddDays(1), rejection?.MutedUntil);
+        var rejection = exception as ChatMessageRejectedException;
+        Assert.Equal(muteEnd, rejection?.MutedUntil);
     }
 
     [Fact]
     public void SendMessage_EndedChatSanction_BroadcastsMessage()
     {
-        _unitOfWork.SanctionStore.Store(new Sanction(AccountId, SanctionScope.Chat, _now.AddDays(-1)));
+        _sessionVerifier.Add(Token, _player);
+        DateTime muteEnd = _now.AddDays(-SanctionDays);
+        AddSanction(SanctionScope.Chat, muteEnd);
 
-        _lobbyChatService.SendMessage(Token, "hola", _now);
+        _lobbyChatService.SendMessage(Token, CleanText, _now);
 
         Assert.Single(_broadcaster.Lines);
     }
@@ -118,9 +163,10 @@ public class TestLobbyChatService
     [Fact]
     public void SendMessage_AccountSanctionOnly_BroadcastsMessage()
     {
-        _unitOfWork.SanctionStore.Store(new Sanction(AccountId, SanctionScope.Account, null));
+        _sessionVerifier.Add(Token, _player);
+        AddSanction(SanctionScope.Account, endsAt: null);
 
-        _lobbyChatService.SendMessage(Token, "hola", _now);
+        _lobbyChatService.SendMessage(Token, CleanText, _now);
 
         Assert.Single(_broadcaster.Lines);
     }
@@ -128,15 +174,24 @@ public class TestLobbyChatService
     [Fact]
     public void SendMessage_BannedTerm_RejectsBannedTerm()
     {
-        ChatMessageRejectedException? rejection = RecordRejection("eres un TONTO", _now);
+        _sessionVerifier.Add(Token, _player);
+        _unitOfWork.BannedWordRepository.ChatTerms.Add(BannedTerm);
+        Action send = () => _lobbyChatService.SendMessage(Token, ShoutedBannedText, _now);
 
+        Exception? exception = Record.Exception(send);
+
+        var rejection = exception as ChatMessageRejectedException;
         Assert.Equal(ChatRejection.BannedTerm, rejection?.Rejection);
     }
 
     [Fact]
     public void SendMessage_BannedTerm_DoesNotBroadcast()
     {
-        Record.Exception(() => _lobbyChatService.SendMessage(Token, "tonto", _now));
+        _sessionVerifier.Add(Token, _player);
+        _unitOfWork.BannedWordRepository.ChatTerms.Add(BannedTerm);
+        Action send = () => _lobbyChatService.SendMessage(Token, BannedTerm, _now);
+
+        Record.Exception(send);
 
         Assert.Empty(_broadcaster.Lines);
     }
@@ -144,29 +199,37 @@ public class TestLobbyChatService
     [Fact]
     public void SendMessage_SecondMessageWithinCooldown_RejectsTooFast()
     {
-        _lobbyChatService.SendMessage(Token, "hola", _now);
+        _sessionVerifier.Add(Token, _player);
+        _lobbyChatService.SendMessage(Token, CleanText, _now);
+        Action sendAgain = () => _lobbyChatService.SendMessage(Token, RepeatedText, _withinCooldown);
 
-        ChatMessageRejectedException? rejection = RecordRejection("otra vez", _now.AddSeconds(1));
+        Exception? exception = Record.Exception(sendAgain);
 
+        var rejection = exception as ChatMessageRejectedException;
         Assert.Equal(ChatRejection.TooFast, rejection?.Rejection);
     }
 
     [Fact]
     public void SendMessage_SecondMessageAfterCooldown_BroadcastsBoth()
     {
-        _lobbyChatService.SendMessage(Token, "hola", _now);
+        _sessionVerifier.Add(Token, _player);
+        _lobbyChatService.SendMessage(Token, CleanText, _now);
+        DateTime cooldownEnd = _now.AddSeconds(ChatPolicy.MessageCooldownSeconds);
 
-        _lobbyChatService.SendMessage(Token, "otra vez", _now.AddSeconds(ChatPolicy.MessageCooldownSeconds));
+        _lobbyChatService.SendMessage(Token, RepeatedText, cooldownEnd);
 
-        Assert.Equal(2, _broadcaster.Lines.Count);
+        Assert.Equal(TwoBroadcastLines, _broadcaster.Lines.Count);
     }
 
     [Fact]
     public void SendMessage_AfterRejectedMessage_KeepsTurn()
     {
-        Record.Exception(() => _lobbyChatService.SendMessage(Token, "tonto", _now));
+        _sessionVerifier.Add(Token, _player);
+        _unitOfWork.BannedWordRepository.ChatTerms.Add(BannedTerm);
+        Action sendBanned = () => _lobbyChatService.SendMessage(Token, BannedTerm, _now);
+        Record.Exception(sendBanned);
 
-        _lobbyChatService.SendMessage(Token, "perdón", _now.AddSeconds(1));
+        _lobbyChatService.SendMessage(Token, ApologyText, _withinCooldown);
 
         Assert.Single(_broadcaster.Lines);
     }
@@ -174,54 +237,69 @@ public class TestLobbyChatService
     [Fact]
     public void SendMessage_OtherPlayerWithinCooldown_BroadcastsBoth()
     {
-        _lobbyChatService.SendMessage(Token, "hola", _now);
+        _sessionVerifier.Add(Token, _player);
+        _sessionVerifier.Add(OtherToken, _otherPlayer);
+        _lobbyChatService.SendMessage(Token, CleanText, _now);
 
-        _lobbyChatService.SendMessage(OtherToken, "hola", _now.AddSeconds(1));
+        _lobbyChatService.SendMessage(OtherToken, CleanText, _withinCooldown);
 
-        Assert.Equal(2, _broadcaster.Lines.Count);
+        Assert.Equal(TwoBroadcastLines, _broadcaster.Lines.Count);
     }
 
     [Fact]
     public void OpenLobbyChat_InvalidSession_ThrowsInvalidSession()
     {
-        Assert.Throws<InvalidSessionException>(() => _lobbyChatService.OpenLobbyChat(UnknownToken, _now));
+        Action open = () => _lobbyChatService.OpenLobbyChat(UnknownToken, _now);
+
+        Assert.Throws<InvalidSessionException>(open);
     }
 
     [Fact]
     public void OpenLobbyChat_AfterMessages_ReturnsThemInOrder()
     {
-        _lobbyChatService.SendMessage(Token, "primero", _now);
-        _lobbyChatService.SendMessage(OtherToken, "segundo", _now);
+        _sessionVerifier.Add(Token, _player);
+        _sessionVerifier.Add(OtherToken, _otherPlayer);
+        _lobbyChatService.SendMessage(Token, FirstText, _now);
+        _lobbyChatService.SendMessage(OtherToken, SecondText, _now);
+        string[] expectedTexts = { FirstText, SecondText };
 
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
 
-        Assert.Equal(new[] { "primero", "segundo" }, history.Entries.Select(entry => entry.PostedLine.Line.Text));
+        IEnumerable<string> texts = history.Entries.Select(entry => entry.PostedLine.Line.Text);
+        Assert.Equal(expectedTexts, texts);
     }
 
     [Fact]
     public void OpenLobbyChat_OwnMessage_MarksItAsOwn()
     {
-        _lobbyChatService.SendMessage(Token, "hola", _now);
+        _sessionVerifier.Add(Token, _player);
+        _lobbyChatService.SendMessage(Token, CleanText, _now);
 
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
 
-        Assert.True(history.Entries[0].IsOwn);
+        ChatHistoryEntry entry = history.Entries[0];
+        Assert.True(entry.IsOwn);
     }
 
     [Fact]
     public void OpenLobbyChat_OtherPlayerMessage_DoesNotMarkItAsOwn()
     {
-        _lobbyChatService.SendMessage(OtherToken, "hola", _now);
+        _sessionVerifier.Add(Token, _player);
+        _sessionVerifier.Add(OtherToken, _otherPlayer);
+        _lobbyChatService.SendMessage(OtherToken, CleanText, _now);
 
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
 
-        Assert.False(history.Entries[0].IsOwn);
+        ChatHistoryEntry entry = history.Entries[0];
+        Assert.False(entry.IsOwn);
     }
 
     [Fact]
     public void OpenLobbyChat_ManyMessages_ReturnsOnlyRecentCount()
     {
-        SendMessagesFromManyPlayers(ChatPolicy.MaximumRecentMessages + 1);
+        _sessionVerifier.Add(Token, _player);
+        int messageCount = ChatPolicy.MaximumRecentMessages + 1;
+        SendMessagesFromManyPlayers(messageCount);
 
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
 
@@ -231,6 +309,9 @@ public class TestLobbyChatService
     [Fact]
     public void OpenLobbyChat_Always_ReturnsListenerCount()
     {
+        _sessionVerifier.Add(Token, _player);
+        _broadcaster.ListenerCount = ListenerCount;
+
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
 
         Assert.Equal(ListenerCount, history.ConnectedPlayerCount);
@@ -239,6 +320,8 @@ public class TestLobbyChatService
     [Fact]
     public void OpenLobbyChat_NoSanction_ReturnsNotMuted()
     {
+        _sessionVerifier.Add(Token, _player);
+
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
 
         Assert.False(history.Mute.IsMuted);
@@ -247,26 +330,30 @@ public class TestLobbyChatService
     [Fact]
     public void OpenLobbyChat_PermanentChatSanction_ReturnsMuteWithoutEnd()
     {
-        _unitOfWork.SanctionStore.Store(new Sanction(AccountId, SanctionScope.Chat, null));
+        _sessionVerifier.Add(Token, _player);
+        AddSanction(SanctionScope.Chat, endsAt: null);
+        var expectedMute = new ChatMute(IsMuted: true, EndsAt: null);
 
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
 
-        Assert.Equal(new ChatMute(true, null), history.Mute);
+        Assert.Equal(expectedMute, history.Mute);
     }
 
-    private ChatMessageRejectedException? RecordRejection(string text, DateTime now)
+    private void AddSanction(SanctionScope scope, DateTime? endsAt)
     {
-        return Record.Exception(() => _lobbyChatService.SendMessage(Token, text, now))
-            as ChatMessageRejectedException;
+        var sanction = new Sanction(AccountId, scope, endsAt);
+        _unitOfWork.SanctionRepository.AddSanction(sanction);
     }
 
     private void SendMessagesFromManyPlayers(int count)
     {
         for (int playerIndex = 0; playerIndex < count; playerIndex++)
         {
-            string token = $"player-{playerIndex}";
-            _sessionVerifier.Add(token, new ConnectedPlayer(playerIndex, $"player_{playerIndex}"));
-            _lobbyChatService.SendMessage(token, "hola", _now);
+            string token = $"{ManyPlayersTokenPrefix}{playerIndex}";
+            string nickname = $"{ManyPlayersNicknamePrefix}{playerIndex}";
+            var player = new ConnectedPlayer(playerIndex, nickname);
+            _sessionVerifier.Add(token, player);
+            _lobbyChatService.SendMessage(token, CleanText, _now);
         }
     }
 }

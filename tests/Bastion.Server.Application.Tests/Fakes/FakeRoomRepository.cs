@@ -8,23 +8,24 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeRoomRepository : IRoomRepository
 {
+    private const int FirstRoomId = 1;
+    private const int FirstMatchId = 100;
+    private const int NoOpenRooms = 0;
+
+    private int _nextRoomId = FirstRoomId;
+    private int _nextMatchId = FirstMatchId;
+
     public HashSet<string> TakenCodes { get; } = new HashSet<string>();
 
     public List<Room> AddedRooms { get; } = new List<Room>();
-
-    public int NextRoomId { get; set; } = 1;
 
     public Dictionary<int, RoomSettings> ChangedSettingsByRoomId { get; } = new Dictionary<int, RoomSettings>();
 
     public List<int> ClosedRoomIds { get; } = new List<int>();
 
-    public int OpenRoomCount { get; set; }
-
     public HashSet<string> CodesInMatch { get; } = new HashSet<string>();
 
     public Dictionary<int, Match> SavedMatchesByRoomId { get; } = new Dictionary<int, Match>();
-
-    public int NextMatchId { get; set; } = 100;
 
     public RoomRepositoryException? MatchSaveFailure { get; set; }
 
@@ -46,8 +47,8 @@ public sealed class FakeRoomRepository : IRoomRepository
         }
 
         SavedMatchesByRoomId[roomId] = match;
-        int matchId = NextMatchId;
-        NextMatchId++;
+        int matchId = _nextMatchId;
+        _nextMatchId++;
         return matchId;
     }
 
@@ -56,8 +57,8 @@ public sealed class FakeRoomRepository : IRoomRepository
         ArgumentNullException.ThrowIfNull(room);
 
         AddedRooms.Add(room);
-        int roomId = NextRoomId;
-        NextRoomId++;
+        int roomId = _nextRoomId;
+        _nextRoomId++;
         return roomId;
     }
 
@@ -73,8 +74,6 @@ public sealed class FakeRoomRepository : IRoomRepository
 
     public int CloseOpenRooms(DateTime closedAt)
     {
-        int closedRoomCount = OpenRoomCount;
-        OpenRoomCount = 0;
-        return closedRoomCount;
+        return NoOpenRooms;
     }
 }

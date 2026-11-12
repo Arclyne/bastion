@@ -10,39 +10,39 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeUnitOfWork : IUnitOfWork
 {
-    public FakeAccountRepository AccountStore { get; } = new FakeAccountRepository();
+    public FakeAccountRepository AccountRepository { get; } = new FakeAccountRepository();
 
-    public FakeSessionRepository SessionStore { get; } = new FakeSessionRepository();
+    public FakeSessionRepository SessionRepository { get; } = new FakeSessionRepository();
 
-    public FakeAccessLogRepository AccessLogStore { get; } = new FakeAccessLogRepository();
+    public FakeAccessLogRepository AccessLogRepository { get; } = new FakeAccessLogRepository();
 
-    public FakeFriendshipRepository FriendshipStore { get; } = new FakeFriendshipRepository();
+    public FakeFriendshipRepository FriendshipRepository { get; } = new FakeFriendshipRepository();
 
-    public FakeFriendRequestRepository FriendRequestStore { get; } = new FakeFriendRequestRepository();
+    public FakeFriendRequestRepository FriendRequestRepository { get; } = new FakeFriendRequestRepository();
 
-    public FakeSanctionRepository SanctionStore { get; } = new FakeSanctionRepository();
+    public FakeSanctionRepository SanctionRepository { get; } = new FakeSanctionRepository();
 
-    public FakeBannedWordRepository BannedWordStore { get; } = new FakeBannedWordRepository();
+    public FakeBannedWordRepository BannedWordRepository { get; } = new FakeBannedWordRepository();
 
-    public FakeMessageRepository MessageStore { get; } = new FakeMessageRepository();
+    public FakeMessageRepository MessageRepository { get; } = new FakeMessageRepository();
 
     public int SaveCount { get; private set; }
 
-    public IAccountRepository Accounts => AccountStore;
+    public IAccountRepository Accounts => AccountRepository;
 
-    public ISessionRepository Sessions => SessionStore;
+    public ISessionRepository Sessions => SessionRepository;
 
-    public IAccessLogRepository AccessLogs => AccessLogStore;
+    public IAccessLogRepository AccessLogs => AccessLogRepository;
 
-    public IFriendshipRepository Friendships => FriendshipStore;
+    public IFriendshipRepository Friendships => FriendshipRepository;
 
-    public IFriendRequestRepository FriendRequests => FriendRequestStore;
+    public IFriendRequestRepository FriendRequests => FriendRequestRepository;
 
-    public ISanctionRepository Sanctions => SanctionStore;
+    public ISanctionRepository Sanctions => SanctionRepository;
 
-    public IBannedWordRepository BannedWords => BannedWordStore;
+    public IBannedWordRepository BannedWords => BannedWordRepository;
 
-    public IMessageRepository Messages => MessageStore;
+    public IMessageRepository Messages => MessageRepository;
 
     public void SaveChanges()
     {

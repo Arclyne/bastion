@@ -6,13 +6,22 @@ public sealed class FakeSessionTokenGenerator : ISessionTokenGenerator
 {
     public const string Token = "session-token";
 
+    private static readonly byte[] _tokenHash = { 1, 2, 3 };
+    private static readonly byte[] _otherTokenHash = { 9 };
+
     public GeneratedToken Generate()
     {
-        return new GeneratedToken(Token, Hash(Token));
+        byte[] tokenHash = Hash(Token);
+        return new GeneratedToken(Token, tokenHash);
     }
 
     public byte[] Hash(string token)
     {
-        return token == Token ? new byte[] { 1, 2, 3 } : new byte[] { 9 };
+        if (token == Token)
+        {
+            return _tokenHash;
+        }
+
+        return _otherTokenHash;
     }
 }

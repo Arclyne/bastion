@@ -4,19 +4,15 @@ using Bastion.Domain.Chat;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
 using Bastion.Server.Application.Matches;
+using Bastion.Server.Application.Tests.GameModes;
 
 namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeMatchRepository : IMatchRepository
 {
-    private const byte ClassicGameModeId = 1;
-    private const byte ClassicBoardSize = 9;
-    private const byte ClassicPlayerCount = 2;
-    private const byte ClassicWallsPerPlayer = 10;
-
     public HashSet<int> AccountIdsWithUnfinishedParticipation { get; } = new HashSet<int>();
 
-    public GameMode? ActiveGameMode { get; set; } = CreateClassicGameMode();
+    public GameMode? ActiveGameMode { get; set; } = GameModeSampleFactory.CreateClassic();
 
     public Dictionary<int, short> EloRatingsByAccountId { get; } = new Dictionary<int, short>();
 
@@ -44,7 +40,12 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public GameMode? FindActiveGameMode(GameModeCode code)
     {
-        return ActiveGameMode?.Code == code ? ActiveGameMode : null;
+        if (ActiveGameMode?.Code != code)
+        {
+            return null;
+        }
+
+        return ActiveGameMode;
     }
 
     public IReadOnlyDictionary<int, short> FindEloRatingsByAccountId(
@@ -71,7 +72,12 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public IReadOnlyList<int> FindAccountIdsWithUnfinishedParticipation(int matchId)
     {
-        return UnfinishedParticipantAccountIdsByMatchId.GetValueOrDefault(matchId) ?? new List<int>();
+        if (!UnfinishedParticipantAccountIdsByMatchId.TryGetValue(matchId, out List<int>? accountIds))
+        {
+            return Array.Empty<int>();
+        }
+
+        return accountIds;
     }
 
     public long SaveMatchChatMessage(Message message)
@@ -97,18 +103,5 @@ public sealed class FakeMatchRepository : IMatchRepository
         ArgumentNullException.ThrowIfNull(match);
 
         SavedAbandonments.Add(match);
-    }
-
-    private static GameMode CreateClassicGameMode()
-    {
-        return new GameMode
-        {
-            GameModeId = ClassicGameModeId,
-            Code = GameModeCode.Classic,
-            BoardSize = ClassicBoardSize,
-            PlayerCount = ClassicPlayerCount,
-            WallsPerPlayer = ClassicWallsPerPlayer,
-            IsActive = true,
-        };
     }
 }

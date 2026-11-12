@@ -19,36 +19,37 @@ public sealed class FakeMessageRepository : IMessageRepository
 
     public IReadOnlyList<Message> ListConversation(int accountId, int partnerId, int count)
     {
-        return Messages
+        IEnumerable<Message> conversationMessages = Messages
             .Where(message => message.GetPartnerId(accountId) == partnerId && Involves(message, accountId))
             .OrderBy(message => message.SentAt)
-            .TakeLast(count)
-            .ToList();
+            .TakeLast(count);
+        return new List<Message>(conversationMessages);
     }
 
     public IReadOnlyList<Message> ListLatestPerPartner(int accountId)
     {
-        return Messages
+        IEnumerable<Message> latestMessages = Messages
             .Where(message => Involves(message, accountId))
             .GroupBy(message => message.GetPartnerId(accountId))
-            .Select(conversation => conversation.OrderBy(message => message.SentAt).Last())
-            .ToList();
+            .Select(FindLatest);
+        return new List<Message>(latestMessages);
     }
 
     public IReadOnlyDictionary<int, int> CountUnreadByAuthor(int recipientId)
     {
-        return Messages
+        IEnumerable<KeyValuePair<int, int>> unreadCounts = Messages
             .Where(message => message.RecipientId == recipientId && message.ReadAt is null)
             .GroupBy(message => message.AuthorId)
-            .ToDictionary(unread => unread.Key, unread => unread.Count());
+            .Select(unread => new KeyValuePair<int, int>(unread.Key, unread.Count()));
+        return new Dictionary<int, int>(unreadCounts);
     }
 
     public void MarkRead(MessageParticipants participants, DateTime readAt)
     {
         ArgumentNullException.ThrowIfNull(participants);
 
-        foreach (Message message in Messages.Where(message =>
-            message.AuthorId == participants.AuthorId && message.RecipientId == participants.RecipientId))
+        IEnumerable<Message> authorMessages = Messages.Where(message => IsFrom(message, participants));
+        foreach (Message message in authorMessages)
         {
             message.MarkRead(readAt);
         }
@@ -57,5 +58,16 @@ public sealed class FakeMessageRepository : IMessageRepository
     private static bool Involves(Message message, int accountId)
     {
         return message.AuthorId == accountId || message.RecipientId == accountId;
+    }
+
+    private static Message FindLatest(IGrouping<int, Message> conversation)
+    {
+        IEnumerable<Message> messagesInOrder = conversation.OrderBy(message => message.SentAt);
+        return messagesInOrder.Last();
+    }
+
+    private static bool IsFrom(Message message, MessageParticipants participants)
+    {
+        return message.AuthorId == participants.AuthorId && message.RecipientId == participants.RecipientId;
     }
 }

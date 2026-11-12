@@ -16,6 +16,7 @@ public sealed class FakeMatchEndNotifier : IMatchEndNotifier
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
         ArgumentNullException.ThrowIfNull(notice);
 
-        NotifiedAbandonments.Add(new NotifiedMatchAbandonment(matchId, recipientAccountIds, notice));
+        var notifiedAbandonment = new NotifiedMatchAbandonment(matchId, recipientAccountIds, notice);
+        NotifiedAbandonments.Add(notifiedAbandonment);
     }
 }

@@ -11,11 +11,13 @@ public sealed class FakeRoomNotifier : IRoomNotifier
 
     public void NotifyRoomUpdated(RoomSnapshot room, int originAccountId)
     {
-        UpdatedRooms.Add(new NotifiedRoom(room, originAccountId));
+        var updatedRoom = new NotifiedRoom(room, originAccountId);
+        UpdatedRooms.Add(updatedRoom);
     }
 
     public void NotifyRoomClosed(RoomSnapshot room, int originAccountId)
     {
-        ClosedRooms.Add(new NotifiedRoom(room, originAccountId));
+        var closedRoom = new NotifiedRoom(room, originAccountId);
+        ClosedRooms.Add(closedRoom);
     }
 }
