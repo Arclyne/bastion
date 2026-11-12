@@ -17,6 +17,10 @@ public sealed class TestBoardLayout
     private const int FirstColumnIndex = 0;
     private const int ClassicLastColumnIndex = 8;
     private const string ThirdPlayerSquare = "a5";
+    private const string FirstPlayerSquare = "e1";
+    private const string SecondPlayerSquare = "e9";
+    private const string RowZeroSquare = "e0";
+    private const int ClassicLastRowIndex = 8;
 
     [Fact]
     public void GetStartingCoordinates_FirstTurnOrderOnClassicBoard_ReturnsCenterOfFirstRow()
@@ -64,6 +68,74 @@ public sealed class TestBoardLayout
         string square = BoardLayout.GetStartingSquare(ClassicBoardSize, Match.ThirdTurnOrder);
 
         Assert.Equal(ThirdPlayerSquare, square);
+    }
+
+    [Fact]
+    public void ToSquare_CenterOfFirstRowOnClassicBoard_ReturnsE1()
+    {
+        var coordinates = new BoardCoordinates(ClassicCenterColumnIndex, FirstRowIndex);
+
+        string square = BoardLayout.ToSquare(coordinates);
+
+        Assert.Equal(FirstPlayerSquare, square);
+    }
+
+    [Fact]
+    public void ParseSquare_E9_ReturnsCenterOfLastClassicRow()
+    {
+        var expectedCoordinates = new BoardCoordinates(ClassicCenterColumnIndex, ClassicLastRowIndex);
+
+        BoardCoordinates coordinates = BoardLayout.ParseSquare(SecondPlayerSquare);
+
+        Assert.Equal(expectedCoordinates, coordinates);
+    }
+
+    [Fact]
+    public void ParseSquare_RowZero_ThrowsFormatException()
+    {
+        Assert.Throws<FormatException>(() => BoardLayout.ParseSquare(RowZeroSquare));
+    }
+
+    [Theory]
+    [InlineData("e")]
+    [InlineData("9e")]
+    [InlineData("E1")]
+    [InlineData("e-1")]
+    public void TryParseSquare_TextOutsideNotation_ReturnsFalse(string square)
+    {
+        bool isSquare = BoardLayout.TryParseSquare(square, out _);
+
+        Assert.False(isSquare);
+    }
+
+    [Fact]
+    public void IsGoal_FirstTurnOrderOnLastRow_ReturnsTrue()
+    {
+        var coordinates = new BoardCoordinates(FirstColumnIndex, ClassicLastRowIndex);
+
+        bool isGoal = BoardLayout.IsGoal(ClassicBoardSize, Match.FirstTurnOrder, coordinates);
+
+        Assert.True(isGoal);
+    }
+
+    [Fact]
+    public void IsGoal_SecondTurnOrderOnFirstRow_ReturnsTrue()
+    {
+        var coordinates = new BoardCoordinates(FirstColumnIndex, FirstRowIndex);
+
+        bool isGoal = BoardLayout.IsGoal(ClassicBoardSize, Match.SecondTurnOrder, coordinates);
+
+        Assert.True(isGoal);
+    }
+
+    [Fact]
+    public void IsGoal_FirstTurnOrderOnFirstRow_ReturnsFalse()
+    {
+        var coordinates = new BoardCoordinates(FirstColumnIndex, FirstRowIndex);
+
+        bool isGoal = BoardLayout.IsGoal(ClassicBoardSize, Match.FirstTurnOrder, coordinates);
+
+        Assert.False(isGoal);
     }
 
     [Fact]

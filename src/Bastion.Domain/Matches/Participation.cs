@@ -4,6 +4,8 @@ namespace Bastion.Domain.Matches;
 
 public class Participation
 {
+    private const int NoClockLeft = 0;
+
     private static readonly PawnSymbol[] _pawnSymbolsInTurnOrder = new PawnSymbol[]
     {
         PawnSymbol.Blue,
@@ -85,5 +87,25 @@ public class Participation
     {
         Finish(ParticipationResult.Won);
         Placement = placement;
+    }
+
+    internal void MoveTo(string square)
+    {
+        ArgumentNullException.ThrowIfNull(square);
+
+        CurrentSquare = square;
+    }
+
+    internal void SpendClock(int spentMilliseconds)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(spentMilliseconds);
+
+        if (RemainingClockMilliseconds is not int remainingMilliseconds)
+        {
+            return;
+        }
+
+        int leftMilliseconds = remainingMilliseconds - spentMilliseconds;
+        RemainingClockMilliseconds = Math.Max(leftMilliseconds, NoClockLeft);
     }
 }

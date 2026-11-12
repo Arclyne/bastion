@@ -14,8 +14,11 @@ public class Match
 
     private const int LastStandingPlayerCount = 1;
     private const byte FirstPlacement = 1;
+    private const int FirstMoveNumber = 1;
+    private const double NoTimeSpent = 0;
 
     private readonly List<Participation> _participations = new List<Participation>();
+    private readonly List<Move> _moves = new List<Move>();
 
     private Match(MatchType matchType, MatchFormat format, DateTime startedAt)
     {
@@ -50,6 +53,8 @@ public class Match
     public byte CurrentTurnOrder { get; private set; }
 
     public IReadOnlyCollection<Participation> Participations => _participations;
+
+    public IReadOnlyCollection<Move> Moves => _moves;
 
     public static Match StartRanked(
         MatchFormat format,
@@ -99,6 +104,118 @@ public class Match
         LeaveFourPlayerMatch(abandoningAccountId, abandonedAt);
     }
 
+    public short GetNextMoveNumber()
+    {
+        int nextMoveNumber = _moves.Count + FirstMoveNumber;
+        short moveNumber = (short)nextMoveNumber;
+        return moveNumber;
+    }
+
+    public bool IsTurnOf(int accountId)
+    {
+        Participation? participation = FindActiveParticipation(accountId);
+        return participation is not null && participation.TurnOrder == CurrentTurnOrder;
+    }
+
+    public Board BuildBoard(byte boardSize)
+    {
+        var pawnsByTurnOrder = new Dictionary<byte, BoardCoordinates>();
+        foreach (Participation participation in ListActiveParticipations())
+        {
+            pawnsByTurnOrder[participation.TurnOrder] = FindPawnCoordinates(participation, boardSize);
+        }
+
+        return new Board(boardSize, pawnsByTurnOrder);
+    }
+
+    public IReadOnlyList<BoardCoordinates> ListReachableSquares(int accountId, byte boardSize)
+    {
+        Participation? participation = FindActiveParticipation(accountId);
+        if (participation is null)
+        {
+            return new List<BoardCoordinates>();
+        }
+
+        Board board = BuildBoard(boardSize);
+        IReadOnlyList<BoardCoordinates> reachableSquares =
+            PawnMovePolicy.ListReachableSquares(board, participation.TurnOrder);
+        return reachableSquares;
+    }
+
+    public void MovePawn(PawnMove pawnMove, byte boardSize, DateTime playedAt)
+    {
+        ArgumentNullException.ThrowIfNull(pawnMove);
+
+        EnsurePawnCanMove(pawnMove, boardSize);
+        Participation mover = _participations.First(participation => participation.AccountId == pawnMove.AccountId);
+        int timeSpentMilliseconds = GetTimeSpentMilliseconds(playedAt);
+        var timing = new MoveTiming(timeSpentMilliseconds, playedAt);
+        var move = new Move(pawnMove, mover.CurrentSquare, timing);
+        _moves.Add(move);
+        mover.SpendClock(timeSpentMilliseconds);
+        string destinationSquare = BoardLayout.ToSquare(pawnMove.Destination);
+        mover.MoveTo(destinationSquare);
+        bool hasReachedGoal = BoardLayout.IsGoal(boardSize, mover.TurnOrder, pawnMove.Destination);
+        if (hasReachedGoal && _participations.Count == TwoPlayerCount)
+        {
+            EndByGoal(mover, playedAt);
+            return;
+        }
+
+        PassTurnFrom(mover.TurnOrder);
+    }
+
+    private void EnsurePawnCanMove(PawnMove pawnMove, byte boardSize)
+    {
+        if (!IsTurnOf(pawnMove.AccountId) || pawnMove.MoveNumber != GetNextMoveNumber())
+        {
+            throw new InvalidOperationException("Only the player who has the turn can make the expected move.");
+        }
+
+        IReadOnlyList<BoardCoordinates> reachableSquares = ListReachableSquares(pawnMove.AccountId, boardSize);
+        if (!reachableSquares.Contains(pawnMove.Destination))
+        {
+            throw new InvalidOperationException("The pawn cannot reach that square.");
+        }
+    }
+
+    private BoardCoordinates FindPawnCoordinates(Participation participation, byte boardSize)
+    {
+        Move? lastPawnMove = _moves
+            .Where(move => move.AccountId == participation.AccountId && move.MoveType == MoveType.PawnMove)
+            .OrderBy(move => move.MoveNumber)
+            .LastOrDefault();
+        if (lastPawnMove is null)
+        {
+            BoardCoordinates startingCoordinates =
+                BoardLayout.GetStartingCoordinates(boardSize, participation.TurnOrder);
+            return startingCoordinates;
+        }
+
+        BoardCoordinates destination = lastPawnMove.GetDestination();
+        return destination;
+    }
+
+    private int GetTimeSpentMilliseconds(DateTime playedAt)
+    {
+        DateTime turnStartedAt = _moves.Count == 0 ? StartedAt : _moves.Max(move => move.PlayedAt);
+        TimeSpan elapsedTime = playedAt - turnStartedAt;
+        double elapsedMilliseconds = Math.Max(elapsedTime.TotalMilliseconds, NoTimeSpent);
+        int timeSpentMilliseconds = (int)elapsedMilliseconds;
+        return timeSpentMilliseconds;
+    }
+
+    private void EndByGoal(Participation winner, DateTime endedAt)
+    {
+        foreach (Participation participation in _participations)
+        {
+            bool isWinner = participation.AccountId == winner.AccountId;
+            participation.Finish(isWinner ? ParticipationResult.Won : ParticipationResult.Lost);
+        }
+
+        Close(MatchEndReason.Goal, endedAt);
+    }
+
     private void EndTwoPlayerMatchByAbandonment(int abandoningAccountId, DateTime endedAt)
     {
         foreach (Participation participation in _participations)
@@ -107,7 +224,7 @@ public class Match
             participation.Finish(isAbandoning ? ParticipationResult.Lost : ParticipationResult.Won);
         }
 
-        EndByAbandonment(endedAt);
+        Close(MatchEndReason.Abandonment, endedAt);
     }
 
     private void LeaveFourPlayerMatch(int abandoningAccountId, DateTime abandonedAt)
@@ -125,14 +242,14 @@ public class Match
         }
 
         activeParticipations.Single().Win(FirstPlacement);
-        EndByAbandonment(abandonedAt);
+        Close(MatchEndReason.Abandonment, abandonedAt);
     }
 
-    private void EndByAbandonment(DateTime endedAt)
+    private void Close(MatchEndReason endReason, DateTime endedAt)
     {
         Status = MatchStatus.Finished;
         EndedAt = endedAt;
-        EndReason = MatchEndReason.Abandonment;
+        EndReason = endReason;
     }
 
     private void PassTurnFrom(byte leavingTurnOrder)
@@ -177,5 +294,16 @@ public class Match
     private Participation? FindParticipation(int accountId)
     {
         return _participations.FirstOrDefault(participation => participation.AccountId == accountId);
+    }
+
+    private Participation? FindActiveParticipation(int accountId)
+    {
+        Participation? participation = FindParticipation(accountId);
+        if (Status != MatchStatus.InProgress || participation is null || participation.Result.HasValue)
+        {
+            return null;
+        }
+
+        return participation;
     }
 }
