@@ -3,7 +3,7 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Rooms;
 
-public class TestRoomPolicy
+public sealed class TestRoomPolicy
 {
     private const string ValidCode = "K7MTQ3";
     private const string CodeWithLetterO = "K7MTO3";

@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Friends;
 
-public class TestFriendship
+public sealed class TestFriendship
 {
     private const int SmallerAccountId = 3;
     private const int LargerAccountId = 4;
@@ -30,6 +30,8 @@ public class TestFriendship
     [Fact]
     public void Constructor_SameAccount_ThrowsArgument()
     {
-        Assert.Throws<ArgumentException>(() => new Friendship(SmallerAccountId, SmallerAccountId, _befriendedAt));
+        Action befriendSelf = () => new Friendship(SmallerAccountId, SmallerAccountId, _befriendedAt);
+
+        Assert.Throws<ArgumentException>(befriendSelf);
     }
 }

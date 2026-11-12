@@ -4,12 +4,15 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Chat;
 
-public class TestMessage
+public sealed class TestMessage
 {
     private const int AuthorId = 3;
     private const int RecipientId = 4;
     private const int MatchId = 16;
+    private const string PrivateText = "hola";
     private const string MatchChatText = "good luck";
+    private const int FirstReadMinutes = 1;
+    private const int SecondReadMinutes = 5;
 
     private static readonly DateTime _sentAt = new DateTime(2026, 11, 5, 12, 0, 0, DateTimeKind.Utc);
 
@@ -26,7 +29,9 @@ public class TestMessage
     {
         var participants = new MessageParticipants(AuthorId, AuthorId);
 
-        Assert.Throws<ArgumentException>(() => Message.CreatePrivate(participants, "hola", _sentAt));
+        Action createSelfMessage = () => Message.CreatePrivate(participants, PrivateText, _sentAt);
+
+        Assert.Throws<ArgumentException>(createSelfMessage);
     }
 
     [Fact]
@@ -53,17 +58,13 @@ public class TestMessage
     public void MarkRead_AlreadyRead_KeepsFirstMoment()
     {
         Message message = CreateMessage();
-        message.MarkRead(_sentAt.AddMinutes(1));
+        DateTime firstReadAt = _sentAt.AddMinutes(FirstReadMinutes);
+        DateTime secondReadAt = _sentAt.AddMinutes(SecondReadMinutes);
+        message.MarkRead(firstReadAt);
 
-        message.MarkRead(_sentAt.AddMinutes(5));
+        message.MarkRead(secondReadAt);
 
-        Assert.Equal(_sentAt.AddMinutes(1), message.ReadAt);
-    }
-
-    private static Message CreateMessage()
-    {
-        var participants = new MessageParticipants(AuthorId, RecipientId);
-        return Message.CreatePrivate(participants, "hola", _sentAt);
+        Assert.Equal(firstReadAt, message.ReadAt);
     }
 
     [Fact]
@@ -84,5 +85,11 @@ public class TestMessage
         var message = Message.CreateForMatch(submission, AuthorId, _sentAt);
 
         Assert.Equal(MatchId, message.MatchId);
+    }
+
+    private static Message CreateMessage()
+    {
+        var participants = new MessageParticipants(AuthorId, RecipientId);
+        return Message.CreatePrivate(participants, PrivateText, _sentAt);
     }
 }

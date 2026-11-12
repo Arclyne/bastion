@@ -3,8 +3,10 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Chat;
 
-public class TestChatPolicy
+public sealed class TestChatPolicy
 {
+    private const char FillerCharacter = 'a';
+
     [Theory]
     [InlineData("hola")]
     [InlineData("  hola  ")]
@@ -29,7 +31,7 @@ public class TestChatPolicy
     [Fact]
     public void IsValidMessage_MaximumLength_ReturnsTrue()
     {
-        string text = new string('a', ChatPolicy.MaximumMessageLength);
+        string text = new string(FillerCharacter, ChatPolicy.MaximumMessageLength);
 
         bool isValidMessage = ChatPolicy.IsValidMessage(text);
 
@@ -39,7 +41,8 @@ public class TestChatPolicy
     [Fact]
     public void IsValidMessage_AboveMaximumLength_ReturnsFalse()
     {
-        string text = new string('a', ChatPolicy.MaximumMessageLength + 1);
+        int tooLongLength = ChatPolicy.MaximumMessageLength + 1;
+        string text = new string(FillerCharacter, tooLongLength);
 
         bool isValidMessage = ChatPolicy.IsValidMessage(text);
 

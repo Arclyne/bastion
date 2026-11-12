@@ -3,8 +3,13 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Friends;
 
-public class TestFriendCodePolicy
+public sealed class TestFriendCodePolicy
 {
+    private const string CompactCode = "QU7K2P";
+    private const string HyphenatedCode = "QU-7K2P";
+    private const string HyphenatedLowercaseCode = "qu-7k2p";
+    private const string PaddedCode = "  QU7K2P ";
+
     [Theory]
     [InlineData("QU7K2P")]
     [InlineData("AB2CD9")]
@@ -37,24 +42,24 @@ public class TestFriendCodePolicy
     [Fact]
     public void Normalize_HyphenatedLowercase_ReturnsCompactUppercase()
     {
-        string normalizedCode = FriendCodePolicy.Normalize("qu-7k2p");
+        string normalizedCode = FriendCodePolicy.Normalize(HyphenatedLowercaseCode);
 
-        Assert.Equal("QU7K2P", normalizedCode);
+        Assert.Equal(CompactCode, normalizedCode);
     }
 
     [Fact]
     public void Normalize_SurroundingSpaces_ReturnsTrimmedCode()
     {
-        string normalizedCode = FriendCodePolicy.Normalize("  QU7K2P ");
+        string normalizedCode = FriendCodePolicy.Normalize(PaddedCode);
 
-        Assert.Equal("QU7K2P", normalizedCode);
+        Assert.Equal(CompactCode, normalizedCode);
     }
 
     [Fact]
     public void Format_ValidCode_InsertsHyphenAfterTwo()
     {
-        string formattedCode = FriendCodePolicy.Format("QU7K2P");
+        string formattedCode = FriendCodePolicy.Format(CompactCode);
 
-        Assert.Equal("QU-7K2P", formattedCode);
+        Assert.Equal(HyphenatedCode, formattedCode);
     }
 }

@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Rooms;
 
-public class TestRoom
+public sealed class TestRoom
 {
     private const string InvalidCode = "K7MTO3";
     private const byte ChangedWalls = 4;
@@ -16,9 +16,12 @@ public class TestRoom
     [Fact]
     public void Open_InvalidCode_ThrowsArgument()
     {
-        var opening = new RoomOpening(InvalidCode, RoomSamples.HostAccountId, _openedAt);
+        var opening = new RoomOpening(InvalidCode, RoomSampleFactory.HostAccountId, _openedAt);
+        RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
 
-        Assert.Throws<ArgumentException>(() => Room.Open(opening, RoomSamples.CreateTwoPlayerSettings()));
+        Action open = () => Room.Open(opening, settings);
+
+        Assert.Throws<ArgumentException>(open);
     }
 
     [Fact]
@@ -33,11 +36,13 @@ public class TestRoom
     public void ChangeSettings_OpenRoom_RecordsActivity()
     {
         Room room = OpenRoom();
-        RoomSettings settings = RoomSamples.CreateTwoPlayerSettings() with { WallsPerPlayer = ChangedWalls };
+        RoomSettings twoPlayerSettings = RoomSampleFactory.CreateTwoPlayerSettings();
+        RoomSettings settings = twoPlayerSettings with { WallsPerPlayer = ChangedWalls };
+        (byte WallsPerPlayer, DateTime LastActivityAt) expectedActivity = (ChangedWalls, _changedAt);
 
         room.ChangeSettings(settings, _changedAt);
 
-        Assert.Equal((ChangedWalls, _changedAt), (room.WallsPerPlayer, room.LastActivityAt));
+        Assert.Equal(expectedActivity, (room.WallsPerPlayer, room.LastActivityAt));
     }
 
     [Fact]
@@ -55,19 +60,22 @@ public class TestRoom
     {
         Room room = OpenRoom();
         room.Close(_changedAt);
+        RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
 
-        Assert.Throws<InvalidOperationException>(
-            () => room.ChangeSettings(RoomSamples.CreateTwoPlayerSettings(), _changedAt));
+        Action changeSettings = () => room.ChangeSettings(settings, _changedAt);
+
+        Assert.Throws<InvalidOperationException>(changeSettings);
     }
 
     [Fact]
     public void StartMatch_OpenRoom_KeepsMatchInRoom()
     {
         Room room = OpenRoom();
+        (RoomStatus Status, int? MatchId) expectedState = (RoomStatus.InMatch, MatchId);
 
         room.StartMatch(MatchId, _changedAt);
 
-        Assert.Equal((RoomStatus.InMatch, MatchId), (room.Status, room.MatchId));
+        Assert.Equal(expectedState, (room.Status, room.MatchId));
     }
 
     [Fact]
@@ -86,12 +94,15 @@ public class TestRoom
     {
         Room room = OpenRoom();
 
-        Assert.Throws<InvalidOperationException>(() => room.FinishMatch(_changedAt));
+        Action finishMatch = () => room.FinishMatch(_changedAt);
+
+        Assert.Throws<InvalidOperationException>(finishMatch);
     }
 
     private static Room OpenRoom()
     {
-        var opening = new RoomOpening(RoomSamples.Code, RoomSamples.HostAccountId, _openedAt);
-        return Room.Open(opening, RoomSamples.CreateTwoPlayerSettings());
+        var opening = new RoomOpening(RoomSampleFactory.Code, RoomSampleFactory.HostAccountId, _openedAt);
+        RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
+        return Room.Open(opening, settings);
     }
 }

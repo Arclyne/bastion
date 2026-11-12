@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Bastion.Domain.Tests.Matches;
 
-public class TestBoardLayout
+public sealed class TestBoardLayout
 {
     private const byte ClassicBoardSize = 9;
     private const byte QuickBoardSize = 7;
@@ -69,7 +69,8 @@ public class TestBoardLayout
     [Fact]
     public void GetStartingCoordinates_FifthTurnOrder_ThrowsArgumentOutOfRangeException()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(
-            () => BoardLayout.GetStartingCoordinates(ClassicBoardSize, FifthTurnOrder));
+        Action getCoordinates = () => BoardLayout.GetStartingCoordinates(ClassicBoardSize, FifthTurnOrder);
+
+        Assert.Throws<ArgumentOutOfRangeException>(getCoordinates);
     }
 }
