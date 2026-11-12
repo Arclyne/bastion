@@ -36,7 +36,7 @@ csharp_space_around_binary_operators = before_and_after
 csharp_prefer_braces = true:warning
 dotnet_diagnostic.IDE0011.severity = warning
 
-# 3.5.1 var only when the type is apparent (IDE0007 / IDE0008)
+# 3.4.1 var only when the type is apparent (IDE0007 / IDE0008)
 csharp_style_var_for_built_in_types = false:warning
 csharp_style_var_when_type_is_apparent = true:warning
 csharp_style_var_elsewhere = false:warning
