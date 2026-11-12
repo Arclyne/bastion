@@ -492,4 +492,16 @@
   <data name="MatchPlayerLeft" xml:space="preserve">
     <value>Salió</value>
   </data>
+  <data name="MatchMoveNotAllowed" xml:space="preserve">
+    <value>No puedes mover ahí.</value>
+  </data>
+  <data name="MatchMoveFailed" xml:space="preserve">
+    <value>No se pudo enviar la jugada. Inténtalo de nuevo.</value>
+  </data>
+  <data name="MatchYouWon" xml:space="preserve">
+    <value>¡Ganaste!</value>
+  </data>
+  <data name="MatchPlayerWonFormat" xml:space="preserve">
+    <value>Ganó {0}</value>
+  </data>
 </root>

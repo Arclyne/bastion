@@ -10,6 +10,8 @@ public interface INotificationClient
 
     event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
 
+    event EventHandler<PawnMovedEventArgs>? PawnMoved;
+
     event EventHandler<MatchFoundEventArgs>? MatchFound;
 
     event EventHandler<PresenceRequestedEventArgs>? PresenceRequested;

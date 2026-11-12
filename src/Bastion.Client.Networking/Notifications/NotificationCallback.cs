@@ -25,6 +25,8 @@ public sealed class NotificationCallback : INotificationCallback
 
     public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
 
+    public event EventHandler<PawnMovedEventArgs>? PawnMoved;
+
     public event EventHandler<MatchFoundEventArgs>? MatchFound;
 
     public event EventHandler<PresenceRequestedEventArgs>? PresenceRequested;
@@ -54,6 +56,7 @@ public sealed class NotificationCallback : INotificationCallback
 
         if (TryDispatchChatNotification(notification)
             || TryDispatchMatchEndNotification(notification)
+            || TryDispatchMatchMoveNotification(notification)
             || TryDispatchFriendNotification(notification)
             || TryDispatchPrivateMessageNotification(notification)
             || TryDispatchRoomNotification(notification)
@@ -125,6 +128,40 @@ public sealed class NotificationCallback : INotificationCallback
     private void OnMatchAbandoned(MatchAbandonedEventArgs e)
     {
         MatchAbandoned?.Invoke(this, e);
+    }
+
+    private bool TryDispatchMatchMoveNotification(Notification notification)
+    {
+        if (notification is not PawnMovedNotification pawnMoved)
+        {
+            return false;
+        }
+
+        OnPawnMoved(ToPawnMovedEventArgs(pawnMoved));
+        return true;
+    }
+
+    private static PawnMovedEventArgs ToPawnMovedEventArgs(PawnMovedNotification notification)
+    {
+        string moverNickname = notification.MoverNickname ?? string.Empty;
+        string fromSquare = notification.FromSquare ?? string.Empty;
+        string toSquare = notification.ToSquare ?? string.Empty;
+        return new PawnMovedEventArgs
+        {
+            MatchId = notification.MatchId,
+            MoverNickname = moverNickname,
+            FromSquare = fromSquare,
+            ToSquare = toSquare,
+            NextTurnOrder = notification.NextTurnOrder,
+            NextMoveNumber = notification.NextMoveNumber,
+            RemainingClockMilliseconds = notification.RemainingClockMilliseconds,
+            IsMatchOver = notification.IsMatchOver,
+        };
+    }
+
+    private void OnPawnMoved(PawnMovedEventArgs e)
+    {
+        PawnMoved?.Invoke(this, e);
     }
 
     private bool TryDispatchFriendNotification(Notification notification)
