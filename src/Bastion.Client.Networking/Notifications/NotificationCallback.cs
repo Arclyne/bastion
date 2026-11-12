@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
 using Bastion.Client.Networking.Chat;
@@ -7,6 +8,8 @@ using Bastion.Client.Networking.Matchmaking;
 using Bastion.Client.Networking.PrivateChat;
 using Bastion.Client.Networking.Rooms;
 using Bastion.Contracts.Notifications;
+using Bastion.Contracts.Rooms;
+using log4net;
 
 namespace Bastion.Client.Networking.Notifications;
 
@@ -14,6 +17,8 @@ namespace Bastion.Client.Networking.Notifications;
 [CallbackBehavior(UseSynchronizationContext = false, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class NotificationCallback : INotificationCallback
 {
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationCallback));
+
     public event EventHandler<ChatMessageReceivedEventArgs>? ChatMessageReceived;
 
     public event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
@@ -39,45 +44,246 @@ public sealed class NotificationCallback : INotificationCallback
     public event EventHandler<RoomClosedEventArgs>? RoomClosed;
 
     /// <inheritdoc/>
-    public void ReceiveNotification(Notification notification)
+    public void ReceiveNotification(Notification? notification)
     {
+        if (notification is null)
+        {
+            _logger.Warn("A notification arrived without content.");
+            return;
+        }
+
         if (TryDispatchChatNotification(notification)
             || TryDispatchMatchEndNotification(notification)
             || TryDispatchFriendNotification(notification)
             || TryDispatchPrivateMessageNotification(notification)
-            || TryDispatchRoomNotification(notification))
+            || TryDispatchRoomNotification(notification)
+            || TryDispatchMatchmakingNotification(notification))
         {
             return;
         }
 
-        DispatchMatchmakingNotification(notification);
+        _logger.Warn($"A notification of an unknown type was ignored. Type={notification.GetType().Name}");
     }
 
-    private static ChatMessageReceivedEventArgs ToEventArgs(ChatMessageNotification notification)
+    private bool TryDispatchChatNotification(Notification notification)
     {
-        return new ChatMessageReceivedEventArgs(ChatContractTranslator.ToChatMessage(notification));
+        if (notification is ChatMessageNotification chatMessage)
+        {
+            OnChatMessageReceived(ToChatMessageReceivedEventArgs(chatMessage));
+            return true;
+        }
+
+        if (notification is MatchChatMessageNotification matchChatMessage)
+        {
+            OnMatchChatMessageReceived(ToMatchChatMessageReceivedEventArgs(matchChatMessage));
+            return true;
+        }
+
+        return false;
     }
 
-    private static MatchChatMessageReceivedEventArgs ToEventArgs(MatchChatMessageNotification notification)
+    private static ChatMessageReceivedEventArgs ToChatMessageReceivedEventArgs(ChatMessageNotification notification)
     {
-        return new MatchChatMessageReceivedEventArgs(
-            notification.MatchId,
-            ChatContractTranslator.ToChatMessage(notification));
+        var message = ChatContractTranslator.ToChatMessage(notification);
+        return new ChatMessageReceivedEventArgs(message);
     }
 
-    private static MatchAbandonedEventArgs ToEventArgs(MatchAbandonedNotification notification)
+    private void OnChatMessageReceived(ChatMessageReceivedEventArgs e)
     {
-        return new MatchAbandonedEventArgs(
-            notification.MatchId,
-            notification.AbandoningNickname ?? string.Empty,
-            notification.IsMatchOver);
+        ChatMessageReceived?.Invoke(this, e);
     }
 
-    private static MatchFoundEventArgs ToEventArgs(MatchFoundNotification notification)
+    private static MatchChatMessageReceivedEventArgs ToMatchChatMessageReceivedEventArgs(
+        MatchChatMessageNotification notification)
+    {
+        var message = ChatContractTranslator.ToChatMessage(notification);
+        return new MatchChatMessageReceivedEventArgs(notification.MatchId, message);
+    }
+
+    private void OnMatchChatMessageReceived(MatchChatMessageReceivedEventArgs e)
+    {
+        MatchChatMessageReceived?.Invoke(this, e);
+    }
+
+    private bool TryDispatchMatchEndNotification(Notification notification)
+    {
+        if (notification is not MatchAbandonedNotification matchAbandoned)
+        {
+            return false;
+        }
+
+        OnMatchAbandoned(ToMatchAbandonedEventArgs(matchAbandoned));
+        return true;
+    }
+
+    private static MatchAbandonedEventArgs ToMatchAbandonedEventArgs(MatchAbandonedNotification notification)
+    {
+        string abandoningNickname = notification.AbandoningNickname ?? string.Empty;
+        return new MatchAbandonedEventArgs(notification.MatchId, abandoningNickname, notification.IsMatchOver);
+    }
+
+    private void OnMatchAbandoned(MatchAbandonedEventArgs e)
+    {
+        MatchAbandoned?.Invoke(this, e);
+    }
+
+    private bool TryDispatchFriendNotification(Notification notification)
+    {
+        if (notification is FriendPresenceNotification friendPresence)
+        {
+            OnFriendPresenceChanged(ToFriendPresenceChangedEventArgs(friendPresence));
+            return true;
+        }
+
+        if (notification is FriendRequestNotification friendRequest)
+        {
+            OnFriendRequestReceived(ToFriendRequestReceivedEventArgs(friendRequest));
+            return true;
+        }
+
+        if (notification is FriendshipStartedNotification friendshipStarted)
+        {
+            OnFriendshipStarted(ToFriendshipStartedEventArgs(friendshipStarted));
+            return true;
+        }
+
+        return false;
+    }
+
+    private static FriendPresenceChangedEventArgs ToFriendPresenceChangedEventArgs(
+        FriendPresenceNotification notification)
+    {
+        var friend = FriendContractTranslator.ToListedFriend(notification);
+        return new FriendPresenceChangedEventArgs(friend, notification.OccurredAt);
+    }
+
+    private void OnFriendPresenceChanged(FriendPresenceChangedEventArgs e)
+    {
+        FriendPresenceChanged?.Invoke(this, e);
+    }
+
+    private static FriendRequestReceivedEventArgs ToFriendRequestReceivedEventArgs(
+        FriendRequestNotification notification)
+    {
+        PendingFriendRequest request = FriendContractTranslator.ToPendingRequest(notification);
+        return new FriendRequestReceivedEventArgs(request);
+    }
+
+    private void OnFriendRequestReceived(FriendRequestReceivedEventArgs e)
+    {
+        FriendRequestReceived?.Invoke(this, e);
+    }
+
+    private static FriendshipStartedEventArgs ToFriendshipStartedEventArgs(FriendshipStartedNotification notification)
+    {
+        var friend = FriendContractTranslator.ToPlayerTag(notification);
+        return new FriendshipStartedEventArgs(friend);
+    }
+
+    private void OnFriendshipStarted(FriendshipStartedEventArgs e)
+    {
+        FriendshipStarted?.Invoke(this, e);
+    }
+
+    private bool TryDispatchPrivateMessageNotification(Notification notification)
+    {
+        if (notification is not PrivateMessageNotification privateMessageNotification)
+        {
+            return false;
+        }
+
+        OnPrivateMessageReceived(ToPrivateMessageReceivedEventArgs(privateMessageNotification));
+        return true;
+    }
+
+    private static PrivateMessageReceivedEventArgs ToPrivateMessageReceivedEventArgs(
+        PrivateMessageNotification notification)
+    {
+        PlayerTag sender = ConversationContractTranslator.ToSender(notification);
+        var message = ConversationContractTranslator.ToPrivateMessage(notification);
+        return new PrivateMessageReceivedEventArgs(sender, message);
+    }
+
+    private void OnPrivateMessageReceived(PrivateMessageReceivedEventArgs e)
+    {
+        PrivateMessageReceived?.Invoke(this, e);
+    }
+
+    private bool TryDispatchRoomNotification(Notification notification)
+    {
+        if (notification is RoomUpdatedNotification { Room: not null } roomUpdated)
+        {
+            OnRoomUpdated(ToRoomUpdatedEventArgs(roomUpdated.Room));
+            return true;
+        }
+
+        if (notification is RoomUpdatedNotification)
+        {
+            _logger.Warn("A room update arrived without the room and was ignored.");
+            return true;
+        }
+
+        if (notification is RoomClosedNotification roomClosed)
+        {
+            OnRoomClosed(ToRoomClosedEventArgs(roomClosed));
+            return true;
+        }
+
+        return false;
+    }
+
+    private static RoomUpdatedEventArgs ToRoomUpdatedEventArgs(RoomState room)
+    {
+        var privateRoom = RoomContractTranslator.ToPrivateRoom(room);
+        return new RoomUpdatedEventArgs(privateRoom);
+    }
+
+    private void OnRoomUpdated(RoomUpdatedEventArgs e)
+    {
+        RoomUpdated?.Invoke(this, e);
+    }
+
+    private static RoomClosedEventArgs ToRoomClosedEventArgs(RoomClosedNotification notification)
+    {
+        RoomCloseReason reason = RoomContractTranslator.ToCloseReason(notification.Reason);
+        string code = notification.Code ?? string.Empty;
+        return new RoomClosedEventArgs(code, reason);
+    }
+
+    private void OnRoomClosed(RoomClosedEventArgs e)
+    {
+        RoomClosed?.Invoke(this, e);
+    }
+
+    private bool TryDispatchMatchmakingNotification(Notification notification)
+    {
+        if (notification is MatchFoundNotification matchFound)
+        {
+            OnMatchFound(ToMatchFoundEventArgs(matchFound));
+            return true;
+        }
+
+        if (notification is PresenceRequestedNotification presenceRequested)
+        {
+            OnPresenceRequested(ToPresenceRequestedEventArgs(presenceRequested));
+            return true;
+        }
+
+        if (notification is SearchEndedNotification searchEnded)
+        {
+            OnSearchEnded(ToSearchEndedEventArgs(searchEnded));
+            return true;
+        }
+
+        return false;
+    }
+
+    private static MatchFoundEventArgs ToMatchFoundEventArgs(MatchFoundNotification notification)
     {
         MatchFoundParticipant[] notifiedParticipants =
             notification.Participants ?? Array.Empty<MatchFoundParticipant>();
-        FoundMatchParticipant[] participants = notifiedParticipants.Select(ToFoundMatchParticipant).ToArray();
+        IEnumerable<FoundMatchParticipant> foundParticipants = notifiedParticipants.Select(ToFoundMatchParticipant);
+        var participants = new List<FoundMatchParticipant>(foundParticipants);
         var format = new FoundMatchFormat(
             notification.BoardSize,
             notification.WallsPerPlayer,
@@ -87,34 +293,30 @@ public sealed class NotificationCallback : INotificationCallback
 
     private static FoundMatchParticipant ToFoundMatchParticipant(MatchFoundParticipant participant)
     {
-        return new FoundMatchParticipant(
-            participant.Nickname ?? string.Empty,
-            participant.EloRating,
-            participant.TurnOrder);
+        string nickname = participant.Nickname ?? string.Empty;
+        return new FoundMatchParticipant(nickname, participant.EloRating, participant.TurnOrder);
     }
 
-    private static PresenceRequestedEventArgs ToEventArgs(PresenceRequestedNotification notification)
+    private void OnMatchFound(MatchFoundEventArgs e)
     {
-        return new PresenceRequestedEventArgs(notification.Deadline - notification.OccurredAt);
+        MatchFound?.Invoke(this, e);
     }
 
-    private static SearchEndedEventArgs ToEventArgs(SearchEndedNotification notification)
+    private static PresenceRequestedEventArgs ToPresenceRequestedEventArgs(PresenceRequestedNotification notification)
     {
-        return new SearchEndedEventArgs(ToReason(notification.Reason));
+        TimeSpan responseWindow = notification.Deadline - notification.OccurredAt;
+        return new PresenceRequestedEventArgs(responseWindow);
     }
 
-    private static PrivateMessageReceivedEventArgs ToEventArgs(PrivateMessageNotification notification)
+    private void OnPresenceRequested(PresenceRequestedEventArgs e)
     {
-        return new PrivateMessageReceivedEventArgs(
-            ConversationContractTranslator.ToSender(notification),
-            ConversationContractTranslator.ToPrivateMessage(notification));
+        PresenceRequested?.Invoke(this, e);
     }
 
-    private static FriendPresenceChangedEventArgs ToEventArgs(FriendPresenceNotification notification)
+    private static SearchEndedEventArgs ToSearchEndedEventArgs(SearchEndedNotification notification)
     {
-        return new FriendPresenceChangedEventArgs(
-            FriendContractTranslator.ToListedFriend(notification),
-            notification.OccurredAt);
+        SearchEndReason reason = ToReason(notification.Reason);
+        return new SearchEndedEventArgs(reason);
     }
 
     private static SearchEndReason ToReason(SearchEndedReason reason)
@@ -132,165 +334,8 @@ public sealed class NotificationCallback : INotificationCallback
         }
     }
 
-    private bool TryDispatchChatNotification(Notification notification)
-    {
-        if (notification is ChatMessageNotification chatMessage)
-        {
-            OnChatMessageReceived(ToEventArgs(chatMessage));
-            return true;
-        }
-
-        if (notification is MatchChatMessageNotification matchChatMessage)
-        {
-            OnMatchChatMessageReceived(ToEventArgs(matchChatMessage));
-            return true;
-        }
-
-        return false;
-    }
-
-    private bool TryDispatchMatchEndNotification(Notification notification)
-    {
-        if (notification is not MatchAbandonedNotification matchAbandoned)
-        {
-            return false;
-        }
-
-        OnMatchAbandoned(ToEventArgs(matchAbandoned));
-        return true;
-    }
-
-    private bool TryDispatchFriendNotification(Notification notification)
-    {
-        if (notification is FriendPresenceNotification friendPresence)
-        {
-            OnFriendPresenceChanged(ToEventArgs(friendPresence));
-            return true;
-        }
-
-        if (notification is FriendRequestNotification friendRequest)
-        {
-            PendingFriendRequest request = FriendContractTranslator.ToPendingRequest(friendRequest);
-            OnFriendRequestReceived(new FriendRequestReceivedEventArgs(request));
-            return true;
-        }
-
-        if (notification is FriendshipStartedNotification friendshipStarted)
-        {
-            var friend = FriendContractTranslator.ToPlayerTag(friendshipStarted);
-            OnFriendshipStarted(new FriendshipStartedEventArgs(friend));
-            return true;
-        }
-
-        return false;
-    }
-
-    private bool TryDispatchPrivateMessageNotification(Notification notification)
-    {
-        if (notification is not PrivateMessageNotification privateMessageNotification)
-        {
-            return false;
-        }
-
-        OnPrivateMessageReceived(ToEventArgs(privateMessageNotification));
-        return true;
-    }
-
-    private bool TryDispatchRoomNotification(Notification notification)
-    {
-        if (notification is RoomUpdatedNotification { Room: not null } roomUpdated)
-        {
-            OnRoomUpdated(new RoomUpdatedEventArgs(RoomContractTranslator.ToPrivateRoom(roomUpdated.Room)));
-            return true;
-        }
-
-        if (notification is RoomClosedNotification roomClosed)
-        {
-            RoomCloseReason reason = RoomContractTranslator.ToCloseReason(roomClosed.Reason);
-            OnRoomClosed(new RoomClosedEventArgs(roomClosed.Code ?? string.Empty, reason));
-            return true;
-        }
-
-        return false;
-    }
-
-    private void DispatchMatchmakingNotification(Notification notification)
-    {
-        if (notification is MatchFoundNotification matchFound)
-        {
-            OnMatchFound(ToEventArgs(matchFound));
-            return;
-        }
-
-        if (notification is PresenceRequestedNotification presenceRequested)
-        {
-            OnPresenceRequested(ToEventArgs(presenceRequested));
-            return;
-        }
-
-        if (notification is SearchEndedNotification searchEnded)
-        {
-            OnSearchEnded(ToEventArgs(searchEnded));
-        }
-    }
-
-    private void OnChatMessageReceived(ChatMessageReceivedEventArgs e)
-    {
-        ChatMessageReceived?.Invoke(this, e);
-    }
-
-    private void OnMatchChatMessageReceived(MatchChatMessageReceivedEventArgs e)
-    {
-        MatchChatMessageReceived?.Invoke(this, e);
-    }
-
-    private void OnMatchAbandoned(MatchAbandonedEventArgs e)
-    {
-        MatchAbandoned?.Invoke(this, e);
-    }
-
-    private void OnMatchFound(MatchFoundEventArgs e)
-    {
-        MatchFound?.Invoke(this, e);
-    }
-
-    private void OnPresenceRequested(PresenceRequestedEventArgs e)
-    {
-        PresenceRequested?.Invoke(this, e);
-    }
-
     private void OnSearchEnded(SearchEndedEventArgs e)
     {
         SearchEnded?.Invoke(this, e);
-    }
-
-    private void OnFriendPresenceChanged(FriendPresenceChangedEventArgs e)
-    {
-        FriendPresenceChanged?.Invoke(this, e);
-    }
-
-    private void OnFriendRequestReceived(FriendRequestReceivedEventArgs e)
-    {
-        FriendRequestReceived?.Invoke(this, e);
-    }
-
-    private void OnFriendshipStarted(FriendshipStartedEventArgs e)
-    {
-        FriendshipStarted?.Invoke(this, e);
-    }
-
-    private void OnPrivateMessageReceived(PrivateMessageReceivedEventArgs e)
-    {
-        PrivateMessageReceived?.Invoke(this, e);
-    }
-
-    private void OnRoomUpdated(RoomUpdatedEventArgs e)
-    {
-        RoomUpdated?.Invoke(this, e);
-    }
-
-    private void OnRoomClosed(RoomClosedEventArgs e)
-    {
-        RoomClosed?.Invoke(this, e);
     }
 }

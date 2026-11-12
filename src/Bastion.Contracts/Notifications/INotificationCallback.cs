@@ -14,5 +14,5 @@ public interface INotificationCallback
     /// </summary>
     /// <param name="notification">The notification, of one of the types that <see cref="Notification"/> knows.</param>
     [OperationContract(IsOneWay = true)]
-    void ReceiveNotification(Notification notification);
+    void ReceiveNotification(Notification? notification);
 }

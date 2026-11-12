@@ -35,13 +35,16 @@ public sealed class ServerConnection : IDisposable
         new ServiceChannel<IConversationService>(ServiceEndpoints.ConversationsPath);
     private readonly ServiceChannel<IRoomService> _roomChannel =
         new ServiceChannel<IRoomService>(ServiceEndpoints.RoomsPath);
+    private readonly SessionChannelFactory _sessionChannelFactory;
     private readonly NotificationClient _notifications;
 
     public ServerConnection(TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
 
-        _notifications = new NotificationClient(timeProvider);
+        var notificationCallback = new NotificationCallback();
+        _sessionChannelFactory = new SessionChannelFactory(notificationCallback);
+        _notifications = new NotificationClient(notificationCallback, _sessionChannelFactory, timeProvider);
         Accounts = new AccountClient(_accountChannel);
         Notifications = _notifications;
         Chat = new ChatClient(_chatChannel, _notifications);
@@ -71,6 +74,7 @@ public sealed class ServerConnection : IDisposable
     public void Dispose()
     {
         _notifications.Dispose();
+        _sessionChannelFactory.Dispose();
         _chatChannel.Dispose();
         _matchmakingChannel.Dispose();
         _matchChannel.Dispose();
