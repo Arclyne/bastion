@@ -79,11 +79,7 @@ public sealed class MatchPlayersPanel : Panel
             Height = RowHeight,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        if (player.HasFirstTurn())
-        {
-            ShapeFactory.InsertBehindContent(row.Visual, ShapeFactory.CreateRounded(Palette.Selected, RowRadius));
-        }
-
+        row.AddChild(CreateTurnHighlight(player));
         row.AddChild(content);
         return row;
     }
@@ -101,5 +97,17 @@ public sealed class MatchPlayersPanel : Panel
         ShapeFactory.InsertBehindContent(pawn.Visual, circle);
         ViewFactory.CenterVertically(pawn);
         return pawn;
+    }
+
+    private static Panel CreateTurnHighlight(MatchPlayerViewModel player)
+    {
+        var highlight = new Panel
+        {
+            BindingContext = player,
+        };
+        highlight.Dock(Gum.Wireframe.Dock.Fill);
+        highlight.SetBinding(nameof(IsVisible), nameof(MatchPlayerViewModel.HasTurn));
+        ShapeFactory.InsertBehindContent(highlight.Visual, ShapeFactory.CreateRounded(Palette.Selected, RowRadius));
+        return highlight;
     }
 }

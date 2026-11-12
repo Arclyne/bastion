@@ -1318,11 +1318,38 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The move could not be sent. Try again..
+        /// </summary>
+        internal static string MatchMoveFailed {
+            get {
+                return ResourceManager.GetString("MatchMoveFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can't move there..
+        /// </summary>
+        internal static string MatchMoveNotAllowed {
+            get {
+                return ResourceManager.GetString("MatchMoveNotAllowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Match over.
         /// </summary>
         internal static string MatchOverTitle {
             get {
                 return ResourceManager.GetString("MatchOverTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} won.
+        /// </summary>
+        internal static string MatchPlayerWonFormat {
+            get {
+                return ResourceManager.GetString("MatchPlayerWonFormat", resourceCulture);
             }
         }
         
@@ -1458,6 +1485,15 @@ namespace Bastion.Client.Localization {
         internal static string MatchWallsFormat {
             get {
                 return ResourceManager.GetString("MatchWallsFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You won!.
+        /// </summary>
+        internal static string MatchYouWon {
+            get {
+                return ResourceManager.GetString("MatchYouWon", resourceCulture);
             }
         }
         

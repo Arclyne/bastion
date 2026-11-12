@@ -45,13 +45,24 @@ public sealed class MatchPlayerViewModel : ViewModel
     [DependsOn(nameof(HasLeft))]
     public string DetailText => HasLeft ? Strings.MatchPlayerLeft : _eloText;
 
-    public bool HasFirstTurn()
+    public bool HasTurn
     {
-        return TurnOrder == Match.FirstTurnOrder;
+        get => Get<bool>();
+        private set => Set(value);
     }
 
     public void MarkLeft()
     {
         HasLeft = true;
+    }
+
+    public void ShowTurn(byte currentTurnOrder)
+    {
+        HasTurn = TurnOrder == currentTurnOrder;
+    }
+
+    public void HideTurn()
+    {
+        HasTurn = false;
     }
 }

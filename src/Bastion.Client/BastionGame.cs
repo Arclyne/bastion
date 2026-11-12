@@ -6,9 +6,12 @@ using Bastion.Client.Screens;
 using Bastion.Client.Screens.Matches;
 using Bastion.Client.Screens.Matches.Scene;
 using Bastion.Client.Theme;
+using Bastion.Domain.Matches;
 using Gum;
 using Gum.Forms;
+using Gum.Forms.Controls;
 using Gum.Forms.Input;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 
 namespace Bastion.Client;
@@ -74,6 +77,7 @@ public sealed class BastionGame : Game
             _screenNavigator?.ReceiveEscapeKey();
         }
 
+        ForwardBoardClick();
         base.Update(gameTime);
     }
 
@@ -91,6 +95,7 @@ public sealed class BastionGame : Game
         {
             Window.ClientSizeChanged -= HandleClientSizeChanged;
             _screenNavigator?.Dispose();
+            _boardScene?.Dispose();
             _serverConnection.Dispose();
         }
 
@@ -128,6 +133,36 @@ public sealed class BastionGame : Game
         GumService.Default.CanvasWidth = windowWidth / uiScale;
         GumService.Default.CanvasHeight = windowHeight / uiScale;
         GumService.Default.Root.UpdateLayout();
+    }
+
+    private void ForwardBoardClick()
+    {
+        MatchViewModel? shownMatch = _screenNavigator?.ShownMatch;
+        ICursor cursor = GumService.Default.Cursor;
+        if (shownMatch is null || _boardScene is null || !cursor.PrimaryClick)
+        {
+            return;
+        }
+
+        if (IsOverGumControl(cursor))
+        {
+            return;
+        }
+
+        var cursorPosition = new Point(cursor.X, cursor.Y);
+        if (!_boardScene.TryFindSquareUnderCursor(shownMatch, cursorPosition, out BoardCoordinates square))
+        {
+            shownMatch.Play.ClearSelection();
+            return;
+        }
+
+        _ = shownMatch.Play.SelectSquare(square);
+    }
+
+    private static bool IsOverGumControl(ICursor cursor)
+    {
+        object? controlOver = cursor.VisualOver?.FormsControlAsObject;
+        return controlOver is FrameworkElement && controlOver is not ScreenView;
     }
 
     private void DrawShownMatchBoard()

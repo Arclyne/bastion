@@ -31,6 +31,21 @@ public static class BoardSceneLayout
         return new Vector3(columnOffset, SurfaceHeight, rowOffset);
     }
 
+    public static bool TryGetCoordinates(byte boardSize, Vector3 surfacePoint, out BoardCoordinates coordinates)
+    {
+        float centerIndex = (boardSize - 1) / BoardHalves;
+        float columnPosition = surfacePoint.X + centerIndex;
+        float rowPosition = centerIndex - surfacePoint.Z;
+        float roundedColumn = MathF.Round(columnPosition);
+        float roundedRow = MathF.Round(rowPosition);
+        int columnIndex = (int)roundedColumn;
+        int rowIndex = (int)roundedRow;
+        coordinates = new BoardCoordinates(columnIndex, rowIndex);
+        bool isColumnInside = columnIndex >= FirstIndex && columnIndex < boardSize;
+        bool isRowInside = rowIndex >= FirstIndex && rowIndex < boardSize;
+        return isColumnInside && isRowInside;
+    }
+
     public static Vector3 GetCameraPosition(byte ownTurnOrder)
     {
         switch (ownTurnOrder)

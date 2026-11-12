@@ -516,4 +516,16 @@
   <data name="MatchPlayerLeft" xml:space="preserve">
     <value>Left the match</value>
   </data>
+  <data name="MatchMoveNotAllowed" xml:space="preserve">
+    <value>You can't move there.</value>
+  </data>
+  <data name="MatchMoveFailed" xml:space="preserve">
+    <value>The move could not be sent. Try again.</value>
+  </data>
+  <data name="MatchYouWon" xml:space="preserve">
+    <value>You won!</value>
+  </data>
+  <data name="MatchPlayerWonFormat" xml:space="preserve">
+    <value>{0} won</value>
+  </data>
 </root>

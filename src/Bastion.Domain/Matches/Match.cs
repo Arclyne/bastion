@@ -11,10 +11,10 @@ public class Match
     public const byte ThirdTurnOrder = 3;
     public const byte FourthTurnOrder = 4;
     public const int TwoPlayerCount = 2;
+    public const short FirstMoveNumber = 1;
 
     private const int LastStandingPlayerCount = 1;
     private const byte FirstPlacement = 1;
-    private const int FirstMoveNumber = 1;
     private const double NoTimeSpent = 0;
 
     private readonly List<Participation> _participations = new List<Participation>();

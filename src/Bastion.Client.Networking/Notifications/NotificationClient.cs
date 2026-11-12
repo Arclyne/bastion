@@ -52,6 +52,12 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         remove => _notificationCallback.MatchAbandoned -= value;
     }
 
+    public event EventHandler<PawnMovedEventArgs>? PawnMoved
+    {
+        add => _notificationCallback.PawnMoved += value;
+        remove => _notificationCallback.PawnMoved -= value;
+    }
+
     public event EventHandler<MatchFoundEventArgs>? MatchFound
     {
         add => _notificationCallback.MatchFound += value;
