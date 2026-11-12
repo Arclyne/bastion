@@ -6,6 +6,8 @@ public static class ServiceEndpoints
 {
     public const string DefaultHost = "localhost";
     public const int DefaultPort = 8000;
+    public const int FirstRegisteredPort = 1024;
+    public const int LastRegisteredPort = 49151;
     public const string AccountsPath = "accounts";
     public const string SessionsPath = "sessions";
     public const string ChatPath = "chat";
@@ -19,6 +21,22 @@ public static class ServiceEndpoints
 
     public static Uri CreateAddress(string host, int port, string path)
     {
-        return new UriBuilder(Scheme, host, port, path).Uri;
+        if (host is null)
+        {
+            throw new ArgumentNullException(nameof(host));
+        }
+
+        if (path is null)
+        {
+            throw new ArgumentNullException(nameof(path));
+        }
+
+        var addressBuilder = new UriBuilder(Scheme, host, port, path);
+        return addressBuilder.Uri;
+    }
+
+    public static bool IsRegisteredPort(int port)
+    {
+        return port >= FirstRegisteredPort && port <= LastRegisteredPort;
     }
 }

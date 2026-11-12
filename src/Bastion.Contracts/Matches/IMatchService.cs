@@ -4,14 +4,15 @@ using Bastion.Contracts.Sessions;
 namespace Bastion.Contracts.Matches;
 
 /// <summary>
-/// Handles the requests of a signed-in player inside a match.
+/// Handles the requests of a logged-in player inside a match.
 /// The other players learn the outcome through the notification channel opened with <see cref="ISessionService"/>.
 /// </summary>
 [ServiceContract]
 public interface IMatchService
 {
     /// <summary>
-    /// Ends the match because the player of the session leaves it: that player loses and the rival wins.
+    /// Records that the player of the session leaves the match, and that player loses. With two players the rival wins
+    /// and the match ends; with four, the match goes on while two players are still in it.
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
     /// <param name="matchId">The match the player leaves.</param>
@@ -21,7 +22,7 @@ public interface IMatchService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="MatchNotJoinedFault"/>: the player is not playing that match.
     /// </exception>
-    /// <exception cref="FaultException">The server could not reach the database.</exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     [FaultContract(typeof(MatchNotJoinedFault))]

@@ -63,10 +63,15 @@ public static class ChatTranslator
         return new LobbyChatLog
         {
             Messages = messages,
-            ConnectedPlayers = history.ConnectedPlayers,
+            ConnectedPlayerCount = history.ConnectedPlayerCount,
             IsMuted = history.Mute.IsMuted,
             MutedUntil = history.Mute.EndsAt,
         };
+    }
+
+    public static string RequireText(string? text)
+    {
+        return text ?? throw ToFault(new ChatMessageRejectedException(ChatRejection.InvalidMessage));
     }
 
     public static FaultException<ChatMessageRejectedFault> ToFault(ChatMessageRejectedException rejection)

@@ -1,16 +1,22 @@
 using System;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
-using Bastion.Contracts;
 using Bastion.Contracts.Accounts;
 
 namespace Bastion.Client.Networking.Accounts;
 
-public sealed class AccountClient : IAccountClient, IDisposable
+public sealed class AccountClient : IAccountClient
 {
-    private readonly ServiceChannel<IAccountService> _channel = new ServiceChannel<IAccountService>(ServiceEndpoints.AccountsPath);
+    private readonly IServiceChannel<IAccountService> _channel;
 
-    public SignedInSession LogIn(LoginCredentials credentials)
+    public AccountClient(IServiceChannel<IAccountService> channel)
+    {
+        ArgumentNullException.ThrowIfNull(channel);
+
+        _channel = channel;
+    }
+
+    public LoggedInSession LogIn(LoginCredentials credentials)
     {
         ArgumentNullException.ThrowIfNull(credentials);
 
@@ -24,48 +30,40 @@ public sealed class AccountClient : IAccountClient, IDisposable
             DeviceFingerprint = DeviceIdentity.GetFingerprint(),
             ClientVersion = DeviceIdentity.GetClientVersion(),
         };
+        PlayerSession session = Call(service => service.LogIn(playerCredentials, device));
+        return ToLoggedInSession(session);
+    }
+
+    private TResult Call<TResult>(Func<IAccountService, TResult> operation)
+    {
         try
         {
-            PlayerSession session = _channel.Call(service => service.LogIn(playerCredentials, device));
-            return ToSignedInSession(session);
-        }
-        catch (EndpointNotFoundException ex)
-        {
-            throw new ServerUnreachableException(ex);
-        }
-        catch (FaultException<InvalidCredentialsFault> ex)
-        {
-            throw new InvalidCredentialsException(ex);
-        }
-        catch (FaultException<AccountRestrictedFault> ex)
-        {
-            throw new AccountRestrictedException(ToRestriction(ex.Detail.Reason), ex.Detail.LockMinutes, ex);
-        }
-        catch (FaultException ex)
-        {
-            throw new ServerErrorException(ex);
+            return _channel.Call(operation);
         }
         catch (CommunicationException ex)
         {
-            throw new ConnectionLostException(ex);
+            throw ToClientException(ex);
         }
         catch (TimeoutException ex)
         {
-            throw new ConnectionLostException(ex);
+            throw ToClientException(ex);
         }
     }
 
-    public void Dispose()
+    private static Exception ToClientException(Exception ex)
     {
-        _channel.Dispose();
-    }
+        if (ex is FaultException<InvalidCredentialsFault>)
+        {
+            return new InvalidCredentialsException(ex);
+        }
 
-    private static SignedInSession ToSignedInSession(PlayerSession session)
-    {
-        return new SignedInSession(
-            session.Token ?? string.Empty,
-            session.Nickname ?? string.Empty,
-            session.PreferredLanguage ?? string.Empty);
+        if (ex is FaultException<AccountRestrictedFault> restricted)
+        {
+            AccountRestriction restriction = ToRestriction(restricted.Detail.Reason);
+            return new AccountRestrictedException(restriction, restricted.Detail.LockMinutes, ex);
+        }
+
+        return ServiceFailureTranslator.ToClientException(ex);
     }
 
     private static AccountRestriction ToRestriction(RestrictionReason reason)
@@ -83,5 +81,13 @@ public sealed class AccountClient : IAccountClient, IDisposable
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported restriction reason.");
         }
+    }
+
+    private static LoggedInSession ToLoggedInSession(PlayerSession session)
+    {
+        string token = session.Token ?? string.Empty;
+        string nickname = session.Nickname ?? string.Empty;
+        string preferredLanguage = session.PreferredLanguage ?? string.Empty;
+        return new LoggedInSession(token, nickname, preferredLanguage);
     }
 }

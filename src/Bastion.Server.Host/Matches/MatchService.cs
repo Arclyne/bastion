@@ -33,14 +33,9 @@ public sealed class MatchService : IMatchService
     /// <inheritdoc/>
     public void AbandonMatch(string? sessionToken, int matchId)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         Action abandonMatch = () => AbandonMatchInRequestScope(token, matchId);
         TranslateMatchFailures(nameof(AbandonMatch), matchId, abandonMatch);
-    }
-
-    private static string RequireSessionToken(string? sessionToken)
-    {
-        return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());
     }
 
     private void AbandonMatchInRequestScope(string token, int matchId)

@@ -64,12 +64,12 @@ public static class FriendshipTranslator
     {
         ArgumentNullException.ThrowIfNull(board);
 
-        FriendRequestEntry[] receivedRequests = ContractArray.ConvertAll(board.Received, ToRequestEntry);
-        FriendRequestEntry[] sentRequests = ContractArray.ConvertAll(board.Sent, ToRequestEntry);
+        FriendRequestEntry[] receivedRequests = ContractArray.ConvertAll(board.ReceivedRequests, ToRequestEntry);
+        FriendRequestEntry[] sentRequests = ContractArray.ConvertAll(board.SentRequests, ToRequestEntry);
         return new FriendRequestList
         {
-            Received = receivedRequests,
-            Sent = sentRequests,
+            ReceivedRequests = receivedRequests,
+            SentRequests = sentRequests,
             ListedAt = board.ListedAt,
         };
     }

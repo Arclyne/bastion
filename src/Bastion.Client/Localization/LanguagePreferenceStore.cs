@@ -31,7 +31,8 @@ public sealed class LanguagePreferenceStore : ILanguagePreferenceStore
 
         try
         {
-            return File.ReadAllText(_filePath).Trim();
+            string savedText = File.ReadAllText(_filePath);
+            return savedText.Trim();
         }
         catch (UnauthorizedAccessException ex)
         {

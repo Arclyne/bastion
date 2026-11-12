@@ -35,7 +35,7 @@ public sealed class FriendshipService : IFriendshipService
     /// <inheritdoc/>
     public FriendList ListFriends(string? sessionToken)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         Func<FriendList> listFriends = () => ListFriendsInRequestScope(token);
         return TranslateFriendshipFailures(nameof(ListFriends), listFriends);
     }
@@ -43,7 +43,7 @@ public sealed class FriendshipService : IFriendshipService
     /// <inheritdoc/>
     public PlayerSearchEntry[] SearchPlayers(string? sessionToken, string? text)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         string searchText = text ?? string.Empty;
         Func<PlayerSearchEntry[]> searchPlayers = () => SearchPlayersInRequestScope(token, searchText);
         return TranslateFriendshipFailures(nameof(SearchPlayers), searchPlayers);
@@ -52,7 +52,7 @@ public sealed class FriendshipService : IFriendshipService
     /// <inheritdoc/>
     public FriendRequestResult SendFriendRequest(string? sessionToken, string? friendCode)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         string recipientCode = RequireFriendCode(friendCode, FriendshipRejection.PlayerNotFound);
         Func<FriendRequestResult> sendRequest = () => SendFriendRequestInRequestScope(token, recipientCode);
         return TranslateFriendshipFailures(nameof(SendFriendRequest), sendRequest);
@@ -61,7 +61,7 @@ public sealed class FriendshipService : IFriendshipService
     /// <inheritdoc/>
     public FriendRequestList ListFriendRequests(string? sessionToken)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         Func<FriendRequestList> listRequests = () => ListFriendRequestsInRequestScope(token);
         return TranslateFriendshipFailures(nameof(ListFriendRequests), listRequests);
     }
@@ -69,7 +69,7 @@ public sealed class FriendshipService : IFriendshipService
     /// <inheritdoc/>
     public void AcceptFriendRequest(string? sessionToken, string? requesterFriendCode)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         string requesterCode = RequireFriendCode(requesterFriendCode, FriendshipRejection.RequestNotFound);
         Action acceptRequest = () => AcceptFriendRequestInRequestScope(token, requesterCode);
         TranslateFriendshipFailures(nameof(AcceptFriendRequest), acceptRequest);
@@ -78,7 +78,7 @@ public sealed class FriendshipService : IFriendshipService
     /// <inheritdoc/>
     public void RejectFriendRequest(string? sessionToken, string? requesterFriendCode)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         string requesterCode = RequireFriendCode(requesterFriendCode, FriendshipRejection.RequestNotFound);
         Action rejectRequest = () => RejectFriendRequestInRequestScope(token, requesterCode);
         TranslateFriendshipFailures(nameof(RejectFriendRequest), rejectRequest);
@@ -87,7 +87,7 @@ public sealed class FriendshipService : IFriendshipService
     /// <inheritdoc/>
     public void CancelFriendRequest(string? sessionToken, string? recipientFriendCode)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         string recipientCode = RequireFriendCode(recipientFriendCode, FriendshipRejection.RequestNotFound);
         Action cancelRequest = () => CancelFriendRequestInRequestScope(token, recipientCode);
         TranslateFriendshipFailures(nameof(CancelFriendRequest), cancelRequest);
@@ -96,15 +96,10 @@ public sealed class FriendshipService : IFriendshipService
     /// <inheritdoc/>
     public void RemoveFriend(string? sessionToken, string? friendCode)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         string removedFriendCode = RequireFriendCode(friendCode, FriendshipRejection.NotFriends);
         Action removeFriend = () => RemoveFriendInRequestScope(token, removedFriendCode);
         TranslateFriendshipFailures(nameof(RemoveFriend), removeFriend);
-    }
-
-    private static string RequireSessionToken(string? sessionToken)
-    {
-        return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());
     }
 
     private static string RequireFriendCode(string? friendCode, FriendshipRejection rejectionWhenMissing)

@@ -34,7 +34,7 @@ public sealed class RoomService : IRoomService
     /// <inheritdoc/>
     public RoomState CreateRoom(string? sessionToken, RoomOptions? options)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         RequestedRoomSettings requestedSettings = RequireSettings(options, nameof(CreateRoom));
         Func<RoomState> createRoom = () => CreateRoomInRequestScope(token, requestedSettings);
         return TranslateRoomFailures(nameof(CreateRoom), createRoom);
@@ -43,7 +43,7 @@ public sealed class RoomService : IRoomService
     /// <inheritdoc/>
     public RoomState JoinRoom(string? sessionToken, string? code)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         string roomCode = code ?? string.Empty;
         Func<RoomState> joinRoom = () => JoinRoomInRequestScope(token, roomCode);
         return TranslateRoomFailures(nameof(JoinRoom), joinRoom);
@@ -52,7 +52,7 @@ public sealed class RoomService : IRoomService
     /// <inheritdoc/>
     public RoomState SetReady(string? sessionToken, bool isReady)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         Func<RoomState> setReady = () => SetReadyInRequestScope(token, isReady);
         return TranslateRoomFailures(nameof(SetReady), setReady);
     }
@@ -60,7 +60,7 @@ public sealed class RoomService : IRoomService
     /// <inheritdoc/>
     public RoomState ChangeOptions(string? sessionToken, RoomOptions? options)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         RequestedRoomSettings requestedSettings = RequireSettings(options, nameof(ChangeOptions));
         Func<RoomState> changeOptions = () => ChangeOptionsInRequestScope(token, requestedSettings);
         return TranslateRoomFailures(nameof(ChangeOptions), changeOptions);
@@ -69,7 +69,7 @@ public sealed class RoomService : IRoomService
     /// <inheritdoc/>
     public void StartMatch(string? sessionToken)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         Action startMatch = () => StartMatchInRequestScope(token);
         TranslateRoomFailures(nameof(StartMatch), startMatch);
     }
@@ -84,14 +84,9 @@ public sealed class RoomService : IRoomService
     /// <inheritdoc/>
     public RoomState? FindOwnRoom(string? sessionToken)
     {
-        string token = RequireSessionToken(sessionToken);
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
         Func<RoomState?> findOwnRoom = () => FindOwnRoomInRequestScope(token);
         return TranslateRoomFailures(nameof(FindOwnRoom), findOwnRoom);
-    }
-
-    private static string RequireSessionToken(string? sessionToken)
-    {
-        return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());
     }
 
     private static RequestedRoomSettings RequireSettings(RoomOptions? options, string operationName)

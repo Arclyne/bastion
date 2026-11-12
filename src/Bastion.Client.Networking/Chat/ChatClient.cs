@@ -2,21 +2,21 @@ using System;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Notifications;
-using Bastion.Contracts;
 using Bastion.Contracts.Chat;
 
 namespace Bastion.Client.Networking.Chat;
 
-public sealed class ChatClient : IChatClient, IDisposable
+public sealed class ChatClient : IChatClient
 {
-    private readonly ServiceChannel<IChatService> _channel =
-        new ServiceChannel<IChatService>(ServiceEndpoints.ChatPath);
+    private readonly IServiceChannel<IChatService> _channel;
     private readonly INotificationClient _notificationClient;
 
-    public ChatClient(INotificationClient notificationClient)
+    public ChatClient(IServiceChannel<IChatService> channel, INotificationClient notificationClient)
     {
+        ArgumentNullException.ThrowIfNull(channel);
         ArgumentNullException.ThrowIfNull(notificationClient);
 
+        _channel = channel;
         _notificationClient = notificationClient;
     }
 
@@ -52,29 +52,6 @@ public sealed class ChatClient : IChatClient, IDisposable
         return ChatContractTranslator.ToTranscript(log);
     }
 
-    public void Dispose()
-    {
-        _channel.Dispose();
-    }
-
-    private static Exception ToClientException(Exception ex)
-    {
-        if (ex is FaultException<ChatMessageRejectedFault> rejected)
-        {
-            return new ChatMessageRejectedException(
-                ChatContractTranslator.ToRejection(rejected.Detail.Reason),
-                rejected.Detail.MutedUntil,
-                ex);
-        }
-
-        if (ex is FaultException<ChatChannelForbiddenFault>)
-        {
-            return new ChatChannelForbiddenException(ex);
-        }
-
-        return ServiceFailureTranslator.ToClientException(ex);
-    }
-
     private TResult Call<TResult>(Func<IChatService, TResult> operation)
     {
         try
@@ -89,5 +66,20 @@ public sealed class ChatClient : IChatClient, IDisposable
         {
             throw ToClientException(ex);
         }
+    }
+
+    private static Exception ToClientException(Exception ex)
+    {
+        if (ex is FaultException<ChatMessageRejectedFault> rejected)
+        {
+            return ChatContractTranslator.ToMessageRejectedException(rejected);
+        }
+
+        if (ex is FaultException<ChatChannelForbiddenFault>)
+        {
+            return new ChatChannelForbiddenException(ex);
+        }
+
+        return ServiceFailureTranslator.ToClientException(ex);
     }
 }

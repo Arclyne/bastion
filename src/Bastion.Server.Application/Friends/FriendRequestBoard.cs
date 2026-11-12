@@ -6,21 +6,21 @@ namespace Bastion.Server.Application.Friends;
 public sealed record FriendRequestBoard
 {
     public FriendRequestBoard(
-        IReadOnlyList<FriendRequestSummary> received,
-        IReadOnlyList<FriendRequestSummary> sent,
+        IReadOnlyList<FriendRequestSummary> receivedRequests,
+        IReadOnlyList<FriendRequestSummary> sentRequests,
         DateTime listedAt)
     {
-        ArgumentNullException.ThrowIfNull(received);
-        ArgumentNullException.ThrowIfNull(sent);
+        ArgumentNullException.ThrowIfNull(receivedRequests);
+        ArgumentNullException.ThrowIfNull(sentRequests);
 
-        Received = received;
-        Sent = sent;
+        ReceivedRequests = receivedRequests;
+        SentRequests = sentRequests;
         ListedAt = listedAt;
     }
 
-    public IReadOnlyList<FriendRequestSummary> Received { get; }
+    public IReadOnlyList<FriendRequestSummary> ReceivedRequests { get; }
 
-    public IReadOnlyList<FriendRequestSummary> Sent { get; }
+    public IReadOnlyList<FriendRequestSummary> SentRequests { get; }
 
     public DateTime ListedAt { get; }
 }

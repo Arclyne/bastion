@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Chat;
 using Bastion.Client.Networking.Friends;
 using Bastion.Client.Networking.PrivateChat;
@@ -20,12 +21,12 @@ public sealed class PrivateConversationViewModel : ViewModel
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(PrivateConversationViewModel));
 
-    private readonly SignedInSession _session;
+    private readonly LoggedInSession _session;
     private readonly IConversationClient _conversations;
     private PlayerTag _partner = new PlayerTag(string.Empty, string.Empty);
     private DateTime? _lastDay;
 
-    public PrivateConversationViewModel(SignedInSession session, IConversationClient conversations)
+    public PrivateConversationViewModel(LoggedInSession session, IConversationClient conversations)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(conversations);

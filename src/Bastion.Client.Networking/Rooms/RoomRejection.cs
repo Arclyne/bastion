@@ -6,7 +6,7 @@ public enum RoomRejection
     UnfinishedMatch,
     SearchingMatch,
     InRoom,
-    InvalidSettings,
+    InvalidOptions,
     RoomNotFound,
     RoomFull,
     Kicked,

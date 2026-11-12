@@ -8,7 +8,7 @@ using Gum.GueDeriving;
 
 namespace Bastion.Client.Screens.Matches;
 
-public sealed class VersusView : Panel
+public sealed class VersusView : ScreenView
 {
     private const float CardPaddingX = 40;
     private const float CardPaddingTop = 32;
@@ -28,7 +28,6 @@ public sealed class VersusView : Panel
         ArgumentNullException.ThrowIfNull(viewModel);
 
         BindingContext = viewModel;
-        Dock(Gum.Wireframe.Dock.Fill);
         float contentWidth = ((OwnPlayerCount + viewModel.Rivals.Count) * PlayerWidth) + VersusWidth;
 
         var content = new StackPanel

@@ -2,15 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
-using Bastion.Contracts;
 using Bastion.Contracts.Friends;
 
 namespace Bastion.Client.Networking.Friends;
 
-public sealed class FriendClient : IFriendClient, IDisposable
+public sealed class FriendClient : IFriendClient
 {
-    private readonly ServiceChannel<IFriendshipService> _channel =
-        new ServiceChannel<IFriendshipService>(ServiceEndpoints.FriendsPath);
+    private readonly IServiceChannel<IFriendshipService> _channel;
+
+    public FriendClient(IServiceChannel<IFriendshipService> channel)
+    {
+        ArgumentNullException.ThrowIfNull(channel);
+
+        _channel = channel;
+    }
 
     public FriendListing ListFriends(string sessionToken)
     {
@@ -78,30 +83,6 @@ public sealed class FriendClient : IFriendClient, IDisposable
         Call(service => service.RemoveFriend(sessionToken, friendCode));
     }
 
-    public void Dispose()
-    {
-        _channel.Dispose();
-    }
-
-    private static Exception ToClientException(Exception ex)
-    {
-        if (ex is FaultException<FriendshipRejectedFault> rejected)
-        {
-            return new FriendshipRejectedException(FriendContractTranslator.ToRejection(rejected.Detail.Reason), ex);
-        }
-
-        return ServiceFailureTranslator.ToClientException(ex);
-    }
-
-    private void Call(Action<IFriendshipService> operation)
-    {
-        Call(service =>
-        {
-            operation(service);
-            return true;
-        });
-    }
-
     private TResult Call<TResult>(Func<IFriendshipService, TResult> operation)
     {
         try
@@ -116,5 +97,28 @@ public sealed class FriendClient : IFriendClient, IDisposable
         {
             throw ToClientException(ex);
         }
+    }
+
+    private static Exception ToClientException(Exception ex)
+    {
+        if (ex is FaultException<FriendshipRejectedFault> rejected)
+        {
+            FriendshipRejection rejection = FriendContractTranslator.ToRejection(rejected.Detail.Reason);
+            return new FriendshipRejectedException(rejection, ex);
+        }
+
+        return ServiceFailureTranslator.ToClientException(ex);
+    }
+
+    private void Call(Action<IFriendshipService> operation)
+    {
+        Func<IFriendshipService, bool> operationAsFunction = service => CompleteOperation(operation, service);
+        Call(operationAsFunction);
+    }
+
+    private static bool CompleteOperation(Action<IFriendshipService> operation, IFriendshipService service)
+    {
+        operation(service);
+        return true;
     }
 }

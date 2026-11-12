@@ -3,16 +3,21 @@ using System.Collections.Generic;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Chat;
-using Bastion.Contracts;
 using Bastion.Contracts.Chat;
 using Bastion.Contracts.PrivateChat;
 
 namespace Bastion.Client.Networking.PrivateChat;
 
-public sealed class ConversationClient : IConversationClient, IDisposable
+public sealed class ConversationClient : IConversationClient
 {
-    private readonly ServiceChannel<IConversationService> _channel =
-        new ServiceChannel<IConversationService>(ServiceEndpoints.ConversationsPath);
+    private readonly IServiceChannel<IConversationService> _channel;
+
+    public ConversationClient(IServiceChannel<IConversationService> channel)
+    {
+        ArgumentNullException.ThrowIfNull(channel);
+
+        _channel = channel;
+    }
 
     public IReadOnlyList<ConversationPreview> ListConversations(string sessionToken)
     {
@@ -46,29 +51,7 @@ public sealed class ConversationClient : IConversationClient, IDisposable
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(friendCode);
 
-        Call(service =>
-        {
-            service.MarkConversationRead(sessionToken, friendCode);
-            return true;
-        });
-    }
-
-    public void Dispose()
-    {
-        _channel.Dispose();
-    }
-
-    private static Exception ToClientException(Exception ex)
-    {
-        if (ex is FaultException<ChatMessageRejectedFault> rejected)
-        {
-            return new ChatMessageRejectedException(
-                ChatContractTranslator.ToRejection(rejected.Detail.Reason),
-                rejected.Detail.MutedUntil,
-                ex);
-        }
-
-        return ServiceFailureTranslator.ToClientException(ex);
+        Call(service => service.MarkConversationRead(sessionToken, friendCode));
     }
 
     private TResult Call<TResult>(Func<IConversationService, TResult> operation)
@@ -85,5 +68,27 @@ public sealed class ConversationClient : IConversationClient, IDisposable
         {
             throw ToClientException(ex);
         }
+    }
+
+    private static Exception ToClientException(Exception ex)
+    {
+        if (ex is FaultException<ChatMessageRejectedFault> rejected)
+        {
+            return ChatContractTranslator.ToMessageRejectedException(rejected);
+        }
+
+        return ServiceFailureTranslator.ToClientException(ex);
+    }
+
+    private void Call(Action<IConversationService> operation)
+    {
+        Func<IConversationService, bool> operationAsFunction = service => CompleteOperation(operation, service);
+        Call(operationAsFunction);
+    }
+
+    private static bool CompleteOperation(Action<IConversationService> operation, IConversationService service)
+    {
+        operation(service);
+        return true;
     }
 }

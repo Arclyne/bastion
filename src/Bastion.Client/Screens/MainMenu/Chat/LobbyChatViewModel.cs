@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Chat;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.Sessions;
@@ -21,13 +22,13 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(LobbyChatViewModel));
 
-    private readonly SignedInSession _session;
+    private readonly LoggedInSession _session;
     private readonly IChatClient _chat;
     private readonly INotificationClient _notifications;
     private readonly SynchronizationContext? _uiContext;
     private int _unreadCount;
 
-    public LobbyChatViewModel(SignedInSession session, IChatClient chat, INotificationClient notifications)
+    public LobbyChatViewModel(LoggedInSession session, IChatClient chat, INotificationClient notifications)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(chat);
@@ -265,7 +266,7 @@ public sealed class LobbyChatViewModel : ViewModel, IDisposable
         }
 
         IsEmpty = Messages.Count == 0;
-        ChannelDetail = FormatText(Strings.ChatConnectedCountFormat, transcript.ConnectedPlayers);
+        ChannelDetail = FormatText(Strings.ChatConnectedCountFormat, transcript.ConnectedPlayerCount);
         ShowMute(transcript.Mute);
     }
 

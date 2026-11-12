@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
-using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Matches;
 using Bastion.Client.Screens.Matches;
 using Bastion.Client.Tests.Fakes;

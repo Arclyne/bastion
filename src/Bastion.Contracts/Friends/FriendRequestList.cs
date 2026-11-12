@@ -7,10 +7,10 @@ namespace Bastion.Contracts.Friends;
 public sealed class FriendRequestList
 {
     [DataMember]
-    public FriendRequestEntry[]? Received { get; set; }
+    public FriendRequestEntry[]? ReceivedRequests { get; set; }
 
     [DataMember]
-    public FriendRequestEntry[]? Sent { get; set; }
+    public FriendRequestEntry[]? SentRequests { get; set; }
 
     [DataMember]
     public DateTime ListedAt { get; set; }

@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Matchmaking;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.Sessions;
@@ -21,7 +22,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchSearchViewModel));
     private static readonly TimeSpan _clockTick = TimeSpan.FromSeconds(ClockTickSeconds);
 
-    private readonly SignedInSession _session;
+    private readonly LoggedInSession _session;
     private readonly IMatchmakingClient _matchmakingClient;
     private readonly TimeProvider _timeProvider;
     private readonly SynchronizationContext? _uiContext;
@@ -30,7 +31,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
     private DateTimeOffset _presenceDeadline;
 
     public MatchSearchViewModel(
-        SignedInSession session,
+        LoggedInSession session,
         IMatchmakingClient matchmakingClient,
         TimeProvider timeProvider)
     {

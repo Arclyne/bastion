@@ -2,21 +2,21 @@ using System;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Notifications;
-using Bastion.Contracts;
 using Bastion.Contracts.Matchmaking;
 
 namespace Bastion.Client.Networking.Matchmaking;
 
-public sealed class MatchmakingClient : IMatchmakingClient, IDisposable
+public sealed class MatchmakingClient : IMatchmakingClient
 {
-    private readonly ServiceChannel<IMatchmakingService> _channel =
-        new ServiceChannel<IMatchmakingService>(ServiceEndpoints.MatchmakingPath);
+    private readonly IServiceChannel<IMatchmakingService> _channel;
     private readonly INotificationClient _notificationClient;
 
-    public MatchmakingClient(INotificationClient notificationClient)
+    public MatchmakingClient(IServiceChannel<IMatchmakingService> channel, INotificationClient notificationClient)
     {
+        ArgumentNullException.ThrowIfNull(channel);
         ArgumentNullException.ThrowIfNull(notificationClient);
 
+        _channel = channel;
         _notificationClient = notificationClient;
     }
 
@@ -65,16 +65,28 @@ public sealed class MatchmakingClient : IMatchmakingClient, IDisposable
         Call(service => service.ConfirmPresence(sessionToken));
     }
 
-    public void Dispose()
+    private void Call(Action<IMatchmakingService> operation)
     {
-        _channel.Dispose();
+        try
+        {
+            _channel.Call(operation);
+        }
+        catch (CommunicationException ex)
+        {
+            throw ToClientException(ex);
+        }
+        catch (TimeoutException ex)
+        {
+            throw ToClientException(ex);
+        }
     }
 
     private static Exception ToClientException(Exception ex)
     {
         if (ex is FaultException<SearchRejectedFault> rejected)
         {
-            return new SearchRejectedException(ToRejection(rejected.Detail.Reason), ex);
+            SearchRejection rejection = ToRejection(rejected.Detail.Reason);
+            return new SearchRejectedException(rejection, ex);
         }
 
         return ServiceFailureTranslator.ToClientException(ex);
@@ -92,22 +104,6 @@ public sealed class MatchmakingClient : IMatchmakingClient, IDisposable
                 return SearchRejection.InRoom;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported search rejection reason.");
-        }
-    }
-
-    private void Call(Action<IMatchmakingService> operation)
-    {
-        try
-        {
-            _channel.Call(operation);
-        }
-        catch (CommunicationException ex)
-        {
-            throw ToClientException(ex);
-        }
-        catch (TimeoutException ex)
-        {
-            throw ToClientException(ex);
         }
     }
 }

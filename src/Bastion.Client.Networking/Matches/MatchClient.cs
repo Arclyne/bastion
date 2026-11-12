@@ -2,21 +2,21 @@ using System;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Notifications;
-using Bastion.Contracts;
 using Bastion.Contracts.Matches;
 
 namespace Bastion.Client.Networking.Matches;
 
-public sealed class MatchClient : IMatchClient, IDisposable
+public sealed class MatchClient : IMatchClient
 {
-    private readonly ServiceChannel<IMatchService> _channel =
-        new ServiceChannel<IMatchService>(ServiceEndpoints.MatchesPath);
+    private readonly IServiceChannel<IMatchService> _channel;
     private readonly INotificationClient _notificationClient;
 
-    public MatchClient(INotificationClient notificationClient)
+    public MatchClient(IServiceChannel<IMatchService> channel, INotificationClient notificationClient)
     {
+        ArgumentNullException.ThrowIfNull(channel);
         ArgumentNullException.ThrowIfNull(notificationClient);
 
+        _channel = channel;
         _notificationClient = notificationClient;
     }
 
@@ -42,11 +42,6 @@ public sealed class MatchClient : IMatchClient, IDisposable
         {
             throw ToClientException(ex);
         }
-    }
-
-    public void Dispose()
-    {
-        _channel.Dispose();
     }
 
     private static Exception ToClientException(Exception ex)

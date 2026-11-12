@@ -2,21 +2,21 @@ using System;
 using System.ServiceModel;
 using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Notifications;
-using Bastion.Contracts;
 using Bastion.Contracts.Rooms;
 
 namespace Bastion.Client.Networking.Rooms;
 
-public sealed class RoomClient : IRoomClient, IDisposable
+public sealed class RoomClient : IRoomClient
 {
-    private readonly ServiceChannel<IRoomService> _channel =
-        new ServiceChannel<IRoomService>(ServiceEndpoints.RoomsPath);
+    private readonly IServiceChannel<IRoomService> _channel;
     private readonly INotificationClient _notificationClient;
 
-    public RoomClient(INotificationClient notificationClient)
+    public RoomClient(IServiceChannel<IRoomService> channel, INotificationClient notificationClient)
     {
+        ArgumentNullException.ThrowIfNull(channel);
         ArgumentNullException.ThrowIfNull(notificationClient);
 
+        _channel = channel;
         _notificationClient = notificationClient;
     }
 
@@ -43,7 +43,7 @@ public sealed class RoomClient : IRoomClient, IDisposable
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(options);
 
-        RoomOptions contractOptions = RoomContractTranslator.ToContract(options);
+        var contractOptions = RoomContractTranslator.ToRoomOptions(options);
         return CallForRoom(service => service.CreateRoom(sessionToken, contractOptions));
     }
 
@@ -67,7 +67,7 @@ public sealed class RoomClient : IRoomClient, IDisposable
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(options);
 
-        RoomOptions contractOptions = RoomContractTranslator.ToContract(options);
+        var contractOptions = RoomContractTranslator.ToRoomOptions(options);
         return CallForRoom(service => service.ChangeOptions(sessionToken, contractOptions));
     }
 
@@ -90,30 +90,18 @@ public sealed class RoomClient : IRoomClient, IDisposable
         ArgumentNullException.ThrowIfNull(sessionToken);
 
         RoomState? state = Call(service => service.FindOwnRoom(sessionToken));
-        return state is null ? null : RoomContractTranslator.ToPrivateRoom(state);
-    }
-
-    public void Dispose()
-    {
-        _channel.Dispose();
-    }
-
-    private static Exception ToClientException(Exception ex)
-    {
-        if (ex is FaultException<RoomRejectedFault> rejected)
+        if (state is null)
         {
-            return new RoomRejectedException(
-                RoomContractTranslator.ToRejection(rejected.Detail.Reason),
-                TimeSpan.FromSeconds(rejected.Detail.RetryAfterSeconds),
-                ex);
+            return null;
         }
 
-        return ServiceFailureTranslator.ToClientException(ex);
+        return RoomContractTranslator.ToPrivateRoom(state);
     }
 
     private PrivateRoom CallForRoom(Func<IRoomService, RoomState> operation)
     {
-        return RoomContractTranslator.ToPrivateRoom(Call(operation));
+        RoomState state = Call(operation);
+        return RoomContractTranslator.ToPrivateRoom(state);
     }
 
     private TResult Call<TResult>(Func<IRoomService, TResult> operation)
@@ -132,19 +120,27 @@ public sealed class RoomClient : IRoomClient, IDisposable
         }
     }
 
+    private static Exception ToClientException(Exception ex)
+    {
+        if (ex is FaultException<RoomRejectedFault> rejected)
+        {
+            RoomRejection rejection = RoomContractTranslator.ToRejection(rejected.Detail.Reason);
+            var retryDelay = TimeSpan.FromSeconds(rejected.Detail.RetryAfterSeconds);
+            return new RoomRejectedException(rejection, retryDelay, ex);
+        }
+
+        return ServiceFailureTranslator.ToClientException(ex);
+    }
+
     private void Call(Action<IRoomService> operation)
     {
-        try
-        {
-            _channel.Call(operation);
-        }
-        catch (CommunicationException ex)
-        {
-            throw ToClientException(ex);
-        }
-        catch (TimeoutException ex)
-        {
-            throw ToClientException(ex);
-        }
+        Func<IRoomService, bool> operationAsFunction = service => CompleteOperation(operation, service);
+        Call(operationAsFunction);
+    }
+
+    private static bool CompleteOperation(Action<IRoomService> operation, IRoomService service)
+    {
+        operation(service);
+        return true;
     }
 }

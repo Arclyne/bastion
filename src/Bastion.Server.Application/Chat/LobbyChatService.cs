@@ -50,8 +50,8 @@ public sealed class LobbyChatService : ILobbyChatService
         IEnumerable<ChatHistoryEntry> entries = recentLines
             .Select(postedLine => new ChatHistoryEntry(postedLine, postedLine.Line.Sender.AccountId == player.AccountId));
         var entryList = new List<ChatHistoryEntry>(entries);
-        int connectedPlayers = _chatRoom.CountListeners();
+        int connectedPlayerCount = _chatRoom.CountListeners();
         ChatMute mute = _chatModerator.FindMute(player.AccountId, now);
-        return new LobbyChatHistory(entryList, connectedPlayers, mute);
+        return new LobbyChatHistory(entryList, connectedPlayerCount, mute);
     }
 }

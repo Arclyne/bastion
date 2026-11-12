@@ -27,7 +27,9 @@ public static class ChannelSettings
     {
         ArgumentNullException.ThrowIfNull(path);
 
-        return new EndpointAddress(ServerAddress.Create(path), new DnsEndpointIdentity(ServerCertificateName));
+        Uri address = ServerAddress.Create(path);
+        var identity = new DnsEndpointIdentity(ServerCertificateName);
+        return new EndpointAddress(address, identity);
     }
 
     public static void ApplyCertificateValidation(ChannelFactory factory)
@@ -37,7 +39,7 @@ public static class ChannelSettings
         factory.Credentials.ServiceCertificate.SslCertificateAuthentication = new X509ServiceCertificateAuthentication
         {
             CertificateValidationMode = X509CertificateValidationMode.Custom,
-            CustomCertificateValidator = new ThumbprintCertificateValidator(ServerAddress.GetCertificateThumbprint()),
+            CustomCertificateValidator = new ThumbprintX509CertificateValidator(ServerAddress.GetCertificateThumbprint()),
         };
     }
 }

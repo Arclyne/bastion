@@ -12,45 +12,43 @@ public static class FriendContractTranslator
     {
         ArgumentNullException.ThrowIfNull(list);
 
+        string ownFriendCode = list.OwnFriendCode ?? string.Empty;
         FriendListEntry[] entries = list.Friends ?? Array.Empty<FriendListEntry>();
-        return new FriendListing(
-            list.OwnFriendCode ?? string.Empty,
-            entries.Select(ToListedFriend).ToList(),
-            list.ListedAt);
+        IEnumerable<ListedFriend> friends = entries.Select(ToListedFriend);
+        var friendList = new List<ListedFriend>(friends);
+        return new FriendListing(ownFriendCode, friendList, list.ListedAt);
     }
 
     public static ListedFriend ToListedFriend(FriendPresenceNotification notification)
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        var friend = new PlayerTag(
-            notification.FriendNickname ?? string.Empty,
-            notification.FriendCode ?? string.Empty);
-        return new ListedFriend(friend, ToPresence(notification.Presence), notification.LastSeenAt);
+        PlayerTag friend = ToPlayerTag(notification.FriendNickname, notification.FriendCode);
+        FriendPresence presence = ToPresence(notification.Presence);
+        return new ListedFriend(friend, presence, notification.LastSeenAt);
     }
 
     public static IReadOnlyList<FoundPlayer> ToFoundPlayers(PlayerSearchEntry[]? entries)
     {
-        return (entries ?? Array.Empty<PlayerSearchEntry>()).Select(ToFoundPlayer).ToList();
+        PlayerSearchEntry[] searchEntries = entries ?? Array.Empty<PlayerSearchEntry>();
+        IEnumerable<FoundPlayer> foundPlayers = searchEntries.Select(ToFoundPlayer);
+        return new List<FoundPlayer>(foundPlayers);
     }
 
     public static FriendRequestListing ToFriendRequestListing(FriendRequestList list)
     {
         ArgumentNullException.ThrowIfNull(list);
 
-        return new FriendRequestListing(
-            ToPendingRequests(list.Received),
-            ToPendingRequests(list.Sent),
-            list.ListedAt);
+        List<PendingFriendRequest> receivedRequests = ToPendingRequests(list.ReceivedRequests);
+        List<PendingFriendRequest> sentRequests = ToPendingRequests(list.SentRequests);
+        return new FriendRequestListing(receivedRequests, sentRequests, list.ListedAt);
     }
 
     public static PendingFriendRequest ToPendingRequest(FriendRequestNotification notification)
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        var requester = new PlayerTag(
-            notification.RequesterNickname ?? string.Empty,
-            notification.RequesterFriendCode ?? string.Empty);
+        PlayerTag requester = ToPlayerTag(notification.RequesterNickname, notification.RequesterFriendCode);
         return new PendingFriendRequest(requester, notification.OccurredAt, notification.ExpiresAt);
     }
 
@@ -58,7 +56,14 @@ public static class FriendContractTranslator
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        return new PlayerTag(notification.FriendNickname ?? string.Empty, notification.FriendCode ?? string.Empty);
+        return ToPlayerTag(notification.FriendNickname, notification.FriendCode);
+    }
+
+    public static PlayerTag ToPlayerTag(string? nickname, string? friendCode)
+    {
+        string tagNickname = nickname ?? string.Empty;
+        string tagFriendCode = friendCode ?? string.Empty;
+        return new PlayerTag(tagNickname, tagFriendCode);
     }
 
     public static FriendRequestOutcome ToOutcome(FriendRequestResult result)
@@ -99,21 +104,31 @@ public static class FriendContractTranslator
         }
     }
 
-    private static List<PendingFriendRequest> ToPendingRequests(FriendRequestEntry[]? entries)
+    private static ListedFriend ToListedFriend(FriendListEntry entry)
     {
-        return (entries ?? Array.Empty<FriendRequestEntry>()).Select(ToPendingRequest).ToList();
+        PlayerTag friend = ToPlayerTag(entry.Nickname, entry.FriendCode);
+        FriendPresence presence = ToPresence(entry.Presence);
+        return new ListedFriend(friend, presence, entry.LastSeenAt);
     }
 
-    private static PendingFriendRequest ToPendingRequest(FriendRequestEntry entry)
+    private static FriendPresence ToPresence(PresenceState state)
     {
-        var player = new PlayerTag(entry.Nickname ?? string.Empty, entry.FriendCode ?? string.Empty);
-        return new PendingFriendRequest(player, entry.RequestedAt, entry.ExpiresAt);
+        switch (state)
+        {
+            case PresenceState.Connected:
+                return FriendPresence.Connected;
+            case PresenceState.Disconnected:
+                return FriendPresence.Disconnected;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(state), state, "Unsupported presence state.");
+        }
     }
 
     private static FoundPlayer ToFoundPlayer(PlayerSearchEntry entry)
     {
-        var player = new PlayerTag(entry.Nickname ?? string.Empty, entry.FriendCode ?? string.Empty);
-        return new FoundPlayer(player, ToRelationship(entry.Relationship));
+        PlayerTag player = ToPlayerTag(entry.Nickname, entry.FriendCode);
+        FriendRelationship relationship = ToRelationship(entry.Relationship);
+        return new FoundPlayer(player, relationship);
     }
 
     private static FriendRelationship ToRelationship(PlayerRelationship relationship)
@@ -135,22 +150,16 @@ public static class FriendContractTranslator
         }
     }
 
-    private static ListedFriend ToListedFriend(FriendListEntry entry)
+    private static List<PendingFriendRequest> ToPendingRequests(FriendRequestEntry[]? entries)
     {
-        var friend = new PlayerTag(entry.Nickname ?? string.Empty, entry.FriendCode ?? string.Empty);
-        return new ListedFriend(friend, ToPresence(entry.Presence), entry.LastSeenAt);
+        FriendRequestEntry[] requestEntries = entries ?? Array.Empty<FriendRequestEntry>();
+        IEnumerable<PendingFriendRequest> pendingRequests = requestEntries.Select(ToPendingRequest);
+        return new List<PendingFriendRequest>(pendingRequests);
     }
 
-    private static FriendPresence ToPresence(PresenceState state)
+    private static PendingFriendRequest ToPendingRequest(FriendRequestEntry entry)
     {
-        switch (state)
-        {
-            case PresenceState.Connected:
-                return FriendPresence.Connected;
-            case PresenceState.Disconnected:
-                return FriendPresence.Disconnected;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(state), state, "Unsupported presence state.");
-        }
+        PlayerTag player = ToPlayerTag(entry.Nickname, entry.FriendCode);
+        return new PendingFriendRequest(player, entry.RequestedAt, entry.ExpiresAt);
     }
 }

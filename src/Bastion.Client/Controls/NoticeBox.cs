@@ -33,7 +33,12 @@ public sealed class NoticeBox : Panel
         float textWidth = width - (PaddingX * HorizontalSideCount);
         _title = CreateLabel(TextStyles.NoticeTitle, textWidth);
         _message = CreateLabel(TextStyles.NoticeMessage, textWidth);
-        var content = new StackPanel { X = PaddingX, Y = PaddingY, Spacing = TitleSpacing };
+        var content = new StackPanel
+        {
+            X = PaddingX,
+            Y = PaddingY,
+            Spacing = TitleSpacing,
+        };
         content.AddChild(_title);
         content.AddChild(_message);
         AddChild(content);
@@ -53,7 +58,8 @@ public sealed class NoticeBox : Panel
             Color accent = PickAccent(value);
             _surface.FillColor = PickFill(value);
             _surface.StrokeColor = new Color(accent.R, accent.G, accent.B, BorderAlpha);
-            ((LabelVisual)_title.Visual).Color = accent;
+            var titleVisual = (LabelVisual)_title.Visual;
+            titleVisual.Color = accent;
         }
     }
 
@@ -76,8 +82,13 @@ public sealed class NoticeBox : Panel
 
     private static Label CreateLabel(TextStyle style, float width)
     {
-        var label = new Label { Width = width, WidthUnits = DimensionUnitType.Absolute };
-        style.ApplyTo((LabelVisual)label.Visual);
+        var label = new Label
+        {
+            Width = width,
+            WidthUnits = DimensionUnitType.Absolute,
+        };
+        var labelVisual = (LabelVisual)label.Visual;
+        style.ApplyTo(labelVisual);
         return label;
     }
 

@@ -1,7 +1,6 @@
 using System;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
-using Gum;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 
@@ -9,18 +8,20 @@ namespace Bastion.Client.Controls;
 
 public sealed class LanguagePicker : ComboBox
 {
-    public LanguagePicker(float width, float height)
+    public LanguagePicker(ILanguageService languages, float width, float height)
     {
+        ArgumentNullException.ThrowIfNull(languages);
+
         Width = width;
         WidthUnits = DimensionUnitType.Absolute;
         Height = height;
         HeightUnits = DimensionUnitType.Absolute;
         DisplayMemberPath = nameof(SupportedLanguage.DisplayName);
         PickerSkin.CreateAndAttach(this);
-        GumService.Default.LocalizationService.CurrentLanguageChanged += HandleCurrentLanguageChanged;
+        languages.LanguageChanged += HandleLanguageChanged;
     }
 
-    private void HandleCurrentLanguageChanged()
+    private void HandleLanguageChanged(object? sender, EventArgs e)
     {
         RefreshListItems();
         UpdateToObject(SelectedObject);

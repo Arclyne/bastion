@@ -19,19 +19,30 @@ public static class ServerAddress
 
     public static string GetCertificateThumbprint()
     {
-        return Environment.GetEnvironmentVariable(ThumbprintVariable)?.Trim() ?? string.Empty;
+        string? thumbprint = Environment.GetEnvironmentVariable(ThumbprintVariable);
+        return thumbprint?.Trim() ?? string.Empty;
     }
 
     private static string GetHost()
     {
         string? host = Environment.GetEnvironmentVariable(HostVariable);
-        return string.IsNullOrWhiteSpace(host) ? ServiceEndpoints.DefaultHost : host;
+        if (string.IsNullOrWhiteSpace(host))
+        {
+            return ServiceEndpoints.DefaultHost;
+        }
+
+        return host;
     }
 
     private static int GetPort()
     {
-        string? text = Environment.GetEnvironmentVariable(PortVariable);
-        bool isValid = int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out int port) && port > 0;
-        return isValid ? port : ServiceEndpoints.DefaultPort;
+        string? portText = Environment.GetEnvironmentVariable(PortVariable);
+        bool isNumber = int.TryParse(portText, NumberStyles.None, CultureInfo.InvariantCulture, out int port);
+        if (!isNumber || !ServiceEndpoints.IsRegisteredPort(port))
+        {
+            return ServiceEndpoints.DefaultPort;
+        }
+
+        return port;
     }
 }

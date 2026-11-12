@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using System.Net;
+using Bastion.Contracts;
 using Bastion.Server.Adapters;
 using CoreWCF.Configuration;
 using log4net;
@@ -53,10 +53,10 @@ public static class Program
             Path.Combine(AppContext.BaseDirectory, ServiceModelConfigurationFileName));
         builder.Services.AddBastionAdapters(connectionString);
         builder.Services.AddBastionApplication();
-        builder.Services.AddBastionServiceModel();
+        builder.Services.AddBastionHost();
 
         using WebApplication app = builder.Build();
-        app.UseServiceModel(certificate.ConfigureServices);
+        app.UseServiceModel(serviceBuilder => ConfigureServiceModel(serviceBuilder, certificate));
         app.Start();
         _logger.Info($"Game server started. NetTcpPort={netTcpPort}");
         app.WaitForShutdown();
@@ -66,6 +66,12 @@ public static class Program
     {
         var configurationFile = new FileInfo(Path.Combine(AppContext.BaseDirectory, LogConfigurationFileName));
         XmlConfigurator.Configure(LogManager.GetRepository(typeof(Program).Assembly), configurationFile);
+    }
+
+    private static void ConfigureServiceModel(IServiceBuilder serviceBuilder, ServerCertificate certificate)
+    {
+        serviceBuilder.AddBastionServices();
+        certificate.ApplyTo(serviceBuilder);
     }
 
     private static void LogUnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -89,10 +95,11 @@ public static class Program
     private static int GetNetTcpPort(IConfiguration configuration)
     {
         int netTcpPort = configuration.GetValue<int>(NetTcpPortKey);
-        if (netTcpPort <= IPEndPoint.MinPort || netTcpPort > IPEndPoint.MaxPort)
+        if (!ServiceEndpoints.IsRegisteredPort(netTcpPort))
         {
             throw new InvalidOperationException(
-                $"The net.tcp port is missing or out of range. Key={NetTcpPortKey}; Port={netTcpPort}");
+                $"The net.tcp port is missing or is not a registered port. Key={NetTcpPortKey}; Port={netTcpPort}; "
+                + $"FirstPort={ServiceEndpoints.FirstRegisteredPort}; LastPort={ServiceEndpoints.LastRegisteredPort}");
         }
 
         return netTcpPort;

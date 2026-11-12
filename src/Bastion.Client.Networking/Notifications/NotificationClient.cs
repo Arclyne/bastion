@@ -2,7 +2,6 @@ using System;
 using System.ServiceModel;
 using System.Threading;
 using Bastion.Client.Networking.Channels;
-using Bastion.Contracts;
 using Bastion.Contracts.Sessions;
 using log4net;
 
@@ -15,22 +14,24 @@ public sealed class NotificationClient : INotificationClient, IDisposable
     private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationClient));
     private static readonly TimeSpan _keepAliveInterval = TimeSpan.FromSeconds(KeepAliveSeconds);
 
-    private readonly NotificationCallback _notificationCallback = new NotificationCallback();
-    private readonly DuplexChannelFactory<ISessionService> _sessionChannelFactory;
+    private readonly NotificationCallback _notificationCallback;
+    private readonly ISessionChannelFactory _sessionChannelFactory;
     private readonly TimeProvider _timeProvider;
     private ISessionService? _sessionChannel;
     private ITimer? _keepAliveTimer;
 
-    public NotificationClient(TimeProvider timeProvider)
+    public NotificationClient(
+        NotificationCallback notificationCallback,
+        ISessionChannelFactory sessionChannelFactory,
+        TimeProvider timeProvider)
     {
+        ArgumentNullException.ThrowIfNull(notificationCallback);
+        ArgumentNullException.ThrowIfNull(sessionChannelFactory);
         ArgumentNullException.ThrowIfNull(timeProvider);
 
+        _notificationCallback = notificationCallback;
+        _sessionChannelFactory = sessionChannelFactory;
         _timeProvider = timeProvider;
-        _sessionChannelFactory = new DuplexChannelFactory<ISessionService>(
-            new InstanceContext(_notificationCallback),
-            ChannelSettings.CreateBinding(),
-            ChannelSettings.CreateAddress(ServiceEndpoints.SessionsPath));
-        ChannelSettings.ApplyCertificateValidation(_sessionChannelFactory);
     }
 
     public event EventHandler<ChatMessageReceivedEventArgs>? ChatMessageReceived
@@ -126,7 +127,8 @@ public sealed class NotificationClient : INotificationClient, IDisposable
             throw AbortSubscription(channel, ex);
         }
 
-        ((ICommunicationObject)channel).Faulted += HandleChannelFaulted;
+        var communicationObject = (ICommunicationObject)channel;
+        communicationObject.Faulted += HandleChannelFaulted;
         _sessionChannel = channel;
         _keepAliveTimer = _timeProvider.CreateTimer(SendKeepAlive, null, _keepAliveInterval, _keepAliveInterval);
     }
@@ -148,12 +150,12 @@ public sealed class NotificationClient : INotificationClient, IDisposable
     public void Dispose()
     {
         Disconnect();
-        ChannelCloser.CloseOrAbort(_sessionChannelFactory);
     }
 
     private static Exception AbortSubscription(ISessionService channel, Exception ex)
     {
-        ((ICommunicationObject)channel).Abort();
+        var communicationObject = (ICommunicationObject)channel;
+        communicationObject.Abort();
         return ServiceFailureTranslator.ToClientException(ex);
     }
 

@@ -14,20 +14,26 @@ public static class ViewFactory
 {
     private const float VersionMarginY = 16;
     private const int VersionFieldCount = 3;
+    private const float MiddleOffsetY = 0;
 
     public static Label CreateLabel(string textKey, TextStyle style)
     {
+        ArgumentNullException.ThrowIfNull(textKey);
+        ArgumentNullException.ThrowIfNull(style);
+
         var label = new Label
         {
             Text = textKey,
         };
-        style.ApplyTo((LabelVisual)label.Visual);
+        var labelVisual = (LabelVisual)label.Visual;
+        style.ApplyTo(labelVisual);
         return label;
     }
 
     public static Label CreateBoundLabel(string viewModelProperty, TextStyle style, float width)
     {
         ArgumentNullException.ThrowIfNull(viewModelProperty);
+        ArgumentNullException.ThrowIfNull(style);
 
         Label label = CreateFixedWidthLabel(style, width);
         label.SetBinding(nameof(Label.Text), viewModelProperty);
@@ -37,9 +43,11 @@ public static class ViewFactory
     public static Label CreateBoundUntranslatedLabel(string viewModelProperty, TextStyle style, float width)
     {
         ArgumentNullException.ThrowIfNull(viewModelProperty);
+        ArgumentNullException.ThrowIfNull(style);
 
         Label label = CreateFixedWidthLabel(style, width);
-        ((LabelVisual)label.Visual).LocalizeText = false;
+        var labelVisual = (LabelVisual)label.Visual;
+        labelVisual.LocalizeText = false;
         label.SetBinding(nameof(Label.Text), viewModelProperty);
         return label;
     }
@@ -50,13 +58,16 @@ public static class ViewFactory
         ArgumentNullException.ThrowIfNull(style);
 
         Label label = CreateLabel(string.Empty, style);
-        ((LabelVisual)label.Visual).LocalizeText = false;
+        var labelVisual = (LabelVisual)label.Visual;
+        labelVisual.LocalizeText = false;
         label.Text = text;
         return label;
     }
 
     public static Button CreateButton(string textKey, float width, float height)
     {
+        ArgumentNullException.ThrowIfNull(textKey);
+
         return new Button
         {
             Text = textKey,
@@ -68,9 +79,11 @@ public static class ViewFactory
 
     public static void CenterVertically(FrameworkElement element)
     {
+        ArgumentNullException.ThrowIfNull(element);
+
         element.YUnits = GeneralUnitType.PixelsFromMiddle;
         element.YOrigin = VerticalAlignment.Center;
-        element.Y = 0;
+        element.Y = MiddleOffsetY;
     }
 
     public static Label CreateVersionLabel()
@@ -88,14 +101,13 @@ public static class ViewFactory
 
     private static Label CreateFixedWidthLabel(TextStyle style, float width)
     {
-        ArgumentNullException.ThrowIfNull(style);
-
         var label = new Label
         {
             Width = width,
             WidthUnits = DimensionUnitType.Absolute,
         };
-        style.ApplyTo((LabelVisual)label.Visual);
+        var labelVisual = (LabelVisual)label.Visual;
+        style.ApplyTo(labelVisual);
         return label;
     }
 }
