@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Screens.Matches;
 
-public class TestMatchViewModel : IDisposable
+public sealed class TestMatchViewModel : IDisposable
 {
     private const int ClassicCenterColumnIndex = 4;
     private const int FirstRowIndex = 0;
@@ -19,20 +19,20 @@ public class TestMatchViewModel : IDisposable
     private const int FourPlayers = 4;
     private const int FourthPlayerIndex = 3;
 
-    private static readonly byte[] _turnOrders = new byte[]
+    private static readonly byte[] _turnOrders = { Match.FirstTurnOrder, Match.SecondTurnOrder };
+    private static readonly PawnSymbol[] _symbolsWithoutFourthPlayer =
     {
-        Match.FirstTurnOrder,
-        Match.SecondTurnOrder,
+        PawnSymbol.Blue,
+        PawnSymbol.Red,
+        PawnSymbol.Green,
     };
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
-    private readonly JoinedMatch _fourPlayerMatch = JoinedMatchSamples.CreateFourPlayerWithOwnThirdTurn();
     private readonly List<MatchAbandonmentViewModel> _abandonmentViewModels = new List<MatchAbandonmentViewModel>();
-    private readonly MatchAbandonmentViewModel _fourPlayerAbandonment;
 
-    public TestMatchViewModel()
+    public void Dispose()
     {
-        _fourPlayerAbandonment = CreateAbandonmentViewModel(_fourPlayerMatch);
+        _abandonmentViewModels.ForEach(DisposeViewModel);
     }
 
     [Fact]
@@ -40,7 +40,8 @@ public class TestMatchViewModel : IDisposable
     {
         MatchViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
 
-        Assert.Equal(_turnOrders, viewModel.Players.Select(player => player.TurnOrder));
+        IEnumerable<byte> turnOrders = viewModel.Players.Select(player => player.TurnOrder);
+        Assert.Equal(_turnOrders, turnOrders);
     }
 
     [Fact]
@@ -48,7 +49,8 @@ public class TestMatchViewModel : IDisposable
     {
         MatchViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
 
-        Assert.Equal(JoinedMatchSamples.OwnNickname, viewModel.Players.Single(player => player.IsOwn).Nickname);
+        MatchPlayerViewModel ownPlayer = viewModel.Players.Single(player => player.IsOwn);
+        Assert.Equal(JoinedMatchSampleFactory.OwnNickname, ownPlayer.Nickname);
     }
 
     [Fact]
@@ -80,17 +82,19 @@ public class TestMatchViewModel : IDisposable
     {
         MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
 
-        Assert.True(viewModel.Players[0].HasFirstTurn());
+        MatchPlayerViewModel firstPlayer = viewModel.Players[0];
+        bool hasFirstTurn = firstPlayer.HasFirstTurn();
+        Assert.True(hasFirstTurn);
     }
 
     [Fact]
     public void Constructor_ClassicBoard_PlacesPawnsOnStartingCoordinates()
     {
-        var expectedPawns = new BoardPawn[]
-        {
-            new BoardPawn(new BoardCoordinates(ClassicCenterColumnIndex, FirstRowIndex), PawnSymbol.Blue),
-            new BoardPawn(new BoardCoordinates(ClassicCenterColumnIndex, ClassicLastRowIndex), PawnSymbol.Red),
-        };
+        var blueStart = new BoardCoordinates(ClassicCenterColumnIndex, FirstRowIndex);
+        var redStart = new BoardCoordinates(ClassicCenterColumnIndex, ClassicLastRowIndex);
+        var bluePawn = new BoardPawn(blueStart, PawnSymbol.Blue);
+        var redPawn = new BoardPawn(redStart, PawnSymbol.Red);
+        BoardPawn[] expectedPawns = { bluePawn, redPawn };
 
         MatchViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
 
@@ -103,11 +107,12 @@ public class TestMatchViewModel : IDisposable
         string expectedText = string.Format(
             CultureInfo.CurrentCulture,
             Strings.MatchWallsFormat,
-            JoinedMatchSamples.WallsPerPlayer);
+            JoinedMatchSampleFactory.WallsPerPlayer);
 
         MatchViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
 
-        Assert.Equal(expectedText, viewModel.Players[0].WallsText);
+        MatchPlayerViewModel firstPlayer = viewModel.Players[0];
+        Assert.Equal(expectedText, firstPlayer.WallsText);
     }
 
     [Fact]
@@ -115,7 +120,8 @@ public class TestMatchViewModel : IDisposable
     {
         MatchViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
 
-        Assert.Equal(FiveMinuteClockText, viewModel.Players[0].ClockText);
+        MatchPlayerViewModel firstPlayer = viewModel.Players[0];
+        Assert.Equal(FiveMinuteClockText, firstPlayer.ClockText);
     }
 
     [Fact]
@@ -124,7 +130,7 @@ public class TestMatchViewModel : IDisposable
         string expectedText = string.Format(
             CultureInfo.CurrentCulture,
             Strings.MatchPlayerTurnFormat,
-            JoinedMatchSamples.RivalNickname);
+            JoinedMatchSampleFactory.RivalNickname);
 
         MatchViewModel viewModel = CreateFourPlayerViewModel();
 
@@ -140,38 +146,47 @@ public class TestMatchViewModel : IDisposable
     }
 
     [Fact]
-    public void PlayerLeft_MatchGoesOn_RemovesPawnOfLeftPlayer()
+    public void MatchAbandoned_MatchGoesOn_RemovesPawnOfLeftPlayer()
     {
         MatchViewModel viewModel = CreateFourPlayerViewModel();
 
-        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.FourthNickname, false);
+        _matchClient.RaiseMatchAbandoned(
+            JoinedMatchSampleFactory.MatchId,
+            JoinedMatchSampleFactory.ThirdRivalNickname,
+            isMatchOver: false);
 
-        Assert.DoesNotContain(viewModel.Pawns, pawn => pawn.Symbol == PawnSymbol.Yellow);
+        IEnumerable<PawnSymbol> symbols = viewModel.Pawns.Select(pawn => pawn.Symbol);
+        Assert.Equal(_symbolsWithoutFourthPlayer, symbols);
     }
 
     [Fact]
-    public void PlayerLeft_MatchGoesOn_MarksLeftPlayerRow()
+    public void MatchAbandoned_MatchGoesOn_MarksLeftPlayerRow()
     {
         MatchViewModel viewModel = CreateFourPlayerViewModel();
 
-        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.FourthNickname, false);
+        _matchClient.RaiseMatchAbandoned(
+            JoinedMatchSampleFactory.MatchId,
+            JoinedMatchSampleFactory.ThirdRivalNickname,
+            isMatchOver: false);
 
-        Assert.Equal(Strings.MatchPlayerLeft, viewModel.Players[FourthPlayerIndex].DetailText);
+        MatchPlayerViewModel fourthPlayer = viewModel.Players[FourthPlayerIndex];
+        Assert.Equal(Strings.MatchPlayerLeft, fourthPlayer.DetailText);
     }
 
     [Fact]
     public void Constructor_PlayerLeftDuringVersus_StartsWithoutLeftPawn()
     {
-        _matchClient.RaiseMatchAbandoned(JoinedMatchSamples.MatchId, JoinedMatchSamples.FourthNickname, false);
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateFourPlayerWithOwnThirdTurn();
+        MatchAbandonmentViewModel abandonment = CreateAbandonmentViewModel(joinedMatch);
+        _matchClient.RaiseMatchAbandoned(
+            JoinedMatchSampleFactory.MatchId,
+            JoinedMatchSampleFactory.ThirdRivalNickname,
+            isMatchOver: false);
+        int expectedPawnCount = FourPlayers - 1;
 
-        MatchViewModel viewModel = CreateFourPlayerViewModel();
+        var viewModel = new MatchViewModel(joinedMatch, abandonment);
 
-        Assert.Equal(FourPlayers - 1, viewModel.Pawns.Count);
-    }
-
-    public void Dispose()
-    {
-        _abandonmentViewModels.ForEach(DisposeViewModel);
+        Assert.Equal(expectedPawnCount, viewModel.Pawns.Count);
     }
 
     private static void DisposeViewModel(MatchAbandonmentViewModel viewModel)
@@ -181,13 +196,9 @@ public class TestMatchViewModel : IDisposable
 
     private MatchViewModel CreateViewModel(byte ownTurnOrder)
     {
-        JoinedMatch joinedMatch = JoinedMatchSamples.CreateWithOwnTurnOrder(ownTurnOrder);
-        return new MatchViewModel(joinedMatch, CreateAbandonmentViewModel(joinedMatch));
-    }
-
-    private MatchViewModel CreateFourPlayerViewModel()
-    {
-        return new MatchViewModel(_fourPlayerMatch, _fourPlayerAbandonment);
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
+        MatchAbandonmentViewModel abandonment = CreateAbandonmentViewModel(joinedMatch);
+        return new MatchViewModel(joinedMatch, abandonment);
     }
 
     private MatchAbandonmentViewModel CreateAbandonmentViewModel(JoinedMatch joinedMatch)
@@ -195,5 +206,12 @@ public class TestMatchViewModel : IDisposable
         var viewModel = new MatchAbandonmentViewModel(joinedMatch, _matchClient);
         _abandonmentViewModels.Add(viewModel);
         return viewModel;
+    }
+
+    private MatchViewModel CreateFourPlayerViewModel()
+    {
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateFourPlayerWithOwnThirdTurn();
+        MatchAbandonmentViewModel abandonment = CreateAbandonmentViewModel(joinedMatch);
+        return new MatchViewModel(joinedMatch, abandonment);
     }
 }

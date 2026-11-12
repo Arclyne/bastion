@@ -13,7 +13,7 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Screens.Matches;
 
-public class TestMatchChatViewModel : IDisposable
+public sealed class TestMatchChatViewModel : IDisposable
 {
     private const string MessageText = "Good luck";
     private const string BlankText = "   ";
@@ -21,6 +21,7 @@ public class TestMatchChatViewModel : IDisposable
     private const string TooFastMessage = "The player is sending messages too fast.";
     private const int OtherMatchId = 40;
     private const int SecondMessageNumber = 2;
+    private const int NoMessagesSent = 0;
 
     private static readonly DateTimeOffset _openedAt = new DateTimeOffset(2026, 11, 5, 18, 1, 0, TimeSpan.Zero);
     private static readonly DateTime _rivalSentAt = new DateTime(2026, 11, 5, 18, 1, 30, DateTimeKind.Utc);
@@ -31,7 +32,7 @@ public class TestMatchChatViewModel : IDisposable
 
     public TestMatchChatViewModel()
     {
-        JoinedMatch joinedMatch = JoinedMatchSamples.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
         _viewModel = InlineUiContext.CreateViewModel(
             () => new MatchChatViewModel(joinedMatch, _chatClient, _timeProvider));
     }
@@ -48,7 +49,7 @@ public class TestMatchChatViewModel : IDisposable
 
         await _viewModel.SendMessage();
 
-        Assert.Equal(JoinedMatchSamples.MatchId, _chatClient.LastSentMatchId);
+        Assert.Equal(JoinedMatchSampleFactory.MatchId, _chatClient.LastSentMatchId);
     }
 
     [Fact]
@@ -58,7 +59,8 @@ public class TestMatchChatViewModel : IDisposable
 
         await _viewModel.SendMessage();
 
-        Assert.False(_viewModel.Messages[0].IsPending);
+        ChatMessageRowViewModel ownRow = _viewModel.Messages[0];
+        Assert.False(ownRow.IsPending);
     }
 
     [Fact]
@@ -75,10 +77,11 @@ public class TestMatchChatViewModel : IDisposable
     public async Task SendMessage_BlankDraft_ShowsInvalidMessageStatus()
     {
         _viewModel.Draft = BlankText;
+        string expectedStatus = ChatRejectionText.DescribeInvalidMessage();
 
         await _viewModel.SendMessage();
 
-        Assert.Equal(ChatRejectionText.DescribeInvalidMessage(), _viewModel.StatusText);
+        Assert.Equal(expectedStatus, _viewModel.StatusText);
     }
 
     [Fact]
@@ -88,7 +91,7 @@ public class TestMatchChatViewModel : IDisposable
 
         await _viewModel.SendMessage();
 
-        Assert.Equal(0, _chatClient.MatchChatSendCount);
+        Assert.Equal(NoMessagesSent, _chatClient.MatchChatSendCount);
     }
 
     [Fact]
@@ -105,15 +108,15 @@ public class TestMatchChatViewModel : IDisposable
     [Fact]
     public async Task SendMessage_TooFast_ShowsRejectionOnRow()
     {
-        _chatClient.MatchChatSendFailure = new ChatMessageRejectedException(
-            ChatRejection.TooFast,
-            null,
-            new InvalidOperationException(TooFastMessage));
+        var cause = new InvalidOperationException(TooFastMessage);
+        _chatClient.MatchChatSendFailure = new ChatMessageRejectedException(ChatRejection.TooFast, mutedUntil: null, cause);
         _viewModel.Draft = MessageText;
+        string expectedState = ChatRejectionText.Describe(ChatRejection.TooFast);
 
         await _viewModel.SendMessage();
 
-        Assert.Equal(ChatRejectionText.Describe(ChatRejection.TooFast), _viewModel.Messages[0].StateText);
+        ChatMessageRowViewModel ownRow = _viewModel.Messages[0];
+        Assert.Equal(expectedState, ownRow.StateText);
     }
 
     [Fact]
@@ -124,13 +127,16 @@ public class TestMatchChatViewModel : IDisposable
 
         await _viewModel.SendMessage();
 
-        Assert.Equal(Strings.MatchChatUnavailable, _viewModel.Messages[0].StateText);
+        ChatMessageRowViewModel ownRow = _viewModel.Messages[0];
+        Assert.Equal(Strings.MatchChatUnavailable, ownRow.StateText);
     }
 
     [Fact]
     public void MatchChatMessageReceived_JoinedMatch_AddsRivalRow()
     {
-        _chatClient.RaiseMatchChatMessageReceived(JoinedMatchSamples.MatchId, CreateRivalMessage(RivalMessageText));
+        ChatMessage rivalMessage = CreateRivalMessage(RivalMessageText);
+
+        _chatClient.RaiseMatchChatMessageReceived(JoinedMatchSampleFactory.MatchId, rivalMessage);
 
         Assert.Single(_viewModel.Messages);
     }
@@ -138,7 +144,9 @@ public class TestMatchChatViewModel : IDisposable
     [Fact]
     public void MatchChatMessageReceived_OtherMatch_IgnoresMessage()
     {
-        _chatClient.RaiseMatchChatMessageReceived(OtherMatchId, CreateRivalMessage(RivalMessageText));
+        ChatMessage rivalMessage = CreateRivalMessage(RivalMessageText);
+
+        _chatClient.RaiseMatchChatMessageReceived(OtherMatchId, rivalMessage);
 
         Assert.Empty(_viewModel.Messages);
     }
@@ -146,13 +154,18 @@ public class TestMatchChatViewModel : IDisposable
     [Fact]
     public void MatchChatMessageReceived_OverMaximumRecentMessages_DropsOldestMessage()
     {
-        for (int messageNumber = 1; messageNumber <= ChatPolicy.MaximumRecentMessages + 1; messageNumber++)
+        int messageCount = ChatPolicy.MaximumRecentMessages + 1;
+        string expectedOldestText = SecondMessageNumber.ToString(CultureInfo.InvariantCulture);
+
+        for (int messageNumber = 1; messageNumber <= messageCount; messageNumber++)
         {
             string text = messageNumber.ToString(CultureInfo.InvariantCulture);
-            _chatClient.RaiseMatchChatMessageReceived(JoinedMatchSamples.MatchId, CreateRivalMessage(text));
+            ChatMessage rivalMessage = CreateRivalMessage(text);
+            _chatClient.RaiseMatchChatMessageReceived(JoinedMatchSampleFactory.MatchId, rivalMessage);
         }
 
-        Assert.Equal(SecondMessageNumber.ToString(CultureInfo.InvariantCulture), _viewModel.Messages[0].Text);
+        ChatMessageRowViewModel oldestRow = _viewModel.Messages[0];
+        Assert.Equal(expectedOldestText, oldestRow.Text);
     }
 
     [Fact]
@@ -160,12 +173,13 @@ public class TestMatchChatViewModel : IDisposable
     {
         _viewModel.Dispose();
 
-        Assert.False(_chatClient.HasMatchChatSubscribers());
+        bool hasSubscribers = _chatClient.HasMatchChatSubscribers();
+        Assert.False(hasSubscribers);
     }
 
     private static ChatMessage CreateRivalMessage(string text)
     {
-        var rival = new ChatAuthor(JoinedMatchSamples.RivalNickname, false);
+        var rival = new ChatAuthor(JoinedMatchSampleFactory.RivalNickname, isOwn: false);
         return new ChatMessage(rival, text, _rivalSentAt);
     }
 }

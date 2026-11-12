@@ -8,10 +8,11 @@ using Xunit;
 
 namespace Bastion.Client.Tests.PrivateChat;
 
-public class TestConversationContractTranslator
+public sealed class TestConversationContractTranslator
 {
     private const string PartnerNickname = "marta_muros";
     private const string PartnerFriendCode = "MA3R7T";
+    private const string MessageText = "hola";
     private const int UnreadCount = 2;
 
     private static readonly DateTime _sentAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
@@ -19,17 +20,24 @@ public class TestConversationContractTranslator
     [Fact]
     public void ToPreviews_Entry_KeepsUnreadCount()
     {
-        ConversationEntry[] entries = { CreateEntry(new PrivateChatMessage { Text = "hola", SentAt = _sentAt }) };
+        var lastMessage = new PrivateChatMessage
+        {
+            Text = MessageText,
+            SentAt = _sentAt,
+        };
+        ConversationEntry entry = CreateEntry(lastMessage);
+        ConversationEntry[] entries = { entry };
 
         IReadOnlyList<ConversationPreview> previews = ConversationContractTranslator.ToPreviews(entries);
 
-        Assert.Equal(UnreadCount, previews[0].UnreadCount);
+        ConversationPreview preview = previews[0];
+        Assert.Equal(UnreadCount, preview.UnreadCount);
     }
 
     [Fact]
     public void ToPreviews_NullEntries_ReturnsEmptyList()
     {
-        IReadOnlyList<ConversationPreview> previews = ConversationContractTranslator.ToPreviews(null);
+        IReadOnlyList<ConversationPreview> previews = ConversationContractTranslator.ToPreviews(entries: null);
 
         Assert.Empty(previews);
     }
@@ -37,33 +45,47 @@ public class TestConversationContractTranslator
     [Fact]
     public void ToPreviews_EntryWithoutLastMessage_UsesEmptyText()
     {
-        ConversationEntry[] entries = { CreateEntry(null) };
+        ConversationEntry entry = CreateEntry(lastMessage: null);
+        ConversationEntry[] entries = { entry };
 
         IReadOnlyList<ConversationPreview> previews = ConversationContractTranslator.ToPreviews(entries);
 
-        Assert.Empty(previews[0].LastMessage.Text);
+        ConversationPreview preview = previews[0];
+        Assert.Empty(preview.LastMessage.Text);
     }
 
     [Fact]
     public void ToTranscript_OwnMessage_KeepsOwnFlag()
     {
+        var ownMessage = new PrivateChatMessage
+        {
+            Text = MessageText,
+            SentAt = _sentAt,
+            IsOwn = true,
+        };
+        PrivateChatMessage[] messages = { ownMessage };
         var log = new PrivateConversationLog
         {
             PartnerNickname = PartnerNickname,
             PartnerFriendCode = PartnerFriendCode,
             IsFriend = true,
-            Messages = new[] { new PrivateChatMessage { Text = "hola", SentAt = _sentAt, IsOwn = true } },
+            Messages = messages,
         };
 
         ConversationTranscript transcript = ConversationContractTranslator.ToTranscript(log);
 
-        Assert.True(transcript.Messages[0].IsOwn);
+        PrivateMessage first = transcript.Messages[0];
+        Assert.True(first.IsOwn);
     }
 
     [Fact]
     public void ToTranscript_FormerFriend_IsNotFriend()
     {
-        var log = new PrivateConversationLog { PartnerNickname = PartnerNickname, IsFriend = false };
+        var log = new PrivateConversationLog
+        {
+            PartnerNickname = PartnerNickname,
+            IsFriend = false,
+        };
 
         ConversationTranscript transcript = ConversationContractTranslator.ToTranscript(log);
 
@@ -77,7 +99,7 @@ public class TestConversationContractTranslator
         {
             SenderNickname = PartnerNickname,
             SenderFriendCode = PartnerFriendCode,
-            Text = "hola",
+            Text = MessageText,
             OccurredAt = _sentAt,
         };
 

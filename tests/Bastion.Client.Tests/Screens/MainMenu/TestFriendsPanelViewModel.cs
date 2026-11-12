@@ -8,7 +8,7 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Screens.MainMenu;
 
-public class TestFriendsPanelViewModel
+public sealed class TestFriendsPanelViewModel
 {
     private const string SessionToken = "session-token";
     private const string OwnNickname = "marta_muros";
@@ -24,7 +24,8 @@ public class TestFriendsPanelViewModel
     {
         using FriendsPanelViewModel viewModel = CreateViewModel();
 
-        Assert.True(_notifications.HasAnySubscribers());
+        bool hasSubscribers = _notifications.HasAnySubscribers();
+        Assert.True(hasSubscribers);
     }
 
     [Fact]
@@ -34,7 +35,8 @@ public class TestFriendsPanelViewModel
 
         viewModel.Dispose();
 
-        Assert.False(_notifications.HasAnySubscribers());
+        bool hasSubscribers = _notifications.HasAnySubscribers();
+        Assert.False(hasSubscribers);
     }
 
     [Fact]
@@ -61,10 +63,14 @@ public class TestFriendsPanelViewModel
     private FriendsPanelViewModel CreateViewModel()
     {
         var session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
-        var chatClients = new ChatClients(new FakeChatClient(), new FakeConversationClient(), _notifications);
-        var clients = new SocialClients(new FakeFriendClient(), chatClients, _notifications);
+        var chatClient = new FakeChatClient();
+        var conversationClient = new FakeConversationClient();
+        var chatClients = new ChatClients(chatClient, conversationClient, _notifications);
+        var friendClient = new FakeFriendClient();
+        var clients = new SocialClients(friendClient, chatClients, _notifications);
+        var languages = new FakeLanguageService();
         var timeProvider = new ManualTimeProvider(_now);
-        var localServices = new LocalServices(new FakeLanguageService(), _clipboard, timeProvider);
+        var localServices = new LocalServices(languages, _clipboard, timeProvider);
         return InlineUiContext.CreateViewModel(() => new FriendsPanelViewModel(session, clients, localServices));
     }
 }

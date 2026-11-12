@@ -5,13 +5,15 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Screens.Matches.Scene;
 
-public class TestBoardSceneLayout
+public sealed class TestBoardSceneLayout
 {
     private const byte ClassicBoardSize = 9;
     private const byte QuickBoardSize = 7;
+    private const int FirstIndex = 0;
     private const int ClassicLastIndex = 8;
     private const int QuickCenterIndex = 3;
     private const float ClassicHalfSpan = 4f;
+    private const float BoardHeight = 0f;
     private const string ClassicFirstRowGoal = "Meta_Fila1";
     private const string ClassicLastRowGoal = "Meta_Fila9";
     private const string QuickLastRowGoal = "Meta_Fila7";
@@ -23,9 +25,10 @@ public class TestBoardSceneLayout
     [Fact]
     public void GetCellCenter_FirstCell_SitsAtNearLeftCorner()
     {
-        var expectedCenter = new Vector3(-ClassicHalfSpan, 0f, ClassicHalfSpan);
+        var expectedCenter = new Vector3(-ClassicHalfSpan, BoardHeight, ClassicHalfSpan);
+        var firstCell = new BoardCoordinates(FirstIndex, FirstIndex);
 
-        Vector3 center = BoardSceneLayout.GetCellCenter(ClassicBoardSize, new BoardCoordinates(0, 0));
+        Vector3 center = BoardSceneLayout.GetCellCenter(ClassicBoardSize, firstCell);
 
         Assert.Equal(expectedCenter, center);
     }
@@ -33,7 +36,7 @@ public class TestBoardSceneLayout
     [Fact]
     public void GetCellCenter_LastCell_SitsAtFarRightCorner()
     {
-        var expectedCenter = new Vector3(ClassicHalfSpan, 0f, -ClassicHalfSpan);
+        var expectedCenter = new Vector3(ClassicHalfSpan, BoardHeight, -ClassicHalfSpan);
         var lastCell = new BoardCoordinates(ClassicLastIndex, ClassicLastIndex);
 
         Vector3 center = BoardSceneLayout.GetCellCenter(ClassicBoardSize, lastCell);
@@ -56,7 +59,8 @@ public class TestBoardSceneLayout
     {
         Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(Match.FirstTurnOrder);
 
-        Assert.True(cameraPosition.Z > 0f);
+        bool isOnFirstRowSide = cameraPosition.Z > 0f;
+        Assert.True(isOnFirstRowSide);
     }
 
     [Fact]
@@ -64,7 +68,8 @@ public class TestBoardSceneLayout
     {
         Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(Match.SecondTurnOrder);
 
-        Assert.True(cameraPosition.Z < 0f);
+        bool isOnLastRowSide = cameraPosition.Z < 0f;
+        Assert.True(isOnLastRowSide);
     }
 
     [Fact]
@@ -72,7 +77,8 @@ public class TestBoardSceneLayout
     {
         Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(Match.ThirdTurnOrder);
 
-        Assert.True(cameraPosition.X < 0f);
+        bool isOnFirstColumnSide = cameraPosition.X < 0f;
+        Assert.True(isOnFirstColumnSide);
     }
 
     [Fact]
@@ -80,7 +86,8 @@ public class TestBoardSceneLayout
     {
         Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(Match.FourthTurnOrder);
 
-        Assert.True(cameraPosition.X > 0f);
+        bool isOnLastColumnSide = cameraPosition.X > 0f;
+        Assert.True(isOnLastColumnSide);
     }
 
     [Fact]

@@ -5,21 +5,24 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Screens.Login;
 
-public class TestLoginViewModel
+public sealed class TestLoginViewModel
 {
     private const string AnyPassword = "any-password";
     private const string MalformedIdentifier = "marta@";
     private const string WellFormedNickname = "marta_muros";
     private const string WellFormedEmail = "marta@example.com";
     private const string PaddedNickname = " marta_muros ";
+    private const int NoLogIns = 0;
+    private const int OneLogIn = 1;
 
-    private readonly FakeAccountClient _accounts;
+    private readonly FakeAccountClient _accounts = new FakeAccountClient();
     private readonly LoginViewModel _viewModel;
 
     public TestLoginViewModel()
     {
-        _accounts = new FakeAccountClient();
-        _viewModel = new LoginViewModel(new FakeLanguageService(), _accounts, new FakeNavigator());
+        var languages = new FakeLanguageService();
+        var navigator = new FakeNavigator();
+        _viewModel = new LoginViewModel(languages, _accounts, navigator);
         _viewModel.Password = AnyPassword;
     }
 
@@ -40,7 +43,7 @@ public class TestLoginViewModel
 
         await _viewModel.LogIn();
 
-        Assert.Equal(0, _accounts.LogInCount);
+        Assert.Equal(NoLogIns, _accounts.LogInCount);
     }
 
     [Fact]
@@ -63,7 +66,7 @@ public class TestLoginViewModel
 
         await _viewModel.LogIn();
 
-        Assert.Equal(1, _accounts.LogInCount);
+        Assert.Equal(OneLogIn, _accounts.LogInCount);
     }
 
     [Fact]
