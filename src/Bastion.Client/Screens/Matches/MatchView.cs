@@ -1,5 +1,4 @@
 using System;
-using Bastion.Client.Controls;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
@@ -8,7 +7,7 @@ using log4net;
 
 namespace Bastion.Client.Screens.Matches;
 
-public sealed class MatchView : Panel
+public sealed class MatchView : ScreenView
 {
     private const float TurnPillPaddingX = 24;
     private const int HorizontalSideCount = 2;
@@ -19,7 +18,6 @@ public sealed class MatchView : Panel
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchView));
 
     private readonly MatchAbandonmentViewModel _abandonmentViewModel;
-    private readonly ModalLayer _rivalAbandonedLayer;
 
     public MatchView(
         MatchViewModel matchViewModel,
@@ -31,14 +29,16 @@ public sealed class MatchView : Panel
         ArgumentNullException.ThrowIfNull(abandonmentViewModel);
 
         _abandonmentViewModel = abandonmentViewModel;
-        Dock(Gum.Wireframe.Dock.Fill);
         AddChild(CreatePlayersPanel(matchViewModel));
         AddChild(CreateTurnPill(matchViewModel));
         AddChild(CreateChatPanel(chatViewModel));
         AddChild(CreateAbandonButton());
         AddChild(CreateAbandonStatus());
         AddChild(CreatePlayerLeftNotice());
-        _rivalAbandonedLayer = CreateRivalAbandonedLayer(abandonmentViewModel);
+        AddDialog(
+            new RivalAbandonedDialogView(abandonmentViewModel),
+            abandonmentViewModel,
+            nameof(MatchAbandonmentViewModel.HasRivalAbandoned));
     }
 
     private static MatchPlayersPanel CreatePlayersPanel(MatchViewModel matchViewModel)
@@ -68,17 +68,6 @@ public sealed class MatchView : Panel
         pill.AddChild(text);
         Skins.ApplyCard(pill.Visual);
         return pill;
-    }
-
-    private static ModalLayer CreateRivalAbandonedLayer(MatchAbandonmentViewModel abandonmentViewModel)
-    {
-        var layer = new ModalLayer
-        {
-            BindingContext = abandonmentViewModel,
-        };
-        layer.SetBinding(nameof(ModalLayer.IsOpen), nameof(MatchAbandonmentViewModel.HasRivalAbandoned));
-        layer.AddChild(new RivalAbandonedDialogView(abandonmentViewModel));
-        return layer;
     }
 
     private static MatchChatPanel CreateChatPanel(MatchChatViewModel chatViewModel)

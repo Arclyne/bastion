@@ -26,6 +26,8 @@ public sealed class LanguageService : ILanguageService
 
     public SupportedLanguage CurrentLanguage { get; private set; }
 
+    public event EventHandler? LanguageChanged;
+
     public void LoadInitialLanguage()
     {
         LoadTextDatabase();
@@ -57,6 +59,7 @@ public sealed class LanguageService : ILanguageService
 
         CurrentLanguage = language;
         _textDatabase.CurrentLanguage = IndexOf(language);
+        LanguageChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void LoadTextDatabase()

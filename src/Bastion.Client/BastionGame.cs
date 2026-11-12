@@ -1,6 +1,7 @@
 using System;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking;
+using Bastion.Client.Platform;
 using Bastion.Client.Screens;
 using Bastion.Client.Screens.Matches;
 using Bastion.Client.Screens.Matches.Scene;
@@ -48,7 +49,10 @@ public sealed class BastionGame : Game
         ThemeInitializer.Initialize(this);
         var languages = new LanguageService(new LanguagePreferenceStore(), GumService.Default.LocalizationService);
         languages.LoadInitialLanguage();
-        _screenNavigator = new ScreenNavigator(languages, _serverConnection, TimeProvider.System);
+        var clipboard = new GumClipboard(GumService.Default.Clipboard);
+        var localServices = new LocalServices(languages, clipboard, TimeProvider.System);
+        var screenHost = new GumScreenHost(GumService.Default.Root, GumService.Default.ModalRoot);
+        _screenNavigator = new ScreenNavigator(_serverConnection, localServices, screenHost);
         _screenNavigator.ShowLogin();
         Window.ClientSizeChanged += HandleClientSizeChanged;
         ApplyUiScale();

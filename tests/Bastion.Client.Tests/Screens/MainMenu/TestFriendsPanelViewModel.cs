@@ -13,6 +13,7 @@ public class TestFriendsPanelViewModel
     private const string PreferredLanguage = "es-MX";
 
     private readonly FakeNotificationClient _notifications = new FakeNotificationClient();
+    private readonly FakeClipboard _clipboard = new FakeClipboard();
 
     [Fact]
     public void Constructor_Created_SubscribesToNotifications()
@@ -32,11 +33,32 @@ public class TestFriendsPanelViewModel
         Assert.False(_notifications.HasAnySubscribers());
     }
 
+    [Fact]
+    public void CopyOwnCode_ClipboardAvailable_MarksCodeCopied()
+    {
+        using FriendsPanelViewModel viewModel = CreateViewModel();
+
+        viewModel.CopyOwnCode();
+
+        Assert.True(viewModel.IsCodeCopied);
+    }
+
+    [Fact]
+    public void CopyOwnCode_ClipboardUnavailable_LeavesCodeNotCopied()
+    {
+        using FriendsPanelViewModel viewModel = CreateViewModel();
+        _clipboard.IsAvailable = false;
+
+        viewModel.CopyOwnCode();
+
+        Assert.False(viewModel.IsCodeCopied);
+    }
+
     private FriendsPanelViewModel CreateViewModel()
     {
         var session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
         var chatClients = new ChatClients(new FakeChatClient(), new FakeConversationClient(), _notifications);
         var clients = new SocialClients(new FakeFriendClient(), chatClients, _notifications);
-        return InlineUiContext.CreateViewModel(() => new FriendsPanelViewModel(session, clients));
+        return InlineUiContext.CreateViewModel(() => new FriendsPanelViewModel(session, clients, _clipboard));
     }
 }

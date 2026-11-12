@@ -10,40 +10,42 @@ using Bastion.Client.Screens.MainMenu;
 using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Screens.MainMenu.Friends;
 using Bastion.Client.Screens.Matches;
-using Gum;
-using Gum.Forms.Controls;
-using Gum.Wireframe;
 
 namespace Bastion.Client.Screens;
 
 public sealed class ScreenNavigator : INavigator, IDisposable
 {
-    private readonly ILanguageService _languages;
     private readonly ServerConnection _connection;
+    private readonly ILanguageService _languages;
+    private readonly IClipboard _clipboard;
     private readonly TimeProvider _timeProvider;
+    private readonly IScreenHost _screenHost;
     private readonly List<IDisposable> _screenViewModels = new List<IDisposable>();
-    private FrameworkElement? _currentScreen;
+    private ScreenView? _currentScreen;
     private LoggedInSession? _loggedInSession;
     private JoinedMatch? _joinedMatch;
     private MatchChatViewModel? _matchChatViewModel;
     private MatchAbandonmentViewModel? _matchAbandonmentViewModel;
 
-    public ScreenNavigator(ILanguageService languages, ServerConnection connection, TimeProvider timeProvider)
+    public ScreenNavigator(ServerConnection connection, LocalServices localServices, IScreenHost screenHost)
     {
-        ArgumentNullException.ThrowIfNull(languages);
         ArgumentNullException.ThrowIfNull(connection);
-        ArgumentNullException.ThrowIfNull(timeProvider);
+        ArgumentNullException.ThrowIfNull(localServices);
+        ArgumentNullException.ThrowIfNull(screenHost);
 
-        _languages = languages;
         _connection = connection;
-        _timeProvider = timeProvider;
+        _languages = localServices.Languages;
+        _clipboard = localServices.Clipboard;
+        _timeProvider = localServices.TimeProvider;
+        _screenHost = screenHost;
     }
 
     public MatchViewModel? ShownMatch { get; private set; }
 
     public void ShowLogin()
     {
-        ShowScreen(() => new LoginView(new LoginViewModel(_languages, _connection.Accounts, this)));
+        var loginViewModel = new LoginViewModel(_languages, _connection.Accounts, this);
+        ShowScreen(new LoginView(loginViewModel, _languages));
     }
 
     public void ShowMainMenu(LoggedInSession session)
@@ -72,11 +74,11 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         var mainMenuViewModel = new MainMenuViewModel(session, _connection.Notifications);
         var chatClients = new ChatClients(_connection.Chat, _connection.Conversations, _connection.Notifications);
         var clients = new SocialClients(_connection.Friends, chatClients, _connection.Notifications);
-        var friendsPanel = new FriendsPanelViewModel(session, clients);
+        var friendsPanel = new FriendsPanelViewModel(session, clients, _clipboard);
         var matchSearchViewModel = new MatchSearchViewModel(session, _connection.Matchmaking, _timeProvider);
         matchSearchViewModel.MatchFound += HandleMatchFound;
         ShowScreen(
-            () => new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel),
+            new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel),
             friendsPanel,
             matchSearchViewModel);
         _loggedInSession = session;
@@ -94,7 +96,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         var versusViewModel = new VersusViewModel(joinedMatch, _timeProvider);
         versusViewModel.CountdownFinished += HandleCountdownFinished;
         ShowScreen(
-            () => new VersusView(versusViewModel),
+            new VersusView(versusViewModel),
             versusViewModel,
             matchChatViewModel,
             matchAbandonmentViewModel);
@@ -110,27 +112,20 @@ public sealed class ScreenNavigator : INavigator, IDisposable
     {
         var matchViewModel = new MatchViewModel(joinedMatch, matchAbandonmentViewModel);
         ShowScreen(
-            () => new MatchView(matchViewModel, matchChatViewModel, matchAbandonmentViewModel),
+            new MatchView(matchViewModel, matchChatViewModel, matchAbandonmentViewModel),
             matchChatViewModel,
             matchAbandonmentViewModel,
             matchViewModel);
         ShownMatch = matchViewModel;
     }
 
-    private void ShowScreen(Func<FrameworkElement> createScreen, params IDisposable[] nextScreenViewModels)
+    private void ShowScreen(ScreenView screen, params IDisposable[] screenViewModels)
     {
         ShownMatch = null;
-        if (_currentScreen is not null)
-        {
-            GumService.Default.Root.Children.Remove(_currentScreen.Visual);
-        }
-
-        GumService.Default.ModalRoot.Children.Clear();
-        InteractiveGue.CurrentInputReceiver = null;
-        DisposeViewModelsExcept(nextScreenViewModels);
-        _screenViewModels.AddRange(nextScreenViewModels);
-        _currentScreen = createScreen();
-        GumService.Default.Root.AddChild(_currentScreen);
+        _screenHost.ShowScreen(screen);
+        _currentScreen = screen;
+        DisposeViewModelsExcept(screenViewModels);
+        _screenViewModels.AddRange(screenViewModels);
     }
 
     private void DisposeViewModelsExcept(IReadOnlyCollection<IDisposable> keptViewModels)

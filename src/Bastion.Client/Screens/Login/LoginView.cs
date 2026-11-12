@@ -8,7 +8,7 @@ using log4net;
 
 namespace Bastion.Client.Screens.Login;
 
-public sealed class LoginView : Panel
+public sealed class LoginView : ScreenView
 {
     private const float CardX = 96;
     private const float CardWidth = 440;
@@ -33,19 +33,20 @@ public sealed class LoginView : Panel
     private static readonly ILog _logger = LogManager.GetLogger(typeof(LoginView));
 
     private readonly LoginViewModel _viewModel;
-    private readonly ModalLayer _dialogLayer;
+    private readonly ILanguageService _languages;
 
-    public LoginView(LoginViewModel viewModel)
+    public LoginView(LoginViewModel viewModel, ILanguageService languages)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
+        ArgumentNullException.ThrowIfNull(languages);
 
         _viewModel = viewModel;
+        _languages = languages;
         BindingContext = viewModel;
-        Dock(Gum.Wireframe.Dock.Fill);
         AddChild(CreateCard());
         AddChild(CreateExitButton());
         AddChild(ViewFactory.CreateVersionLabel());
-        _dialogLayer = CreateDialogLayer(viewModel);
+        AddDialog(new LoginDialogView(viewModel), viewModel, nameof(LoginViewModel.IsDialogOpen));
     }
 
     private Panel CreateCard()
@@ -83,7 +84,7 @@ public sealed class LoginView : Panel
         return content;
     }
 
-    private static Panel CreateHeader()
+    private Panel CreateHeader()
     {
         var brand = new StackPanel { Spacing = HeaderSpacing };
         brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.AppName), TextStyles.Title));
@@ -100,9 +101,9 @@ public sealed class LoginView : Panel
         return header;
     }
 
-    private static LanguagePicker CreateLanguagePicker()
+    private LanguagePicker CreateLanguagePicker()
     {
-        var picker = new LanguagePicker(LanguagePickerWidth, LanguagePickerHeight);
+        var picker = new LanguagePicker(_languages, LanguagePickerWidth, LanguagePickerHeight);
         picker.SetBinding(nameof(LanguagePicker.Items), nameof(LoginViewModel.Languages));
         picker.SetBinding(nameof(LanguagePicker.SelectedObject), nameof(LoginViewModel.SelectedLanguage));
         BindEnabledToIdle(picker);
@@ -213,14 +214,6 @@ public sealed class LoginView : Panel
         notice.SetBinding(nameof(NoticeBox.Message), nameof(LoginViewModel.NoticeMessage));
         notice.SetBinding(nameof(IsVisible), nameof(LoginViewModel.HasNotice));
         return notice;
-    }
-
-    private static ModalLayer CreateDialogLayer(LoginViewModel viewModel)
-    {
-        var layer = new ModalLayer { BindingContext = viewModel };
-        layer.SetBinding(nameof(ModalLayer.IsOpen), nameof(LoginViewModel.IsDialogOpen));
-        layer.AddChild(new LoginDialogView(viewModel));
-        return layer;
     }
 
     private static void BindEnabledToIdle(FrameworkElement control)

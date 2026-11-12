@@ -25,17 +25,20 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
     private readonly LoggedInSession _session;
     private readonly IFriendClient _friends;
     private readonly INotificationClient _notifications;
+    private readonly IClipboard _clipboard;
     private readonly SynchronizationContext? _uiContext;
     private readonly List<FriendRowViewModel> _allRows = new List<FriendRowViewModel>();
 
-    public FriendsPanelViewModel(LoggedInSession session, SocialClients clients)
+    public FriendsPanelViewModel(LoggedInSession session, SocialClients clients, IClipboard clipboard)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(clients);
+        ArgumentNullException.ThrowIfNull(clipboard);
 
         _session = session;
         _friends = clients.Friends;
         _notifications = clients.Notifications;
+        _clipboard = clipboard;
         _uiContext = SynchronizationContext.Current;
         AddFriend = new AddFriendViewModel(session, clients.Friends);
         AddFriend.FriendshipStarted += HandleFriendshipStarted;
@@ -228,8 +231,15 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         IsAddingFriend = false;
     }
 
-    public void MarkCodeCopied()
+    public void CopyOwnCode()
     {
+        bool isCopied = _clipboard.TryCopyText(FormattedFriendCode);
+        if (!isCopied)
+        {
+            _logger.Warn("The friend code could not be copied because there is no clipboard.");
+            return;
+        }
+
         IsCodeCopied = true;
     }
 

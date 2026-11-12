@@ -1,5 +1,4 @@
 using System;
-using Bastion.Client.Controls;
 using Bastion.Client.Localization;
 using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Screens.MainMenu.Friends;
@@ -15,7 +14,7 @@ using RenderingLibrary.Graphics;
 
 namespace Bastion.Client.Screens.MainMenu;
 
-public sealed class MainMenuView : Panel, IEscapeKeyReceiver
+public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
 {
     private const float SettingsWidth = 116;
     private const float HowToPlayWidth = 140;
@@ -59,9 +58,7 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MainMenuView));
 
     private readonly FriendsPanelViewModel _friendsPanel;
-    private readonly ModalLayer _removeFriendLayer;
     private readonly MatchSearchViewModel _matchSearchViewModel;
-    private readonly ModalLayer _presenceDialogLayer;
 
     public MainMenuView(
         MainMenuViewModel viewModel,
@@ -74,9 +71,7 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
 
         _friendsPanel = friendsPanel;
         _matchSearchViewModel = matchSearchViewModel;
-        _removeFriendLayer = CreateRemoveFriendLayer(friendsPanel.Actions);
         BindingContext = viewModel;
-        Dock(Gum.Wireframe.Dock.Fill);
         AddChild(CreateIdentityChip());
         AddChild(CreateSettingsButton());
         AddChild(CreateFriendsButton());
@@ -97,7 +92,14 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         AddChild(ViewFactory.CreateVersionLabel());
         AddChild(CreateFriendsPanel(friendsPanel));
         AddChild(CreateRequestToast(friendsPanel.Requests));
-        _presenceDialogLayer = CreatePresenceDialogLayer();
+        AddDialog(
+            new RemoveFriendDialogView(friendsPanel.Actions),
+            friendsPanel.Actions,
+            nameof(FriendActionsViewModel.IsDialogOpen));
+        AddDialog(
+            new PresenceDialogView(matchSearchViewModel),
+            matchSearchViewModel,
+            nameof(MatchSearchViewModel.IsPresenceDialogOpen));
     }
 
     public void ReceiveEscapeKey()
@@ -206,14 +208,6 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         badge.Y = ScreenMetrics.MarginY + SettingsOffsetY - BadgeOverlap;
         badge.SetBinding(nameof(IsVisible), binding.VisibilityProperty);
         return badge;
-    }
-
-    private static ModalLayer CreateRemoveFriendLayer(FriendActionsViewModel actions)
-    {
-        var layer = new ModalLayer { BindingContext = actions };
-        layer.SetBinding(nameof(ModalLayer.IsOpen), nameof(FriendActionsViewModel.IsDialogOpen));
-        layer.AddChild(new RemoveFriendDialogView(actions));
-        return layer;
     }
 
     private static FriendRequestToast CreateRequestToast(FriendRequestsViewModel requests)
@@ -384,17 +378,6 @@ public sealed class MainMenuView : Panel, IEscapeKeyReceiver
         panel.Anchor(Gum.Wireframe.Anchor.Bottom);
         panel.Y = -SearchPanelMarginY;
         return panel;
-    }
-
-    private ModalLayer CreatePresenceDialogLayer()
-    {
-        var layer = new ModalLayer
-        {
-            BindingContext = _matchSearchViewModel,
-        };
-        layer.SetBinding(nameof(ModalLayer.IsOpen), nameof(MatchSearchViewModel.IsPresenceDialogOpen));
-        layer.AddChild(new PresenceDialogView(_matchSearchViewModel));
-        return layer;
     }
 
     private async void HandleFindMatchClick(object? sender, EventArgs e)

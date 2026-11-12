@@ -1,17 +1,19 @@
+using System;
 using Bastion.Client.Theme;
-using Gum;
 using Gum.Forms.Controls;
 
 namespace Bastion.Client.Controls;
 
 public sealed class ModalLayer : Panel
 {
+    private const float OverlayCornerRadius = 0;
+
     private bool _isOpen;
 
     public ModalLayer()
     {
         Dock(Gum.Wireframe.Dock.Fill);
-        Shapes.InsertBehindContent(Visual, Shapes.CreateRounded(Palette.Overlay, 0));
+        Shapes.InsertBehindContent(Visual, Shapes.CreateRounded(Palette.Overlay, OverlayCornerRadius));
     }
 
     public bool IsOpen
@@ -25,14 +27,9 @@ public sealed class ModalLayer : Panel
             }
 
             _isOpen = value;
-            if (value)
-            {
-                GumService.Default.ModalRoot.AddChild(this);
-            }
-            else
-            {
-                GumService.Default.ModalRoot.Children.Remove(Visual);
-            }
+            IsOpenChanged?.Invoke(this, EventArgs.Empty);
         }
     }
+
+    public event EventHandler? IsOpenChanged;
 }
