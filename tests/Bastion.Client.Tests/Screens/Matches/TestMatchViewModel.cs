@@ -18,6 +18,7 @@ public class TestMatchViewModel : IDisposable
     private const int SecondRowIndex = 1;
     private const string SecondRowSquare = "e2";
     private const string FirstGoalSquare = "e9";
+    private const string CenterGroove = "e4";
     private const int ClassicLastRowIndex = 8;
     private const string FiveMinuteClockText = "5:00";
     private const int FourPlayers = 4;
@@ -135,6 +136,20 @@ public class TestMatchViewModel : IDisposable
         var viewModel = new MatchViewModel(joinedMatch, abandonment, play);
 
         Assert.Contains(expectedPawn, viewModel.Pawns);
+    }
+
+    [Fact]
+    public void WallPlaced_RivalPlacedWall_ShowsRivalWallsLeft()
+    {
+        string expectedText = string.Format(
+            CultureInfo.CurrentCulture,
+            Strings.MatchWallsFormat,
+            WallPlacedSamples.WallsLeftAfterOne);
+        MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+
+        _matchClient.RaiseWallPlaced(WallPlacedSamples.CreateFirstWall(JoinedMatchSamples.RivalNickname, CenterGroove));
+
+        Assert.Equal(expectedText, viewModel.Players[0].WallsText);
     }
 
     [Fact]

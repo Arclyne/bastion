@@ -130,7 +130,8 @@ public class Match
             pawnsByTurnOrder[participation.TurnOrder] = FindPawnCoordinates(participation, boardSize);
         }
 
-        return new Board(boardSize, pawnsByTurnOrder);
+        List<Wall> walls = ListPlacedWalls();
+        return new Board(boardSize, pawnsByTurnOrder, walls);
     }
 
     public IReadOnlyList<BoardCoordinates> ListReachableSquares(int accountId, byte boardSize)
@@ -170,17 +171,62 @@ public class Match
         PassTurnFrom(mover.TurnOrder);
     }
 
-    private void EnsurePawnCanMove(PawnMove pawnMove, byte boardSize)
+    public WallRejection? FindWallRejection(WallPlacement placement, byte boardSize)
     {
-        if (!IsTurnOf(pawnMove.AccountId) || pawnMove.MoveNumber != GetNextMoveNumber())
+        ArgumentNullException.ThrowIfNull(placement);
+
+        Participation? placer = FindActiveParticipation(placement.AccountId);
+        if (placer is null)
         {
-            throw new InvalidOperationException("Only the player who has the turn can make the expected move.");
+            throw new InvalidOperationException("Only a player of a match in progress can place a wall.");
         }
 
+        if (!placer.HasWallsLeft())
+        {
+            return new WallRejection(WallRejectionReason.NoWallsLeft, null);
+        }
+
+        Board board = BuildBoard(boardSize);
+        WallRejection? rejection = WallPolicy.FindRejection(board, placement.Wall);
+        return rejection;
+    }
+
+    public void PlaceWall(WallPlacement placement, byte boardSize, DateTime playedAt)
+    {
+        ArgumentNullException.ThrowIfNull(placement);
+
+        EnsureExpectedMove(placement.AccountId, placement.MoveNumber);
+        WallRejection? rejection = FindWallRejection(placement, boardSize);
+        if (rejection is not null)
+        {
+            throw new InvalidOperationException($"The wall cannot be placed. Reason={rejection.Reason}");
+        }
+
+        Participation placer = _participations.First(participation => participation.AccountId == placement.AccountId);
+        int timeSpentMilliseconds = GetTimeSpentMilliseconds(playedAt);
+        var timing = new MoveTiming(timeSpentMilliseconds, playedAt);
+        var move = new Move(placement, timing);
+        _moves.Add(move);
+        placer.SpendClock(timeSpentMilliseconds);
+        placer.SpendWall();
+        PassTurnFrom(placer.TurnOrder);
+    }
+
+    private void EnsurePawnCanMove(PawnMove pawnMove, byte boardSize)
+    {
+        EnsureExpectedMove(pawnMove.AccountId, pawnMove.MoveNumber);
         IReadOnlyList<BoardCoordinates> reachableSquares = ListReachableSquares(pawnMove.AccountId, boardSize);
         if (!reachableSquares.Contains(pawnMove.Destination))
         {
             throw new InvalidOperationException("The pawn cannot reach that square.");
+        }
+    }
+
+    private void EnsureExpectedMove(int accountId, short moveNumber)
+    {
+        if (!IsTurnOf(accountId) || moveNumber != GetNextMoveNumber())
+        {
+            throw new InvalidOperationException("Only the player who has the turn can make the expected move.");
         }
     }
 
@@ -199,6 +245,14 @@ public class Match
 
         BoardCoordinates destination = lastPawnMove.GetDestination();
         return destination;
+    }
+
+    private List<Wall> ListPlacedWalls()
+    {
+        IEnumerable<Wall> placedWalls = _moves
+            .Where(move => move.MoveType == MoveType.Wall)
+            .Select(move => move.GetWall());
+        return new List<Wall>(placedWalls);
     }
 
     private int GetTimeSpentMilliseconds(DateTime playedAt)

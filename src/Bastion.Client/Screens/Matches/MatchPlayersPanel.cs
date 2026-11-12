@@ -69,7 +69,7 @@ public sealed class MatchPlayersPanel : Panel
         };
         content.AddChild(CreatePawn(player));
         content.AddChild(nameColumn);
-        content.AddChild(ViewFactory.CreateUntranslatedLabel(player.WallsText, TextStyles.IdentityDetail));
+        content.AddChild(CreateWallsLabel(player));
         content.AddChild(ViewFactory.CreateUntranslatedLabel(player.ClockText, TextStyles.IdentityName));
         ViewFactory.CenterVertically(content);
 
@@ -83,6 +83,14 @@ public sealed class MatchPlayersPanel : Panel
         row.AddChild(CreateTurnHighlight(player));
         row.AddChild(content);
         return row;
+    }
+
+    private static Label CreateWallsLabel(MatchPlayerViewModel player)
+    {
+        Label walls = ViewFactory.CreateUntranslatedLabel(player.WallsText, TextStyles.IdentityDetail);
+        walls.BindingContext = player;
+        walls.SetBinding(nameof(Label.Text), nameof(MatchPlayerViewModel.WallsText));
+        return walls;
     }
 
     private static Panel CreatePawn(MatchPlayerViewModel player)

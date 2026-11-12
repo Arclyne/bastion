@@ -8,11 +8,21 @@ public sealed class FakeMatchMoveNotifier : IMatchMoveNotifier
 {
     public List<NotifiedPawnMove> NotifiedPawnMoves { get; } = new List<NotifiedPawnMove>();
 
+    public List<NotifiedWallPlacement> NotifiedWallPlacements { get; } = new List<NotifiedWallPlacement>();
+
     public void NotifyPawnMoved(int matchId, IReadOnlyCollection<int> recipientAccountIds, PawnMoveNotice notice)
     {
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
         ArgumentNullException.ThrowIfNull(notice);
 
         NotifiedPawnMoves.Add(new NotifiedPawnMove(matchId, recipientAccountIds, notice));
+    }
+
+    public void NotifyWallPlaced(int matchId, IReadOnlyCollection<int> recipientAccountIds, WallPlacementNotice notice)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+        ArgumentNullException.ThrowIfNull(notice);
+
+        NotifiedWallPlacements.Add(new NotifiedWallPlacement(matchId, recipientAccountIds, notice));
     }
 }

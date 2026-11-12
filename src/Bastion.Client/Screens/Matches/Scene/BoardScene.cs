@@ -28,6 +28,8 @@ public sealed class BoardScene : IDisposable
     private const int QuadVertexCount = 6;
     private const int QuadTriangleCount = 2;
     private const float SelectedPawnLightening = 0.35f;
+    private const float OpaqueAlpha = 1f;
+    private const float GhostAlpha = 0.55f;
 
     private static readonly Plane _boardSurface = new Plane(Vector3.Up, BoardSurfaceDistance);
 
@@ -36,6 +38,7 @@ public sealed class BoardScene : IDisposable
     private readonly SceneModel _quickBoardModel;
     private readonly SceneModel _pawnModel;
     private readonly BasicEffect _highlightEffect;
+    private readonly BasicEffect _wallEffect;
     private readonly VertexPositionColor[] _highlightVertices = new VertexPositionColor[QuadVertexCount];
     private readonly Dictionary<string, Color> _goalColorsByMeshName = new Dictionary<string, Color>();
     private MatchViewModel? _preparedMatch;
@@ -54,6 +57,11 @@ public sealed class BoardScene : IDisposable
         {
             VertexColorEnabled = true,
         };
+        _wallEffect = new BasicEffect(graphicsDevice)
+        {
+            PreferPerPixelLighting = true,
+        };
+        _wallEffect.EnableDefaultLighting();
     }
 
     public void Draw(MatchViewModel match)
@@ -65,6 +73,7 @@ public sealed class BoardScene : IDisposable
         ApplyDeviceStates();
         DrawBoard(GetBoardModel(match.BoardSize), camera);
         DrawReachableSquares(match, camera);
+        DrawWalls(match, camera);
         foreach (BoardPawn pawn in match.Pawns)
         {
             DrawPawn(match, pawn, camera);
@@ -75,23 +84,32 @@ public sealed class BoardScene : IDisposable
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        SceneCamera camera = CreateCamera(match.OwnTurnOrder);
-        Ray cursorRay = CreateCursorRay(cursorPosition, camera);
-        float? surfaceDistance = cursorRay.Intersects(_boardSurface);
-        if (surfaceDistance is not float distance)
+        if (!TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint))
         {
             square = new BoardCoordinates(OffBoardIndex, OffBoardIndex);
             return false;
         }
 
-        Vector3 surfaceOffset = cursorRay.Direction * distance;
-        Vector3 surfacePoint = cursorRay.Position + surfaceOffset;
         return BoardSceneLayout.TryGetCoordinates(match.BoardSize, surfacePoint, out square);
+    }
+
+    public bool TryFindGrooveUnderCursor(MatchViewModel match, Point cursorPosition, out BoardCoordinates groove)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+
+        if (!TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint))
+        {
+            groove = new BoardCoordinates(OffBoardIndex, OffBoardIndex);
+            return false;
+        }
+
+        return BoardSceneLayout.TryGetGroove(match.BoardSize, surfacePoint, out groove);
     }
 
     public void Dispose()
     {
         _highlightEffect.Dispose();
+        _wallEffect.Dispose();
     }
 
     private void PrepareGoalColors(MatchViewModel match)
@@ -208,6 +226,46 @@ public sealed class BoardScene : IDisposable
         }
     }
 
+    private void DrawWalls(MatchViewModel match, SceneCamera camera)
+    {
+        _wallEffect.View = camera.View;
+        _wallEffect.Projection = camera.Projection;
+        _wallEffect.Alpha = OpaqueAlpha;
+        foreach (Wall wall in match.Play.Walls)
+        {
+            DrawWall(match.BoardSize, wall, Palette.Wall);
+        }
+
+        WallPlacementViewModel wallPlacement = match.WallPlacement;
+        if (wallPlacement.PendingWall is Wall pendingWall)
+        {
+            DrawWall(match.BoardSize, pendingWall, Palette.PendingWall);
+        }
+
+        if (wallPlacement.HoveredWall is Wall hoveredWall)
+        {
+            DrawWallGhost(match.BoardSize, hoveredWall, wallPlacement.IsHoveredWallValid);
+        }
+    }
+
+    private void DrawWallGhost(byte boardSize, Wall hoveredWall, bool isValid)
+    {
+        Color ghostColor = isValid ? Palette.ValidWallGhost : Palette.InvalidWallGhost;
+        _graphicsDevice.BlendState = BlendState.NonPremultiplied;
+        _graphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
+        _wallEffect.Alpha = GhostAlpha;
+        DrawWall(boardSize, hoveredWall, ghostColor);
+        _wallEffect.Alpha = OpaqueAlpha;
+        ApplyDeviceStates();
+    }
+
+    private void DrawWall(byte boardSize, Wall wall, Color color)
+    {
+        _wallEffect.World = BoardSceneLayout.GetWallTransform(boardSize, wall);
+        _wallEffect.DiffuseColor = color.ToVector3();
+        WallMesh.Draw(_graphicsDevice, _wallEffect);
+    }
+
     private void DrawPawn(MatchViewModel match, BoardPawn pawn, SceneCamera camera)
     {
         var world = Matrix.CreateTranslation(BoardSceneLayout.GetCellCenter(match.BoardSize, pawn.Coordinates));
@@ -229,6 +287,22 @@ public sealed class BoardScene : IDisposable
 
         var selectedColor = Color.Lerp(pawnColor, Palette.White, SelectedPawnLightening);
         return selectedColor;
+    }
+
+    private bool TryFindSurfacePoint(MatchViewModel match, Point cursorPosition, out Vector3 surfacePoint)
+    {
+        SceneCamera camera = CreateCamera(match.OwnTurnOrder);
+        Ray cursorRay = CreateCursorRay(cursorPosition, camera);
+        float? surfaceDistance = cursorRay.Intersects(_boardSurface);
+        if (surfaceDistance is not float distance)
+        {
+            surfacePoint = Vector3.Zero;
+            return false;
+        }
+
+        Vector3 surfaceOffset = cursorRay.Direction * distance;
+        surfacePoint = cursorRay.Position + surfaceOffset;
+        return true;
     }
 
     private Ray CreateCursorRay(Point cursorPosition, SceneCamera camera)

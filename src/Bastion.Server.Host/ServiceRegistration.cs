@@ -32,7 +32,7 @@ public static class ServiceRegistration
         services.AddScoped<ILobbyChatService, LobbyChatService>();
         services.AddScoped<IMatchChatService, MatchChatService>();
         services.AddScoped<IMatchAbandonmentService, MatchAbandonmentService>();
-        services.AddScoped<IPawnMoveService, PawnMoveService>();
+        services.AddScoped<IMatchMoveService, MatchMoveService>();
         services.AddScoped<IChatModerator, ChatModerator>();
         services.AddScoped<IMatchSearchService, MatchSearchService>();
         services.AddScoped<IMatchmakingPlayerVerifier, MatchmakingPlayerVerifier>();

@@ -516,4 +516,34 @@
   <data name="MatchPlayerWonFormat" xml:space="preserve">
     <value>{0} won</value>
   </data>
+  <data name="MatchPlaceWallButton" xml:space="preserve">
+    <value>Place wall</value>
+  </data>
+  <data name="MatchRotateWallButton" xml:space="preserve">
+    <value>Rotate</value>
+  </data>
+  <data name="MatchConfirmWallButton" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="MatchCancelWallButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="MatchWallChooseHint" xml:space="preserve">
+    <value>Choose a groove. Right-click or R rotates the wall.</value>
+  </data>
+  <data name="MatchWallPendingHint" xml:space="preserve">
+    <value>Confirm the wall or choose another groove.</value>
+  </data>
+  <data name="MatchWallNoWallsLeft" xml:space="preserve">
+    <value>You have no walls left.</value>
+  </data>
+  <data name="MatchWallOutOfBoard" xml:space="preserve">
+    <value>The wall does not fit there.</value>
+  </data>
+  <data name="MatchWallGrooveTaken" xml:space="preserve">
+    <value>That groove is already taken.</value>
+  </data>
+  <data name="MatchWallWouldBlockFormat" xml:space="preserve">
+    <value>That wall would shut in {0}.</value>
+  </data>
 </root>

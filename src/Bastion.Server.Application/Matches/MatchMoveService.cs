@@ -9,15 +9,15 @@ using log4net;
 namespace Bastion.Server.Application.Matches;
 
 /// <inheritdoc/>
-public sealed class PawnMoveService : IPawnMoveService
+public sealed class MatchMoveService : IMatchMoveService
 {
-    private static readonly ILog _logger = LogManager.GetLogger(typeof(PawnMoveService));
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchMoveService));
 
     private readonly ISessionVerifier _sessionVerifier;
     private readonly IMatchRepository _matchRepository;
     private readonly IMatchMoveNotifier _matchMoveNotifier;
 
-    public PawnMoveService(
+    public MatchMoveService(
         ISessionVerifier sessionVerifier,
         IMatchRepository matchRepository,
         IMatchMoveNotifier matchMoveNotifier)
@@ -39,7 +39,7 @@ public sealed class PawnMoveService : IPawnMoveService
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
         Match match = FindPlayedMatch(player, move.MatchId);
-        EnsureTurn(match, player, move);
+        EnsureTurn(match, player, move.MoveNumber);
         BoardCoordinates destination = ReadDestination(player, move);
         var pawnMove = new PawnMove(player.AccountId, move.MoveNumber, destination);
         byte boardSize = FindBoardSize(match);
@@ -47,25 +47,45 @@ public sealed class PawnMoveService : IPawnMoveService
         Participation mover = match.Participations.Single(participation => participation.AccountId == player.AccountId);
         string fromSquare = mover.CurrentSquare;
         match.MovePawn(pawnMove, boardSize, now);
-        _matchRepository.SavePawnMove(match);
+        _matchRepository.SaveMove(match);
         _logger.Info(
             $"A pawn moved. AccountId={player.AccountId}; MatchId={match.MatchId}; MoveNumber={move.MoveNumber}");
         NotifyPawnMoved(match, player, fromSquare);
     }
 
-    private static void EnsureTurn(Match match, ConnectedPlayer player, ChosenPawnMove move)
+    /// <inheritdoc/>
+    public void PlaceWall(string sessionToken, ChosenWall wall, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(wall);
+
+        ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
+        Match match = FindPlayedMatch(player, wall.MatchId);
+        EnsureTurn(match, player, wall.MoveNumber);
+        Wall placedWall = ReadWall(player, wall);
+        var placement = new WallPlacement(player.AccountId, wall.MoveNumber, placedWall);
+        byte boardSize = FindBoardSize(match);
+        EnsureWallFits(match, placement, boardSize);
+        match.PlaceWall(placement, boardSize, now);
+        _matchRepository.SaveMove(match);
+        _logger.Info(
+            $"A wall was placed. AccountId={player.AccountId}; MatchId={match.MatchId}; MoveNumber={wall.MoveNumber}");
+        NotifyWallPlaced(match, player, placedWall);
+    }
+
+    private static void EnsureTurn(Match match, ConnectedPlayer player, short moveNumber)
     {
         short nextMoveNumber = match.GetNextMoveNumber();
-        if (match.IsTurnOf(player.AccountId) && move.MoveNumber == nextMoveNumber)
+        if (match.IsTurnOf(player.AccountId) && moveNumber == nextMoveNumber)
         {
             return;
         }
 
-        if (move.MoveNumber > nextMoveNumber)
+        if (moveNumber > nextMoveNumber)
         {
             _logger.Warn(
                 "A move arrived ahead of the expected number; the client may be modified. "
-                + $"AccountId={player.AccountId}; MatchId={match.MatchId}; MoveNumber={move.MoveNumber}; "
+                + $"AccountId={player.AccountId}; MatchId={match.MatchId}; MoveNumber={moveNumber}; "
                 + $"NextMoveNumber={nextMoveNumber}");
         }
 
@@ -98,6 +118,42 @@ public sealed class PawnMoveService : IPawnMoveService
             $"The server rejected a pawn move. AccountId={pawnMove.AccountId}; MatchId={match.MatchId}; "
             + $"MoveNumber={pawnMove.MoveNumber}; Square={destinationSquare}");
         throw new IllegalMoveException();
+    }
+
+    private static Wall ReadWall(ConnectedPlayer player, ChosenWall wall)
+    {
+        if (!BoardLayout.TryParseSquare(wall.Groove, out BoardCoordinates groove))
+        {
+            _logger.Warn(
+                $"A wall arrived with a groove outside board notation. AccountId={player.AccountId}; "
+                + $"MatchId={wall.MatchId}; Groove={wall.Groove}");
+            throw new IllegalWallException(WallRejectionReason.OutOfBoard, null);
+        }
+
+        return new Wall(groove, wall.Orientation);
+    }
+
+    private static void EnsureWallFits(Match match, WallPlacement placement, byte boardSize)
+    {
+        WallRejection? rejection = match.FindWallRejection(placement, boardSize);
+        if (rejection is null)
+        {
+            return;
+        }
+
+        string groove = BoardLayout.ToSquare(placement.Wall.Groove);
+        string logMessage = $"The server rejected a wall. AccountId={placement.AccountId}; MatchId={match.MatchId}; "
+            + $"Groove={groove}; Orientation={placement.Wall.Orientation}; Reason={rejection.Reason}";
+        if (rejection.Reason == WallRejectionReason.NoWallsLeft)
+        {
+            _logger.Warn($"{logMessage}. The interface does not allow it; the client may be modified.");
+        }
+        else
+        {
+            _logger.Info(logMessage);
+        }
+
+        throw new IllegalWallException(rejection.Reason, rejection.BlockedTurnOrder);
     }
 
     private Match FindPlayedMatch(ConnectedPlayer player, int matchId)
@@ -139,8 +195,34 @@ public sealed class PawnMoveService : IPawnMoveService
             RemainingClockMilliseconds = mover.RemainingClockMilliseconds,
             IsMatchOver = isMatchOver,
         };
-        IEnumerable<int> recipientAccountIds = match.Participations.Select(participation => participation.AccountId);
-        var recipientAccountIdList = new List<int>(recipientAccountIds);
-        _matchMoveNotifier.NotifyPawnMoved(match.MatchId, recipientAccountIdList, notice);
+        List<int> recipientAccountIds = ListParticipantAccountIds(match);
+        _matchMoveNotifier.NotifyPawnMoved(match.MatchId, recipientAccountIds, notice);
+    }
+
+    private void NotifyWallPlaced(Match match, ConnectedPlayer player, Wall placedWall)
+    {
+        Participation placer =
+            match.Participations.Single(participation => participation.AccountId == player.AccountId);
+        string groove = BoardLayout.ToSquare(placedWall.Groove);
+        short nextMoveNumber = match.GetNextMoveNumber();
+        var notice = new WallPlacementNotice
+        {
+            PlacerNickname = player.Nickname,
+            Groove = groove,
+            Orientation = placedWall.Orientation,
+            RemainingWalls = placer.RemainingWalls,
+            NextTurnOrder = match.CurrentTurnOrder,
+            NextMoveNumber = nextMoveNumber,
+            RemainingClockMilliseconds = placer.RemainingClockMilliseconds,
+        };
+        List<int> recipientAccountIds = ListParticipantAccountIds(match);
+        _matchMoveNotifier.NotifyWallPlaced(match.MatchId, recipientAccountIds, notice);
+    }
+
+    private static List<int> ListParticipantAccountIds(Match match)
+    {
+        IEnumerable<int> participantAccountIds =
+            match.Participations.Select(participation => participation.AccountId);
+        return new List<int>(participantAccountIds);
     }
 }

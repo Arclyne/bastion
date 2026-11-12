@@ -53,12 +53,35 @@ public sealed class MatchService : IMatchService
         TranslateMatchFailures(nameof(MovePawn), move.MatchId, movePawn);
     }
 
+    /// <inheritdoc/>
+    public void PlaceWall(string? sessionToken, WallPlacement? wall)
+    {
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
+        if (wall is null || !Enum.IsDefined(wall.Orientation))
+        {
+            _logger.Warn("A wall arrived without its data or with an unknown orientation.");
+            throw MatchTranslator.ToUnreadableWallFault();
+        }
+
+        var chosenWall = MatchTranslator.ToChosenWall(wall);
+        Action placeWall = () => PlaceWallInRequestScope(token, chosenWall);
+        TranslateMatchFailures(nameof(PlaceWall), wall.MatchId, placeWall);
+    }
+
     private void MovePawnInRequestScope(string token, ChosenPawnMove move)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
-        IPawnMoveService pawnMoveService = scope.ServiceProvider.GetRequiredService<IPawnMoveService>();
+        IMatchMoveService matchMoveService = scope.ServiceProvider.GetRequiredService<IMatchMoveService>();
         DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
-        pawnMoveService.MovePawn(token, move, now);
+        matchMoveService.MovePawn(token, move, now);
+    }
+
+    private void PlaceWallInRequestScope(string token, ChosenWall wall)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchMoveService matchMoveService = scope.ServiceProvider.GetRequiredService<IMatchMoveService>();
+        DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
+        matchMoveService.PlaceWall(token, wall, now);
     }
 
     private void AbandonMatchInRequestScope(string token, int matchId)
@@ -89,6 +112,10 @@ public sealed class MatchService : IMatchService
             throw MatchTranslator.ToFault(ex);
         }
         catch (IllegalMoveException ex)
+        {
+            throw MatchTranslator.ToFault(ex);
+        }
+        catch (IllegalWallException ex)
         {
             throw MatchTranslator.ToFault(ex);
         }

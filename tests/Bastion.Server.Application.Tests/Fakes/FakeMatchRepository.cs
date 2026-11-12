@@ -37,7 +37,7 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public List<Match> SavedAbandonments { get; } = new List<Match>();
 
-    public List<Match> SavedPawnMoves { get; } = new List<Match>();
+    public List<Match> SavedMoves { get; } = new List<Match>();
 
     public bool HasUnfinishedParticipation(int accountId)
     {
@@ -106,11 +106,11 @@ public sealed class FakeMatchRepository : IMatchRepository
         return ActiveGameMode?.GameModeId == gameModeId ? ActiveGameMode : null;
     }
 
-    public void SavePawnMove(Match match)
+    public void SaveMove(Match match)
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        SavedPawnMoves.Add(match);
+        SavedMoves.Add(match);
     }
 
     private static GameMode CreateClassicGameMode()

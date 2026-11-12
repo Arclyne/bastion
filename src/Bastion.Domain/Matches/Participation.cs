@@ -5,6 +5,7 @@ namespace Bastion.Domain.Matches;
 public class Participation
 {
     private const int NoClockLeft = 0;
+    private const byte NoWallsLeft = 0;
 
     private static readonly PawnSymbol[] _pawnSymbolsInTurnOrder = new PawnSymbol[]
     {
@@ -66,6 +67,11 @@ public class Participation
         return _pawnSymbolsInTurnOrder[symbolIndex];
     }
 
+    public bool HasWallsLeft()
+    {
+        return RemainingWalls > NoWallsLeft;
+    }
+
     internal void Finish(ParticipationResult result)
     {
         if (Result.HasValue)
@@ -107,5 +113,15 @@ public class Participation
 
         int leftMilliseconds = remainingMilliseconds - spentMilliseconds;
         RemainingClockMilliseconds = Math.Max(leftMilliseconds, NoClockLeft);
+    }
+
+    internal void SpendWall()
+    {
+        if (!HasWallsLeft())
+        {
+            throw new InvalidOperationException("The player has no walls left.");
+        }
+
+        RemainingWalls--;
     }
 }

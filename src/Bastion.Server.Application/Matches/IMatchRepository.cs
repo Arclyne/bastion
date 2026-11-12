@@ -25,5 +25,5 @@ public interface IMatchRepository
 
     GameMode? FindGameMode(byte gameModeId);
 
-    void SavePawnMove(Match match);
+    void SaveMove(Match match);
 }

@@ -22,6 +22,9 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     private readonly SynchronizationContext? _uiContext;
     private readonly Dictionary<byte, BoardCoordinates> _pawnsByTurnOrder;
     private readonly Dictionary<string, byte> _turnOrdersByNickname;
+    private readonly Dictionary<byte, string> _nicknamesByTurnOrder;
+    private readonly Dictionary<byte, byte> _remainingWallsByTurnOrder;
+    private readonly List<Wall> _walls = new List<Wall>();
     private List<BoardCoordinates> _reachableSquares = new List<BoardCoordinates>();
 
     public MatchPlayViewModel(JoinedMatch joinedMatch, IMatchClient matches)
@@ -35,13 +38,16 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         IReadOnlyList<FoundMatchParticipant> participants = joinedMatch.FoundMatch.Participants;
         _pawnsByTurnOrder = new Dictionary<byte, BoardCoordinates>(participants.Count);
         _turnOrdersByNickname = new Dictionary<string, byte>(participants.Count, StringComparer.Ordinal);
+        _nicknamesByTurnOrder = new Dictionary<byte, string>(participants.Count);
+        _remainingWallsByTurnOrder = new Dictionary<byte, byte>(participants.Count);
         BoardSize = joinedMatch.FoundMatch.Format.BoardSize;
         OwnTurnOrder = joinedMatch.FindOwnParticipant().TurnOrder;
         CurrentTurnOrder = Match.FirstTurnOrder;
         NextMoveNumber = Match.FirstMoveNumber;
         NoticeText = string.Empty;
-        PlacePawnsAtStart(participants);
+        PlacePawnsAtStart(participants, joinedMatch.FoundMatch.Format.WallsPerPlayer);
         _matches.PawnMoved += HandlePawnMoved;
+        _matches.WallPlaced += HandleWallPlaced;
         _matches.MatchAbandoned += HandleMatchAbandoned;
     }
 
@@ -64,6 +70,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     public IReadOnlyList<BoardCoordinates> ReachableSquares => _reachableSquares;
 
     public IReadOnlyDictionary<byte, BoardCoordinates> Pawns => _pawnsByTurnOrder;
+
+    public IReadOnlyList<Wall> Walls => _walls;
 
     public string NoticeText
     {
@@ -119,19 +127,71 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         OnStateChanged();
     }
 
+    public Board BuildBoard()
+    {
+        return new Board(BoardSize, _pawnsByTurnOrder, _walls);
+    }
+
+    public byte GetRemainingWalls(byte turnOrder)
+    {
+        return _remainingWallsByTurnOrder.GetValueOrDefault(turnOrder);
+    }
+
+    public string FindNickname(byte turnOrder)
+    {
+        return _nicknamesByTurnOrder.GetValueOrDefault(turnOrder, string.Empty);
+    }
+
+    public bool IsOwnTurn()
+    {
+        return CurrentTurnOrder == OwnTurnOrder;
+    }
+
+    public bool CanPlaceWall()
+    {
+        byte ownRemainingWalls = GetRemainingWalls(OwnTurnOrder);
+        return CanChooseMove() && IsOwnTurn() && ownRemainingWalls > 0;
+    }
+
+    public async Task<bool> PlaceWall(Wall wall)
+    {
+        ArgumentNullException.ThrowIfNull(wall);
+
+        if (!CanPlaceWall())
+        {
+            return false;
+        }
+
+        NoticeText = string.Empty;
+        string groove = BoardLayout.ToSquare(wall.Groove);
+        var orientation = MatchWallTranslator.ToPlacedWallOrientation(wall.Orientation);
+        var chosenWall = new ChosenWall
+        {
+            MatchId = _joinedMatch.FoundMatch.MatchId,
+            MoveNumber = NextMoveNumber,
+            Groove = groove,
+            Orientation = orientation,
+        };
+        bool isSent = await TrySendToServer(() => PlaceInJoinedMatch(chosenWall));
+        return isSent;
+    }
+
     public void Dispose()
     {
         _matches.PawnMoved -= HandlePawnMoved;
+        _matches.WallPlaced -= HandleWallPlaced;
         _matches.MatchAbandoned -= HandleMatchAbandoned;
     }
 
-    private void PlacePawnsAtStart(IReadOnlyList<FoundMatchParticipant> participants)
+    private void PlacePawnsAtStart(IReadOnlyList<FoundMatchParticipant> participants, byte wallsPerPlayer)
     {
         foreach (FoundMatchParticipant participant in participants)
         {
             BoardCoordinates start = BoardLayout.GetStartingCoordinates(BoardSize, participant.TurnOrder);
             _pawnsByTurnOrder[participant.TurnOrder] = start;
             _turnOrdersByNickname[participant.Nickname] = participant.TurnOrder;
+            _nicknamesByTurnOrder[participant.TurnOrder] = participant.Nickname;
+            _remainingWallsByTurnOrder[participant.TurnOrder] = wallsPerPlayer;
         }
     }
 
@@ -148,42 +208,51 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
             return;
         }
 
-        var board = new Board(BoardSize, _pawnsByTurnOrder);
+        Board board = BuildBoard();
         IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, OwnTurnOrder);
         _reachableSquares = new List<BoardCoordinates>(reachableSquares);
         SelectedPawn = ownPawn;
         OnStateChanged();
     }
 
-    private bool IsOwnTurn()
-    {
-        return CurrentTurnOrder == OwnTurnOrder;
-    }
 
     private async Task SendMove(BoardCoordinates destination)
     {
         string toSquare = BoardLayout.ToSquare(destination);
         var move = new ChosenPawnMove(_joinedMatch.FoundMatch.MatchId, NextMoveNumber, toSquare);
+        bool isSent = await TrySendToServer(() => MoveInJoinedMatch(move));
+        if (isSent)
+        {
+            ClearSelection();
+        }
+    }
+
+    private async Task<bool> TrySendToServer(Action sendToServer)
+    {
         IsSending = true;
         try
         {
-            await Task.Run(() => MoveInJoinedMatch(move));
-            ClearSelection();
+            await Task.Run(sendToServer);
+            return true;
         }
         catch (NotYourTurnException ex)
         {
             _logger.Warn($"The server says another player has the turn. NextMoveNumber={ex.NextMoveNumber}", ex);
-            TakeServerTurn(ex.CurrentTurnOrder, ex.NextMoveNumber);
-            ClearSelection();
+            SyncServerTurn(ex.CurrentTurnOrder, ex.NextMoveNumber);
         }
         catch (IllegalMoveException ex)
         {
-            _logger.Warn($"The server turned down a pawn move. Square={toSquare}", ex);
+            _logger.Warn("The server turned down a pawn move.", ex);
             NoticeText = Strings.MatchMoveNotAllowed;
+        }
+        catch (IllegalWallException ex)
+        {
+            _logger.Warn($"The server turned down a wall. Rejection={ex.Rejection}", ex);
+            ShowWallRejection(ex);
         }
         catch (MatchNotJoinedException ex)
         {
-            _logger.Warn("The match was already over when the pawn moved.", ex);
+            _logger.Warn("The match was already over when the move was sent.", ex);
             EndMatch(null);
         }
         catch (InvalidSessionException ex)
@@ -204,12 +273,14 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         }
         catch (ObjectDisposedException ex)
         {
-            _logger.Warn("The pawn move could not be sent because the connection is closed.", ex);
+            _logger.Warn("The move could not be sent because the connection is closed.", ex);
         }
         finally
         {
             IsSending = false;
         }
+
+        return false;
     }
 
     private void MoveInJoinedMatch(ChosenPawnMove move)
@@ -217,9 +288,30 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         _matches.MovePawn(_joinedMatch.Session.Token, move);
     }
 
+    private void PlaceInJoinedMatch(ChosenWall wall)
+    {
+        _matches.PlaceWall(_joinedMatch.Session.Token, wall);
+    }
+
+    private void SyncServerTurn(byte turnOrder, short nextMoveNumber)
+    {
+        TakeServerTurn(turnOrder, nextMoveNumber);
+        ClearSelection();
+        OnStateChanged();
+    }
+
+    private void ShowWallRejection(IllegalWallException rejection)
+    {
+        WallRejectionReason reason = MatchWallTranslator.ToRejectionReason(rejection.Rejection);
+        string blockedNickname = rejection.BlockedTurnOrder is byte blockedTurnOrder
+            ? FindNickname(blockedTurnOrder)
+            : string.Empty;
+        NoticeText = WallRejectionText.Describe(reason, blockedNickname);
+    }
+
     private void ReportMoveFailure(Exception ex)
     {
-        _logger.Warn("The pawn move could not be sent.", ex);
+        _logger.Warn("The move could not be sent.", ex);
         NoticeText = Strings.MatchMoveFailed;
     }
 
@@ -242,6 +334,23 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
             return;
         }
 
+        OnStateChanged();
+    }
+
+    private void ReceiveWallPlacement(WallPlacedEventArgs e)
+    {
+        if (!_turnOrdersByNickname.TryGetValue(e.PlacerNickname, out byte placerTurnOrder)
+            || !BoardLayout.TryParseSquare(e.Groove, out BoardCoordinates groove))
+        {
+            _logger.Warn($"A wall arrived that the board cannot place. MatchId={e.MatchId}; Groove={e.Groove}");
+            return;
+        }
+
+        var orientation = MatchWallTranslator.ToWallOrientation(e.Orientation);
+        _walls.Add(new Wall(groove, orientation));
+        _remainingWallsByTurnOrder[placerTurnOrder] = e.RemainingWalls;
+        TakeServerTurn(e.NextTurnOrder, e.NextMoveNumber);
+        ClearSelection();
         OnStateChanged();
     }
 
@@ -294,6 +403,16 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         }
 
         UiThread.Run(_uiContext, () => ReceivePawnMove(e));
+    }
+
+    private void HandleWallPlaced(object? sender, WallPlacedEventArgs e)
+    {
+        if (e.MatchId != _joinedMatch.FoundMatch.MatchId)
+        {
+            return;
+        }
+
+        UiThread.Run(_uiContext, () => ReceiveWallPlacement(e));
     }
 
     private void HandleMatchAbandoned(object? sender, MatchAbandonedEventArgs e)

@@ -4,6 +4,7 @@ using System.Linq;
 using System.ServiceModel;
 using Bastion.Client.Networking.Chat;
 using Bastion.Client.Networking.Friends;
+using Bastion.Client.Networking.Matches;
 using Bastion.Client.Networking.Matchmaking;
 using Bastion.Client.Networking.PrivateChat;
 using Bastion.Client.Networking.Rooms;
@@ -26,6 +27,8 @@ public sealed class NotificationCallback : INotificationCallback
     public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
 
     public event EventHandler<PawnMovedEventArgs>? PawnMoved;
+
+    public event EventHandler<WallPlacedEventArgs>? WallPlaced;
 
     public event EventHandler<MatchFoundEventArgs>? MatchFound;
 
@@ -132,13 +135,19 @@ public sealed class NotificationCallback : INotificationCallback
 
     private bool TryDispatchMatchMoveNotification(Notification notification)
     {
-        if (notification is not PawnMovedNotification pawnMoved)
+        if (notification is PawnMovedNotification pawnMoved)
         {
-            return false;
+            OnPawnMoved(ToPawnMovedEventArgs(pawnMoved));
+            return true;
         }
 
-        OnPawnMoved(ToPawnMovedEventArgs(pawnMoved));
-        return true;
+        if (notification is WallPlacedNotification wallPlaced)
+        {
+            OnWallPlaced(MatchContractTranslator.ToWallPlacedEventArgs(wallPlaced));
+            return true;
+        }
+
+        return false;
     }
 
     private static PawnMovedEventArgs ToPawnMovedEventArgs(PawnMovedNotification notification)
@@ -162,6 +171,11 @@ public sealed class NotificationCallback : INotificationCallback
     private void OnPawnMoved(PawnMovedEventArgs e)
     {
         PawnMoved?.Invoke(this, e);
+    }
+
+    private void OnWallPlaced(WallPlacedEventArgs e)
+    {
+        WallPlaced?.Invoke(this, e);
     }
 
     private bool TryDispatchFriendNotification(Notification notification)

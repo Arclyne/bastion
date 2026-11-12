@@ -32,6 +32,12 @@ public sealed class MatchClient : IMatchClient
         remove => _notificationClient.PawnMoved -= value;
     }
 
+    public event EventHandler<WallPlacedEventArgs>? WallPlaced
+    {
+        add => _notificationClient.WallPlaced += value;
+        remove => _notificationClient.WallPlaced -= value;
+    }
+
     public void AbandonMatch(string sessionToken, int matchId)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
@@ -70,6 +76,26 @@ public sealed class MatchClient : IMatchClient
         }
     }
 
+    public void PlaceWall(string sessionToken, ChosenWall wall)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(wall);
+
+        var contractWall = MatchContractTranslator.ToWallPlacement(wall);
+        try
+        {
+            _channel.Call(service => service.PlaceWall(sessionToken, contractWall));
+        }
+        catch (CommunicationException ex)
+        {
+            throw ToClientException(ex);
+        }
+        catch (TimeoutException ex)
+        {
+            throw ToClientException(ex);
+        }
+    }
+
     private static PawnMove ToContractMove(ChosenPawnMove move)
     {
         return new PawnMove
@@ -93,6 +119,8 @@ public sealed class MatchClient : IMatchClient
                     ex);
             case FaultException<IllegalMoveFault>:
                 return new IllegalMoveException(ex);
+            case FaultException<IllegalWallFault> illegalWall:
+                return MatchContractTranslator.ToIllegalWallException(illegalWall);
             default:
                 return ServiceFailureTranslator.ToClientException(ex);
         }
