@@ -58,10 +58,12 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 
     public void ReceiveEscapeKey()
     {
-        if (_currentScreen is IEscapeKeyReceiver receiver)
+        if (_currentScreen is not IEscapeKeyReceiver receiver)
         {
-            receiver.ReceiveEscapeKey();
+            return;
         }
+
+        receiver.ReceiveEscapeKey();
     }
 
     public void Dispose()
