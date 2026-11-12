@@ -3,14 +3,11 @@ using Bastion.Client.Localization;
 using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Screens.MainMenu.Friends;
 using Bastion.Client.Theme;
-using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using log4net;
-using RenderingLibrary.Graphics;
 
 namespace Bastion.Client.Screens.MainMenu;
 
@@ -30,13 +27,14 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
     private const float AvatarSize = 46;
     private const float AvatarRingWidth = 2.5f;
     private const float IdentitySpacing = 3;
-    private const float TabletWidth = 460;
-    private const float TabletY = 164;
-    private const float TabletPaddingX = 30;
-    private const float TabletPaddingTop = 26;
-    private const float TabletPaddingBottom = 30;
-    private const float TabletContentWidth = 400;
-    private const float TabletSpacing = 20;
+    private const float MenuCardWidth = 460;
+    private const float MenuCardY = 164;
+    private const float MenuCardPaddingX = 30;
+    private const float MenuCardPaddingTop = 26;
+    private const float MenuCardPaddingBottom = 30;
+    private const float MenuCardContentWidth = MenuCardWidth - (MenuCardPaddingX * HorizontalSideCount);
+    private const int HorizontalSideCount = 2;
+    private const float MenuCardSpacing = 20;
     private const float BrandSpacing = 3;
     private const float HeroHeight = 78;
     private const float HeroIconSize = 50;
@@ -50,6 +48,9 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
     private const float PillSpacing = 10;
     private const float FriendsPillWidth = 112;
     private const float ChatPillWidth = 92;
+    private const float FriendsPillRightOffset = ScreenMetrics.MarginX + SettingsWidth + PillSpacing;
+    private const float ChatPillRightOffset = FriendsPillRightOffset + FriendsPillWidth + PillSpacing;
+    private const float PillRowY = ScreenMetrics.MarginY + SettingsOffsetY;
     private const float FriendsPanelGapY = 12;
     private const float BadgeSize = 22;
     private const float BadgeOverlap = 8;
@@ -57,19 +58,19 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MainMenuView));
 
-    private readonly FriendsPanelViewModel _friendsPanel;
+    private readonly FriendsPanelViewModel _friendsPanelViewModel;
     private readonly MatchSearchViewModel _matchSearchViewModel;
 
     public MainMenuView(
         MainMenuViewModel viewModel,
-        FriendsPanelViewModel friendsPanel,
+        FriendsPanelViewModel friendsPanelViewModel,
         MatchSearchViewModel matchSearchViewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
-        ArgumentNullException.ThrowIfNull(friendsPanel);
+        ArgumentNullException.ThrowIfNull(friendsPanelViewModel);
         ArgumentNullException.ThrowIfNull(matchSearchViewModel);
 
-        _friendsPanel = friendsPanel;
+        _friendsPanelViewModel = friendsPanelViewModel;
         _matchSearchViewModel = matchSearchViewModel;
         BindingContext = viewModel;
         AddChild(CreateIdentityChip());
@@ -77,24 +78,24 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         AddChild(CreateFriendsButton());
         AddChild(CreateChatButton());
         AddChild(CreateCountBadge(
-            friendsPanel.Requests,
+            friendsPanelViewModel.Requests,
             new BadgeBinding(
                 nameof(FriendRequestsViewModel.PendingCountText),
                 nameof(FriendRequestsViewModel.HasPending)),
-            ScreenMetrics.MarginX + SettingsWidth + PillSpacing));
+            FriendsPillRightOffset));
         AddChild(CreateCountBadge(
-            friendsPanel.Chat,
+            friendsPanelViewModel.Chat,
             new BadgeBinding(nameof(ChatTabViewModel.UnreadText), nameof(ChatTabViewModel.HasUnread)),
-            ScreenMetrics.MarginX + SettingsWidth + PillSpacing + FriendsPillWidth + PillSpacing));
-        AddChild(CreateTablet());
+            ChatPillRightOffset));
+        AddChild(CreateMenuCard());
         AddChild(CreateMatchSearchPanel());
         AddChild(CreateHowToPlayButton());
         AddChild(ViewFactory.CreateVersionLabel());
-        AddChild(CreateFriendsPanel(friendsPanel));
-        AddChild(CreateRequestToast(friendsPanel.Requests));
+        AddChild(CreateFriendsPanel(friendsPanelViewModel));
+        AddChild(CreateRequestToast(friendsPanelViewModel.Requests));
         AddDialog(
-            new RemoveFriendDialogView(friendsPanel.Actions),
-            friendsPanel.Actions,
+            new RemoveFriendDialogView(friendsPanelViewModel.Actions),
+            friendsPanelViewModel.Actions,
             nameof(FriendActionsViewModel.IsDialogOpen));
         AddDialog(
             new PresenceDialogView(matchSearchViewModel),
@@ -104,12 +105,16 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
 
     public void ReceiveEscapeKey()
     {
-        _friendsPanel.Close();
+        _friendsPanelViewModel.Close();
     }
 
     private static Panel CreateIdentityChip()
     {
-        var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = ChipSpacing };
+        var content = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = ChipSpacing,
+        };
         content.AddChild(CreateAvatar());
         content.AddChild(CreateIdentityText());
         content.Anchor(Gum.Wireframe.Anchor.Left);
@@ -146,7 +151,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
             Height = AvatarSize,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        RectangleRuntime circle = Shapes.CreateRounded(Palette.AvatarFill, AvatarSize / 2);
+        RectangleRuntime circle = Shapes.CreateCircle(Palette.AvatarFill, AvatarSize);
         circle.StrokeColor = Palette.PlayerOne;
         circle.StrokeWidth = AvatarRingWidth;
         Shapes.InsertBehindContent(avatar.Visual, circle);
@@ -155,11 +160,14 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
 
     private static StackPanel CreateIdentityText()
     {
-        Label nickname = ViewFactory.CreateLabel(string.Empty, TextStyles.IdentityName);
-        ((LabelVisual)nickname.Visual).LocalizeText = false;
-        nickname.SetBinding(nameof(Label.Text), nameof(MainMenuViewModel.Nickname));
+        Label nickname = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(MainMenuViewModel.Nickname),
+            TextStyles.IdentityName);
 
-        var text = new StackPanel { Spacing = IdentitySpacing };
+        var text = new StackPanel
+        {
+            Spacing = IdentitySpacing,
+        };
         text.AddChild(nickname);
         text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuClassicMode), TextStyles.IdentityDetail));
         ViewFactory.CenterVertically(text);
@@ -168,92 +176,15 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
 
     private static Button CreateSettingsButton()
     {
-        Button button = CreatePillButton(nameof(Strings.MainMenuSettings), SettingsWidth);
+        return CreateTopRightPill(nameof(Strings.MainMenuSettings), SettingsWidth, ScreenMetrics.MarginX);
+    }
+
+    private static Button CreateTopRightPill(string textKey, float width, float rightOffset)
+    {
+        Button button = CreatePillButton(textKey, width);
         button.Anchor(Gum.Wireframe.Anchor.TopRight);
-        button.X = -ScreenMetrics.MarginX;
-        button.Y = ScreenMetrics.MarginY + SettingsOffsetY;
-        return button;
-    }
-
-    private static FriendsPanel CreateFriendsPanel(FriendsPanelViewModel friendsPanel)
-    {
-        var panel = new FriendsPanel(friendsPanel);
-        panel.Anchor(Gum.Wireframe.Anchor.TopRight);
-        panel.X = -ScreenMetrics.MarginX;
-        panel.Y = ScreenMetrics.MarginY + SettingsOffsetY + ScreenMetrics.MenuPillHeight + FriendsPanelGapY;
-        return panel;
-    }
-
-    private static Panel CreateCountBadge(object context, BadgeBinding binding, float pillRightOffset)
-    {
-        Label count = ViewFactory.CreateLabel(string.Empty, TextStyles.PrimaryButton);
-        ((LabelVisual)count.Visual).LocalizeText = false;
-        count.SetBinding(nameof(Label.Text), binding.TextProperty);
-        count.XUnits = GeneralUnitType.PixelsFromMiddle;
-        count.XOrigin = HorizontalAlignment.Center;
-        ViewFactory.CenterVertically(count);
-
-        var badge = new Panel
-        {
-            Width = BadgeSize,
-            WidthUnits = DimensionUnitType.Absolute,
-            Height = BadgeSize,
-            HeightUnits = DimensionUnitType.Absolute,
-            BindingContext = context,
-        };
-        Shapes.InsertBehindContent(badge.Visual, Shapes.CreateRounded(Palette.PlayerOne, BadgeSize / 2));
-        badge.AddChild(count);
-        badge.Anchor(Gum.Wireframe.Anchor.TopRight);
-        badge.X = -pillRightOffset + BadgeOverlap;
-        badge.Y = ScreenMetrics.MarginY + SettingsOffsetY - BadgeOverlap;
-        badge.SetBinding(nameof(IsVisible), binding.VisibilityProperty);
-        return badge;
-    }
-
-    private static FriendRequestToast CreateRequestToast(FriendRequestsViewModel requests)
-    {
-        var toast = new FriendRequestToast(requests);
-        toast.Anchor(Gum.Wireframe.Anchor.Top);
-        toast.Y = ScreenMetrics.MarginY;
-        return toast;
-    }
-
-    private Button CreateFriendsButton()
-    {
-        Button button = CreatePillButton(nameof(Strings.MainMenuFriends), FriendsPillWidth);
-        button.Anchor(Gum.Wireframe.Anchor.TopRight);
-        button.X = -(ScreenMetrics.MarginX + SettingsWidth + PillSpacing);
-        button.Y = ScreenMetrics.MarginY + SettingsOffsetY;
-        button.Click += HandleFriendsClick;
-        return button;
-    }
-
-    private Button CreateChatButton()
-    {
-        Button button = CreatePillButton(nameof(Strings.MainMenuChat), ChatPillWidth);
-        button.Anchor(Gum.Wireframe.Anchor.TopRight);
-        button.X = -(ScreenMetrics.MarginX + SettingsWidth + PillSpacing + FriendsPillWidth + PillSpacing);
-        button.Y = ScreenMetrics.MarginY + SettingsOffsetY;
-        button.Click += HandleChatClick;
-        return button;
-    }
-
-    private void HandleFriendsClick(object? sender, EventArgs e)
-    {
-        _friendsPanel.Open(FriendsTab.Friends);
-    }
-
-    private void HandleChatClick(object? sender, EventArgs e)
-    {
-        _friendsPanel.Open(FriendsTab.Chat);
-    }
-
-    private static Button CreateHowToPlayButton()
-    {
-        Button button = CreatePillButton(nameof(Strings.MainMenuHowToPlay), HowToPlayWidth);
-        button.Anchor(Gum.Wireframe.Anchor.BottomLeft);
-        button.X = ScreenMetrics.MarginX;
-        button.Y = -ScreenMetrics.MarginY;
+        button.X = -rightOffset;
+        button.Y = PillRowY;
         return button;
     }
 
@@ -264,49 +195,103 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         return button;
     }
 
-    private Panel CreateTablet()
+    private Button CreateFriendsButton()
+    {
+        Button button = CreateTopRightPill(nameof(Strings.MainMenuFriends), FriendsPillWidth, FriendsPillRightOffset);
+        button.Click += HandleFriendsClick;
+        return button;
+    }
+
+    private Button CreateChatButton()
+    {
+        Button button = CreateTopRightPill(nameof(Strings.MainMenuChat), ChatPillWidth, ChatPillRightOffset);
+        button.Click += HandleChatClick;
+        return button;
+    }
+
+    private static Panel CreateCountBadge(object bindingContext, BadgeBinding binding, float pillRightOffset)
+    {
+        Label count = ViewFactory.CreateBoundUntranslatedLabel(binding.TextProperty, TextStyles.PrimaryButton);
+        ViewFactory.CenterHorizontally(count);
+        ViewFactory.CenterVertically(count);
+
+        var badge = new Panel
+        {
+            Width = BadgeSize,
+            WidthUnits = DimensionUnitType.Absolute,
+            Height = BadgeSize,
+            HeightUnits = DimensionUnitType.Absolute,
+            BindingContext = bindingContext,
+        };
+        Shapes.InsertBehindContent(badge.Visual, Shapes.CreateCircle(Palette.PlayerOne, BadgeSize));
+        badge.AddChild(count);
+        badge.Anchor(Gum.Wireframe.Anchor.TopRight);
+        badge.X = -pillRightOffset + BadgeOverlap;
+        badge.Y = PillRowY - BadgeOverlap;
+        badge.SetBinding(nameof(IsVisible), binding.VisibilityProperty);
+        return badge;
+    }
+
+    private Panel CreateMenuCard()
     {
         var content = new StackPanel
         {
-            X = TabletPaddingX,
-            Y = TabletPaddingTop,
-            Width = TabletContentWidth,
+            X = MenuCardPaddingX,
+            Y = MenuCardPaddingTop,
+            Width = MenuCardContentWidth,
             WidthUnits = DimensionUnitType.Absolute,
-            Spacing = TabletSpacing,
+            Spacing = MenuCardSpacing,
         };
         content.AddChild(CreateBrand());
         content.AddChild(CreateFindMatchButton());
         content.AddChild(CreateMatchSearchStatus());
-        content.AddChild(CreateCentered(ViewFactory.CreateLabel(
+        content.AddChild(CreateCenteredRow(ViewFactory.CreateLabel(
             nameof(Strings.MainMenuPrivateMatch),
             TextStyles.SectionLabel)));
         content.AddChild(CreatePrivateMatchButtons());
 
-        var tablet = new Panel
+        var card = new Panel
         {
-            Width = TabletWidth,
+            Width = MenuCardWidth,
             WidthUnits = DimensionUnitType.Absolute,
-            Height = TabletPaddingBottom,
+            Height = MenuCardPaddingBottom,
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
-        tablet.Anchor(Gum.Wireframe.Anchor.Top);
-        tablet.Y = TabletY;
-        tablet.AddChild(content);
-        Skins.ApplyCard(tablet.Visual);
-        return tablet;
+        card.Anchor(Gum.Wireframe.Anchor.Top);
+        card.Y = MenuCardY;
+        card.AddChild(content);
+        Skins.ApplyCard(card.Visual);
+        return card;
     }
 
     private static Panel CreateBrand()
     {
-        var brand = new StackPanel { Spacing = BrandSpacing };
+        var brand = new StackPanel
+        {
+            Spacing = BrandSpacing,
+        };
         brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.AppName), TextStyles.MenuTitle));
         brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.LoginTagline), TextStyles.MenuTagline));
-        return CreateCentered(brand);
+        return CreateCenteredRow(brand);
+    }
+
+    private static Panel CreateCenteredRow(FrameworkElement element)
+    {
+        ViewFactory.CenterHorizontally(element);
+
+        var row = new Panel
+        {
+            Width = MenuCardContentWidth,
+            WidthUnits = DimensionUnitType.Absolute,
+            HeightUnits = DimensionUnitType.RelativeToChildren,
+        };
+        row.AddChild(element);
+        return row;
     }
 
     private Button CreateFindMatchButton()
     {
-        Button button = ViewFactory.CreateButton(string.Empty, TabletContentWidth, HeroHeight);
+        Button button = ViewFactory.CreateButton(string.Empty, MenuCardContentWidth, HeroHeight);
         ButtonSkin.CreateAndAttach(button, ButtonLooks.Hero);
         button.BindingContext = _matchSearchViewModel;
         button.SetBinding(nameof(IsEnabled), nameof(MatchSearchViewModel.CanStartSearch));
@@ -322,7 +307,11 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         icon.HeightUnits = DimensionUnitType.Absolute;
         button.AddChild(icon);
 
-        var text = new StackPanel { X = HeroTextX, Spacing = HeroTextSpacing };
+        var text = new StackPanel
+        {
+            X = HeroTextX,
+            Spacing = HeroTextSpacing,
+        };
         text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatch), TextStyles.HeroTitle));
         text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatchDetail), TextStyles.HeroDetail));
         ViewFactory.CenterVertically(text);
@@ -330,46 +319,34 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         return button;
     }
 
-    private static StackPanel CreatePrivateMatchButtons()
-    {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = PrivateButtonSpacing };
-        row.AddChild(CreateSecondaryButton(nameof(Strings.MainMenuCreateRoom)));
-        row.AddChild(CreateSecondaryButton(nameof(Strings.MainMenuJoinWithCode)));
-        return row;
-    }
-
-    private static Button CreateSecondaryButton(string textKey)
-    {
-        Button button = ViewFactory.CreateButton(textKey, PrivateButtonWidth, PrivateButtonHeight);
-        ButtonSkin.CreateAndAttach(button, ButtonLooks.Secondary);
-        return button;
-    }
-
-    private static Panel CreateCentered(FrameworkElement element)
-    {
-        element.XUnits = GeneralUnitType.PixelsFromMiddle;
-        element.XOrigin = HorizontalAlignment.Center;
-        element.X = 0;
-
-        var row = new Panel
-        {
-            Width = TabletContentWidth,
-            WidthUnits = DimensionUnitType.Absolute,
-            HeightUnits = DimensionUnitType.RelativeToChildren,
-        };
-        row.AddChild(element);
-        return row;
-    }
-
     private Label CreateMatchSearchStatus()
     {
         Label status = ViewFactory.CreateBoundLabel(
             nameof(MatchSearchViewModel.StatusKey),
             TextStyles.FieldError,
-            TabletContentWidth);
+            MenuCardContentWidth);
         status.BindingContext = _matchSearchViewModel;
         status.SetBinding(nameof(IsVisible), nameof(MatchSearchViewModel.HasStatus));
         return status;
+    }
+
+    private static StackPanel CreatePrivateMatchButtons()
+    {
+        var row = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = PrivateButtonSpacing,
+        };
+        row.AddChild(CreatePrivateMatchButton(nameof(Strings.MainMenuCreateRoom)));
+        row.AddChild(CreatePrivateMatchButton(nameof(Strings.MainMenuJoinWithCode)));
+        return row;
+    }
+
+    private static Button CreatePrivateMatchButton(string textKey)
+    {
+        Button button = ViewFactory.CreateButton(textKey, PrivateButtonWidth, PrivateButtonHeight);
+        ButtonSkin.CreateAndAttach(button, ButtonLooks.Secondary);
+        return button;
     }
 
     private MatchSearchPanel CreateMatchSearchPanel()
@@ -378,6 +355,42 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         panel.Anchor(Gum.Wireframe.Anchor.Bottom);
         panel.Y = -SearchPanelMarginY;
         return panel;
+    }
+
+    private static Button CreateHowToPlayButton()
+    {
+        Button button = CreatePillButton(nameof(Strings.MainMenuHowToPlay), HowToPlayWidth);
+        button.Anchor(Gum.Wireframe.Anchor.BottomLeft);
+        button.X = ScreenMetrics.MarginX;
+        button.Y = -ScreenMetrics.MarginY;
+        return button;
+    }
+
+    private static FriendsPanel CreateFriendsPanel(FriendsPanelViewModel friendsPanelViewModel)
+    {
+        var panel = new FriendsPanel(friendsPanelViewModel);
+        panel.Anchor(Gum.Wireframe.Anchor.TopRight);
+        panel.X = -ScreenMetrics.MarginX;
+        panel.Y = PillRowY + ScreenMetrics.MenuPillHeight + FriendsPanelGapY;
+        return panel;
+    }
+
+    private static FriendRequestToast CreateRequestToast(FriendRequestsViewModel requests)
+    {
+        var toast = new FriendRequestToast(requests);
+        toast.Anchor(Gum.Wireframe.Anchor.Top);
+        toast.Y = ScreenMetrics.MarginY;
+        return toast;
+    }
+
+    private void HandleFriendsClick(object? sender, EventArgs e)
+    {
+        _friendsPanelViewModel.Open(FriendsTab.Friends);
+    }
+
+    private void HandleChatClick(object? sender, EventArgs e)
+    {
+        _friendsPanelViewModel.Open(FriendsTab.Chat);
     }
 
     private async void HandleFindMatchClick(object? sender, EventArgs e)

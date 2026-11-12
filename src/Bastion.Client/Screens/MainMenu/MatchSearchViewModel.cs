@@ -18,6 +18,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
     private const int ClockTickSeconds = 1;
     private const string ElapsedFormat = "{0:00}:{1:00}";
     private const string DetailSeparator = " · ";
+    private const int MinimumSecondsLeft = 0;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchSearchViewModel));
     private static readonly TimeSpan _clockTick = TimeSpan.FromSeconds(ClockTickSeconds);
@@ -116,7 +117,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         IsBusy = true;
         try
         {
-            string? failureKey = await TrySendRequest(_matchmakingClient.StartSearch, nameof(StartSearch));
+            string? failureKey = await SendRequest(_matchmakingClient.StartSearch, nameof(StartSearch));
             if (failureKey is not null)
             {
                 StatusKey = failureKey;
@@ -146,7 +147,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         IsBusy = true;
         try
         {
-            string? failureKey = await TrySendRequest(_matchmakingClient.CancelSearch, nameof(CancelSearch));
+            string? failureKey = await SendRequest(_matchmakingClient.CancelSearch, nameof(CancelSearch));
             EndActiveSearch(failureKey ?? string.Empty);
         }
         finally
@@ -163,7 +164,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         }
 
         IsPresenceDialogOpen = false;
-        string? failureKey = await TrySendRequest(_matchmakingClient.ConfirmPresence, nameof(ConfirmPresence));
+        string? failureKey = await SendRequest(_matchmakingClient.ConfirmPresence, nameof(ConfirmPresence));
         if (failureKey is not null)
         {
             EndActiveSearch(failureKey);
@@ -177,6 +178,87 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         _matchmakingClient.PresenceRequested -= HandlePresenceRequested;
         _matchmakingClient.SearchEnded -= HandleSearchEnded;
         _matchmakingClient.Disconnected -= HandleDisconnected;
+    }
+
+    private async Task<string?> SendRequest(Action<string> request, string operationName)
+    {
+        try
+        {
+            await Task.Run(() => request(_session.Token));
+            return null;
+        }
+        catch (InvalidSessionException ex)
+        {
+            _logger.Warn($"The server turned down a match search request with an invalid session. Operation={operationName}", ex);
+            return nameof(Strings.MatchSearchSessionExpired);
+        }
+        catch (ServerUnreachableException ex)
+        {
+            LogRequestFailure(ex, operationName);
+            return nameof(Strings.MatchSearchUnavailable);
+        }
+        catch (ConnectionLostException ex)
+        {
+            LogRequestFailure(ex, operationName);
+            return nameof(Strings.MatchSearchConnectionLost);
+        }
+        catch (ServerErrorException ex)
+        {
+            LogRequestFailure(ex, operationName);
+            return nameof(Strings.MatchSearchUnavailable);
+        }
+    }
+
+    private static void LogRequestFailure(Exception ex, string operationName)
+    {
+        _logger.Error($"A match search request failed. Operation={operationName}", ex);
+    }
+
+    private void ShowSearching()
+    {
+        if (Stage != MatchSearchStage.Idle)
+        {
+            return;
+        }
+
+        _searchStartedAt = _timeProvider.GetUtcNow();
+        Stage = MatchSearchStage.Searching;
+        UpdateClock();
+        _clockTimer = _timeProvider.CreateTimer(HandleClockTick, null, _clockTick, _clockTick);
+    }
+
+    private void UpdateClock()
+    {
+        if (Stage != MatchSearchStage.Searching)
+        {
+            return;
+        }
+
+        TimeSpan elapsed = _timeProvider.GetUtcNow() - _searchStartedAt;
+        SearchDetail = string.Concat(Strings.MainMenuFindMatchDetail, DetailSeparator, FormatElapsed(elapsed));
+        if (IsPresenceDialogOpen)
+        {
+            UpdatePresenceMessage();
+        }
+    }
+
+    private static string FormatElapsed(TimeSpan elapsed)
+    {
+        double totalMinutes = elapsed.TotalMinutes;
+        int wholeMinutes = (int)totalMinutes;
+        return string.Format(CultureInfo.InvariantCulture, ElapsedFormat, wholeMinutes, elapsed.Seconds);
+    }
+
+    private void UpdatePresenceMessage()
+    {
+        TimeSpan remaining = _presenceDeadline - _timeProvider.GetUtcNow();
+        double roundedUpSeconds = Math.Ceiling(remaining.TotalSeconds);
+        int wholeSecondsLeft = (int)roundedUpSeconds;
+        int secondsLeft = Math.Max(MinimumSecondsLeft, wholeSecondsLeft);
+        PresenceMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Strings.MatchSearchPresenceMessageFormat,
+            secondsLeft);
     }
 
     private static string ToStatusKey(SearchRejection rejection)
@@ -194,53 +276,22 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         }
     }
 
-    private static string FormatElapsed(TimeSpan elapsed)
+    private void EndActiveSearch(string statusKey)
     {
-        return string.Format(CultureInfo.InvariantCulture, ElapsedFormat, (int)elapsed.TotalMinutes, elapsed.Seconds);
-    }
-
-    private async Task<string?> TrySendRequest(Action<string> request, string operationName)
-    {
-        try
-        {
-            await Task.Run(() => request(_session.Token));
-            return null;
-        }
-        catch (InvalidSessionException ex)
-        {
-            return ReportRequestFailure(ex, operationName, nameof(Strings.MatchSearchSessionExpired));
-        }
-        catch (ServerUnreachableException ex)
-        {
-            return ReportRequestFailure(ex, operationName, nameof(Strings.MatchSearchUnavailable));
-        }
-        catch (ConnectionLostException ex)
-        {
-            return ReportRequestFailure(ex, operationName, nameof(Strings.MatchSearchConnectionLost));
-        }
-        catch (ServerErrorException ex)
-        {
-            return ReportRequestFailure(ex, operationName, nameof(Strings.MatchSearchUnavailable));
-        }
-    }
-
-    private string ReportRequestFailure(Exception ex, string operationName, string statusKey)
-    {
-        _logger.Warn($"A match search request failed. Operation={operationName}", ex);
-        return statusKey;
-    }
-
-    private void ShowSearching()
-    {
-        if (Stage != MatchSearchStage.Idle)
+        if (Stage != MatchSearchStage.Searching)
         {
             return;
         }
 
-        _searchStartedAt = _timeProvider.GetUtcNow();
-        Stage = MatchSearchStage.Searching;
-        UpdateClock();
-        _clockTimer = _timeProvider.CreateTimer(HandleClockTick, null, _clockTick, _clockTick);
+        StopClock();
+        IsPresenceDialogOpen = false;
+        Stage = MatchSearchStage.Idle;
+        StatusKey = statusKey;
+    }
+
+    private void StopClock()
+    {
+        Interlocked.Exchange(ref _clockTimer, null)?.Dispose();
     }
 
     private void EndSearchWithMatch(MatchFoundEventArgs foundMatch)
@@ -291,54 +342,6 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         }
     }
 
-    private void EndActiveSearch(string statusKey)
-    {
-        if (Stage != MatchSearchStage.Searching)
-        {
-            return;
-        }
-
-        StopClock();
-        IsPresenceDialogOpen = false;
-        Stage = MatchSearchStage.Idle;
-        StatusKey = statusKey;
-    }
-
-    private void UpdateClock()
-    {
-        if (Stage != MatchSearchStage.Searching)
-        {
-            return;
-        }
-
-        TimeSpan elapsed = _timeProvider.GetUtcNow() - _searchStartedAt;
-        SearchDetail = string.Concat(Strings.MainMenuFindMatchDetail, DetailSeparator, FormatElapsed(elapsed));
-        if (IsPresenceDialogOpen)
-        {
-            UpdatePresenceMessage();
-        }
-    }
-
-    private void UpdatePresenceMessage()
-    {
-        TimeSpan remaining = _presenceDeadline - _timeProvider.GetUtcNow();
-        int secondsLeft = Math.Max(0, (int)Math.Ceiling(remaining.TotalSeconds));
-        PresenceMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            Strings.MatchSearchPresenceMessageFormat,
-            secondsLeft);
-    }
-
-    private void StopClock()
-    {
-        Interlocked.Exchange(ref _clockTimer, null)?.Dispose();
-    }
-
-    private void HandleClockTick(object? state)
-    {
-        UiThread.Run(_uiContext, UpdateClock);
-    }
-
     private void HandleMatchFound(object? sender, MatchFoundEventArgs e)
     {
         UiThread.Run(_uiContext, () => EndSearchWithMatch(e));
@@ -357,5 +360,10 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
     private void HandleDisconnected(object? sender, EventArgs e)
     {
         UiThread.Run(_uiContext, () => EndActiveSearch(nameof(Strings.MatchSearchConnectionLost)));
+    }
+
+    private void HandleClockTick(object? state)
+    {
+        UiThread.Run(_uiContext, UpdateClock);
     }
 }

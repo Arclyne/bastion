@@ -40,7 +40,7 @@ public sealed class MainMenuViewModel : ViewModel
         }
         catch (InvalidSessionException ex)
         {
-            ReportConnectFailure(ex);
+            _logger.Warn("The notification channel could not be connected because the session is no longer valid.", ex);
         }
         catch (ServerUnreachableException ex)
         {
@@ -58,6 +58,6 @@ public sealed class MainMenuViewModel : ViewModel
 
     private static void ReportConnectFailure(Exception ex)
     {
-        _logger.Warn("The notification channel could not be connected.", ex);
+        _logger.Error("The notification channel could not be connected.", ex);
     }
 }

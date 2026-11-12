@@ -15,6 +15,7 @@ public static class ViewFactory
     private const float VersionMarginY = 16;
     private const int VersionFieldCount = 3;
     private const float MiddleOffsetY = 0;
+    private const float MiddleOffsetX = 0;
 
     public static Label CreateLabel(string textKey, TextStyle style)
     {
@@ -46,8 +47,18 @@ public static class ViewFactory
         ArgumentNullException.ThrowIfNull(style);
 
         Label label = CreateFixedWidthLabel(style, width);
-        var labelVisual = (LabelVisual)label.Visual;
-        labelVisual.LocalizeText = false;
+        DisableTranslation(label);
+        label.SetBinding(nameof(Label.Text), viewModelProperty);
+        return label;
+    }
+
+    public static Label CreateBoundUntranslatedLabel(string viewModelProperty, TextStyle style)
+    {
+        ArgumentNullException.ThrowIfNull(viewModelProperty);
+        ArgumentNullException.ThrowIfNull(style);
+
+        Label label = CreateLabel(string.Empty, style);
+        DisableTranslation(label);
         label.SetBinding(nameof(Label.Text), viewModelProperty);
         return label;
     }
@@ -58,8 +69,7 @@ public static class ViewFactory
         ArgumentNullException.ThrowIfNull(style);
 
         Label label = CreateLabel(string.Empty, style);
-        var labelVisual = (LabelVisual)label.Visual;
-        labelVisual.LocalizeText = false;
+        DisableTranslation(label);
         label.Text = text;
         return label;
     }
@@ -86,6 +96,15 @@ public static class ViewFactory
         element.Y = MiddleOffsetY;
     }
 
+    public static void CenterHorizontally(FrameworkElement element)
+    {
+        ArgumentNullException.ThrowIfNull(element);
+
+        element.XUnits = GeneralUnitType.PixelsFromMiddle;
+        element.XOrigin = HorizontalAlignment.Center;
+        element.X = MiddleOffsetX;
+    }
+
     public static Label CreateVersionLabel()
     {
         string version = typeof(ViewFactory).Assembly.GetName().Version?.ToString(VersionFieldCount) ?? string.Empty;
@@ -109,5 +128,11 @@ public static class ViewFactory
         var labelVisual = (LabelVisual)label.Visual;
         style.ApplyTo(labelVisual);
         return label;
+    }
+
+    private static void DisableTranslation(Label label)
+    {
+        var labelVisual = (LabelVisual)label.Visual;
+        labelVisual.LocalizeText = false;
     }
 }

@@ -9,6 +9,7 @@ public static class Shapes
 {
     private const string BackgroundPartName = "Background";
     private const string FocusedIndicatorPartName = "FocusedIndicator";
+    private const int RadiiPerDiameter = 2;
 
     public static RectangleRuntime CreateRounded(Color fill, float radius)
     {
@@ -21,6 +22,12 @@ public static class Shapes
         };
         shape.Dock(Dock.Fill);
         return shape;
+    }
+
+    public static RectangleRuntime CreateCircle(Color fill, float diameter)
+    {
+        float radius = diameter / RadiiPerDiameter;
+        return CreateRounded(fill, radius);
     }
 
     public static RectangleRuntime CreateHalo(float radius, float spread)
