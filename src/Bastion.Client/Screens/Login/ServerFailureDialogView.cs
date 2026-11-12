@@ -3,25 +3,20 @@ using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.GueDeriving;
 using log4net;
 
 namespace Bastion.Client.Screens.Login;
 
-public sealed class LoginDialogView : Panel
+public sealed class ServerFailureDialogView : Panel
 {
     private const float ButtonSpacing = 12;
-    private const float Radius = 22;
-    private const float BorderWidth = 1.5f;
-    private const float ShadowOffsetY = 30;
-    private const float ShadowBlur = 60;
     private const int ButtonsPerRow = 2;
 
-    private static readonly ILog _logger = LogManager.GetLogger(typeof(LoginDialogView));
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(ServerFailureDialogView));
 
     private readonly LoginViewModel _viewModel;
 
-    public LoginDialogView(LoginViewModel viewModel)
+    public ServerFailureDialogView(LoginViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
 
@@ -32,7 +27,7 @@ public sealed class LoginDialogView : Panel
         Height = DialogMetrics.PaddingBottom;
         HeightUnits = DimensionUnitType.RelativeToChildren;
         AddChild(CreateContent());
-        Shapes.InsertBehindContent(Visual, CreateSurface());
+        Skins.ApplyCard(Visual);
     }
 
     private StackPanel CreateContent()
@@ -51,13 +46,13 @@ public sealed class LoginDialogView : Panel
             nameof(LoginViewModel.DialogMessageKey),
             TextStyles.DialogMessage,
             DialogMetrics.ContentWidth));
-        content.AddChild(CreateButtons(DialogMetrics.ContentWidth));
+        content.AddChild(CreateButtons());
         return content;
     }
 
-    private StackPanel CreateButtons(float contentWidth)
+    private StackPanel CreateButtons()
     {
-        float buttonWidth = (contentWidth - ButtonSpacing) / ButtonsPerRow;
+        float buttonWidth = (DialogMetrics.ContentWidth - ButtonSpacing) / ButtonsPerRow;
 
         Button retryButton = CreateButton(nameof(Strings.CommonRetryButton), buttonWidth, ButtonLooks.Primary);
         retryButton.SetBinding(nameof(IsVisible), nameof(LoginViewModel.CanRetry));
@@ -66,7 +61,11 @@ public sealed class LoginDialogView : Panel
         Button acceptButton = CreateButton(nameof(Strings.CommonAcceptButton), buttonWidth, ButtonLooks.Secondary);
         acceptButton.Click += HandleAcceptClick;
 
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = ButtonSpacing };
+        var row = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = ButtonSpacing,
+        };
         row.AddChild(retryButton);
         row.AddChild(acceptButton);
         return row;
@@ -85,18 +84,6 @@ public sealed class LoginDialogView : Panel
         return button;
     }
 
-    private static RectangleRuntime CreateSurface()
-    {
-        RectangleRuntime surface = Shapes.CreateRounded(Palette.Card, Radius);
-        surface.StrokeColor = Palette.Border;
-        surface.StrokeWidth = BorderWidth;
-        surface.HasDropshadow = true;
-        surface.DropshadowColor = Palette.Shadow;
-        surface.DropshadowOffsetY = ShadowOffsetY;
-        surface.DropshadowBlur = ShadowBlur;
-        return surface;
-    }
-
     private async void HandleRetryClick(object? sender, EventArgs e)
     {
         try
@@ -105,7 +92,7 @@ public sealed class LoginDialogView : Panel
         }
         catch (ObjectDisposedException ex)
         {
-            _logger.Warn("The sign-in retry could not be completed because the connection is closed.", ex);
+            _logger.Warn("The login retry could not be completed because the connection is closed.", ex);
         }
     }
 
