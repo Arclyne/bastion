@@ -1,8 +1,8 @@
 using System;
-using System.Linq;
 using Bastion.Contracts.Matchmaking;
 using Bastion.Contracts.Notifications;
 using Bastion.Server.Application.Matchmaking;
+using Bastion.Server.Host.Common;
 using CoreWCF;
 
 namespace Bastion.Server.Host.Matchmaking;
@@ -17,13 +17,15 @@ public static class MatchmakingTranslator
         {
             Reason = ToReason(rejection.Rejection),
         };
-        return new FaultException<SearchRejectedFault>(fault, new FaultReason(rejection.Message));
+        return FaultExceptionFactory.Create(fault, rejection);
     }
 
-    public static MatchFoundNotification ToNotification(CreatedMatch createdMatch, DateTime now)
+    public static MatchFoundNotification ToMatchFoundNotification(CreatedMatch createdMatch, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(createdMatch);
 
+        MatchFoundParticipant[] participants =
+            ContractArray.ConvertAll(createdMatch.Participants, ToMatchFoundParticipant);
         return new MatchFoundNotification
         {
             OccurredAt = now,
@@ -31,11 +33,11 @@ public static class MatchmakingTranslator
             BoardSize = createdMatch.Format.GameMode.BoardSize,
             WallsPerPlayer = createdMatch.Format.WallsPerPlayer,
             ClockMinutes = createdMatch.Format.ClockMinutes,
-            Participants = createdMatch.Participants.Select(ToMatchFoundParticipant).ToArray(),
+            Participants = participants,
         };
     }
 
-    public static PresenceRequestedNotification ToNotification(PresenceRequest request, DateTime now)
+    public static PresenceRequestedNotification ToPresenceRequestedNotification(PresenceRequest request, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -46,22 +48,13 @@ public static class MatchmakingTranslator
         };
     }
 
-    public static SearchEndedNotification ToNotification(SearchEndReason reason, DateTime now)
+    public static SearchEndedNotification ToSearchEndedNotification(SearchEndReason reason, DateTime now)
     {
+        SearchEndedReason searchEndedReason = ToReason(reason);
         return new SearchEndedNotification
         {
             OccurredAt = now,
-            Reason = ToReason(reason),
-        };
-    }
-
-    private static MatchFoundParticipant ToMatchFoundParticipant(CreatedMatchParticipant participant)
-    {
-        return new MatchFoundParticipant
-        {
-            Nickname = participant.Player.Nickname,
-            EloRating = participant.EloRating,
-            TurnOrder = participant.TurnOrder,
+            Reason = searchEndedReason,
         };
     }
 
@@ -78,6 +71,16 @@ public static class MatchmakingTranslator
             default:
                 throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported search rejection.");
         }
+    }
+
+    private static MatchFoundParticipant ToMatchFoundParticipant(CreatedMatchParticipant participant)
+    {
+        return new MatchFoundParticipant
+        {
+            Nickname = participant.Player.Nickname,
+            EloRating = participant.EloRating,
+            TurnOrder = participant.TurnOrder,
+        };
     }
 
     private static SearchEndedReason ToReason(SearchEndReason reason)

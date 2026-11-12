@@ -39,18 +39,18 @@ public class TestMatchAbandonmentService
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 7, 0, DateTimeKind.Utc);
 
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
-    private readonly FakeMatchStore _matchStore = new FakeMatchStore();
+    private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
     private readonly FakeMatchEndNotifier _matchEndNotifier = new FakeMatchEndNotifier();
     private readonly MatchAbandonmentService _abandonmentService;
 
     public TestMatchAbandonmentService()
     {
-        _abandonmentService = new MatchAbandonmentService(_sessionVerifier, _matchStore, _matchEndNotifier);
+        _abandonmentService = new MatchAbandonmentService(_sessionVerifier, _matchRepository, _matchEndNotifier);
         _sessionVerifier.Add(AbandoningToken, new ConnectedPlayer(AbandoningAccountId, AbandoningNickname));
         _sessionVerifier.Add(OutsiderToken, new ConnectedPlayer(OutsiderAccountId, OutsiderNickname));
         _sessionVerifier.Add(RivalToken, new ConnectedPlayer(RivalAccountId, RivalNickname));
-        _matchStore.MatchesById[MatchId] = StartMatch();
-        _matchStore.MatchesById[FourPlayerMatchId] = StartFourPlayerMatch();
+        _matchRepository.MatchesById[MatchId] = StartMatch();
+        _matchRepository.MatchesById[FourPlayerMatchId] = StartFourPlayerMatch();
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public class TestMatchAbandonmentService
     {
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Assert.Equal(MatchStatus.Finished, _matchStore.SavedAbandonments.Single().Status);
+        Assert.Equal(MatchStatus.Finished, _matchRepository.SavedAbandonments.Single().Status);
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public class TestMatchAbandonmentService
     {
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Participation abandoning = _matchStore.SavedAbandonments.Single().Participations
+        Participation abandoning = _matchRepository.SavedAbandonments.Single().Participations
             .Single(participation => participation.AccountId == AbandoningAccountId);
         Assert.Equal(ParticipationResult.Lost, abandoning.Result);
     }

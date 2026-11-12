@@ -36,29 +36,27 @@ public sealed class ChatService : IChatService
     public ChatMessageReceipt SendChatMessage(string? sessionToken, string? text)
     {
         string token = RequireSessionToken(sessionToken);
-        string checkedText = RequireText(text);
-        return Run<ILobbyChatService, ChatMessageReceipt>(
-            nameof(SendChatMessage),
-            chat => ChatTranslator.ToReceipt(chat.SendMessage(token, checkedText, GetUtcNow())));
+        string messageText = RequireText(text);
+        Func<ChatMessageReceipt> sendMessage = () => SendChatMessageInRequestScope(token, messageText);
+        return TranslateChatFailures(nameof(SendChatMessage), sendMessage);
     }
 
     /// <inheritdoc/>
     public LobbyChatLog OpenLobbyChat(string? sessionToken)
     {
         string token = RequireSessionToken(sessionToken);
-        return Run<ILobbyChatService, LobbyChatLog>(
-            nameof(OpenLobbyChat),
-            chat => ChatTranslator.ToChatLog(chat.OpenLobbyChat(token, GetUtcNow())));
+        Func<LobbyChatLog> openChat = () => OpenLobbyChatInRequestScope(token);
+        return TranslateChatFailures(nameof(OpenLobbyChat), openChat);
     }
 
     /// <inheritdoc/>
     public ChatMessageReceipt SendMatchChatMessage(string? sessionToken, int matchId, string? text)
     {
         string token = RequireSessionToken(sessionToken);
-        var submission = new MatchChatSubmission(matchId, RequireText(text));
-        return Run<IMatchChatService, ChatMessageReceipt>(
-            nameof(SendMatchChatMessage),
-            chat => ChatTranslator.ToReceipt(chat.SendMessage(token, submission, GetUtcNow())));
+        string messageText = RequireText(text);
+        var submission = new MatchChatSubmission(matchId, messageText);
+        Func<ChatMessageReceipt> sendMessage = () => SendMatchChatMessageInRequestScope(token, submission);
+        return TranslateChatFailures(nameof(SendMatchChatMessage), sendMessage);
     }
 
     private static string RequireSessionToken(string? sessionToken)
@@ -71,13 +69,35 @@ public sealed class ChatService : IChatService
         return text ?? throw ChatTranslator.ToFault(new ChatMessageRejectedException(ChatRejection.InvalidMessage));
     }
 
-    private TResult Run<TChatService, TResult>(string operationName, Func<TChatService, TResult> operation)
-        where TChatService : notnull
+    private ChatMessageReceipt SendChatMessageInRequestScope(string token, string messageText)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        ILobbyChatService lobbyChat = scope.ServiceProvider.GetRequiredService<ILobbyChatService>();
+        PostedChatLine postedLine = lobbyChat.SendMessage(token, messageText, GetUtcNow());
+        return ChatTranslator.ToReceipt(postedLine);
+    }
+
+    private LobbyChatLog OpenLobbyChatInRequestScope(string token)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        ILobbyChatService lobbyChat = scope.ServiceProvider.GetRequiredService<ILobbyChatService>();
+        LobbyChatHistory history = lobbyChat.OpenLobbyChat(token, GetUtcNow());
+        return ChatTranslator.ToChatLog(history);
+    }
+
+    private ChatMessageReceipt SendMatchChatMessageInRequestScope(string token, MatchChatSubmission submission)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchChatService matchChat = scope.ServiceProvider.GetRequiredService<IMatchChatService>();
+        PostedChatLine postedLine = matchChat.SendMessage(token, submission, GetUtcNow());
+        return ChatTranslator.ToReceipt(postedLine);
+    }
+
+    private TResult TranslateChatFailures<TResult>(string operationName, Func<TResult> operation)
     {
         try
         {
-            using IServiceScope scope = _scopeFactory.CreateScope();
-            return operation(scope.ServiceProvider.GetRequiredService<TChatService>());
+            return operation();
         }
         catch (InvalidSessionException ex)
         {
@@ -91,9 +111,9 @@ public sealed class ChatService : IChatService
         {
             throw ChatTranslator.ToFault(ex);
         }
-        catch (MatchStoreException ex)
+        catch (MatchRepositoryException ex)
         {
-            _logger.Error($"The match store could not be used. Operation={operationName}", ex);
+            _logger.Error($"The match repository could not be used. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)

@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using Bastion.Contracts.Chat;
 using Bastion.Contracts.PrivateChat;
+using Bastion.Domain.Chat;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.PrivateChat;
 using Bastion.Server.Application.Sessions;
@@ -14,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Host.PrivateChat;
 
+/// <inheritdoc/>
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class ConversationService : IConversationService
 {
@@ -33,47 +36,41 @@ public sealed class ConversationService : IConversationService
         _timeProvider = timeProvider;
     }
 
+    /// <inheritdoc/>
     public ConversationEntry[] ListConversations(string? sessionToken)
     {
         string token = RequireSessionToken(sessionToken);
-        return Run(
-            nameof(ListConversations),
-            chat => PrivateChatTranslator.ToConversationEntries(chat.ListConversations(token, GetUtcNow())));
+        Func<ConversationEntry[]> listConversations = () => ListConversationsInRequestScope(token);
+        return TranslateConversationFailures(nameof(ListConversations), listConversations);
     }
 
+    /// <inheritdoc/>
     public PrivateConversationLog OpenConversation(string? sessionToken, string? friendCode)
     {
         string token = RequireSessionToken(sessionToken);
-        string code = RequireFriendCode(friendCode);
-        return Run(
-            nameof(OpenConversation),
-            chat => PrivateChatTranslator.ToConversationLog(chat.OpenConversation(token, code, GetUtcNow())));
+        string partnerCode = RequireFriendCode(friendCode);
+        Func<PrivateConversationLog> openConversation = () => OpenConversationInRequestScope(token, partnerCode);
+        return TranslateConversationFailures(nameof(OpenConversation), openConversation);
     }
 
+    /// <inheritdoc/>
     public ChatMessageReceipt SendPrivateMessage(string? sessionToken, string? friendCode, string? text)
     {
         string token = RequireSessionToken(sessionToken);
-        string code = RequireFriendCode(friendCode);
-        if (text is null)
-        {
-            throw ChatTranslator.ToFault(new ChatMessageRejectedException(ChatRejection.InvalidMessage));
-        }
-
-        var draft = new PrivateMessageDraft(code, text);
-        return Run(
-            nameof(SendPrivateMessage),
-            chat => PrivateChatTranslator.ToReceipt(chat.SendPrivateMessage(token, draft, GetUtcNow())));
+        string recipientCode = RequireFriendCode(friendCode);
+        string messageText = RequireText(text);
+        var draft = new PrivateMessageDraft(recipientCode, messageText);
+        Func<ChatMessageReceipt> sendMessage = () => SendPrivateMessageInRequestScope(token, draft);
+        return TranslateConversationFailures(nameof(SendPrivateMessage), sendMessage);
     }
 
+    /// <inheritdoc/>
     public void MarkConversationRead(string? sessionToken, string? friendCode)
     {
         string token = RequireSessionToken(sessionToken);
-        string code = RequireFriendCode(friendCode);
-        Run(nameof(MarkConversationRead), chat =>
-        {
-            chat.MarkConversationRead(token, code, GetUtcNow());
-            return true;
-        });
+        string partnerCode = RequireFriendCode(friendCode);
+        Action markConversationRead = () => MarkConversationReadInRequestScope(token, partnerCode);
+        TranslateConversationFailures(nameof(MarkConversationRead), markConversationRead);
     }
 
     private static string RequireSessionToken(string? sessionToken)
@@ -87,12 +84,47 @@ public sealed class ConversationService : IConversationService
             ?? throw ChatTranslator.ToFault(new ChatMessageRejectedException(ChatRejection.PlayerNotFound));
     }
 
-    private TResult Run<TResult>(string operationName, Func<IPrivateChatService, TResult> operation)
+    private static string RequireText(string? text)
+    {
+        return text ?? throw ChatTranslator.ToFault(new ChatMessageRejectedException(ChatRejection.InvalidMessage));
+    }
+
+    private ConversationEntry[] ListConversationsInRequestScope(string token)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IPrivateChatService privateChat = scope.ServiceProvider.GetRequiredService<IPrivateChatService>();
+        IReadOnlyList<ConversationSummary> summaries = privateChat.ListConversations(token, GetUtcNow());
+        return PrivateChatTranslator.ToConversationEntries(summaries);
+    }
+
+    private PrivateConversationLog OpenConversationInRequestScope(string token, string partnerCode)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IPrivateChatService privateChat = scope.ServiceProvider.GetRequiredService<IPrivateChatService>();
+        PrivateConversation conversation = privateChat.OpenConversation(token, partnerCode, GetUtcNow());
+        return PrivateChatTranslator.ToConversationLog(conversation);
+    }
+
+    private ChatMessageReceipt SendPrivateMessageInRequestScope(string token, PrivateMessageDraft draft)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IPrivateChatService privateChat = scope.ServiceProvider.GetRequiredService<IPrivateChatService>();
+        Message message = privateChat.SendPrivateMessage(token, draft, GetUtcNow());
+        return PrivateChatTranslator.ToReceipt(message);
+    }
+
+    private void MarkConversationReadInRequestScope(string token, string partnerCode)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IPrivateChatService privateChat = scope.ServiceProvider.GetRequiredService<IPrivateChatService>();
+        privateChat.MarkConversationRead(token, partnerCode, GetUtcNow());
+    }
+
+    private TResult TranslateConversationFailures<TResult>(string operationName, Func<TResult> operation)
     {
         try
         {
-            using IServiceScope scope = _scopeFactory.CreateScope();
-            return operation(scope.ServiceProvider.GetRequiredService<IPrivateChatService>());
+            return operation();
         }
         catch (InvalidSessionException ex)
         {
@@ -104,7 +136,7 @@ public sealed class ConversationService : IConversationService
         }
         catch (DbUpdateException ex)
         {
-            _logger.Error($"The private message could not be saved. Operation={operationName}", ex);
+            _logger.Error($"The conversation could not be saved. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)
@@ -112,6 +144,18 @@ public sealed class ConversationService : IConversationService
             _logger.Error($"The database could not be reached. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
+    }
+
+    private void TranslateConversationFailures(string operationName, Action operation)
+    {
+        Func<bool> operationAsFunction = () => CompleteOperation(operation);
+        TranslateConversationFailures(operationName, operationAsFunction);
+    }
+
+    private static bool CompleteOperation(Action operation)
+    {
+        operation();
+        return true;
     }
 
     private DateTime GetUtcNow()

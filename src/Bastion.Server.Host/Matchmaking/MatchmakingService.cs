@@ -34,14 +34,56 @@ public sealed class MatchmakingService : IMatchmakingService
     /// <inheritdoc/>
     public void StartSearch(string? sessionToken)
     {
-        if (sessionToken is null)
-        {
-            throw SessionTranslator.ToFault(new InvalidSessionException());
-        }
+        string token = RequireSessionToken(sessionToken);
+        Action startSearch = () => StartSearchInRequestScope(token);
+        TranslateMatchmakingFailures(nameof(StartSearch), startSearch);
+    }
 
+    /// <inheritdoc/>
+    public void CancelSearch(string? sessionToken)
+    {
+        Action<string> cancelSearch = CancelSearchInRequestScope;
+        LogOneWayFailures(nameof(CancelSearch), sessionToken, cancelSearch);
+    }
+
+    /// <inheritdoc/>
+    public void ConfirmPresence(string? sessionToken)
+    {
+        Action<string> confirmPresence = ConfirmPresenceInRequestScope;
+        LogOneWayFailures(nameof(ConfirmPresence), sessionToken, confirmPresence);
+    }
+
+    private static string RequireSessionToken(string? sessionToken)
+    {
+        return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());
+    }
+
+    private void StartSearchInRequestScope(string token)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchSearchService matchSearch = scope.ServiceProvider.GetRequiredService<IMatchSearchService>();
+        matchSearch.StartSearch(token, GetUtcNow());
+    }
+
+    private void CancelSearchInRequestScope(string token)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchSearchService matchSearch = scope.ServiceProvider.GetRequiredService<IMatchSearchService>();
+        matchSearch.CancelSearch(token, GetUtcNow());
+    }
+
+    private void ConfirmPresenceInRequestScope(string token)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchSearchService matchSearch = scope.ServiceProvider.GetRequiredService<IMatchSearchService>();
+        matchSearch.ConfirmPresence(token, GetUtcNow());
+    }
+
+    private void TranslateMatchmakingFailures(string operationName, Action operation)
+    {
         try
         {
-            RunInRequestScope(searchService => searchService.StartSearch(sessionToken, GetUtcNow()));
+            operation();
         }
         catch (InvalidSessionException ex)
         {
@@ -51,31 +93,19 @@ public sealed class MatchmakingService : IMatchmakingService
         {
             throw MatchmakingTranslator.ToFault(ex);
         }
-        catch (MatchStoreException ex)
+        catch (MatchRepositoryException ex)
         {
-            _logger.Error("The match store could not be read while starting a match search.", ex);
+            _logger.Error($"The match repository could not be read. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)
         {
-            _logger.Error("The database could not be reached while starting a match search.", ex);
+            _logger.Error($"The database could not be reached. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
     }
 
-    /// <inheritdoc/>
-    public void CancelSearch(string? sessionToken)
-    {
-        RunOneWay(sessionToken, nameof(CancelSearch), (searchService, token) => searchService.CancelSearch(token, GetUtcNow()));
-    }
-
-    /// <inheritdoc/>
-    public void ConfirmPresence(string? sessionToken)
-    {
-        RunOneWay(sessionToken, nameof(ConfirmPresence), (searchService, token) => searchService.ConfirmPresence(token, GetUtcNow()));
-    }
-
-    private void RunOneWay(string? sessionToken, string operationName, Action<IMatchSearchService, string> operation)
+    private static void LogOneWayFailures(string operationName, string? sessionToken, Action<string> operation)
     {
         if (sessionToken is null)
         {
@@ -85,23 +115,20 @@ public sealed class MatchmakingService : IMatchmakingService
 
         try
         {
-            RunInRequestScope(searchService => operation(searchService, sessionToken));
+            operation(sessionToken);
         }
         catch (InvalidSessionException ex)
         {
-            _logger.Warn($"A one-way matchmaking request was ignored because the session is not valid. Operation={operationName}", ex);
+            _logger.Warn(
+                $"A one-way matchmaking request was ignored because the session is not valid. Operation={operationName}",
+                ex);
         }
         catch (DbException ex)
         {
-            _logger.Error($"The database could not be reached during a one-way matchmaking request. Operation={operationName}", ex);
+            _logger.Error(
+                $"The database could not be reached during a one-way matchmaking request. Operation={operationName}",
+                ex);
         }
-    }
-
-    private void RunInRequestScope(Action<IMatchSearchService> operation)
-    {
-        using IServiceScope scope = _scopeFactory.CreateScope();
-        IMatchSearchService searchService = scope.ServiceProvider.GetRequiredService<IMatchSearchService>();
-        operation(searchService);
     }
 
     private DateTime GetUtcNow()

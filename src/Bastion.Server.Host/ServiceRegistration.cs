@@ -54,7 +54,7 @@ public static class ServiceRegistration
         services.AddSingleton<ILobbyChatRoom, LobbyChatRoom>();
         services.AddSingleton<IMatchChatRelay, MatchChatRelay>();
         services.AddSingleton<IPrivateChatRoom, PrivateChatRoom>();
-        services.AddSingleton<MatchmakingDispatcher>();
+        services.AddSingleton<IMatchmakingDispatcher, MatchmakingDispatcher>();
         services.AddSingleton<NotificationChannelRegistry>();
         services.AddSingleton<IChatBroadcaster>(provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddSingleton<IMatchChatNotifier>(
@@ -69,7 +69,7 @@ public static class ServiceRegistration
         services.AddSingleton<IRoomNotifier>(
             provider => provider.GetRequiredService<NotificationChannelRegistry>());
         services.AddHostedService<MatchmakingBackgroundService>();
-        services.AddHostedService<RoomBackgroundService>();
+        services.AddHostedService<RoomCleanupService>();
         return services;
     }
 

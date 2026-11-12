@@ -34,94 +34,64 @@ public sealed class RoomService : IRoomService
     /// <inheritdoc/>
     public RoomState CreateRoom(string? sessionToken, RoomOptions? options)
     {
-        string token = RequireSession(sessionToken);
+        string token = RequireSessionToken(sessionToken);
         RequestedRoomSettings requestedSettings = RequireSettings(options, nameof(CreateRoom));
-        return RunRequest(
-            nameof(CreateRoom),
-            roomService => roomService.CreateRoom(token, requestedSettings, GetUtcNow()));
+        Func<RoomState> createRoom = () => CreateRoomInRequestScope(token, requestedSettings);
+        return TranslateRoomFailures(nameof(CreateRoom), createRoom);
     }
 
     /// <inheritdoc/>
     public RoomState JoinRoom(string? sessionToken, string? code)
     {
-        string token = RequireSession(sessionToken);
+        string token = RequireSessionToken(sessionToken);
         string roomCode = code ?? string.Empty;
-        return RunRequest(nameof(JoinRoom), roomService => roomService.JoinRoom(token, roomCode, GetUtcNow()));
+        Func<RoomState> joinRoom = () => JoinRoomInRequestScope(token, roomCode);
+        return TranslateRoomFailures(nameof(JoinRoom), joinRoom);
     }
 
     /// <inheritdoc/>
     public RoomState SetReady(string? sessionToken, bool isReady)
     {
-        string token = RequireSession(sessionToken);
-        return RunRequest(nameof(SetReady), roomService => roomService.SetReady(token, isReady, GetUtcNow()));
+        string token = RequireSessionToken(sessionToken);
+        Func<RoomState> setReady = () => SetReadyInRequestScope(token, isReady);
+        return TranslateRoomFailures(nameof(SetReady), setReady);
     }
 
     /// <inheritdoc/>
     public RoomState ChangeOptions(string? sessionToken, RoomOptions? options)
     {
-        string token = RequireSession(sessionToken);
+        string token = RequireSessionToken(sessionToken);
         RequestedRoomSettings requestedSettings = RequireSettings(options, nameof(ChangeOptions));
-        return RunRequest(
-            nameof(ChangeOptions),
-            roomService => roomService.ChangeSettings(token, requestedSettings, GetUtcNow()));
+        Func<RoomState> changeOptions = () => ChangeOptionsInRequestScope(token, requestedSettings);
+        return TranslateRoomFailures(nameof(ChangeOptions), changeOptions);
     }
 
     /// <inheritdoc/>
     public void StartMatch(string? sessionToken)
     {
-        string token = RequireSession(sessionToken);
-        RunGuarded<IRoomMatchService, int>(
-            nameof(StartMatch),
-            matchService => matchService.StartMatch(token, GetUtcNow()));
+        string token = RequireSessionToken(sessionToken);
+        Action startMatch = () => StartMatchInRequestScope(token);
+        TranslateRoomFailures(nameof(StartMatch), startMatch);
     }
 
     /// <inheritdoc/>
     public void LeaveRoom(string? sessionToken)
     {
-        if (sessionToken is null)
-        {
-            _logger.Warn("A request to leave a room arrived without a session.");
-            return;
-        }
-
-        try
-        {
-            RunInRequestScope(roomService => roomService.LeaveRoom(sessionToken, GetUtcNow()));
-        }
-        catch (InvalidSessionException ex)
-        {
-            _logger.Warn("A request to leave a room was ignored because the session is not valid.", ex);
-        }
-        catch (RoomStoreException ex)
-        {
-            _logger.Error("The closed room could not be saved.", ex);
-        }
+        Action<string> leaveRoom = LeaveRoomInRequestScope;
+        LogOneWayFailures(nameof(LeaveRoom), sessionToken, leaveRoom);
     }
 
     /// <inheritdoc/>
     public RoomState? FindOwnRoom(string? sessionToken)
     {
-        string token = RequireSession(sessionToken);
-        try
-        {
-            RoomSnapshot? room = RunInRequestScope<IPrivateRoomService, RoomSnapshot?>(
-                roomService => roomService.FindOwnRoom(token, GetUtcNow()));
-            return room is null ? null : RoomTranslator.ToState(room);
-        }
-        catch (InvalidSessionException ex)
-        {
-            throw SessionTranslator.ToFault(ex);
-        }
+        string token = RequireSessionToken(sessionToken);
+        Func<RoomState?> findOwnRoom = () => FindOwnRoomInRequestScope(token);
+        return TranslateRoomFailures(nameof(FindOwnRoom), findOwnRoom);
     }
 
-    private static string RequireSession(string? sessionToken)
+    private static string RequireSessionToken(string? sessionToken)
     {
-        if (sessionToken is null)
-        {
-            throw SessionTranslator.ToFault(new InvalidSessionException());
-        }
-
-        return sessionToken;
+        return sessionToken ?? throw SessionTranslator.ToFault(new InvalidSessionException());
     }
 
     private static RequestedRoomSettings RequireSettings(RoomOptions? options, string operationName)
@@ -135,17 +105,70 @@ public sealed class RoomService : IRoomService
         return RoomTranslator.ToRequestedSettings(options);
     }
 
-    private RoomState RunRequest(string operationName, Func<IPrivateRoomService, RoomSnapshot> operation)
+    private RoomState CreateRoomInRequestScope(string token, RequestedRoomSettings requestedSettings)
     {
-        return RoomTranslator.ToState(RunGuarded(operationName, operation));
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IPrivateRoomService privateRoomService = scope.ServiceProvider.GetRequiredService<IPrivateRoomService>();
+        RoomSnapshot room = privateRoomService.CreateRoom(token, requestedSettings, GetUtcNow());
+        return RoomTranslator.ToState(room);
     }
 
-    private TResult RunGuarded<TService, TResult>(string operationName, Func<TService, TResult> operation)
-        where TService : notnull
+    private RoomState JoinRoomInRequestScope(string token, string roomCode)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IPrivateRoomService privateRoomService = scope.ServiceProvider.GetRequiredService<IPrivateRoomService>();
+        RoomSnapshot room = privateRoomService.JoinRoom(token, roomCode, GetUtcNow());
+        return RoomTranslator.ToState(room);
+    }
+
+    private RoomState SetReadyInRequestScope(string token, bool isReady)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IPrivateRoomService privateRoomService = scope.ServiceProvider.GetRequiredService<IPrivateRoomService>();
+        RoomSnapshot room = privateRoomService.SetReady(token, isReady, GetUtcNow());
+        return RoomTranslator.ToState(room);
+    }
+
+    private RoomState ChangeOptionsInRequestScope(string token, RequestedRoomSettings requestedSettings)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IPrivateRoomService privateRoomService = scope.ServiceProvider.GetRequiredService<IPrivateRoomService>();
+        RoomSnapshot room = privateRoomService.ChangeSettings(token, requestedSettings, GetUtcNow());
+        return RoomTranslator.ToState(room);
+    }
+
+    private void StartMatchInRequestScope(string token)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IRoomMatchService roomMatchService = scope.ServiceProvider.GetRequiredService<IRoomMatchService>();
+        roomMatchService.StartMatch(token, GetUtcNow());
+    }
+
+    private void LeaveRoomInRequestScope(string token)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IPrivateRoomService privateRoomService = scope.ServiceProvider.GetRequiredService<IPrivateRoomService>();
+        privateRoomService.LeaveRoom(token, GetUtcNow());
+    }
+
+    private RoomState? FindOwnRoomInRequestScope(string token)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IPrivateRoomService privateRoomService = scope.ServiceProvider.GetRequiredService<IPrivateRoomService>();
+        RoomSnapshot? room = privateRoomService.FindOwnRoom(token, GetUtcNow());
+        if (room is null)
+        {
+            return null;
+        }
+
+        return RoomTranslator.ToState(room);
+    }
+
+    private TResult TranslateRoomFailures<TResult>(string operationName, Func<TResult> operation)
     {
         try
         {
-            return RunInRequestScope(operation);
+            return operation();
         }
         catch (InvalidSessionException ex)
         {
@@ -153,17 +176,16 @@ public sealed class RoomService : IRoomService
         }
         catch (RoomRejectedException ex)
         {
-            LogRejection(operationName, ex);
             throw RoomTranslator.ToFault(ex);
         }
-        catch (RoomStoreException ex)
+        catch (RoomRepositoryException ex)
         {
-            _logger.Error($"The room store failed during a room request. Operation={operationName}", ex);
+            _logger.Error($"The room repository failed during a room request. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
-        catch (MatchStoreException ex)
+        catch (MatchRepositoryException ex)
         {
-            _logger.Error($"The match store failed during a room request. Operation={operationName}", ex);
+            _logger.Error($"The match repository failed during a room request. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)
@@ -173,30 +195,46 @@ public sealed class RoomService : IRoomService
         }
     }
 
-    private static void LogRejection(string operationName, RoomRejectedException rejection)
+    private void TranslateRoomFailures(string operationName, Action operation)
     {
-        if (rejection.Rejection == RoomRejection.InvalidSettings)
+        Func<bool> operationAsFunction = () => CompleteOperation(operation);
+        TranslateRoomFailures(operationName, operationAsFunction);
+    }
+
+    private static bool CompleteOperation(Action operation)
+    {
+        operation();
+        return true;
+    }
+
+    private static void LogOneWayFailures(string operationName, string? sessionToken, Action<string> operation)
+    {
+        if (sessionToken is null)
         {
-            _logger.Warn($"A room request carried settings the client never offers. Operation={operationName}");
+            _logger.Warn($"A one-way room request arrived without a session. Operation={operationName}");
             return;
         }
 
-        _logger.Info($"A room request was rejected. Operation={operationName}; Rejection={rejection.Rejection}");
-    }
-
-    private void RunInRequestScope(Action<IPrivateRoomService> operation)
-    {
-        using IServiceScope scope = _scopeFactory.CreateScope();
-        IPrivateRoomService roomService = scope.ServiceProvider.GetRequiredService<IPrivateRoomService>();
-        operation(roomService);
-    }
-
-    private TResult RunInRequestScope<TService, TResult>(Func<TService, TResult> operation)
-        where TService : notnull
-    {
-        using IServiceScope scope = _scopeFactory.CreateScope();
-        TService service = scope.ServiceProvider.GetRequiredService<TService>();
-        return operation(service);
+        try
+        {
+            operation(sessionToken);
+        }
+        catch (InvalidSessionException ex)
+        {
+            _logger.Warn(
+                $"A one-way room request was ignored because the session is not valid. Operation={operationName}",
+                ex);
+        }
+        catch (RoomRepositoryException ex)
+        {
+            _logger.Error($"The closed room could not be saved. Operation={operationName}", ex);
+        }
+        catch (DbException ex)
+        {
+            _logger.Error(
+                $"The database could not be reached during a one-way room request. Operation={operationName}",
+                ex);
+        }
     }
 
     private DateTime GetUtcNow()

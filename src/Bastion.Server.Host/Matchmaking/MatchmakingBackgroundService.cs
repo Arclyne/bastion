@@ -12,10 +12,10 @@ public sealed class MatchmakingBackgroundService : BackgroundService
 
     private static readonly TimeSpan _reviewInterval = TimeSpan.FromSeconds(ReviewIntervalSeconds);
 
-    private readonly MatchmakingDispatcher _matchmakingDispatcher;
+    private readonly IMatchmakingDispatcher _matchmakingDispatcher;
     private readonly TimeProvider _timeProvider;
 
-    public MatchmakingBackgroundService(MatchmakingDispatcher matchmakingDispatcher, TimeProvider timeProvider)
+    public MatchmakingBackgroundService(IMatchmakingDispatcher matchmakingDispatcher, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(matchmakingDispatcher);
         ArgumentNullException.ThrowIfNull(timeProvider);

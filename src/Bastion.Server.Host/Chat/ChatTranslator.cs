@@ -1,15 +1,15 @@
 using System;
-using System.Linq;
 using Bastion.Contracts.Chat;
 using Bastion.Contracts.Notifications;
 using Bastion.Server.Application.Chat;
+using Bastion.Server.Host.Common;
 using CoreWCF;
 
 namespace Bastion.Server.Host.Chat;
 
 public static class ChatTranslator
 {
-    public static ChatMessageNotification ToNotification(PostedChatLine postedLine)
+    public static ChatMessageNotification ToLobbyChatNotification(PostedChatLine postedLine)
     {
         ArgumentNullException.ThrowIfNull(postedLine);
 
@@ -40,9 +40,8 @@ public static class ChatTranslator
     {
         ArgumentNullException.ThrowIfNull(rejection);
 
-        return new FaultException<ChatChannelForbiddenFault>(
-            new ChatChannelForbiddenFault(),
-            new FaultReason(rejection.Message));
+        var fault = new ChatChannelForbiddenFault();
+        return FaultExceptionFactory.Create(fault, rejection);
     }
 
     public static ChatMessageReceipt ToReceipt(PostedChatLine postedLine)
@@ -60,9 +59,10 @@ public static class ChatTranslator
     {
         ArgumentNullException.ThrowIfNull(history);
 
+        LobbyChatMessage[] messages = ContractArray.ConvertAll(history.Entries, ToMessage);
         return new LobbyChatLog
         {
-            Messages = history.Entries.Select(ToMessage).ToArray(),
+            Messages = messages,
             ConnectedPlayers = history.ConnectedPlayers,
             IsMuted = history.Mute.IsMuted,
             MutedUntil = history.Mute.EndsAt,
@@ -78,17 +78,19 @@ public static class ChatTranslator
             Reason = ToReason(rejection.Rejection),
             MutedUntil = rejection.MutedUntil,
         };
-        return new FaultException<ChatMessageRejectedFault>(fault, new FaultReason(rejection.Message));
+        return FaultExceptionFactory.Create(fault, rejection);
     }
 
     private static LobbyChatMessage ToMessage(ChatHistoryEntry entry)
     {
+        PostedChatLine postedLine = entry.PostedLine;
+        ChatLine line = postedLine.Line;
         return new LobbyChatMessage
         {
-            MessageId = entry.Line.MessageId,
-            SenderNickname = entry.Line.Line.Sender.Nickname,
-            Text = entry.Line.Line.Text,
-            SentAt = entry.Line.Line.SentAt,
+            MessageId = postedLine.MessageId,
+            SenderNickname = line.Sender.Nickname,
+            Text = line.Text,
+            SentAt = line.SentAt,
             IsOwn = entry.IsOwn,
         };
     }

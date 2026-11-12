@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Bastion.Contracts.Chat;
 using Bastion.Contracts.Notifications;
 using Bastion.Contracts.PrivateChat;
 using Bastion.Domain.Chat;
 using Bastion.Server.Application.PrivateChat;
+using Bastion.Server.Host.Common;
 
 namespace Bastion.Server.Host.PrivateChat;
 
@@ -15,19 +15,21 @@ public static class PrivateChatTranslator
     {
         ArgumentNullException.ThrowIfNull(summaries);
 
-        return summaries.Select(ToConversationEntry).ToArray();
+        ConversationEntry[] entries = ContractArray.ConvertAll(summaries, ToConversationEntry);
+        return entries;
     }
 
     public static PrivateConversationLog ToConversationLog(PrivateConversation conversation)
     {
         ArgumentNullException.ThrowIfNull(conversation);
 
+        PrivateChatMessage[] messages = ContractArray.ConvertAll(conversation.Messages, ToPrivateChatMessage);
         return new PrivateConversationLog
         {
             PartnerNickname = conversation.Partner.Player.Nickname,
             PartnerFriendCode = conversation.Partner.Player.FriendCode,
             IsFriend = conversation.Partner.IsFriend,
-            Messages = conversation.Messages.Select(ToChatMessage).ToArray(),
+            Messages = messages,
             IsMuted = conversation.Mute.IsMuted,
             MutedUntil = conversation.Mute.EndsAt,
         };
@@ -44,7 +46,7 @@ public static class PrivateChatTranslator
         };
     }
 
-    public static PrivateMessageNotification ToNotification(PrivateMessageDelivery delivery)
+    public static PrivateMessageNotification ToPrivateMessageNotification(PrivateMessageDelivery delivery)
     {
         ArgumentNullException.ThrowIfNull(delivery);
 
@@ -60,23 +62,25 @@ public static class PrivateChatTranslator
 
     private static ConversationEntry ToConversationEntry(ConversationSummary summary)
     {
+        PrivateChatMessage lastMessage = ToPrivateChatMessage(summary.LastMessage);
         return new ConversationEntry
         {
             PartnerNickname = summary.Partner.Player.Nickname,
             PartnerFriendCode = summary.Partner.Player.FriendCode,
             IsFriend = summary.Partner.IsFriend,
-            LastMessage = ToChatMessage(summary.LastMessage),
+            LastMessage = lastMessage,
             UnreadCount = summary.UnreadCount,
         };
     }
 
-    private static PrivateChatMessage ToChatMessage(PrivateMessageEntry entry)
+    private static PrivateChatMessage ToPrivateChatMessage(PrivateMessageEntry entry)
     {
+        var sentAt = DateTime.SpecifyKind(entry.Message.SentAt, DateTimeKind.Utc);
         return new PrivateChatMessage
         {
             MessageId = entry.Message.MessageId,
             Text = entry.Message.Text,
-            SentAt = DateTime.SpecifyKind(entry.Message.SentAt, DateTimeKind.Utc),
+            SentAt = sentAt,
             IsOwn = entry.IsOwn,
         };
     }

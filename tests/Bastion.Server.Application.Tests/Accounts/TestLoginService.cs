@@ -35,11 +35,11 @@ public class TestLoginService
     }
 
     [Fact]
-    public void LogIn_UnknownIdentifier_StillChecksAPassword()
+    public void LogIn_UnknownIdentifier_SimulatesAPasswordCheck()
     {
         TryLogIn("nadie", Password);
 
-        Assert.Equal(1, _passwordHasher.VerifyCount);
+        Assert.Equal(1, _passwordHasher.SimulatedCheckCount);
     }
 
     [Fact]

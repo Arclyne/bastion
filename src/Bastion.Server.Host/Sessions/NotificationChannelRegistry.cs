@@ -72,7 +72,7 @@ public sealed class NotificationChannelRegistry
     {
         ArgumentNullException.ThrowIfNull(line);
 
-        ChatMessageNotification notification = ChatTranslator.ToNotification(line);
+        ChatMessageNotification notification = ChatTranslator.ToLobbyChatNotification(line);
         int senderAccountId = line.Line.Sender.AccountId;
         foreach (KeyValuePair<int, INotificationCallback> subscription in _callbacksByAccountId)
         {
@@ -102,7 +102,7 @@ public sealed class NotificationChannelRegistry
     {
         ArgumentNullException.ThrowIfNull(createdMatch);
 
-        MatchFoundNotification notification = MatchmakingTranslator.ToNotification(createdMatch, GetUtcNow());
+        var notification = MatchmakingTranslator.ToMatchFoundNotification(createdMatch, GetUtcNow());
         foreach (CreatedMatchParticipant participant in createdMatch.Participants)
         {
             NotifyPlayer(participant.Player.AccountId, notification);
@@ -138,12 +138,12 @@ public sealed class NotificationChannelRegistry
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        NotifyPlayer(request.AccountId, MatchmakingTranslator.ToNotification(request, GetUtcNow()));
+        NotifyPlayer(request.AccountId, MatchmakingTranslator.ToPresenceRequestedNotification(request, GetUtcNow()));
     }
 
     public void NotifySearchEnded(int accountId, SearchEndReason reason)
     {
-        NotifyPlayer(accountId, MatchmakingTranslator.ToNotification(reason, GetUtcNow()));
+        NotifyPlayer(accountId, MatchmakingTranslator.ToSearchEndedNotification(reason, GetUtcNow()));
     }
 
     public void NotifyPresenceChanged(IReadOnlyList<int> recipientAccountIds, FriendPresenceChange change)
@@ -151,7 +151,7 @@ public sealed class NotificationChannelRegistry
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
         ArgumentNullException.ThrowIfNull(change);
 
-        FriendPresenceNotification notification = FriendshipTranslator.ToNotification(change, GetUtcNow());
+        FriendPresenceNotification notification = FriendshipTranslator.ToPresenceNotification(change, GetUtcNow());
         NotifyPlayers(recipientAccountIds, notification);
     }
 
@@ -173,7 +173,7 @@ public sealed class NotificationChannelRegistry
     {
         ArgumentNullException.ThrowIfNull(delivery);
 
-        NotifyPlayer(delivery.Message.RecipientId.GetValueOrDefault(), PrivateChatTranslator.ToNotification(delivery));
+        NotifyPlayer(delivery.Message.RecipientId.GetValueOrDefault(), PrivateChatTranslator.ToPrivateMessageNotification(delivery));
     }
 
     public void NotifyRoomUpdated(RoomSnapshot room, int originAccountId)

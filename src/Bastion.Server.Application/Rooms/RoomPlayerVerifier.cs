@@ -8,17 +8,17 @@ namespace Bastion.Server.Application.Rooms;
 public sealed class RoomPlayerVerifier : IRoomPlayerVerifier
 {
     private readonly ISessionVerifier _sessionVerifier;
-    private readonly IMatchStore _matchStore;
+    private readonly IMatchRepository _matchRepository;
     private readonly IPlayerActivity _playerActivity;
 
-    public RoomPlayerVerifier(ISessionVerifier sessionVerifier, IMatchStore matchStore, IPlayerActivity playerActivity)
+    public RoomPlayerVerifier(ISessionVerifier sessionVerifier, IMatchRepository matchRepository, IPlayerActivity playerActivity)
     {
         ArgumentNullException.ThrowIfNull(sessionVerifier);
-        ArgumentNullException.ThrowIfNull(matchStore);
+        ArgumentNullException.ThrowIfNull(matchRepository);
         ArgumentNullException.ThrowIfNull(playerActivity);
 
         _sessionVerifier = sessionVerifier;
-        _matchStore = matchStore;
+        _matchRepository = matchRepository;
         _playerActivity = playerActivity;
     }
 
@@ -49,7 +49,7 @@ public sealed class RoomPlayerVerifier : IRoomPlayerVerifier
             throw new RoomRejectedException(RoomRejection.SearchingMatch);
         }
 
-        if (_matchStore.HasUnfinishedParticipation(player.AccountId))
+        if (_matchRepository.HasUnfinishedParticipation(player.AccountId))
         {
             throw new RoomRejectedException(RoomRejection.UnfinishedMatch);
         }

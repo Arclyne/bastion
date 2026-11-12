@@ -13,20 +13,20 @@ public sealed class MatchAbandonmentService : IMatchAbandonmentService
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchAbandonmentService));
 
     private readonly ISessionVerifier _sessionVerifier;
-    private readonly IMatchStore _matchStore;
+    private readonly IMatchRepository _matchRepository;
     private readonly IMatchEndNotifier _matchEndNotifier;
 
     public MatchAbandonmentService(
         ISessionVerifier sessionVerifier,
-        IMatchStore matchStore,
+        IMatchRepository matchRepository,
         IMatchEndNotifier matchEndNotifier)
     {
         ArgumentNullException.ThrowIfNull(sessionVerifier);
-        ArgumentNullException.ThrowIfNull(matchStore);
+        ArgumentNullException.ThrowIfNull(matchRepository);
         ArgumentNullException.ThrowIfNull(matchEndNotifier);
 
         _sessionVerifier = sessionVerifier;
-        _matchStore = matchStore;
+        _matchRepository = matchRepository;
         _matchEndNotifier = matchEndNotifier;
     }
 
@@ -36,7 +36,7 @@ public sealed class MatchAbandonmentService : IMatchAbandonmentService
         ArgumentNullException.ThrowIfNull(sessionToken);
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        Match? match = _matchStore.FindMatch(matchId);
+        Match? match = _matchRepository.FindMatch(matchId);
         if (match is null || !match.CanBeAbandonedBy(player.AccountId))
         {
             _logger.Warn(
@@ -46,7 +46,7 @@ public sealed class MatchAbandonmentService : IMatchAbandonmentService
 
         match.Abandon(player.AccountId, now);
         bool isMatchOver = match.Status == MatchStatus.Finished;
-        _matchStore.SaveAbandonment(match);
+        _matchRepository.SaveAbandonment(match);
         _logger.Info(
             $"A player left the match. AccountId={player.AccountId}; MatchId={matchId}; IsMatchOver={isMatchOver}");
         IEnumerable<int> recipientAccountIds = match.Participations

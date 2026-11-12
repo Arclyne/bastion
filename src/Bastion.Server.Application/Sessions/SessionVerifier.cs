@@ -34,7 +34,7 @@ public sealed class SessionVerifier : ISessionVerifier
         ArgumentNullException.ThrowIfNull(sessionToken);
 
         Account account = FindSessionAccount(sessionToken, now);
-        return new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode);
+        return PlayerIdentity.FromAccount(account);
     }
 
     private Account FindSessionAccount(string sessionToken, DateTime now)

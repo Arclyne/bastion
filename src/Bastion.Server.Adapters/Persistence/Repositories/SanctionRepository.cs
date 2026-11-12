@@ -20,9 +20,10 @@ public sealed class SanctionRepository : ISanctionRepository
 
     public IReadOnlyList<Sanction> ListChatSanctions(int accountId)
     {
-        return _context.Sanctions
+        IQueryable<Sanction> chatSanctions = _context.Sanctions
             .AsNoTracking()
-            .Where(sanction => sanction.AccountId == accountId && sanction.Scope == SanctionScope.Chat)
-            .ToList();
+            .Where(sanction => sanction.AccountId == accountId)
+            .Where(sanction => sanction.Scope == SanctionScope.Chat);
+        return new List<Sanction>(chatSanctions);
     }
 }

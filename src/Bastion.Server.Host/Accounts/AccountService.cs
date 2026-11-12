@@ -1,21 +1,22 @@
 using System;
 using System.Data.Common;
-using CoreWCF;
-using log4net;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Bastion.Contracts.Accounts;
 using Bastion.Domain.Auditing;
 using Bastion.Domain.Sessions;
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Host.Common;
+using CoreWCF;
+using log4net;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Host.Accounts;
 
+/// <inheritdoc/>
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall, ConcurrencyMode = ConcurrencyMode.Multiple)]
 public sealed class AccountService : IAccountService
 {
-    private const string ServerFailureReason = "The server could not complete the sign-in.";
+    private const string ServerFailureReason = "The server could not complete the login.";
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(AccountService));
 
@@ -31,6 +32,7 @@ public sealed class AccountService : IAccountService
         _timeProvider = timeProvider;
     }
 
+    /// <inheritdoc/>
     public PlayerSession LogIn(PlayerCredentials credentials, ClientDevice device)
     {
         if (credentials is null || device is null)
@@ -60,7 +62,7 @@ public sealed class AccountService : IAccountService
         }
         catch (DbUpdateException ex)
         {
-            _logger.Error($"The sign-in could not be saved. IpAddress={connection.IpAddress}", ex);
+            _logger.Error($"The login could not be saved. IpAddress={connection.IpAddress}", ex);
             throw new FaultException(ServerFailureReason);
         }
         catch (DbException ex)

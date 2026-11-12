@@ -28,6 +28,6 @@ public interface IMatchChatService
     /// <exception cref="ChatMessageRejectedException">
     /// The text is invalid or has a banned term, the author is muted, or the author writes too fast.
     /// </exception>
-    /// <exception cref="MatchStoreException">The match store could not be read or written.</exception>
+    /// <exception cref="MatchRepositoryException">The match repository could not be read or written.</exception>
     PostedChatLine SendMessage(string sessionToken, MatchChatSubmission submission, DateTime now);
 }

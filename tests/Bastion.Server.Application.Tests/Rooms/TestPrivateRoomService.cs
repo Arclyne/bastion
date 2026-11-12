@@ -39,9 +39,9 @@ public class TestPrivateRoomService
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
     private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
     private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
-    private readonly FakeMatchStore _matchStore = new FakeMatchStore();
+    private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
     private readonly FakeRoomCodeGenerator _codeGenerator = new FakeRoomCodeGenerator();
-    private readonly FakeRoomStore _roomStore = new FakeRoomStore();
+    private readonly FakeRoomRepository _roomRepository = new FakeRoomRepository();
     private readonly FakeRoomNotifier _roomNotifier = new FakeRoomNotifier();
     private readonly RoomRegistry _roomRegistry;
     private readonly PrivateRoomService _privateRoomService;
@@ -50,9 +50,9 @@ public class TestPrivateRoomService
     {
         _roomRegistry = new RoomRegistry(_codeGenerator);
         var playerActivity = new PlayerActivity(_matchmakingNotifier, _matchmakingQueue, _roomRegistry);
-        var playerVerifier = new RoomPlayerVerifier(_sessionVerifier, _matchStore, playerActivity);
-        var roomKeeper = new RoomKeeper(_roomRegistry, _roomStore, _roomNotifier);
-        var settingsValidator = new RoomSettingsValidator(_matchStore);
+        var playerVerifier = new RoomPlayerVerifier(_sessionVerifier, _matchRepository, playerActivity);
+        var roomKeeper = new RoomKeeper(_roomRegistry, _roomRepository, _roomNotifier);
+        var settingsValidator = new RoomSettingsValidator(_matchRepository);
         _privateRoomService = new PrivateRoomService(playerVerifier, settingsValidator, roomKeeper);
         AddPlayer(HostToken, HostAccountId, HostNickname);
         AddPlayer(GuestToken, GuestAccountId, GuestNickname);
@@ -90,7 +90,7 @@ public class TestPrivateRoomService
     [Fact]
     public void CreateRoom_PlayerWithUnfinishedMatch_RejectsUnfinishedMatch()
     {
-        _matchStore.AccountIdsWithUnfinishedParticipation.Add(HostAccountId);
+        _matchRepository.AccountIdsWithUnfinishedParticipation.Add(HostAccountId);
 
         RoomRejection rejection = CatchRejection(() => CreateHostRoom());
 
@@ -124,7 +124,7 @@ public class TestPrivateRoomService
     {
         CreateHostRoom();
 
-        Room savedRoom = _roomStore.AddedRooms.Single();
+        Room savedRoom = _roomRepository.AddedRooms.Single();
         Assert.Equal((FirstCode, RoomStatus.Open), (savedRoom.Code, savedRoom.Status));
     }
 
@@ -156,9 +156,9 @@ public class TestPrivateRoomService
     }
 
     [Fact]
-    public void CreateRoom_CodeTakenInStore_UsesNextCode()
+    public void CreateRoom_CodeTakenInRepository_UsesNextCode()
     {
-        _roomStore.TakenCodes.Add(FirstCode);
+        _roomRepository.TakenCodes.Add(FirstCode);
         _codeGenerator.Codes.Enqueue(SecondCode);
 
         RoomSnapshot room = CreateHostRoom();
@@ -281,18 +281,18 @@ public class TestPrivateRoomService
 
         _privateRoomService.ChangeSettings(HostToken, requestedSettings, _now);
 
-        Assert.Equal(FewWalls, _roomStore.ChangedSettingsByRoomId[openedRoom.Identity.RoomId].WallsPerPlayer);
+        Assert.Equal(FewWalls, _roomRepository.ChangedSettingsByRoomId[openedRoom.Identity.RoomId].WallsPerPlayer);
     }
 
     [Fact]
     public void ChangeSettings_FourPlayerRoomToTwoSeatsWithThreeMembers_RejectsTooManyPlayers()
     {
-        _matchStore.ActiveGameMode = GameModeSamples.CreateFourPlayers();
+        _matchRepository.ActiveGameMode = GameModeSamples.CreateFourPlayers();
         var fourPlayerSettings = new RequestedRoomSettings(GameModeCode.FourPlayers, FewWalls, FiveMinuteClock);
         _privateRoomService.CreateRoom(HostToken, fourPlayerSettings, _now);
         _privateRoomService.JoinRoom(GuestToken, FirstCode, _now);
         _privateRoomService.JoinRoom(ThirdToken, FirstCode, _now);
-        _matchStore.ActiveGameMode = GameModeSamples.CreateClassic();
+        _matchRepository.ActiveGameMode = GameModeSamples.CreateClassic();
 
         RoomRejection rejection =
             CatchRejection(() => _privateRoomService.ChangeSettings(HostToken, CreateClassicSettings(), _now));
@@ -312,13 +312,13 @@ public class TestPrivateRoomService
     }
 
     [Fact]
-    public void LeaveRoom_Host_ClosesRoomInStore()
+    public void LeaveRoom_Host_ClosesRoomInRepository()
     {
         RoomSnapshot openedRoom = CreateHostRoom();
 
         _privateRoomService.LeaveRoom(HostToken, _now);
 
-        Assert.Equal(openedRoom.Identity.RoomId, _roomStore.ClosedRoomIds.Single());
+        Assert.Equal(openedRoom.Identity.RoomId, _roomRepository.ClosedRoomIds.Single());
     }
 
     [Fact]

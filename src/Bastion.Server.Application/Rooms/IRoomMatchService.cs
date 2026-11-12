@@ -19,8 +19,8 @@ public interface IRoomMatchService
     /// <exception cref="ArgumentNullException"><paramref name="sessionToken"/> is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="RoomRejectedException">The match cannot start; the rejection says why.</exception>
-    /// <exception cref="RoomStoreException">The match and the room could not be saved; the room stays open.</exception>
-    /// <exception cref="MatchStoreException">
+    /// <exception cref="RoomRepositoryException">The match and the room could not be saved; the room stays open.</exception>
+    /// <exception cref="MatchRepositoryException">
     /// The ratings of the members could not be read; the room stays open.
     /// </exception>
     int StartMatch(string sessionToken, DateTime now);

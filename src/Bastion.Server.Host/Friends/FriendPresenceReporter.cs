@@ -24,26 +24,36 @@ public sealed class FriendPresenceReporter
 
     public void ReportConnected(int accountId)
     {
-        Run(nameof(ReportConnected), accountId, presenceService => presenceService.ReportConnected(accountId));
+        Action reportConnected = () => ReportConnectedInOwnScope(accountId);
+        LogPresenceFailures(nameof(ReportConnected), accountId, reportConnected);
     }
 
     public void ReportDisconnected(int accountId)
     {
         DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
-        Run(
-            nameof(ReportDisconnected),
-            accountId,
-            presenceService => presenceService.ReportDisconnected(accountId, now));
+        Action reportDisconnected = () => ReportDisconnectedInOwnScope(accountId, now);
+        LogPresenceFailures(nameof(ReportDisconnected), accountId, reportDisconnected);
     }
 
-    private void Run(string operationName, int accountId, Action<IFriendPresenceService> operation)
+    private void ReportConnectedInOwnScope(int accountId)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IFriendPresenceService presenceService = scope.ServiceProvider.GetRequiredService<IFriendPresenceService>();
+        presenceService.ReportConnected(accountId);
+    }
+
+    private void ReportDisconnectedInOwnScope(int accountId, DateTime now)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IFriendPresenceService presenceService = scope.ServiceProvider.GetRequiredService<IFriendPresenceService>();
+        presenceService.ReportDisconnected(accountId, now);
+    }
+
+    private static void LogPresenceFailures(string operationName, int accountId, Action report)
     {
         try
         {
-            using IServiceScope scope = _scopeFactory.CreateScope();
-            IFriendPresenceService presenceService =
-                scope.ServiceProvider.GetRequiredService<IFriendPresenceService>();
-            operation(presenceService);
+            report();
         }
         catch (DbException ex)
         {

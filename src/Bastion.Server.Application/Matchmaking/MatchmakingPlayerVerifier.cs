@@ -9,20 +9,20 @@ public sealed class MatchmakingPlayerVerifier : IMatchmakingPlayerVerifier
 {
     private readonly ISessionVerifier _sessionVerifier;
     private readonly IPlayerActivity _playerActivity;
-    private readonly IMatchStore _matchStore;
+    private readonly IMatchRepository _matchRepository;
 
     public MatchmakingPlayerVerifier(
         ISessionVerifier sessionVerifier,
         IPlayerActivity playerActivity,
-        IMatchStore matchStore)
+        IMatchRepository matchRepository)
     {
         ArgumentNullException.ThrowIfNull(sessionVerifier);
         ArgumentNullException.ThrowIfNull(playerActivity);
-        ArgumentNullException.ThrowIfNull(matchStore);
+        ArgumentNullException.ThrowIfNull(matchRepository);
 
         _sessionVerifier = sessionVerifier;
         _playerActivity = playerActivity;
-        _matchStore = matchStore;
+        _matchRepository = matchRepository;
     }
 
     public ConnectedPlayer VerifySession(string sessionToken, DateTime now)
@@ -42,7 +42,7 @@ public sealed class MatchmakingPlayerVerifier : IMatchmakingPlayerVerifier
             throw new SearchRejectedException(SearchRejection.NotificationsUnavailable);
         }
 
-        if (_matchStore.HasUnfinishedParticipation(player.AccountId))
+        if (_matchRepository.HasUnfinishedParticipation(player.AccountId))
         {
             throw new SearchRejectedException(SearchRejection.UnfinishedMatch);
         }

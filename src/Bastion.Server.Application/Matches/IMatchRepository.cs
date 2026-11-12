@@ -5,7 +5,7 @@ using Bastion.Domain.Matches;
 
 namespace Bastion.Server.Application.Matches;
 
-public interface IMatchStore
+public interface IMatchRepository
 {
     bool HasUnfinishedParticipation(int accountId);
 

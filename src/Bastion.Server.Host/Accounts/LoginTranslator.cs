@@ -1,9 +1,10 @@
 using System;
-using CoreWCF;
 using Bastion.Contracts.Accounts;
 using Bastion.Domain.Auditing;
 using Bastion.Domain.Sessions;
 using Bastion.Server.Application.Accounts;
+using Bastion.Server.Host.Common;
+using CoreWCF;
 
 namespace Bastion.Server.Host.Accounts;
 
@@ -14,10 +15,9 @@ public static class LoginTranslator
         ArgumentNullException.ThrowIfNull(device);
         ArgumentNullException.ThrowIfNull(ipAddress);
 
-        return new ClientConnection(
-            ipAddress,
-            device.DeviceFingerprint ?? string.Empty,
-            device.ClientVersion ?? string.Empty);
+        string deviceFingerprint = device.DeviceFingerprint ?? string.Empty;
+        string clientVersion = device.ClientVersion ?? string.Empty;
+        return new ClientConnection(ipAddress, deviceFingerprint, clientVersion);
     }
 
     public static AccessAttempt ToAttempt(PlayerCredentials credentials, ClientConnection connection, DateTime now)
@@ -25,7 +25,8 @@ public static class LoginTranslator
         ArgumentNullException.ThrowIfNull(credentials);
         ArgumentNullException.ThrowIfNull(connection);
 
-        return new AccessAttempt((credentials.Identifier ?? string.Empty).Trim(), connection, now);
+        string enteredIdentifier = (credentials.Identifier ?? string.Empty).Trim();
+        return new AccessAttempt(enteredIdentifier, connection, now);
     }
 
     public static PlayerSession ToSession(LoggedInPlayer player)
@@ -44,9 +45,8 @@ public static class LoginTranslator
     {
         ArgumentNullException.ThrowIfNull(rejection);
 
-        return new FaultException<InvalidCredentialsFault>(
-            new InvalidCredentialsFault(),
-            new FaultReason(rejection.Message));
+        var fault = new InvalidCredentialsFault();
+        return FaultExceptionFactory.Create(fault, rejection);
     }
 
     public static FaultException<AccountRestrictedFault> ToFault(AccountRestrictedException rejection)
@@ -58,7 +58,7 @@ public static class LoginTranslator
             Reason = ToReason(rejection.Restriction),
             LockMinutes = rejection.LockMinutes,
         };
-        return new FaultException<AccountRestrictedFault>(fault, new FaultReason(rejection.Message));
+        return FaultExceptionFactory.Create(fault, rejection);
     }
 
     private static RestrictionReason ToReason(AccountRestriction restriction)

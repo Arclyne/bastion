@@ -48,7 +48,7 @@ public sealed class LobbyChatService : ILobbyChatService
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
         IReadOnlyList<PostedChatLine> recentLines = _chatRoom.ListRecent();
         IEnumerable<ChatHistoryEntry> entries = recentLines
-            .Select(line => new ChatHistoryEntry(line, line.Line.Sender.AccountId == player.AccountId));
+            .Select(postedLine => new ChatHistoryEntry(postedLine, postedLine.Line.Sender.AccountId == player.AccountId));
         var entryList = new List<ChatHistoryEntry>(entries);
         int connectedPlayers = _chatRoom.CountListeners();
         ChatMute mute = _chatModerator.FindMute(player.AccountId, now);

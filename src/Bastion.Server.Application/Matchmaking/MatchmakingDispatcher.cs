@@ -3,7 +3,7 @@ using Bastion.Domain.Matchmaking;
 
 namespace Bastion.Server.Application.Matchmaking;
 
-public sealed class MatchmakingDispatcher
+public sealed class MatchmakingDispatcher : IMatchmakingDispatcher
 {
     private readonly IMatchmakingQueue _matchmakingQueue;
     private readonly IMatchmakingNotifier _matchmakingNotifier;

@@ -1,4 +1,5 @@
 using System;
+using Bastion.Domain.Accounts;
 
 namespace Bastion.Server.Application.Accounts;
 
@@ -19,4 +20,11 @@ public sealed record PlayerIdentity
     public string Nickname { get; }
 
     public string FriendCode { get; }
+
+    public static PlayerIdentity FromAccount(Account account)
+    {
+        ArgumentNullException.ThrowIfNull(account);
+
+        return new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode);
+    }
 }

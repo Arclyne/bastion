@@ -2,17 +2,19 @@ using System;
 using Bastion.Contracts.Matches;
 using Bastion.Contracts.Notifications;
 using Bastion.Server.Application.Matches;
+using Bastion.Server.Host.Common;
 using CoreWCF;
 
 namespace Bastion.Server.Host.Matches;
 
 public static class MatchTranslator
 {
-    public static FaultException<MatchNotJoinedFault> ToFault(MatchNotJoinedException exception)
+    public static FaultException<MatchNotJoinedFault> ToFault(MatchNotJoinedException rejection)
     {
-        ArgumentNullException.ThrowIfNull(exception);
+        ArgumentNullException.ThrowIfNull(rejection);
 
-        return new FaultException<MatchNotJoinedFault>(new MatchNotJoinedFault(), new FaultReason(exception.Message));
+        var fault = new MatchNotJoinedFault();
+        return FaultExceptionFactory.Create(fault, rejection);
     }
 
     public static MatchAbandonedNotification ToAbandonedNotification(

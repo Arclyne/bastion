@@ -45,7 +45,7 @@ public sealed class FriendPresenceService : IFriendPresenceService
         account.RecordLastSeen(now);
         _unitOfWork.SaveChanges();
 
-        var identity = new PlayerIdentity(account.AccountId, account.Nickname, account.FriendCode);
+        var identity = PlayerIdentity.FromAccount(account);
         NotifyFriends(new FriendPresenceChange(identity, FriendPresence.Disconnected, now));
     }
 
