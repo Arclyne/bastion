@@ -6,9 +6,12 @@ using Bastion.Client.Screens;
 using Bastion.Client.Screens.Matches;
 using Bastion.Client.Screens.Matches.Scene;
 using Bastion.Client.Theme;
+using Bastion.Domain.Matches;
 using Gum;
 using Gum.Forms;
+using Gum.Forms.Controls;
 using Gum.Forms.Input;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 
 namespace Bastion.Client;
@@ -73,6 +76,7 @@ public sealed class BastionGame : Game
             _screenNavigator?.ReceiveEscapeKey();
         }
 
+        ForwardBoardInput();
         base.Update(gameTime);
     }
 
@@ -90,6 +94,7 @@ public sealed class BastionGame : Game
         {
             Window.ClientSizeChanged -= HandleClientSizeChanged;
             _screenNavigator?.Dispose();
+            _boardScene?.Dispose();
             _serverConnection.Dispose();
         }
 
@@ -127,6 +132,94 @@ public sealed class BastionGame : Game
         GumService.Default.CanvasWidth = windowWidth / uiScale;
         GumService.Default.CanvasHeight = windowHeight / uiScale;
         GumService.Default.Root.UpdateLayout();
+    }
+
+    private void ForwardBoardInput()
+    {
+        MatchViewModel? shownMatch = _screenNavigator?.ShownMatch;
+        if (shownMatch is null || _boardScene is null)
+        {
+            return;
+        }
+
+        ForwardWallKeys(shownMatch.WallPlacement);
+        ICursor cursor = GumService.Default.Cursor;
+        if (shownMatch.WallPlacement.IsActive)
+        {
+            ForwardWallCursor(_boardScene, shownMatch, cursor);
+            return;
+        }
+
+        ForwardBoardClick(_boardScene, shownMatch, cursor);
+    }
+
+    private static void ForwardWallKeys(WallPlacementViewModel wallPlacement)
+    {
+        if (InteractiveGue.CurrentInputReceiver is not null)
+        {
+            return;
+        }
+
+        if (GumService.Default.Keyboard.KeyPushed(Keys.R))
+        {
+            wallPlacement.Rotate();
+        }
+
+        if (GumService.Default.Keyboard.KeyPushed(Keys.Enter))
+        {
+            _ = wallPlacement.Confirm();
+        }
+
+        if (GumService.Default.Keyboard.KeyPushed(Keys.Escape))
+        {
+            wallPlacement.Cancel();
+        }
+    }
+
+    private static void ForwardWallCursor(BoardScene boardScene, MatchViewModel shownMatch, ICursor cursor)
+    {
+        WallPlacementViewModel wallPlacement = shownMatch.WallPlacement;
+        if (cursor.SecondaryClick)
+        {
+            wallPlacement.Rotate();
+        }
+
+        var cursorPosition = new Point(cursor.X, cursor.Y);
+        if (IsOverGumControl(cursor)
+            || !boardScene.TryFindGrooveUnderCursor(shownMatch, cursorPosition, out BoardCoordinates groove))
+        {
+            wallPlacement.ClearHover();
+            return;
+        }
+
+        wallPlacement.HoverGroove(groove);
+        if (cursor.PrimaryClick)
+        {
+            wallPlacement.ChooseGroove(groove);
+        }
+    }
+
+    private static void ForwardBoardClick(BoardScene boardScene, MatchViewModel shownMatch, ICursor cursor)
+    {
+        if (!cursor.PrimaryClick || IsOverGumControl(cursor))
+        {
+            return;
+        }
+
+        var cursorPosition = new Point(cursor.X, cursor.Y);
+        if (!boardScene.TryFindSquareUnderCursor(shownMatch, cursorPosition, out BoardCoordinates square))
+        {
+            shownMatch.Play.ClearSelection();
+            return;
+        }
+
+        _ = shownMatch.Play.SelectSquare(square);
+    }
+
+    private static bool IsOverGumControl(ICursor cursor)
+    {
+        object? controlOver = cursor.VisualOver?.FormsControlAsObject;
+        return controlOver is FrameworkElement && controlOver is not ScreenView;
     }
 
     private void DrawShownMatchBoard()

@@ -22,4 +22,8 @@ public interface IMatchRepository
     Match? FindMatch(int matchId);
 
     void SaveAbandonment(Match match);
+
+    GameMode? FindGameMode(byte gameModeId);
+
+    void SaveMove(Match match);
 }

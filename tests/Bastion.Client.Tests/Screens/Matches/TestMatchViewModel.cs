@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Bastion.Client.Localization;
+using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Screens.Matches;
 using Bastion.Client.Tests.Fakes;
 using Bastion.Domain.Matches;
@@ -14,10 +15,17 @@ public class TestMatchViewModel : IDisposable
 {
     private const int ClassicCenterColumnIndex = 4;
     private const int FirstRowIndex = 0;
+    private const int SecondRowIndex = 1;
+    private const string SecondRowSquare = "e2";
+    private const string FirstGoalSquare = "e9";
+    private const string CenterGroove = "e4";
     private const int ClassicLastRowIndex = 8;
     private const string FiveMinuteClockText = "5:00";
     private const int FourPlayers = 4;
     private const int FourthPlayerIndex = 3;
+
+    private static readonly BoardCoordinates _rivalForward =
+        new BoardCoordinates(ClassicCenterColumnIndex, SecondRowIndex);
 
     private static readonly byte[] _turnOrders = new byte[]
     {
@@ -27,12 +35,14 @@ public class TestMatchViewModel : IDisposable
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
     private readonly JoinedMatch _fourPlayerMatch = JoinedMatchSamples.CreateFourPlayerWithOwnThirdTurn();
-    private readonly List<MatchAbandonmentViewModel> _abandonmentViewModels = new List<MatchAbandonmentViewModel>();
+    private readonly List<IDisposable> _companionViewModels = new List<IDisposable>();
     private readonly MatchAbandonmentViewModel _fourPlayerAbandonment;
+    private readonly MatchPlayViewModel _fourPlayerPlay;
 
     public TestMatchViewModel()
     {
         _fourPlayerAbandonment = CreateAbandonmentViewModel(_fourPlayerMatch);
+        _fourPlayerPlay = CreatePlayViewModel(_fourPlayerMatch);
     }
 
     [Fact]
@@ -76,11 +86,96 @@ public class TestMatchViewModel : IDisposable
     }
 
     [Fact]
-    public void Constructor_FirstTurnOrderPlayer_HasFirstTurn()
+    public void Constructor_FirstTurnOrderPlayer_HasTurn()
     {
         MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
 
-        Assert.True(viewModel.Players[0].HasFirstTurn());
+        Assert.True(viewModel.Players[0].HasTurn);
+    }
+
+    [Fact]
+    public void PawnMoved_RivalMoved_ShowsOwnTurn()
+    {
+        MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+
+        _matchClient.RaisePawnMoved(CreateRivalFirstMove());
+
+        Assert.Equal(Strings.MatchYourTurn, viewModel.TurnText);
+    }
+
+    [Fact]
+    public void PawnMoved_RivalMoved_GivesTurnHighlightToOwnRow()
+    {
+        MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+
+        _matchClient.RaisePawnMoved(CreateRivalFirstMove());
+
+        Assert.True(viewModel.Players[1].HasTurn);
+    }
+
+    [Fact]
+    public void PawnMoved_RivalMoved_MovesRivalPawn()
+    {
+        var expectedPawn = new BoardPawn(_rivalForward, PawnSymbol.Blue);
+        MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+
+        _matchClient.RaisePawnMoved(CreateRivalFirstMove());
+
+        Assert.Contains(expectedPawn, viewModel.Pawns);
+    }
+
+    [Fact]
+    public void Constructor_RivalMovedDuringVersus_StartsWithMovedPawn()
+    {
+        var expectedPawn = new BoardPawn(_rivalForward, PawnSymbol.Blue);
+        JoinedMatch joinedMatch = JoinedMatchSamples.CreateWithOwnTurnOrder(Match.SecondTurnOrder);
+        MatchAbandonmentViewModel abandonment = CreateAbandonmentViewModel(joinedMatch);
+        MatchPlayViewModel play = CreatePlayViewModel(joinedMatch);
+        _matchClient.RaisePawnMoved(CreateRivalFirstMove());
+
+        var viewModel = new MatchViewModel(joinedMatch, abandonment, play);
+
+        Assert.Contains(expectedPawn, viewModel.Pawns);
+    }
+
+    [Fact]
+    public void WallPlaced_RivalPlacedWall_ShowsRivalWallsLeft()
+    {
+        string expectedText = string.Format(
+            CultureInfo.CurrentCulture,
+            Strings.MatchWallsFormat,
+            WallPlacedSamples.WallsLeftAfterOne);
+        MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+
+        _matchClient.RaiseWallPlaced(WallPlacedSamples.CreateFirstWall(JoinedMatchSamples.RivalNickname, CenterGroove));
+
+        Assert.Equal(expectedText, viewModel.Players[0].WallsText);
+    }
+
+    [Fact]
+    public void PawnMoved_OwnPawnReachedGoal_ShowsOwnWin()
+    {
+        MatchViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+
+        _matchClient.RaisePawnMoved(
+            PawnMovedSamples.CreateWinningMove(JoinedMatchSamples.OwnNickname, FirstGoalSquare));
+
+        Assert.Equal(Strings.MatchYouWon, viewModel.TurnText);
+    }
+
+    [Fact]
+    public void PawnMoved_RivalReachedGoal_ShowsRivalWin()
+    {
+        string expectedText = string.Format(
+            CultureInfo.CurrentCulture,
+            Strings.MatchPlayerWonFormat,
+            JoinedMatchSamples.RivalNickname);
+        MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
+
+        _matchClient.RaisePawnMoved(
+            PawnMovedSamples.CreateWinningMove(JoinedMatchSamples.RivalNickname, FirstGoalSquare));
+
+        Assert.Equal(expectedText, viewModel.TurnText);
     }
 
     [Fact]
@@ -171,29 +266,46 @@ public class TestMatchViewModel : IDisposable
 
     public void Dispose()
     {
-        _abandonmentViewModels.ForEach(DisposeViewModel);
+        _companionViewModels.ForEach(DisposeViewModel);
     }
 
-    private static void DisposeViewModel(MatchAbandonmentViewModel viewModel)
+    private static void DisposeViewModel(IDisposable viewModel)
     {
         viewModel.Dispose();
+    }
+
+    private static PawnMovedEventArgs CreateRivalFirstMove()
+    {
+        return PawnMovedSamples.CreateFirstMove(
+            JoinedMatchSamples.MatchId,
+            JoinedMatchSamples.RivalNickname,
+            SecondRowSquare);
     }
 
     private MatchViewModel CreateViewModel(byte ownTurnOrder)
     {
         JoinedMatch joinedMatch = JoinedMatchSamples.CreateWithOwnTurnOrder(ownTurnOrder);
-        return new MatchViewModel(joinedMatch, CreateAbandonmentViewModel(joinedMatch));
+        MatchAbandonmentViewModel abandonment = CreateAbandonmentViewModel(joinedMatch);
+        MatchPlayViewModel play = CreatePlayViewModel(joinedMatch);
+        return new MatchViewModel(joinedMatch, abandonment, play);
     }
 
     private MatchViewModel CreateFourPlayerViewModel()
     {
-        return new MatchViewModel(_fourPlayerMatch, _fourPlayerAbandonment);
+        return new MatchViewModel(_fourPlayerMatch, _fourPlayerAbandonment, _fourPlayerPlay);
     }
 
     private MatchAbandonmentViewModel CreateAbandonmentViewModel(JoinedMatch joinedMatch)
     {
         var viewModel = new MatchAbandonmentViewModel(joinedMatch, _matchClient);
-        _abandonmentViewModels.Add(viewModel);
+        _companionViewModels.Add(viewModel);
+        return viewModel;
+    }
+
+    private MatchPlayViewModel CreatePlayViewModel(JoinedMatch joinedMatch)
+    {
+        var viewModel = new MatchPlayViewModel(joinedMatch, _matchClient);
+        _companionViewModels.Add(viewModel);
         return viewModel;
     }
 }

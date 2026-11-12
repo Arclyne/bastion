@@ -37,6 +37,8 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public List<Match> SavedAbandonments { get; } = new List<Match>();
 
+    public List<Match> SavedMoves { get; } = new List<Match>();
+
     public bool HasUnfinishedParticipation(int accountId)
     {
         return AccountIdsWithUnfinishedParticipation.Contains(accountId);
@@ -97,6 +99,18 @@ public sealed class FakeMatchRepository : IMatchRepository
         ArgumentNullException.ThrowIfNull(match);
 
         SavedAbandonments.Add(match);
+    }
+
+    public GameMode? FindGameMode(byte gameModeId)
+    {
+        return ActiveGameMode?.GameModeId == gameModeId ? ActiveGameMode : null;
+    }
+
+    public void SaveMove(Match match)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+
+        SavedMoves.Add(match);
     }
 
     private static GameMode CreateClassicGameMode()

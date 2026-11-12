@@ -76,6 +76,16 @@ public static class Palette
 
     public static Color PawnYellow { get; } = new Color(0xD9, 0xA4, 0x1C);
 
+    public static Color ReachableSquare { get; } = new Color(0xF0, 0xC4, 0x88, 0xC8);
+
+    public static Color Wall { get; } = new Color(0x8B, 0x5A, 0x3C);
+
+    public static Color PendingWall { get; } = new Color(0xC9, 0x8B, 0x4E);
+
+    public static Color ValidWallGhost { get; } = new Color(0x3F, 0xA3, 0x6B);
+
+    public static Color InvalidWallGhost { get; } = new Color(0xC2, 0x3B, 0x2E);
+
     public static Color AvatarFill { get; } = new Color(0xFB, 0xEC, 0xDA);
 
     public static Color HeroIconFill { get; } = new Color(0xFF, 0xFF, 0xFF, 0x29);

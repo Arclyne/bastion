@@ -14,6 +14,8 @@ public sealed class MatchView : ScreenView
     private const float AbandonButtonWidth = 210;
     private const float AbandonStatusGap = 8;
     private const float PlayerLeftNoticeWidth = 420;
+    private const float MoveNoticeWidth = 360;
+    private const float MoveNoticeHeight = 28;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchView));
 
@@ -31,6 +33,8 @@ public sealed class MatchView : ScreenView
         _abandonmentViewModel = abandonmentViewModel;
         AddChild(CreatePlayersPanel(matchViewModel));
         AddChild(CreateTurnPill(matchViewModel));
+        AddChild(CreateMoveNotice(matchViewModel.Play));
+        AddChild(CreateWallControls(matchViewModel.WallPlacement));
         AddChild(CreateChatPanel(chatViewModel));
         AddChild(CreateAbandonButton());
         AddChild(CreateAbandonStatus());
@@ -62,12 +66,35 @@ public sealed class MatchView : ScreenView
         pill.Anchor(Gum.Wireframe.Anchor.TopRight);
         pill.X = -ScreenMetrics.MarginX;
         pill.Y = ScreenMetrics.MarginY;
-        Label text = ViewFactory.CreateUntranslatedLabel(matchViewModel.TurnText, TextStyles.IdentityName);
+        Label text = ViewFactory.CreateUntranslatedLabel(string.Empty, TextStyles.IdentityName);
+        text.BindingContext = matchViewModel;
+        text.SetBinding(nameof(Label.Text), nameof(MatchViewModel.TurnText));
         text.X = TurnPillPaddingX;
         ViewFactory.CenterVertically(text);
         pill.AddChild(text);
         Skins.ApplyCard(pill.Visual);
         return pill;
+    }
+
+    private static Label CreateMoveNotice(MatchPlayViewModel playViewModel)
+    {
+        Label notice = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(MatchPlayViewModel.NoticeText),
+            TextStyles.FieldError,
+            MoveNoticeWidth);
+        notice.BindingContext = playViewModel;
+        notice.SetBinding(nameof(IsVisible), nameof(MatchPlayViewModel.HasNotice));
+        notice.Anchor(Gum.Wireframe.Anchor.Bottom);
+        notice.Y = -ScreenMetrics.MarginY;
+        return notice;
+    }
+
+    private static WallControlsPanel CreateWallControls(WallPlacementViewModel wallPlacement)
+    {
+        var panel = new WallControlsPanel(wallPlacement);
+        panel.Anchor(Gum.Wireframe.Anchor.Bottom);
+        panel.Y = -(ScreenMetrics.MarginY + MoveNoticeHeight);
+        return panel;
     }
 
     private static MatchChatPanel CreateChatPanel(MatchChatViewModel chatViewModel)

@@ -4,6 +4,7 @@ using System.Linq;
 using System.ServiceModel;
 using Bastion.Client.Networking.Chat;
 using Bastion.Client.Networking.Friends;
+using Bastion.Client.Networking.Matches;
 using Bastion.Client.Networking.Matchmaking;
 using Bastion.Client.Networking.PrivateChat;
 using Bastion.Client.Networking.Rooms;
@@ -24,6 +25,10 @@ public sealed class NotificationCallback : INotificationCallback
     public event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
 
     public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
+
+    public event EventHandler<PawnMovedEventArgs>? PawnMoved;
+
+    public event EventHandler<WallPlacedEventArgs>? WallPlaced;
 
     public event EventHandler<MatchFoundEventArgs>? MatchFound;
 
@@ -54,6 +59,7 @@ public sealed class NotificationCallback : INotificationCallback
 
         if (TryDispatchChatNotification(notification)
             || TryDispatchMatchEndNotification(notification)
+            || TryDispatchMatchMoveNotification(notification)
             || TryDispatchFriendNotification(notification)
             || TryDispatchPrivateMessageNotification(notification)
             || TryDispatchRoomNotification(notification)
@@ -125,6 +131,51 @@ public sealed class NotificationCallback : INotificationCallback
     private void OnMatchAbandoned(MatchAbandonedEventArgs e)
     {
         MatchAbandoned?.Invoke(this, e);
+    }
+
+    private bool TryDispatchMatchMoveNotification(Notification notification)
+    {
+        if (notification is PawnMovedNotification pawnMoved)
+        {
+            OnPawnMoved(ToPawnMovedEventArgs(pawnMoved));
+            return true;
+        }
+
+        if (notification is WallPlacedNotification wallPlaced)
+        {
+            OnWallPlaced(MatchContractTranslator.ToWallPlacedEventArgs(wallPlaced));
+            return true;
+        }
+
+        return false;
+    }
+
+    private static PawnMovedEventArgs ToPawnMovedEventArgs(PawnMovedNotification notification)
+    {
+        string moverNickname = notification.MoverNickname ?? string.Empty;
+        string fromSquare = notification.FromSquare ?? string.Empty;
+        string toSquare = notification.ToSquare ?? string.Empty;
+        return new PawnMovedEventArgs
+        {
+            MatchId = notification.MatchId,
+            MoverNickname = moverNickname,
+            FromSquare = fromSquare,
+            ToSquare = toSquare,
+            NextTurnOrder = notification.NextTurnOrder,
+            NextMoveNumber = notification.NextMoveNumber,
+            RemainingClockMilliseconds = notification.RemainingClockMilliseconds,
+            IsMatchOver = notification.IsMatchOver,
+        };
+    }
+
+    private void OnPawnMoved(PawnMovedEventArgs e)
+    {
+        PawnMoved?.Invoke(this, e);
+    }
+
+    private void OnWallPlaced(WallPlacedEventArgs e)
+    {
+        WallPlaced?.Invoke(this, e);
     }
 
     private bool TryDispatchFriendNotification(Notification notification)

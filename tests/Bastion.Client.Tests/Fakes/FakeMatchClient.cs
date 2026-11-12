@@ -10,7 +10,19 @@ public sealed class FakeMatchClient : IMatchClient
 
     public int? LastAbandonedMatchId { get; private set; }
 
+    public Exception? MoveFailure { get; set; }
+
+    public ChosenPawnMove? LastMove { get; private set; }
+
+    public Exception? WallFailure { get; set; }
+
+    public ChosenWall? LastWall { get; private set; }
+
     public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
+
+    public event EventHandler<PawnMovedEventArgs>? PawnMoved;
+
+    public event EventHandler<WallPlacedEventArgs>? WallPlaced;
 
     public void AbandonMatch(string sessionToken, int matchId)
     {
@@ -24,9 +36,40 @@ public sealed class FakeMatchClient : IMatchClient
         LastAbandonedMatchId = matchId;
     }
 
+    public void MovePawn(string sessionToken, ChosenPawnMove move)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(move);
+
+        if (MoveFailure is not null)
+        {
+            throw MoveFailure;
+        }
+
+        LastMove = move;
+    }
+
+    public void PlaceWall(string sessionToken, ChosenWall wall)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(wall);
+
+        if (WallFailure is not null)
+        {
+            throw WallFailure;
+        }
+
+        LastWall = wall;
+    }
+
     public bool HasMatchAbandonedSubscribers()
     {
         return MatchAbandoned is not null;
+    }
+
+    public bool HasPawnMovedSubscribers()
+    {
+        return PawnMoved is not null;
     }
 
     public void RaiseMatchAbandoned(int matchId, string abandoningNickname, bool isMatchOver)
@@ -34,5 +77,19 @@ public sealed class FakeMatchClient : IMatchClient
         ArgumentNullException.ThrowIfNull(abandoningNickname);
 
         MatchAbandoned?.Invoke(this, new MatchAbandonedEventArgs(matchId, abandoningNickname, isMatchOver));
+    }
+
+    public void RaisePawnMoved(PawnMovedEventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+
+        PawnMoved?.Invoke(this, e);
+    }
+
+    public void RaiseWallPlaced(WallPlacedEventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+
+        WallPlaced?.Invoke(this, e);
     }
 }

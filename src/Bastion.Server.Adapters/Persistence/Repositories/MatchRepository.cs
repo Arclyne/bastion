@@ -73,6 +73,18 @@ public sealed class MatchRepository : IMatchRepository
         _newContextRunner.Run(context => UpdateMatchAndRoom(context, match));
     }
 
+    public GameMode? FindGameMode(byte gameModeId)
+    {
+        return _newContextRunner.Run(context => LoadGameMode(context, gameModeId));
+    }
+
+    public void SaveMove(Match match)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+
+        _newContextRunner.Run(context => UpdateMatchWithNewestMove(context, match));
+    }
+
     private static bool HasUnfinishedParticipationInContext(BastionDbContext context, int accountId)
     {
         IQueryable<Participation> accountUnfinishedParticipations = SelectUnfinishedParticipations(context)
@@ -129,13 +141,42 @@ public sealed class MatchRepository : IMatchRepository
         IQueryable<Match> matchesWithId = context.Matches
             .AsNoTracking()
             .Include(match => match.Participations)
+            .Include(match => match.Moves)
             .Where(match => match.MatchId == matchId);
         return matchesWithId.FirstOrDefault();
+    }
+
+    private static GameMode? LoadGameMode(BastionDbContext context, byte gameModeId)
+    {
+        IQueryable<GameMode> modesWithId = context.GameModes
+            .AsNoTracking()
+            .Where(gameMode => gameMode.GameModeId == gameModeId);
+        return modesWithId.FirstOrDefault();
     }
 
     private static int UpdateMatchAndRoom(BastionDbContext context, Match match)
     {
         context.Matches.Update(match);
+        int savedRowCount = SaveMatchAndRoom(context, match);
+        return savedRowCount;
+    }
+
+    private static int UpdateMatchWithNewestMove(BastionDbContext context, Match match)
+    {
+        context.Matches.Update(match);
+        short newestMoveNumber = match.Moves.Max(move => move.MoveNumber);
+        foreach (Move move in match.Moves)
+        {
+            bool isNewest = move.MoveNumber == newestMoveNumber;
+            context.Entry(move).State = isNewest ? EntityState.Added : EntityState.Unchanged;
+        }
+
+        int savedRowCount = SaveMatchAndRoom(context, match);
+        return savedRowCount;
+    }
+
+    private static int SaveMatchAndRoom(BastionDbContext context, Match match)
+    {
         if (match.MatchType == MatchType.Private && match.Status == MatchStatus.Finished)
         {
             FinishRoomOfMatch(context, match);

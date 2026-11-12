@@ -26,7 +26,11 @@ public sealed class MatchPlayerViewModel : ViewModel
 
     public string EloText { get; }
 
-    public string WallsText { get; }
+    public string WallsText
+    {
+        get => Get<string>();
+        private set => Set(value);
+    }
 
     public string ClockText { get; }
 
@@ -45,13 +49,29 @@ public sealed class MatchPlayerViewModel : ViewModel
     [DependsOn(nameof(HasLeft))]
     public string DetailText => HasLeft ? Strings.MatchPlayerLeft : EloText;
 
-    public bool HasFirstTurn()
+    public bool HasTurn
     {
-        return TurnOrder == Match.FirstTurnOrder;
+        get => Get<bool>();
+        private set => Set(value);
     }
 
     public void MarkLeft()
     {
         HasLeft = true;
+    }
+
+    public void ShowTurn(byte currentTurnOrder)
+    {
+        HasTurn = TurnOrder == currentTurnOrder;
+    }
+
+    public void HideTurn()
+    {
+        HasTurn = false;
+    }
+
+    public void ShowWalls(byte remainingWalls)
+    {
+        WallsText = MatchScreenText.FormatWallCount(remainingWalls);
     }
 }

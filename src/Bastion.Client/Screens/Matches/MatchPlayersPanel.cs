@@ -69,7 +69,7 @@ public sealed class MatchPlayersPanel : Panel
         };
         content.AddChild(CreatePawn(player));
         content.AddChild(nameColumn);
-        content.AddChild(ViewFactory.CreateUntranslatedLabel(player.WallsText, TextStyles.IdentityDetail));
+        content.AddChild(CreateWallsLabel(player));
         content.AddChild(ViewFactory.CreateUntranslatedLabel(player.ClockText, TextStyles.IdentityName));
         ViewFactory.CenterVertically(content);
 
@@ -80,13 +80,17 @@ public sealed class MatchPlayersPanel : Panel
             Height = RowHeight,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        if (player.HasFirstTurn())
-        {
-            Shapes.InsertBehindContent(row.Visual, Shapes.CreateRounded(Palette.Selected, RowRadius));
-        }
-
+        row.AddChild(CreateTurnHighlight(player));
         row.AddChild(content);
         return row;
+    }
+
+    private static Label CreateWallsLabel(MatchPlayerViewModel player)
+    {
+        Label walls = ViewFactory.CreateUntranslatedLabel(player.WallsText, TextStyles.IdentityDetail);
+        walls.BindingContext = player;
+        walls.SetBinding(nameof(Label.Text), nameof(MatchPlayerViewModel.WallsText));
+        return walls;
     }
 
     private static Panel CreatePawn(MatchPlayerViewModel player)
@@ -102,5 +106,17 @@ public sealed class MatchPlayersPanel : Panel
         Shapes.InsertBehindContent(pawn.Visual, circle);
         ViewFactory.CenterVertically(pawn);
         return pawn;
+    }
+
+    private static Panel CreateTurnHighlight(MatchPlayerViewModel player)
+    {
+        var highlight = new Panel
+        {
+            BindingContext = player,
+        };
+        highlight.Dock(Gum.Wireframe.Dock.Fill);
+        highlight.SetBinding(nameof(IsVisible), nameof(MatchPlayerViewModel.HasTurn));
+        Shapes.InsertBehindContent(highlight.Visual, Shapes.CreateRounded(Palette.Selected, RowRadius));
+        return highlight;
     }
 }

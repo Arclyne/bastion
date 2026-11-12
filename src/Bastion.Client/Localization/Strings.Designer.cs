@@ -1255,6 +1255,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        internal static string MatchCancelWallButton {
+            get {
+                return ResourceManager.GetString("MatchCancelWallButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Match chat.
         /// </summary>
         internal static string MatchChatTitle {
@@ -1273,6 +1282,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Confirm.
+        /// </summary>
+        internal static string MatchConfirmWallButton {
+            get {
+                return ResourceManager.GetString("MatchConfirmWallButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Elo {0}.
         /// </summary>
         internal static string MatchEloFormat {
@@ -1282,11 +1300,38 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The move could not be sent. Try again..
+        /// </summary>
+        internal static string MatchMoveFailed {
+            get {
+                return ResourceManager.GetString("MatchMoveFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can't move there..
+        /// </summary>
+        internal static string MatchMoveNotAllowed {
+            get {
+                return ResourceManager.GetString("MatchMoveNotAllowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Match over.
         /// </summary>
         internal static string MatchOverTitle {
             get {
                 return ResourceManager.GetString("MatchOverTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} won.
+        /// </summary>
+        internal static string MatchPlayerWonFormat {
+            get {
+                return ResourceManager.GetString("MatchPlayerWonFormat", resourceCulture);
             }
         }
         
@@ -1305,6 +1350,15 @@ namespace Bastion.Client.Localization {
         internal static string MatchRivalTurn {
             get {
                 return ResourceManager.GetString("MatchRivalTurn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rotate.
+        /// </summary>
+        internal static string MatchRotateWallButton {
+            get {
+                return ResourceManager.GetString("MatchRotateWallButton", resourceCulture);
             }
         }
         
@@ -1417,11 +1471,74 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Choose a groove. Right-click or R rotates the wall..
+        /// </summary>
+        internal static string MatchWallChooseHint {
+            get {
+                return ResourceManager.GetString("MatchWallChooseHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to That groove is already taken..
+        /// </summary>
+        internal static string MatchWallGrooveTaken {
+            get {
+                return ResourceManager.GetString("MatchWallGrooveTaken", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have no walls left..
+        /// </summary>
+        internal static string MatchWallNoWallsLeft {
+            get {
+                return ResourceManager.GetString("MatchWallNoWallsLeft", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The wall does not fit there..
+        /// </summary>
+        internal static string MatchWallOutOfBoard {
+            get {
+                return ResourceManager.GetString("MatchWallOutOfBoard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Confirm the wall or choose another groove..
+        /// </summary>
+        internal static string MatchWallPendingHint {
+            get {
+                return ResourceManager.GetString("MatchWallPendingHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to That wall would shut in {0}..
+        /// </summary>
+        internal static string MatchWallWouldBlockFormat {
+            get {
+                return ResourceManager.GetString("MatchWallWouldBlockFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} walls.
         /// </summary>
         internal static string MatchWallsFormat {
             get {
                 return ResourceManager.GetString("MatchWallsFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You won!.
+        /// </summary>
+        internal static string MatchYouWon {
+            get {
+                return ResourceManager.GetString("MatchYouWon", resourceCulture);
             }
         }
         
@@ -1521,6 +1638,15 @@ namespace Bastion.Client.Localization {
         internal static string MatchPlayerLeftFormat {
             get {
                 return ResourceManager.GetString("MatchPlayerLeftFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Place wall.
+        /// </summary>
+        internal static string MatchPlaceWallButton {
+            get {
+                return ResourceManager.GetString("MatchPlaceWallButton", resourceCulture);
             }
         }
         

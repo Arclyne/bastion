@@ -17,6 +17,108 @@ public static class MatchTranslator
         return FaultExceptionFactory.Create(fault, rejection);
     }
 
+    public static FaultException<NotYourTurnFault> ToFault(NotYourTurnException rejection)
+    {
+        ArgumentNullException.ThrowIfNull(rejection);
+
+        var fault = new NotYourTurnFault
+        {
+            CurrentTurnOrder = rejection.CurrentTurnOrder,
+            NextMoveNumber = rejection.NextMoveNumber,
+        };
+        return FaultExceptionFactory.Create(fault, rejection);
+    }
+
+    public static FaultException<IllegalMoveFault> ToFault(IllegalMoveException rejection)
+    {
+        ArgumentNullException.ThrowIfNull(rejection);
+
+        var fault = new IllegalMoveFault();
+        return FaultExceptionFactory.Create(fault, rejection);
+    }
+
+    public static FaultException<IllegalWallFault> ToFault(IllegalWallException rejection)
+    {
+        ArgumentNullException.ThrowIfNull(rejection);
+
+        WallRejectionReason reason = ToContractReason(rejection.Reason);
+        var fault = new IllegalWallFault
+        {
+            Reason = reason,
+            BlockedTurnOrder = rejection.BlockedTurnOrder,
+        };
+        return FaultExceptionFactory.Create(fault, rejection);
+    }
+
+    public static FaultException<IllegalWallFault> ToUnreadableWallFault()
+    {
+        var rejection = new IllegalWallException(Bastion.Domain.Matches.WallRejectionReason.OutOfBoard, null);
+        return ToFault(rejection);
+    }
+
+    public static ChosenPawnMove ToChosenPawnMove(PawnMove move)
+    {
+        ArgumentNullException.ThrowIfNull(move);
+
+        string destinationSquare = move.ToSquare ?? string.Empty;
+        return new ChosenPawnMove(move.MatchId, move.MoveNumber, destinationSquare);
+    }
+
+    public static ChosenWall ToChosenWall(WallPlacement wall)
+    {
+        ArgumentNullException.ThrowIfNull(wall);
+
+        string groove = wall.Groove ?? string.Empty;
+        Bastion.Domain.Matches.WallOrientation orientation = ToDomainOrientation(wall.Orientation);
+        return new ChosenWall
+        {
+            MatchId = wall.MatchId,
+            MoveNumber = wall.MoveNumber,
+            Groove = groove,
+            Orientation = orientation,
+        };
+    }
+
+    public static PawnMovedNotification ToPawnMovedNotification(int matchId, PawnMoveNotice notice, DateTime occurredAt)
+    {
+        ArgumentNullException.ThrowIfNull(notice);
+
+        return new PawnMovedNotification
+        {
+            MatchId = matchId,
+            MoverNickname = notice.MoverNickname,
+            FromSquare = notice.FromSquare,
+            ToSquare = notice.ToSquare,
+            NextTurnOrder = notice.NextTurnOrder,
+            NextMoveNumber = notice.NextMoveNumber,
+            RemainingClockMilliseconds = notice.RemainingClockMilliseconds,
+            IsMatchOver = notice.IsMatchOver,
+            OccurredAt = occurredAt,
+        };
+    }
+
+    public static WallPlacedNotification ToWallPlacedNotification(
+        int matchId,
+        WallPlacementNotice notice,
+        DateTime occurredAt)
+    {
+        ArgumentNullException.ThrowIfNull(notice);
+
+        WallOrientation orientation = ToContractOrientation(notice.Orientation);
+        return new WallPlacedNotification
+        {
+            MatchId = matchId,
+            PlacerNickname = notice.PlacerNickname,
+            Groove = notice.Groove,
+            Orientation = orientation,
+            RemainingWalls = notice.RemainingWalls,
+            NextTurnOrder = notice.NextTurnOrder,
+            NextMoveNumber = notice.NextMoveNumber,
+            RemainingClockMilliseconds = notice.RemainingClockMilliseconds,
+            OccurredAt = occurredAt,
+        };
+    }
+
     public static MatchAbandonedNotification ToAbandonedNotification(
         int matchId,
         AbandonmentNotice notice,
@@ -31,5 +133,54 @@ public static class MatchTranslator
             IsMatchOver = notice.IsMatchOver,
             OccurredAt = occurredAt,
         };
+    }
+
+    private static WallRejectionReason ToContractReason(Bastion.Domain.Matches.WallRejectionReason reason)
+    {
+        switch (reason)
+        {
+            case Bastion.Domain.Matches.WallRejectionReason.NoWallsLeft:
+                return WallRejectionReason.NoWallsLeft;
+            case Bastion.Domain.Matches.WallRejectionReason.OutOfBoard:
+                return WallRejectionReason.OutOfBoard;
+            case Bastion.Domain.Matches.WallRejectionReason.GrooveTaken:
+                return WallRejectionReason.GrooveTaken;
+            case Bastion.Domain.Matches.WallRejectionReason.WouldBlockPlayer:
+                return WallRejectionReason.WouldBlockPlayer;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported wall rejection reason.");
+        }
+    }
+
+    private static Bastion.Domain.Matches.WallOrientation ToDomainOrientation(WallOrientation orientation)
+    {
+        switch (orientation)
+        {
+            case WallOrientation.Horizontal:
+                return Bastion.Domain.Matches.WallOrientation.Horizontal;
+            case WallOrientation.Vertical:
+                return Bastion.Domain.Matches.WallOrientation.Vertical;
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(orientation),
+                    orientation,
+                    "Unsupported wall orientation.");
+        }
+    }
+
+    private static WallOrientation ToContractOrientation(Bastion.Domain.Matches.WallOrientation orientation)
+    {
+        switch (orientation)
+        {
+            case Bastion.Domain.Matches.WallOrientation.Horizontal:
+                return WallOrientation.Horizontal;
+            case Bastion.Domain.Matches.WallOrientation.Vertical:
+                return WallOrientation.Vertical;
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(orientation),
+                    orientation,
+                    "Unsupported wall orientation.");
+        }
     }
 }

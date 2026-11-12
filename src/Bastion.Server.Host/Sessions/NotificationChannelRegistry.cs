@@ -26,6 +26,7 @@ public sealed class NotificationChannelRegistry
     IChatBroadcaster,
     IMatchChatNotifier,
     IMatchEndNotifier,
+    IMatchMoveNotifier,
     IMatchmakingNotifier,
     IPlayerPresence,
     IFriendNotifier,
@@ -133,6 +134,24 @@ public sealed class NotificationChannelRegistry
 
         MatchAbandonedNotification notification =
             MatchTranslator.ToAbandonedNotification(matchId, notice, GetUtcNow());
+        NotifyPlayers(recipientAccountIds, notification);
+    }
+
+    public void NotifyPawnMoved(int matchId, IReadOnlyCollection<int> recipientAccountIds, PawnMoveNotice notice)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+        ArgumentNullException.ThrowIfNull(notice);
+
+        var notification = MatchTranslator.ToPawnMovedNotification(matchId, notice, GetUtcNow());
+        NotifyPlayers(recipientAccountIds, notification);
+    }
+
+    public void NotifyWallPlaced(int matchId, IReadOnlyCollection<int> recipientAccountIds, WallPlacementNotice notice)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+        ArgumentNullException.ThrowIfNull(notice);
+
+        var notification = MatchTranslator.ToWallPlacedNotification(matchId, notice, GetUtcNow());
         NotifyPlayers(recipientAccountIds, notification);
     }
 
