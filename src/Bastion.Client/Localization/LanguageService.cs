@@ -113,6 +113,7 @@ public sealed class LanguageService : ILanguageService
         CultureInfo.CurrentUICulture = culture;
         CultureInfo.DefaultThreadCurrentCulture = culture;
         CultureInfo.DefaultThreadCurrentUICulture = culture;
+        Strings.Culture = culture;
 
         CurrentLanguage = language;
         _textDatabase.CurrentLanguage = IndexOf(language);
