@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Bastion.Contracts.Notifications;
 using Bastion.Contracts.Rooms;
@@ -7,13 +8,33 @@ namespace Bastion.Client.Networking.Rooms;
 
 public static class RoomContractTranslator
 {
-    public static RoomOptions ToContract(PrivateRoomOptions options)
+    private static readonly IReadOnlyDictionary<RoomRejectionReason, RoomRejection> _rejectionsByReason =
+        new Dictionary<RoomRejectionReason, RoomRejection>
+        {
+            [RoomRejectionReason.NotificationsUnavailable] = RoomRejection.NotificationsUnavailable,
+            [RoomRejectionReason.UnfinishedMatch] = RoomRejection.UnfinishedMatch,
+            [RoomRejectionReason.SearchingMatch] = RoomRejection.SearchingMatch,
+            [RoomRejectionReason.InRoom] = RoomRejection.InRoom,
+            [RoomRejectionReason.InvalidOptions] = RoomRejection.InvalidOptions,
+            [RoomRejectionReason.RoomNotFound] = RoomRejection.RoomNotFound,
+            [RoomRejectionReason.RoomFull] = RoomRejection.RoomFull,
+            [RoomRejectionReason.Kicked] = RoomRejection.Kicked,
+            [RoomRejectionReason.TooManyAttempts] = RoomRejection.TooManyAttempts,
+            [RoomRejectionReason.TooManyPlayers] = RoomRejection.TooManyPlayers,
+            [RoomRejectionReason.NotInRoom] = RoomRejection.NotInRoom,
+            [RoomRejectionReason.NotHost] = RoomRejection.NotHost,
+            [RoomRejectionReason.NotReadyToStart] = RoomRejection.NotReadyToStart,
+            [RoomRejectionReason.MatchStarted] = RoomRejection.MatchStarted,
+        };
+
+    public static RoomOptions ToRoomOptions(PrivateRoomOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
 
+        RoomGameMode gameMode = ToRoomGameMode(options.GameMode);
         return new RoomOptions
         {
-            GameMode = ToContract(options.GameMode),
+            GameMode = gameMode,
             WallsPerPlayer = options.WallsPerPlayer,
             ClockMinutes = options.ClockMinutes,
         };
@@ -23,13 +44,22 @@ public static class RoomContractTranslator
     {
         ArgumentNullException.ThrowIfNull(state);
 
+        string code = state.Code ?? string.Empty;
         RoomOptions options = state.Options ?? new RoomOptions();
+        PrivateRoomGameMode gameMode = ToPrivateRoomGameMode(options.GameMode);
+        var privateOptions = new PrivateRoomOptions(gameMode, options.WallsPerPlayer, options.ClockMinutes);
         RoomMemberState[] members = state.Members ?? Array.Empty<RoomMemberState>();
-        return new PrivateRoom(
-            state.Code ?? string.Empty,
-            new PrivateRoomOptions(ToGameMode(options.GameMode), options.WallsPerPlayer, options.ClockMinutes),
-            state.SeatCount,
-            members.Select(ToMember).OrderBy(member => member.SeatIndex).ToList());
+        IEnumerable<PrivateRoomMember> seatedMembers = members
+            .Select(ToMember)
+            .OrderBy(member => member.SeatIndex);
+        var memberList = new List<PrivateRoomMember>(seatedMembers);
+        return new PrivateRoom
+        {
+            Code = code,
+            Options = privateOptions,
+            SeatCount = state.SeatCount,
+            Members = memberList,
+        };
     }
 
     public static RoomCloseReason ToCloseReason(RoomClosedReason reason)
@@ -45,56 +75,15 @@ public static class RoomContractTranslator
 
     public static RoomRejection ToRejection(RoomRejectionReason reason)
     {
-        switch (reason)
+        if (!_rejectionsByReason.TryGetValue(reason, out RoomRejection rejection))
         {
-            case RoomRejectionReason.NotificationsUnavailable:
-                return RoomRejection.NotificationsUnavailable;
-            case RoomRejectionReason.UnfinishedMatch:
-                return RoomRejection.UnfinishedMatch;
-            case RoomRejectionReason.SearchingMatch:
-                return RoomRejection.SearchingMatch;
-            case RoomRejectionReason.InRoom:
-                return RoomRejection.InRoom;
-            case RoomRejectionReason.InvalidOptions:
-                return RoomRejection.InvalidSettings;
-            case RoomRejectionReason.RoomNotFound:
-                return RoomRejection.RoomNotFound;
-            default:
-                return ToPlacementRejection(reason);
+            throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported room rejection reason.");
         }
+
+        return rejection;
     }
 
-    private static RoomRejection ToPlacementRejection(RoomRejectionReason reason)
-    {
-        switch (reason)
-        {
-            case RoomRejectionReason.RoomFull:
-                return RoomRejection.RoomFull;
-            case RoomRejectionReason.Kicked:
-                return RoomRejection.Kicked;
-            case RoomRejectionReason.TooManyAttempts:
-                return RoomRejection.TooManyAttempts;
-            case RoomRejectionReason.TooManyPlayers:
-                return RoomRejection.TooManyPlayers;
-            case RoomRejectionReason.NotInRoom:
-                return RoomRejection.NotInRoom;
-            case RoomRejectionReason.NotHost:
-                return RoomRejection.NotHost;
-            case RoomRejectionReason.NotReadyToStart:
-                return RoomRejection.NotReadyToStart;
-            case RoomRejectionReason.MatchStarted:
-                return RoomRejection.MatchStarted;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported room rejection reason.");
-        }
-    }
-
-    private static PrivateRoomMember ToMember(RoomMemberState member)
-    {
-        return new PrivateRoomMember(member.Nickname ?? string.Empty, member.SeatIndex, member.IsReady, member.IsHost);
-    }
-
-    private static RoomGameMode ToContract(PrivateRoomGameMode gameMode)
+    private static RoomGameMode ToRoomGameMode(PrivateRoomGameMode gameMode)
     {
         switch (gameMode)
         {
@@ -112,7 +101,7 @@ public static class RoomContractTranslator
         }
     }
 
-    private static PrivateRoomGameMode ToGameMode(RoomGameMode gameMode)
+    private static PrivateRoomGameMode ToPrivateRoomGameMode(RoomGameMode gameMode)
     {
         switch (gameMode)
         {
@@ -125,5 +114,17 @@ public static class RoomContractTranslator
             default:
                 throw new ArgumentOutOfRangeException(nameof(gameMode), gameMode, "Unsupported room game mode.");
         }
+    }
+
+    private static PrivateRoomMember ToMember(RoomMemberState member)
+    {
+        string nickname = member.Nickname ?? string.Empty;
+        return new PrivateRoomMember
+        {
+            Nickname = nickname,
+            SeatIndex = member.SeatIndex,
+            IsReady = member.IsReady,
+            IsHost = member.IsHost,
+        };
     }
 }
