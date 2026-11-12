@@ -113,12 +113,12 @@ public class TestMatchPlayViewModel : IDisposable
         MatchPlayViewModel viewModel = await CreateViewModelWithSelectedPawn();
         _matchClient.MoveFailure = new NotYourTurnException(
             Match.SecondTurnOrder,
-            PawnMovedSamples.SecondMoveNumber,
+            PawnMovedSampleFactory.SecondMoveNumber,
             new InvalidOperationException());
 
         await viewModel.SelectSquare(_forward);
 
-        Assert.Equal(PawnMovedSamples.SecondMoveNumber, viewModel.NextMoveNumber);
+        Assert.Equal(PawnMovedSampleFactory.SecondMoveNumber, viewModel.NextMoveNumber);
     }
 
     [Fact]
@@ -190,7 +190,7 @@ public class TestMatchPlayViewModel : IDisposable
         MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
 
         _matchClient.RaisePawnMoved(
-            PawnMovedSamples.CreateWinningMove(JoinedMatchSampleFactory.RivalNickname, FirstGoalSquare));
+            PawnMovedSampleFactory.CreateWinningMove(JoinedMatchSampleFactory.RivalNickname, FirstGoalSquare));
 
         Assert.Equal(JoinedMatchSampleFactory.RivalNickname, viewModel.WinnerNickname);
     }
@@ -222,7 +222,7 @@ public class TestMatchPlayViewModel : IDisposable
 
     private static PawnMovedEventArgs CreateRivalFirstMove(int matchId)
     {
-        return PawnMovedSamples.CreateFirstMove(matchId, JoinedMatchSampleFactory.RivalNickname, ForwardSquare);
+        return PawnMovedSampleFactory.CreateFirstMove(matchId, JoinedMatchSampleFactory.RivalNickname, ForwardSquare);
     }
 
     private async Task<MatchPlayViewModel> CreateViewModelWithSelectedPawn()

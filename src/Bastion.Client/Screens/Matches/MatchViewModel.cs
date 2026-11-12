@@ -96,7 +96,8 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         {
             if (!player.HasLeft && Play.Pawns.TryGetValue(player.TurnOrder, out BoardCoordinates? coordinates))
             {
-                pawns.Add(new BoardPawn(coordinates, player.PawnSymbol));
+                var pawn = new BoardPawn(coordinates, player.PawnSymbol);
+                pawns.Add(pawn);
             }
         }
 

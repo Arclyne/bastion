@@ -24,8 +24,7 @@ public static class BoardSceneLayout
     {
         ArgumentNullException.ThrowIfNull(coordinates);
 
-        int lastIndex = BoardLayout.GetLastIndex(boardSize);
-        float centerIndex = lastIndex / BoardHalves;
+        float centerIndex = GetCenterIndex(boardSize);
         float columnOffset = coordinates.ColumnIndex - centerIndex;
         float rowOffset = centerIndex - coordinates.RowIndex;
         return new Vector3(columnOffset, SurfaceHeight, rowOffset);
@@ -33,7 +32,7 @@ public static class BoardSceneLayout
 
     public static bool TryGetCoordinates(byte boardSize, Vector3 surfacePoint, out BoardCoordinates coordinates)
     {
-        float centerIndex = (boardSize - 1) / BoardHalves;
+        float centerIndex = GetCenterIndex(boardSize);
         float columnPosition = surfacePoint.X + centerIndex;
         float rowPosition = centerIndex - surfacePoint.Z;
         float roundedColumn = MathF.Round(columnPosition);
@@ -80,6 +79,13 @@ public static class BoardSceneLayout
         ArgumentNullException.ThrowIfNull(meshName);
 
         return meshName.StartsWith(GoalMeshPrefix, StringComparison.Ordinal);
+    }
+
+    private static float GetCenterIndex(byte boardSize)
+    {
+        int lastIndex = BoardLayout.GetLastIndex(boardSize);
+        float centerIndex = lastIndex / BoardHalves;
+        return centerIndex;
     }
 
     private static string GetFourPlayerGoalMeshName(byte boardSize, BoardCoordinates startingCoordinates)

@@ -146,7 +146,7 @@ public sealed class TestMatchViewModel : IDisposable
     {
         MatchViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
         PawnMovedEventArgs winningMove =
-            PawnMovedSamples.CreateWinningMove(JoinedMatchSampleFactory.OwnNickname, FirstGoalSquare);
+            PawnMovedSampleFactory.CreateWinningMove(JoinedMatchSampleFactory.OwnNickname, FirstGoalSquare);
 
         _matchClient.RaisePawnMoved(winningMove);
 
@@ -162,7 +162,7 @@ public sealed class TestMatchViewModel : IDisposable
             JoinedMatchSampleFactory.RivalNickname);
         MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
         PawnMovedEventArgs winningMove =
-            PawnMovedSamples.CreateWinningMove(JoinedMatchSampleFactory.RivalNickname, FirstGoalSquare);
+            PawnMovedSampleFactory.CreateWinningMove(JoinedMatchSampleFactory.RivalNickname, FirstGoalSquare);
 
         _matchClient.RaisePawnMoved(winningMove);
 
@@ -301,7 +301,7 @@ public sealed class TestMatchViewModel : IDisposable
 
     private static PawnMovedEventArgs CreateRivalFirstMove()
     {
-        return PawnMovedSamples.CreateFirstMove(
+        return PawnMovedSampleFactory.CreateFirstMove(
             JoinedMatchSampleFactory.MatchId,
             JoinedMatchSampleFactory.RivalNickname,
             SecondRowSquare);

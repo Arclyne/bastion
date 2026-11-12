@@ -65,9 +65,9 @@ public sealed class MatchView : ScreenView
         pill.Anchor(Gum.Wireframe.Anchor.TopRight);
         pill.X = -ScreenMetrics.MarginX;
         pill.Y = ScreenMetrics.MarginY;
-        Label turnLabel = ViewFactory.CreateUntranslatedLabel(string.Empty, TextStyleCatalog.IdentityName);
+        Label turnLabel =
+            ViewFactory.CreateBoundUntranslatedLabel(nameof(MatchViewModel.TurnText), TextStyleCatalog.IdentityName);
         turnLabel.BindingContext = matchViewModel;
-        turnLabel.SetBinding(nameof(Label.Text), nameof(MatchViewModel.TurnText));
         turnLabel.X = TurnPillPaddingX;
         ViewFactory.CenterVertically(turnLabel);
         pill.AddChild(turnLabel);
