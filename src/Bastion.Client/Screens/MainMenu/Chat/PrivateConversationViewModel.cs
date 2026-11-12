@@ -348,7 +348,7 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         IsFriend = transcript.Contact.IsFriend;
         if (!IsFriend)
         {
-            ApplyPresence(null);
+            ApplyPresence(presence: null);
         }
 
         IsMuted = transcript.Mute.IsMuted;
@@ -380,7 +380,7 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         if (rejection == ChatRejection.NotFriends)
         {
             IsFriend = false;
-            ApplyPresence(null);
+            ApplyPresence(presence: null);
         }
     }
 

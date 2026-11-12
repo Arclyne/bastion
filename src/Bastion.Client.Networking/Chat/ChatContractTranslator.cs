@@ -72,7 +72,7 @@ public static class ChatContractTranslator
 
     private static ChatMessage ToReceivedMessage(string? senderNickname, string? text, DateTime sentAt)
     {
-        var author = new ChatAuthor(senderNickname ?? string.Empty, false);
+        var author = new ChatAuthor(senderNickname ?? string.Empty, isOwn: false);
         string messageText = text ?? string.Empty;
         return new ChatMessage(author, messageText, sentAt);
     }

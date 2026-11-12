@@ -122,13 +122,13 @@ public sealed class RoomRegistry : IRoomRegistry
             {
                 RemoveRoom(room);
                 var closedRoom = RoomSnapshot.Capture(room);
-                return new RoomDeparture(closedRoom, accountId, true);
+                return new RoomDeparture(closedRoom, accountId, isRoomClosed: true);
             }
 
             room.Remove(accountId);
             _roomsByAccountId.Remove(accountId);
             var remainingRoom = RoomSnapshot.Capture(room);
-            return new RoomDeparture(remainingRoom, accountId, false);
+            return new RoomDeparture(remainingRoom, accountId, isRoomClosed: false);
         }
     }
 

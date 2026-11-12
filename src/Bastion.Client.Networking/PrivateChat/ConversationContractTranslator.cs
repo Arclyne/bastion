@@ -42,7 +42,7 @@ public static class ConversationContractTranslator
         ArgumentNullException.ThrowIfNull(notification);
 
         string text = notification.Text ?? string.Empty;
-        return new PrivateMessage(text, notification.OccurredAt, false);
+        return new PrivateMessage(text, notification.OccurredAt, isOwn: false);
     }
 
     private static ConversationPreview ToPreview(ConversationEntry entry)
@@ -50,7 +50,7 @@ public static class ConversationContractTranslator
         var partner = FriendContractTranslator.ToPlayerTag(entry.PartnerNickname, entry.PartnerFriendCode);
         var contact = new ConversationContact(partner, entry.IsFriend);
         PrivateMessage lastMessage = entry.LastMessage is null
-            ? new PrivateMessage(string.Empty, DateTime.MinValue, false)
+            ? new PrivateMessage(string.Empty, DateTime.MinValue, isOwn: false)
             : ToPrivateMessage(entry.LastMessage);
         return new ConversationPreview(contact, lastMessage, entry.UnreadCount);
     }
