@@ -733,6 +733,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You are no longer friends..
+        /// </summary>
+        internal static string FriendsRejectedNotFriends {
+            get {
+                return ResourceManager.GetString("FriendsRejectedNotFriends", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You reached the limit of 100 friends..
         /// </summary>
         internal static string FriendsRejectedOwnLimit {
@@ -841,6 +850,15 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The request could not be answered. Try again..
+        /// </summary>
+        internal static string FriendsRespondFailed {
+            get {
+                return ResourceManager.GetString("FriendsRespondFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Retry.
         /// </summary>
         internal static string FriendsRetry {
@@ -900,6 +918,15 @@ namespace Bastion.Client.Localization {
         internal static string FriendsSendMessage {
             get {
                 return ResourceManager.GetString("FriendsSendMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The request could not be sent. Try again..
+        /// </summary>
+        internal static string FriendsSendRequestFailed {
+            get {
+                return ResourceManager.GetString("FriendsSendRequestFailed", resourceCulture);
             }
         }
         

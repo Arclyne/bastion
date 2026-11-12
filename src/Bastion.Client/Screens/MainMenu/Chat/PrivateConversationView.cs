@@ -130,7 +130,7 @@ public sealed class PrivateConversationView : StackPanel
 
     private void RebuildRows()
     {
-        ConversationParts.ClearRows(_messages);
+        ViewFactory.ClearRows(_messages.InnerPanel);
         AddRows(_conversation.Messages);
     }
 

@@ -44,7 +44,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         AddFriend.FriendshipStarted += HandleFriendshipStarted;
         Actions = new FriendActionsViewModel(session, clients.Friends);
         Actions.FriendRemoved += HandleFriendRemoved;
-        Requests = new FriendRequestsViewModel(session, clients.Friends);
+        Requests = new FriendRequestsViewModel(session, clients.Friends, localServices.TimeProvider);
         Requests.FriendshipStarted += HandleFriendshipStarted;
         Actions.MessageRequested += HandleMessageRequested;
         var chatContext = new ChatContext(session, clients.Chat, localServices.TimeProvider);
@@ -52,10 +52,12 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         _notifications.FriendPresenceChanged += HandleFriendPresenceChanged;
         _notifications.FriendRequestReceived += HandleFriendRequestReceived;
         _notifications.FriendshipStarted += HandleRemoteFriendshipStarted;
+        ConnectedFriends = new ObservableCollection<FriendRowViewModel>();
+        OfflineFriends = new ObservableCollection<FriendRowViewModel>();
         SelectedTab = FriendsTab.Friends;
         FilterText = string.Empty;
         HeaderText = string.Empty;
-        MenuGroupTitle = string.Empty;
+        ConnectedGroupTitle = string.Empty;
         OfflineGroupTitle = string.Empty;
         OwnFriendCodeText = string.Empty;
         FormattedFriendCode = string.Empty;
@@ -113,10 +115,12 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         get => Get<string>();
         set
         {
-            if (Set(value))
+            if (!Set(value))
             {
-                ApplyFilter();
+                return;
             }
+
+            ApplyFilter();
         }
     }
 
@@ -126,7 +130,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         private set => Set(value);
     }
 
-    public string MenuGroupTitle
+    public string ConnectedGroupTitle
     {
         get => Get<string>();
         private set => Set(value);
@@ -150,7 +154,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         private set => Set(value);
     }
 
-    public bool HasMenuFriends
+    public bool HasConnectedFriends
     {
         get => Get<bool>();
         private set => Set(value);
@@ -192,11 +196,9 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
     [DependsOn(nameof(IsCodeCopied))]
     public string CopyButtonKey => IsCodeCopied ? nameof(Strings.FriendsCodeCopied) : nameof(Strings.FriendsCopyCode);
 
-    public ObservableCollection<FriendRowViewModel> MenuFriends { get; } =
-        new ObservableCollection<FriendRowViewModel>();
+    public ObservableCollection<FriendRowViewModel> ConnectedFriends { get; }
 
-    public ObservableCollection<FriendRowViewModel> OfflineFriends { get; } =
-        new ObservableCollection<FriendRowViewModel>();
+    public ObservableCollection<FriendRowViewModel> OfflineFriends { get; }
 
     public void Open(FriendsTab tab)
     {
@@ -254,7 +256,8 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         }
         catch (InvalidSessionException ex)
         {
-            ReportLoadFailure(ex);
+            _logger.Warn("The friend list could not be loaded because the session is no longer valid.", ex);
+            HasLoadFailed = true;
         }
         catch (ServerUnreachableException ex)
         {
@@ -272,8 +275,15 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
 
     public ConversationPresence? FindPresence(string friendCode)
     {
+        ArgumentNullException.ThrowIfNull(friendCode);
+
         FriendRowViewModel? row = _allRows.Find(friend => friend.FriendCode == friendCode);
-        return row is null ? null : new ConversationPresence(row.IsConnected, row.StatusText);
+        if (row is null)
+        {
+            return null;
+        }
+
+        return new ConversationPresence(row.IsConnected, row.StatusText);
     }
 
     public void Dispose()
@@ -282,6 +292,31 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         _notifications.FriendRequestReceived -= HandleFriendRequestReceived;
         _notifications.FriendshipStarted -= HandleRemoteFriendshipStarted;
         Chat.Dispose();
+    }
+
+    private void ApplyFilter()
+    {
+        ConnectedFriends.Clear();
+        OfflineFriends.Clear();
+        IEnumerable<FriendRowViewModel> matchingRows = _allRows.Where(MatchesFilter);
+        foreach (FriendRowViewModel row in matchingRows)
+        {
+            ObservableCollection<FriendRowViewModel> group = row.IsConnected ? ConnectedFriends : OfflineFriends;
+            group.Add(row);
+        }
+
+        ConnectedGroupTitle = FormatText(Strings.FriendsGroupInMenuFormat, ConnectedFriends.Count);
+        OfflineGroupTitle = FormatText(Strings.FriendsGroupOfflineFormat, OfflineFriends.Count);
+        HasConnectedFriends = ConnectedFriends.Count > 0;
+        HasOfflineFriends = OfflineFriends.Count > 0;
+        bool hasNoMatch = _allRows.Count > 0 && ConnectedFriends.Count + OfflineFriends.Count == 0;
+        NoMatchText = hasNoMatch ? FormatText(Strings.FriendsNoMatchFormat, FilterText.Trim()) : string.Empty;
+    }
+
+    private bool MatchesFilter(FriendRowViewModel row)
+    {
+        string filter = FilterText.Trim();
+        return filter.Length == 0 || row.Nickname.Contains(filter, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string FormatText(string format, params object[] arguments)
@@ -294,7 +329,8 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         _allRows.Clear();
         foreach (ListedFriend friend in listing.Friends)
         {
-            _allRows.Add(new FriendRowViewModel(friend, listing.ListedAt));
+            var row = new FriendRowViewModel(friend, listing.ListedAt);
+            _allRows.Add(row);
         }
 
         FormattedFriendCode = FriendCodePolicy.Format(listing.OwnFriendCode);
@@ -308,6 +344,43 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
     {
         int connectedCount = _allRows.Count(row => row.IsConnected);
         HeaderText = FormatText(Strings.FriendsConnectedCountFormat, connectedCount, _allRows.Count);
+    }
+
+    private void ReportLoadFailure(Exception ex)
+    {
+        _logger.Error("The friend list could not be loaded.", ex);
+        HasLoadFailed = true;
+    }
+
+    private void UpdateFriendPresence(FriendPresenceChangedEventArgs change)
+    {
+        int index = _allRows.FindIndex(row => row.FriendCode == change.Friend.Friend.FriendCode);
+        if (index < 0)
+        {
+            return;
+        }
+
+        _allRows[index] = new FriendRowViewModel(change.Friend, change.OccurredAt);
+        UpdateHeaderText();
+        ApplyFilter();
+        Chat.RefreshPresence(change.Friend.Friend.FriendCode);
+    }
+
+    private void ReceiveFriendRequest(PendingFriendRequest request)
+    {
+        bool isRequestsTabShown = IsOpen && IsRequestsTab;
+        Requests.ReceiveRequest(request, !isRequestsTabShown);
+    }
+
+    private void ReloadFriendsAndRequests()
+    {
+        _ = LoadFriends();
+        _ = Requests.LoadRequests();
+    }
+
+    private void HandleFriendshipStarted(object? sender, EventArgs e)
+    {
+        _ = LoadFriends();
     }
 
     private void HandleFriendRemoved(object? sender, FriendRemovedEventArgs e)
@@ -325,82 +398,18 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         Chat.OpenPrivate(e.Friend);
     }
 
-    private void HandleFriendshipStarted(object? sender, EventArgs e)
-    {
-        _ = LoadFriends();
-    }
-
     private void HandleFriendPresenceChanged(object? sender, FriendPresenceChangedEventArgs e)
     {
-        RunOnUi(() => UpdateFriendPresence(e));
+        UiThread.Run(_uiContext, () => UpdateFriendPresence(e));
     }
 
     private void HandleFriendRequestReceived(object? sender, FriendRequestReceivedEventArgs e)
     {
-        RunOnUi(() => Requests.ReceiveRequest(e.Request, !(IsOpen && IsRequestsTab)));
+        UiThread.Run(_uiContext, () => ReceiveFriendRequest(e.Request));
     }
 
     private void HandleRemoteFriendshipStarted(object? sender, FriendshipStartedEventArgs e)
     {
-        RunOnUi(() =>
-        {
-            _ = LoadFriends();
-            _ = Requests.LoadRequests();
-        });
-    }
-
-    private void RunOnUi(Action action)
-    {
-        if (_uiContext is null)
-        {
-            action();
-            return;
-        }
-
-        _uiContext.Post(state => ((Action)state!).Invoke(), action);
-    }
-
-    private void UpdateFriendPresence(FriendPresenceChangedEventArgs change)
-    {
-        int index = _allRows.FindIndex(row => row.FriendCode == change.Friend.Friend.FriendCode);
-        if (index < 0)
-        {
-            return;
-        }
-
-        _allRows[index] = new FriendRowViewModel(change.Friend, change.OccurredAt);
-        UpdateHeaderText();
-        ApplyFilter();
-        Chat.RefreshPresence(change.Friend.Friend.FriendCode);
-    }
-
-    private void ApplyFilter()
-    {
-        MenuFriends.Clear();
-        OfflineFriends.Clear();
-        foreach (FriendRowViewModel row in _allRows.Where(MatchesFilter))
-        {
-            ObservableCollection<FriendRowViewModel> group = row.IsConnected ? MenuFriends : OfflineFriends;
-            group.Add(row);
-        }
-
-        MenuGroupTitle = FormatText(Strings.FriendsGroupInMenuFormat, MenuFriends.Count);
-        OfflineGroupTitle = FormatText(Strings.FriendsGroupOfflineFormat, OfflineFriends.Count);
-        HasMenuFriends = MenuFriends.Count > 0;
-        HasOfflineFriends = OfflineFriends.Count > 0;
-        bool hasNoMatch = _allRows.Count > 0 && MenuFriends.Count + OfflineFriends.Count == 0;
-        NoMatchText = hasNoMatch ? FormatText(Strings.FriendsNoMatchFormat, FilterText.Trim()) : string.Empty;
-    }
-
-    private bool MatchesFilter(FriendRowViewModel row)
-    {
-        string filter = FilterText.Trim();
-        return filter.Length == 0 || row.Nickname.Contains(filter, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private void ReportLoadFailure(Exception ex)
-    {
-        _logger.Warn("The friend list could not be loaded.", ex);
-        HasLoadFailed = true;
+        UiThread.Run(_uiContext, ReloadFriendsAndRequests);
     }
 }

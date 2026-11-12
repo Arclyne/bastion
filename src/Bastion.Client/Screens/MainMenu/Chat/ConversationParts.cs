@@ -9,7 +9,7 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public static class ConversationParts
 {
-    public const float ViewWidth = 360;
+    public const float ViewWidth = PanelMetrics.ContentWidth;
 
     private const float HeaderSpacing = 12;
     private const float TextSpacing = 2;
@@ -63,21 +63,15 @@ public static class ConversationParts
         ArgumentNullException.ThrowIfNull(visibilityProperty);
         ArgumentNullException.ThrowIfNull(style);
 
-        Label label = ViewFactory.CreateBoundUntranslatedLabel(textProperty, style, ViewWidth);
-        label.SetBinding(nameof(FrameworkElement.IsVisible), visibilityProperty);
+        Label label = ViewFactory.CreateBoundNotice(textProperty, visibilityProperty, style);
+        label.Width = ViewWidth;
+        label.WidthUnits = DimensionUnitType.Absolute;
         return label;
     }
 
     public static ScrollViewer CreateMessageList(float height, float rowSpacing)
     {
-        var messages = new ScrollViewer
-        {
-            Width = ViewWidth,
-            WidthUnits = DimensionUnitType.Absolute,
-            Height = height,
-            HeightUnits = DimensionUnitType.Absolute,
-        };
-        Shapes.HideDefaultParts(messages);
+        ScrollViewer messages = ViewFactory.CreateScrollList(ViewWidth, height);
         messages.InnerPanel.StackSpacing = rowSpacing;
         return messages;
     }
@@ -108,16 +102,6 @@ public static class ConversationParts
         row.AddChild(input);
         row.AddChild(send);
         return row;
-    }
-
-    public static void ClearRows(ScrollViewer list)
-    {
-        ArgumentNullException.ThrowIfNull(list);
-
-        while (list.InnerPanel.Children.Count > 0)
-        {
-            list.InnerPanel.Children.RemoveAt(list.InnerPanel.Children.Count - 1);
-        }
     }
 
     public static void ScrollToLatest(ScrollViewer list)

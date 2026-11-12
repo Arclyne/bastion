@@ -3,21 +3,13 @@ using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
 using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Friends;
 
 public sealed class RemoveFriendDialogView : Panel
 {
-    private const float DialogWidth = 420;
-    private const float PaddingX = 28;
-    private const float PaddingTop = 26;
-    private const float PaddingBottom = 24;
-    private const float SectionSpacing = 14;
     private const float ButtonSpacing = 12;
-    private const float ButtonHeight = 46;
-    private const int HorizontalSideCount = 2;
     private const int ButtonsPerRow = 2;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(RemoveFriendDialogView));
@@ -31,35 +23,29 @@ public sealed class RemoveFriendDialogView : Panel
         _actions = actions;
         BindingContext = actions;
         Anchor(Gum.Wireframe.Anchor.Center);
-        Width = DialogWidth;
+        Width = DialogMetrics.Width;
         WidthUnits = DimensionUnitType.Absolute;
-        Height = PaddingBottom;
+        Height = DialogMetrics.PaddingBottom;
         HeightUnits = DimensionUnitType.RelativeToChildren;
         AddChild(CreateContent());
         Skins.ApplyCard(Visual);
     }
 
-    private static float ContentWidth => DialogWidth - (PaddingX * HorizontalSideCount);
-
-    private static Label CreateBoundLabel(string textProperty, TextStyle style)
-    {
-        var label = new Label { Width = ContentWidth, WidthUnits = DimensionUnitType.Absolute };
-        style.ApplyTo((LabelVisual)label.Visual);
-        ((LabelVisual)label.Visual).LocalizeText = false;
-        label.SetBinding(nameof(Label.Text), textProperty);
-        return label;
-    }
-
     private StackPanel CreateContent()
     {
-        var keepsHistory = new Label { Width = ContentWidth, WidthUnits = DimensionUnitType.Absolute };
-        TextStyles.DialogMessage.ApplyTo((LabelVisual)keepsHistory.Visual);
-        keepsHistory.Text = nameof(Strings.FriendsRemoveKeepsHistory);
+        Label keepsHistory = ViewFactory.CreateLabel(nameof(Strings.FriendsRemoveKeepsHistory), TextStyles.DialogMessage);
+        keepsHistory.Width = DialogMetrics.ContentWidth;
+        keepsHistory.WidthUnits = DimensionUnitType.Absolute;
 
         Label error = CreateBoundLabel(nameof(FriendActionsViewModel.ErrorText), TextStyles.FieldError);
         error.SetBinding(nameof(IsVisible), nameof(FriendActionsViewModel.HasError));
 
-        var content = new StackPanel { X = PaddingX, Y = PaddingTop, Spacing = SectionSpacing };
+        var content = new StackPanel
+        {
+            X = DialogMetrics.PaddingX,
+            Y = DialogMetrics.PaddingTop,
+            Spacing = DialogMetrics.SectionSpacing,
+        };
         content.AddChild(CreateBoundLabel(nameof(FriendActionsViewModel.DialogTitle), TextStyles.DialogTitle));
         content.AddChild(CreateBoundLabel(nameof(FriendActionsViewModel.DialogMessage), TextStyles.DialogMessage));
         content.AddChild(keepsHistory);
@@ -68,20 +54,29 @@ public sealed class RemoveFriendDialogView : Panel
         return content;
     }
 
+    private static Label CreateBoundLabel(string textProperty, TextStyle style)
+    {
+        return ViewFactory.CreateBoundUntranslatedLabel(textProperty, style, DialogMetrics.ContentWidth);
+    }
+
     private StackPanel CreateButtons()
     {
-        float buttonWidth = (ContentWidth - ButtonSpacing) / ButtonsPerRow;
+        float buttonWidth = (DialogMetrics.ContentWidth - ButtonSpacing) / ButtonsPerRow;
 
-        Button cancel = ViewFactory.CreateButton(nameof(Strings.FriendsCancelRequest), buttonWidth, ButtonHeight);
+        Button cancel = ViewFactory.CreateButton(nameof(Strings.FriendsCancelRequest), buttonWidth, DialogMetrics.ButtonHeight);
         ButtonSkin.CreateAndAttach(cancel, ButtonLooks.Secondary);
         cancel.Click += HandleCancelClick;
 
-        Button remove = ViewFactory.CreateButton(nameof(Strings.FriendsRemove), buttonWidth, ButtonHeight);
+        Button remove = ViewFactory.CreateButton(nameof(Strings.FriendsRemove), buttonWidth, DialogMetrics.ButtonHeight);
         ButtonSkin.CreateAndAttach(remove, ButtonLooks.Primary);
         remove.SetBinding(nameof(IsEnabled), nameof(FriendActionsViewModel.CanConfirm));
         remove.Click += HandleRemoveClick;
 
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = ButtonSpacing };
+        var row = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = ButtonSpacing,
+        };
         row.AddChild(cancel);
         row.AddChild(remove);
         return row;

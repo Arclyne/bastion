@@ -11,7 +11,7 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public sealed class ChatChannelListView : StackPanel
 {
-    private const float ListWidth = 360;
+    private const float ListWidth = PanelMetrics.ContentWidth;
     private const float ListSpacing = 12;
     private const float RowHeight = 64;
     private const float RowRadius = 10;
@@ -50,14 +50,7 @@ public sealed class ChatChannelListView : StackPanel
 
     private static ScrollViewer CreateConversations()
     {
-        var conversations = new ScrollViewer
-        {
-            Width = ListWidth,
-            WidthUnits = DimensionUnitType.Absolute,
-            Height = ConversationsHeight,
-            HeightUnits = DimensionUnitType.Absolute,
-        };
-        Shapes.HideDefaultParts(conversations);
+        ScrollViewer conversations = ViewFactory.CreateScrollList(ListWidth, ConversationsHeight);
         conversations.InnerPanel.StackSpacing = ConversationSpacing;
         conversations.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.HasConversations));
         return conversations;
@@ -177,7 +170,7 @@ public sealed class ChatChannelListView : StackPanel
 
     private void HandleConversationsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        ConversationParts.ClearRows(_conversations);
+        ViewFactory.ClearRows(_conversations.InnerPanel);
         foreach (ConversationRowViewModel row in _chatTab.Conversations)
         {
             var rowView = new ConversationRowView(row, _chatTab);

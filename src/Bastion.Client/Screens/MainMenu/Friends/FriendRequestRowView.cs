@@ -4,14 +4,13 @@ using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
 using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Friends;
 
 public sealed class FriendRequestRowView : Panel
 {
-    private const float RowWidth = 360;
+    private const float RowWidth = PanelMetrics.ContentWidth;
     private const float RowHeight = 56;
     private const float ContentPaddingX = 6;
     private const float TextSpacing = 2;
@@ -42,7 +41,11 @@ public sealed class FriendRequestRowView : Panel
 
     private static StackPanel CreateText()
     {
-        var text = new StackPanel { X = ContentPaddingX, Spacing = TextSpacing };
+        var text = new StackPanel
+        {
+            X = ContentPaddingX,
+            Spacing = TextSpacing,
+        };
         text.AddChild(CreateBoundLabel(nameof(FriendRequestRowViewModel.Nickname), TextStyles.IdentityName));
         text.AddChild(CreateBoundLabel(nameof(FriendRequestRowViewModel.DetailText), TextStyles.Hint));
         ViewFactory.CenterVertically(text);
@@ -51,18 +54,7 @@ public sealed class FriendRequestRowView : Panel
 
     private static Label CreateBoundLabel(string propertyName, TextStyle style)
     {
-        Label label = ViewFactory.CreateLabel(string.Empty, style);
-        ((LabelVisual)label.Visual).LocalizeText = false;
-        label.SetBinding(nameof(Label.Text), propertyName);
-        return label;
-    }
-
-    private static Button CreateActionButton(string textKey, ButtonLook look)
-    {
-        Button button = ViewFactory.CreateButton(textKey, ActionButtonWidth, ActionButtonHeight);
-        ButtonSkin.CreateAndAttach(button, look);
-        button.SetBinding(nameof(IsEnabled), nameof(FriendRequestRowViewModel.CanAct));
-        return button;
+        return ViewFactory.CreateBoundUntranslatedLabel(propertyName, style);
     }
 
     private StackPanel CreateReceivedActions()
@@ -74,16 +66,21 @@ public sealed class FriendRequestRowView : Panel
         return CreateActionRow(reject, accept);
     }
 
-    private StackPanel CreateSentActions()
+    private static Button CreateActionButton(string textKey, ButtonLook look)
     {
-        Button cancel = CreateActionButton(nameof(Strings.FriendsCancelRequest), ButtonLooks.Secondary);
-        cancel.Click += HandleCancelClick;
-        return CreateActionRow(cancel);
+        Button button = ViewFactory.CreateButton(textKey, ActionButtonWidth, ActionButtonHeight);
+        ButtonSkin.CreateAndAttach(button, look);
+        button.SetBinding(nameof(IsEnabled), nameof(FriendRequestRowViewModel.CanAct));
+        return button;
     }
 
     private StackPanel CreateActionRow(params Button[] buttons)
     {
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = ButtonSpacing };
+        var actions = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = ButtonSpacing,
+        };
         foreach (Button button in buttons)
         {
             actions.AddChild(button);
@@ -93,22 +90,14 @@ public sealed class FriendRequestRowView : Panel
         return actions;
     }
 
-    private void HandleAcceptClick(object? sender, EventArgs e)
+    private StackPanel CreateSentActions()
     {
-        RunSafely(_requests.Accept(_row));
+        Button cancel = CreateActionButton(nameof(Strings.FriendsCancelRequest), ButtonLooks.Secondary);
+        cancel.Click += HandleCancelClick;
+        return CreateActionRow(cancel);
     }
 
-    private void HandleRejectClick(object? sender, EventArgs e)
-    {
-        RunSafely(_requests.Reject(_row));
-    }
-
-    private void HandleCancelClick(object? sender, EventArgs e)
-    {
-        RunSafely(_requests.Cancel(_row));
-    }
-
-    private async void RunSafely(Task response)
+    private static async Task RespondSafely(Task response)
     {
         try
         {
@@ -118,5 +107,20 @@ public sealed class FriendRequestRowView : Panel
         {
             _logger.Warn("The friend request response could not be sent because the connection is closed.", ex);
         }
+    }
+
+    private void HandleRejectClick(object? sender, EventArgs e)
+    {
+        _ = RespondSafely(_requests.Reject(_row));
+    }
+
+    private void HandleAcceptClick(object? sender, EventArgs e)
+    {
+        _ = RespondSafely(_requests.Accept(_row));
+    }
+
+    private void HandleCancelClick(object? sender, EventArgs e)
+    {
+        _ = RespondSafely(_requests.Cancel(_row));
     }
 }

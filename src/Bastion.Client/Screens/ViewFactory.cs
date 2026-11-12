@@ -6,6 +6,7 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 
 namespace Bastion.Client.Screens;
@@ -63,6 +64,17 @@ public static class ViewFactory
         return label;
     }
 
+    public static Label CreateBoundNotice(string textProperty, string visibilityProperty, TextStyle style)
+    {
+        ArgumentNullException.ThrowIfNull(textProperty);
+        ArgumentNullException.ThrowIfNull(visibilityProperty);
+        ArgumentNullException.ThrowIfNull(style);
+
+        Label label = CreateBoundUntranslatedLabel(textProperty, style);
+        label.SetBinding(nameof(Label.IsVisible), visibilityProperty);
+        return label;
+    }
+
     public static Label CreateUntranslatedLabel(string text, TextStyle style)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -103,6 +115,29 @@ public static class ViewFactory
         element.XUnits = GeneralUnitType.PixelsFromMiddle;
         element.XOrigin = HorizontalAlignment.Center;
         element.X = MiddleOffsetX;
+    }
+
+    public static ScrollViewer CreateScrollList(float width, float height)
+    {
+        var list = new ScrollViewer
+        {
+            Width = width,
+            WidthUnits = DimensionUnitType.Absolute,
+            Height = height,
+            HeightUnits = DimensionUnitType.Absolute,
+        };
+        Shapes.HideDefaultParts(list);
+        return list;
+    }
+
+    public static void ClearRows(GraphicalUiElement container)
+    {
+        ArgumentNullException.ThrowIfNull(container);
+
+        while (container.Children.Count > 0)
+        {
+            container.Children.RemoveAt(container.Children.Count - 1);
+        }
     }
 
     public static Label CreateVersionLabel()

@@ -10,7 +10,7 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public sealed class ConversationRowView : Panel
 {
-    private const float RowWidth = 360;
+    private const float RowWidth = PanelMetrics.ContentWidth;
     private const float RowHeight = 60;
     private const float RowRadius = 10;
     private const float PaddingX = 12;

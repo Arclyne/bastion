@@ -3,7 +3,6 @@ using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
 
@@ -11,7 +10,7 @@ namespace Bastion.Client.Screens.MainMenu.Friends;
 
 public sealed class FriendRowView : Panel
 {
-    private const float RowWidth = 360;
+    private const float RowWidth = PanelMetrics.ContentWidth;
     private const float RowHeight = 52;
     private const float DotSize = 10;
     private const float ContentPaddingX = 6;
@@ -59,7 +58,7 @@ public sealed class FriendRowView : Panel
             HeightUnits = DimensionUnitType.Absolute,
         };
         Color color = isConnected ? Palette.Success : Palette.Muted;
-        RectangleRuntime circle = Shapes.CreateRounded(color, DotSize / 2);
+        RectangleRuntime circle = Shapes.CreateCircle(color, DotSize);
         Shapes.InsertBehindContent(dot.Visual, circle);
         ViewFactory.CenterVertically(dot);
         return dot;
@@ -67,7 +66,10 @@ public sealed class FriendRowView : Panel
 
     private static StackPanel CreateText()
     {
-        var text = new StackPanel { Spacing = TextSpacing };
+        var text = new StackPanel
+        {
+            Spacing = TextSpacing,
+        };
         text.AddChild(CreateBoundLabel(nameof(FriendRowViewModel.Nickname), TextStyles.IdentityName));
         text.AddChild(CreateBoundLabel(nameof(FriendRowViewModel.StatusText), TextStyles.Hint));
         ViewFactory.CenterVertically(text);
@@ -76,10 +78,7 @@ public sealed class FriendRowView : Panel
 
     private static Label CreateBoundLabel(string propertyName, TextStyle style)
     {
-        Label label = ViewFactory.CreateLabel(string.Empty, style);
-        ((LabelVisual)label.Visual).LocalizeText = false;
-        label.SetBinding(nameof(Label.Text), propertyName);
-        return label;
+        return ViewFactory.CreateBoundUntranslatedLabel(propertyName, style);
     }
 
     private Button CreateMoreButton()

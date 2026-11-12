@@ -32,10 +32,6 @@ public sealed class FriendActionsViewModel : ViewModel
         ErrorText = string.Empty;
     }
 
-    public event EventHandler<FriendRemovedEventArgs>? FriendRemoved;
-
-    public event EventHandler<MessageRequestedEventArgs>? MessageRequested;
-
     public string Nickname
     {
         get => Get<string>();
@@ -84,6 +80,10 @@ public sealed class FriendActionsViewModel : ViewModel
     [DependsOn(nameof(IsRemoving))]
     public bool CanConfirm => !IsRemoving;
 
+    public event EventHandler<FriendRemovedEventArgs>? FriendRemoved;
+
+    public event EventHandler<MessageRequestedEventArgs>? MessageRequested;
+
     public void OpenMenu(FriendRowViewModel row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -97,7 +97,9 @@ public sealed class FriendActionsViewModel : ViewModel
     public void RequestMessage()
     {
         IsMenuOpen = false;
-        MessageRequested?.Invoke(this, new MessageRequestedEventArgs(new PlayerTag(Nickname, _friendCode)));
+        var friend = new PlayerTag(Nickname, _friendCode);
+        var request = new MessageRequestedEventArgs(friend);
+        MessageRequested?.Invoke(this, request);
     }
 
     public void AskRemoval()
@@ -137,7 +139,8 @@ public sealed class FriendActionsViewModel : ViewModel
         }
         catch (InvalidSessionException ex)
         {
-            ReportFailure(ex);
+            _logger.Warn("The friend removal was turned down because the session is no longer valid.", ex);
+            ErrorText = Strings.FriendsRemoveFailed;
         }
         catch (ServerUnreachableException ex)
         {
@@ -160,12 +163,13 @@ public sealed class FriendActionsViewModel : ViewModel
     private void CompleteRemoval(string friendCode)
     {
         IsDialogOpen = false;
-        FriendRemoved?.Invoke(this, new FriendRemovedEventArgs(friendCode));
+        var removal = new FriendRemovedEventArgs(friendCode);
+        FriendRemoved?.Invoke(this, removal);
     }
 
     private void ReportFailure(Exception ex)
     {
-        _logger.Warn("The friend could not be removed.", ex);
+        _logger.Error("The friend could not be removed.", ex);
         ErrorText = Strings.FriendsRemoveFailed;
     }
 }

@@ -18,6 +18,15 @@
   <data name="AppVersionFormat" xml:space="preserve">
     <value>Bastión {0}</value>
   </data>
+  <data name="FriendsRejectedNotFriends" xml:space="preserve">
+    <value>You are no longer friends.</value>
+  </data>
+  <data name="FriendsRespondFailed" xml:space="preserve">
+    <value>The request could not be answered. Try again.</value>
+  </data>
+  <data name="FriendsSendRequestFailed" xml:space="preserve">
+    <value>The request could not be sent. Try again.</value>
+  </data>
   <data name="LanguageNameEnglish" xml:space="preserve">
     <value>English (US)</value>
   </data>

@@ -18,23 +18,28 @@ public sealed class FriendRequestsViewModel : ViewModel
 {
     private const int ToastSeconds = 8;
     private const int AcceptedToastSeconds = 3;
+    private const int NewestPosition = 0;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(FriendRequestsViewModel));
 
     private readonly LoggedInSession _session;
     private readonly IFriendClient _friends;
-    private readonly List<FriendRequestRowViewModel> _received = new List<FriendRequestRowViewModel>();
-    private readonly List<FriendRequestRowViewModel> _sent = new List<FriendRequestRowViewModel>();
+    private readonly TimeProvider _timeProvider;
+    private readonly List<FriendRequestRowViewModel> _receivedRequests = new List<FriendRequestRowViewModel>();
+    private readonly List<FriendRequestRowViewModel> _sentRequests = new List<FriendRequestRowViewModel>();
     private FriendRequestRowViewModel? _toastRow;
 
-    public FriendRequestsViewModel(LoggedInSession session, IFriendClient friends)
+    public FriendRequestsViewModel(LoggedInSession session, IFriendClient friends, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(friends);
+        ArgumentNullException.ThrowIfNull(timeProvider);
 
         _session = session;
         _friends = friends;
+        _timeProvider = timeProvider;
         ShowsReceived = true;
+        VisibleRows = new ObservableCollection<FriendRequestRowViewModel>();
         ReceivedTitle = string.Empty;
         SentTitle = string.Empty;
         EmptyText = string.Empty;
@@ -44,10 +49,7 @@ public sealed class FriendRequestsViewModel : ViewModel
         UpdateSummary();
     }
 
-    public event EventHandler? FriendshipStarted;
-
-    public ObservableCollection<FriendRequestRowViewModel> VisibleRows { get; } =
-        new ObservableCollection<FriendRequestRowViewModel>();
+    public ObservableCollection<FriendRequestRowViewModel> VisibleRows { get; }
 
     public bool ShowsReceived
     {
@@ -118,6 +120,8 @@ public sealed class FriendRequestsViewModel : ViewModel
     [DependsOn(nameof(IsToastAccepted))]
     public bool AreToastActionsVisible => !IsToastAccepted;
 
+    public event EventHandler? FriendshipStarted;
+
     public void ShowReceived()
     {
         ShowsReceived = true;
@@ -139,7 +143,8 @@ public sealed class FriendRequestsViewModel : ViewModel
         }
         catch (InvalidSessionException ex)
         {
-            ReportLoadFailure(ex);
+            _logger.Warn("The friend requests could not be loaded because the session is no longer valid.", ex);
+            StatusText = Strings.FriendsRequestsFailed;
         }
         catch (ServerUnreachableException ex)
         {
@@ -159,13 +164,13 @@ public sealed class FriendRequestsViewModel : ViewModel
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (_received.Any(row => row.FriendCode == request.Player.FriendCode))
+        if (_receivedRequests.Any(row => row.FriendCode == request.Player.FriendCode))
         {
             return;
         }
 
-        var row = new FriendRequestRowViewModel(request, request.RequestedAt, true);
-        _received.Insert(0, row);
+        var row = new FriendRequestRowViewModel(request, request.RequestedAt, isReceived: true);
+        _receivedRequests.Insert(NewestPosition, row);
         UpdateSummary();
         if (showsToast)
         {
@@ -175,17 +180,23 @@ public sealed class FriendRequestsViewModel : ViewModel
 
     public Task Accept(FriendRequestRowViewModel row)
     {
-        return Respond(row, (token, code) => _friends.AcceptFriendRequest(token, code), true);
+        ArgumentNullException.ThrowIfNull(row);
+
+        return Respond(row, _friends.AcceptFriendRequest, startsFriendship: true);
     }
 
     public Task Reject(FriendRequestRowViewModel row)
     {
-        return Respond(row, (token, code) => _friends.RejectFriendRequest(token, code), false);
+        ArgumentNullException.ThrowIfNull(row);
+
+        return Respond(row, _friends.RejectFriendRequest, startsFriendship: false);
     }
 
     public Task Cancel(FriendRequestRowViewModel row)
     {
-        return Respond(row, (token, code) => _friends.CancelFriendRequest(token, code), false);
+        ArgumentNullException.ThrowIfNull(row);
+
+        return Respond(row, _friends.CancelFriendRequest, startsFriendship: false);
     }
 
     public async Task AcceptToast()
@@ -196,7 +207,7 @@ public sealed class FriendRequestsViewModel : ViewModel
             return;
         }
 
-        bool isAccepted = await Respond(row, (token, code) => _friends.AcceptFriendRequest(token, code), true);
+        bool isAccepted = await Respond(row, _friends.AcceptFriendRequest, startsFriendship: true);
         if (!isAccepted)
         {
             HideToast(row);
@@ -217,7 +228,24 @@ public sealed class FriendRequestsViewModel : ViewModel
         }
 
         HideToast(row);
-        await Respond(row, (token, code) => _friends.RejectFriendRequest(token, code), false);
+        await Respond(row, _friends.RejectFriendRequest, startsFriendship: false);
+    }
+
+    private void UpdateSummary()
+    {
+        ReceivedTitle = FormatText(Strings.FriendsReceivedFormat, _receivedRequests.Count);
+        SentTitle = FormatText(Strings.FriendsSentFormat, _sentRequests.Count);
+        PendingCountText = BadgeText.FormatCount(_receivedRequests.Count);
+
+        List<FriendRequestRowViewModel> rows = ShowsReceived ? _receivedRequests : _sentRequests;
+        VisibleRows.Clear();
+        foreach (FriendRequestRowViewModel row in rows)
+        {
+            VisibleRows.Add(row);
+        }
+
+        string emptyText = ShowsReceived ? Strings.FriendsNoReceivedRequests : Strings.FriendsNoSentRequests;
+        EmptyText = rows.Count == 0 ? emptyText : string.Empty;
     }
 
     private static string FormatText(string format, object argument)
@@ -225,29 +253,80 @@ public sealed class FriendRequestsViewModel : ViewModel
         return string.Format(CultureInfo.CurrentCulture, format, argument);
     }
 
+    private void ShowListing(FriendRequestListing listing)
+    {
+        _receivedRequests.Clear();
+        IEnumerable<FriendRequestRowViewModel> receivedRows = listing.ReceivedRequests.Select(
+            request => new FriendRequestRowViewModel(request, listing.ListedAt, isReceived: true));
+        _receivedRequests.AddRange(receivedRows);
+        _sentRequests.Clear();
+        IEnumerable<FriendRequestRowViewModel> sentRows = listing.SentRequests.Select(
+            request => new FriendRequestRowViewModel(request, listing.ListedAt, isReceived: false));
+        _sentRequests.AddRange(sentRows);
+        StatusText = string.Empty;
+        UpdateSummary();
+    }
+
+    private void ReportLoadFailure(Exception ex)
+    {
+        _logger.Error("The friend requests could not be loaded.", ex);
+        StatusText = Strings.FriendsRequestsFailed;
+    }
+
+    private void ShowToast(FriendRequestRowViewModel row)
+    {
+        _toastRow = row;
+        ToastText = FormatText(Strings.FriendsRequestToastFormat, row.Nickname);
+        IsToastAccepted = false;
+        IsToastVisible = true;
+        _ = HideToastLater(row, ToastSeconds);
+    }
+
+    private async Task HideToastLater(FriendRequestRowViewModel row, int seconds)
+    {
+        var delay = TimeSpan.FromSeconds(seconds);
+        await Task.Delay(delay, _timeProvider);
+        HideToast(row);
+    }
+
+    private void HideToast(FriendRequestRowViewModel row)
+    {
+        if (_toastRow != row)
+        {
+            return;
+        }
+
+        _toastRow = null;
+        IsToastVisible = false;
+    }
+
     private async Task<bool> Respond(
         FriendRequestRowViewModel row,
         Action<string, string> response,
         bool startsFriendship)
     {
-        ArgumentNullException.ThrowIfNull(row);
-
         row.IsBusy = true;
         StatusText = string.Empty;
         try
         {
             await Task.Run(() => response(_session.Token, row.FriendCode));
             RemoveRow(row);
-            RaiseFriendshipStarted(startsFriendship);
+            if (startsFriendship)
+            {
+                OnFriendshipStarted();
+            }
+
             return true;
         }
         catch (FriendshipRejectedException ex)
         {
-            ShowRejection(row, ex);
+            _logger.Warn($"The server turned down the friend request response. Rejection={ex.Rejection}", ex);
+            ShowRejection(row, ex.Rejection);
         }
         catch (InvalidSessionException ex)
         {
-            ReportResponseFailure(ex);
+            _logger.Warn("The friend request response was turned down because the session is no longer valid.", ex);
+            StatusText = Strings.FriendsRespondFailed;
         }
         catch (ServerUnreachableException ex)
         {
@@ -269,100 +348,31 @@ public sealed class FriendRequestsViewModel : ViewModel
         return false;
     }
 
-    private void ShowListing(FriendRequestListing listing)
-    {
-        _received.Clear();
-        _received.AddRange(listing.ReceivedRequests.Select(request =>
-            new FriendRequestRowViewModel(request, listing.ListedAt, true)));
-        _sent.Clear();
-        _sent.AddRange(listing.SentRequests.Select(request =>
-            new FriendRequestRowViewModel(request, listing.ListedAt, false)));
-        StatusText = string.Empty;
-        UpdateSummary();
-    }
-
-    private void UpdateSummary()
-    {
-        ReceivedTitle = FormatText(Strings.FriendsReceivedFormat, _received.Count);
-        SentTitle = FormatText(Strings.FriendsSentFormat, _sent.Count);
-        PendingCountText = _received.Count > 0 ? _received.Count.ToString(CultureInfo.CurrentCulture) : string.Empty;
-
-        List<FriendRequestRowViewModel> rows = ShowsReceived ? _received : _sent;
-        VisibleRows.Clear();
-        foreach (FriendRequestRowViewModel row in rows)
-        {
-            VisibleRows.Add(row);
-        }
-
-        string emptyText = ShowsReceived ? Strings.FriendsNoReceivedRequests : Strings.FriendsNoSentRequests;
-        EmptyText = rows.Count == 0 ? emptyText : string.Empty;
-    }
-
     private void RemoveRow(FriendRequestRowViewModel row)
     {
-        _received.Remove(row);
-        _sent.Remove(row);
+        _receivedRequests.Remove(row);
+        _sentRequests.Remove(row);
         UpdateSummary();
     }
 
-    private void RaiseFriendshipStarted(bool startsFriendship)
+    private void OnFriendshipStarted()
     {
-        if (startsFriendship)
-        {
-            FriendshipStarted?.Invoke(this, EventArgs.Empty);
-        }
+        FriendshipStarted?.Invoke(this, EventArgs.Empty);
     }
 
-    private void ShowRejection(FriendRequestRowViewModel row, FriendshipRejectedException ex)
+    private void ShowRejection(FriendRequestRowViewModel row, FriendshipRejection rejection)
     {
-        _logger.Warn("The server turned down the friend request response.", ex);
-        if (ex.Rejection == FriendshipRejection.RequestNotFound)
+        if (rejection == FriendshipRejection.RequestNotFound)
         {
             RemoveRow(row);
-            StatusText = Strings.FriendsRejectedRequestNotFound;
-            return;
         }
 
-        StatusText = ex.Rejection == FriendshipRejection.FriendLimitReached
-            ? Strings.FriendsRejectedOwnLimit
-            : Strings.FriendsRejectedTheirLimit;
-    }
-
-    private void ShowToast(FriendRequestRowViewModel row)
-    {
-        _toastRow = row;
-        ToastText = FormatText(Strings.FriendsRequestToastFormat, row.Nickname);
-        IsToastAccepted = false;
-        IsToastVisible = true;
-        _ = HideToastLater(row, ToastSeconds);
-    }
-
-    private async Task HideToastLater(FriendRequestRowViewModel row, int seconds)
-    {
-        await Task.Delay(TimeSpan.FromSeconds(seconds));
-        HideToast(row);
-    }
-
-    private void HideToast(FriendRequestRowViewModel row)
-    {
-        if (_toastRow != row)
-        {
-            return;
-        }
-
-        _toastRow = null;
-        IsToastVisible = false;
-    }
-
-    private void ReportLoadFailure(Exception ex)
-    {
-        _logger.Warn("The friend requests could not be loaded.", ex);
-        StatusText = Strings.FriendsRequestsFailed;
+        StatusText = FriendRejectionText.Describe(rejection);
     }
 
     private void ReportResponseFailure(Exception ex)
     {
-        _logger.Warn("The friend request response could not reach the server.", ex);
-        StatusText = Strings.FriendsSearchFailed;
+        _logger.Error("The friend request response could not reach the server.", ex);
+        StatusText = Strings.FriendsRespondFailed;
     }
 }

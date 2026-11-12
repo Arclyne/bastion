@@ -1,7 +1,6 @@
 using System;
 using Bastion.Client.Theme;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
 
 namespace Bastion.Client.Screens.MainMenu.Friends;
 
@@ -26,9 +25,7 @@ public sealed class FriendCodeFooter : StackPanel
 
     private static Label CreateCodeLabel()
     {
-        Label label = ViewFactory.CreateLabel(string.Empty, TextStyles.IdentityDetail);
-        ((LabelVisual)label.Visual).LocalizeText = false;
-        label.SetBinding(nameof(Label.Text), nameof(FriendsPanelViewModel.OwnFriendCodeText));
+        Label label = ViewFactory.CreateBoundUntranslatedLabel(nameof(FriendsPanelViewModel.OwnFriendCodeText), TextStyles.IdentityDetail);
         ViewFactory.CenterVertically(label);
         return label;
     }

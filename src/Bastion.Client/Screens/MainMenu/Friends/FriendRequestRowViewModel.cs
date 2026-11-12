@@ -55,7 +55,9 @@ public sealed class FriendRequestRowViewModel : ViewModel
 
     private static string DescribeExpiry(DateTime expiresAt, DateTime listedAt)
     {
-        int daysLeft = (int)Math.Ceiling((expiresAt - listedAt).TotalDays);
+        TimeSpan remaining = expiresAt - listedAt;
+        double roundedUpDays = Math.Ceiling(remaining.TotalDays);
+        int daysLeft = (int)roundedUpDays;
         if (daysLeft <= LastDay)
         {
             return Strings.FriendsExpiresTomorrow;

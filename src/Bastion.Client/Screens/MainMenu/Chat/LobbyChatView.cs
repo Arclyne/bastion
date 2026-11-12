@@ -115,7 +115,7 @@ public sealed class LobbyChatView : StackPanel
 
     private void RebuildRows()
     {
-        ConversationParts.ClearRows(_messages);
+        ViewFactory.ClearRows(_messages.InnerPanel);
         AddRows(_chat.Messages);
     }
 

@@ -2,14 +2,13 @@ using System;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
 using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Friends;
 
 public sealed class FoundPlayerRowView : Panel
 {
-    private const float RowWidth = 360;
+    private const float RowWidth = PanelMetrics.ContentWidth;
     private const float RowHeight = 52;
     private const float ContentPaddingX = 6;
     private const float ActionButtonWidth = 150;
@@ -38,9 +37,7 @@ public sealed class FoundPlayerRowView : Panel
 
     private static Label CreateNickname()
     {
-        Label nickname = ViewFactory.CreateLabel(string.Empty, TextStyles.IdentityName);
-        ((LabelVisual)nickname.Visual).LocalizeText = false;
-        nickname.SetBinding(nameof(Label.Text), nameof(FoundPlayerRowViewModel.Nickname));
+        Label nickname = ViewFactory.CreateBoundUntranslatedLabel(nameof(FoundPlayerRowViewModel.Nickname), TextStyles.IdentityName);
         nickname.X = ContentPaddingX;
         ViewFactory.CenterVertically(nickname);
         return nickname;
