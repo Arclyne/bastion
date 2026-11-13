@@ -36,7 +36,7 @@ public sealed class FriendRelationshipResolver
             return FriendRelationship.AlreadyFriends;
         }
 
-        FriendRequest? request = _pendingRequests.FirstOrDefault(pending => Involves(pending, otherAccountId));
+        FriendRequest? request = _pendingRequests.FirstOrDefault(pending => IsInvolved(pending, otherAccountId));
         if (request is null)
         {
             return FriendRelationship.None;
@@ -50,7 +50,7 @@ public sealed class FriendRelationshipResolver
         return FriendRelationship.RequestReceived;
     }
 
-    private static bool Involves(FriendRequest request, int accountId)
+    private static bool IsInvolved(FriendRequest request, int accountId)
     {
         return request.RequesterId == accountId || request.RecipientId == accountId;
     }

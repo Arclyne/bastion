@@ -87,9 +87,9 @@ public sealed class FriendRequestService : IFriendRequestService
         var request = new FriendRequest(sender.AccountId, recipient.AccountId, now);
         _unitOfWork.FriendRequests.Add(request);
         _unitOfWork.SaveChanges();
-        _friendNotifier.NotifyFriendRequestReceived(
-            recipient.AccountId,
-            new FriendRequestSummary(sender, request.RequestedAt, request.GetExpirationTime()));
+        DateTime expiresAt = request.GetExpirationTime();
+        var requestSummary = new FriendRequestSummary(sender, request.RequestedAt, expiresAt);
+        _friendNotifier.NotifyFriendRequestReceived(recipient.AccountId, requestSummary);
         return FriendRequestOutcome.RequestSent;
     }
 
@@ -140,12 +140,24 @@ public sealed class FriendRequestService : IFriendRequestService
         RemoveRequest(requester.AccountId, recipient.AccountId, now);
     }
 
-    private static IReadOnlyList<FriendRequestSummary> ListUnexpired(
-        IReadOnlyList<FriendRequestSummary> requests,
-        DateTime now)
+    private FriendRelationshipResolver CreateRelationshipResolver(int accountId, DateTime now)
     {
-        IEnumerable<FriendRequestSummary> unexpiredRequests = requests.Where(request => request.ExpiresAt > now);
-        return new List<FriendRequestSummary>(unexpiredRequests);
+        IReadOnlyList<int> friendAccountIds = _unitOfWork.Friendships.ListFriendAccountIds(accountId);
+        IReadOnlyList<FriendRequest> involvedRequests = _unitOfWork.FriendRequests.ListInvolving(accountId);
+        IEnumerable<FriendRequest> unexpiredRequests = involvedRequests.Where(request => !request.IsExpiredAt(now));
+        var pendingRequests = new List<FriendRequest>(unexpiredRequests);
+        return new FriendRelationshipResolver(accountId, friendAccountIds, pendingRequests);
+    }
+
+    private IReadOnlyList<PlayerIdentity> FindPlayers(string searchText)
+    {
+        PlayerIdentity? codeOwner = FriendCodeLookup.FindPlayer(_unitOfWork.Accounts, searchText);
+        if (codeOwner is not null)
+        {
+            return new[] { codeOwner };
+        }
+
+        return _unitOfWork.Accounts.SearchPlayerIdentities(searchText, MaximumSearchResults);
     }
 
     private PlayerIdentity FindPlayerByCode(string friendCode)
@@ -166,23 +178,6 @@ public sealed class FriendRequestService : IFriendRequestService
         return null;
     }
 
-    private FriendRequest FindRequestSentBy(int requesterAccountId, int recipientAccountId, DateTime now)
-    {
-        FriendRequest? request = _unitOfWork.FriendRequests.FindBetween(requesterAccountId, recipientAccountId);
-        if (request is null || !request.IsSentBy(requesterAccountId) || request.IsExpiredAt(now))
-        {
-            throw new FriendshipRejectedException(FriendshipRejection.RequestNotFound);
-        }
-
-        return request;
-    }
-
-    private void RemoveRequest(int requesterAccountId, int recipientAccountId, DateTime now)
-    {
-        FriendRequest request = FindRequestSentBy(requesterAccountId, recipientAccountId, now);
-        _unitOfWork.FriendRequests.Remove(request);
-    }
-
     private void EnsureBelowFriendLimit(int ownFriendCount, int otherAccountId)
     {
         if (ownFriendCount >= FriendshipPolicy.MaximumFriends)
@@ -198,29 +193,35 @@ public sealed class FriendRequestService : IFriendRequestService
 
     private void StartFriendship(FriendRequest request, PlayerIdentity accepter, DateTime now)
     {
-        _unitOfWork.Friendships.Add(new Friendship(request.RequesterId, request.RecipientId, now));
+        var friendship = new Friendship(request.RequesterId, request.RecipientId, now);
+        _unitOfWork.Friendships.Add(friendship);
         _unitOfWork.SaveChanges();
         _unitOfWork.FriendRequests.Remove(request);
         _friendNotifier.NotifyFriendshipStarted(request.RequesterId, accepter);
     }
 
-    private IReadOnlyList<PlayerIdentity> FindPlayers(string searchText)
+    private static IReadOnlyList<FriendRequestSummary> ListUnexpired(
+        IReadOnlyList<FriendRequestSummary> requests,
+        DateTime now)
     {
-        PlayerIdentity? codeOwner = FriendCodeLookup.FindPlayer(_unitOfWork.Accounts, searchText);
-        if (codeOwner is not null)
-        {
-            return new[] { codeOwner };
-        }
-
-        return _unitOfWork.Accounts.SearchPlayerIdentities(searchText, MaximumSearchResults);
+        IEnumerable<FriendRequestSummary> unexpiredRequests = requests.Where(request => request.ExpiresAt > now);
+        return new List<FriendRequestSummary>(unexpiredRequests);
     }
 
-    private FriendRelationshipResolver CreateRelationshipResolver(int accountId, DateTime now)
+    private void RemoveRequest(int requesterAccountId, int recipientAccountId, DateTime now)
     {
-        IReadOnlyList<int> friendAccountIds = _unitOfWork.Friendships.ListFriendAccountIds(accountId);
-        IReadOnlyList<FriendRequest> involvedRequests = _unitOfWork.FriendRequests.ListInvolving(accountId);
-        IEnumerable<FriendRequest> pendingRequests = involvedRequests.Where(request => !request.IsExpiredAt(now));
-        var pendingRequestList = new List<FriendRequest>(pendingRequests);
-        return new FriendRelationshipResolver(accountId, friendAccountIds, pendingRequestList);
+        FriendRequest request = FindRequestSentBy(requesterAccountId, recipientAccountId, now);
+        _unitOfWork.FriendRequests.Remove(request);
+    }
+
+    private FriendRequest FindRequestSentBy(int requesterAccountId, int recipientAccountId, DateTime now)
+    {
+        FriendRequest? request = _unitOfWork.FriendRequests.FindBetween(requesterAccountId, recipientAccountId);
+        if (request is null || !request.IsSentBy(requesterAccountId) || request.IsExpiredAt(now))
+        {
+            throw new FriendshipRejectedException(FriendshipRejection.RequestNotFound);
+        }
+
+        return request;
     }
 }

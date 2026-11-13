@@ -33,11 +33,11 @@ public sealed class FriendListService : IFriendListService
 
         PlayerIdentity player = _sessionVerifier.VerifyIdentity(sessionToken, now);
         IReadOnlyList<FriendSummary> friendSummaries = _unitOfWork.Friendships.ListFriends(player.AccountId);
-        IEnumerable<FriendStatus> friends = friendSummaries
+        IEnumerable<FriendStatus> orderedFriends = friendSummaries
             .Select(ToFriendStatus)
             .OrderBy(friend => friend.Summary.Friend.Nickname, StringComparer.OrdinalIgnoreCase);
-        var friendList = new List<FriendStatus>(friends);
-        return new FriendRoster(player.FriendCode, friendList, now);
+        var friends = new List<FriendStatus>(orderedFriends);
+        return new FriendRoster(player.FriendCode, friends, now);
     }
 
     /// <inheritdoc/>
