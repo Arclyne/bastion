@@ -90,7 +90,8 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
         foreach (MatchSearch search in idleSearches)
         {
             DateTime presenceDeadline = search.StartPresenceCheck(now);
-            presenceRequests.Add(new PresenceRequest(search.AccountId, presenceDeadline));
+            var presenceRequest = new PresenceRequest(search.AccountId, presenceDeadline);
+            presenceRequests.Add(presenceRequest);
         }
 
         return presenceRequests;
