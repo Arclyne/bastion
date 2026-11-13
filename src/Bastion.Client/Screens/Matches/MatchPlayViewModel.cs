@@ -315,42 +315,45 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         NoticeText = Strings.MatchMoveFailed;
     }
 
-    private void ReceivePawnMove(PawnMovedEventArgs e)
+    private void ReceivePawnMove(PawnMovedEventArgs pawnMove)
     {
-        if (!_turnOrdersByNickname.TryGetValue(e.MoverNickname, out byte moverTurnOrder)
-            || !BoardLayout.TryParseSquare(e.ToSquare, out BoardCoordinates destination))
+        if (!_turnOrdersByNickname.TryGetValue(pawnMove.MoverNickname, out byte moverTurnOrder)
+            || !BoardLayout.TryParseSquare(pawnMove.ToSquare, out BoardCoordinates destination))
         {
             _logger.Warn(
-                $"A pawn move arrived that the board cannot place. MatchId={e.MatchId}; Square={e.ToSquare}");
+                $"A pawn move arrived that the board cannot place. MatchId={pawnMove.MatchId}; "
+                + $"Square={pawnMove.ToSquare}");
             return;
         }
 
         _pawnsByTurnOrder[moverTurnOrder] = destination;
-        TakeServerTurn(e.NextTurnOrder, e.NextMoveNumber);
+        TakeServerTurn(pawnMove.NextTurnOrder, pawnMove.NextMoveNumber);
         ClearSelection();
-        if (e.IsMatchOver)
+        if (pawnMove.IsMatchOver)
         {
-            EndMatch(e.MoverNickname);
+            EndMatch(pawnMove.MoverNickname);
             return;
         }
 
         OnStateChanged();
     }
 
-    private void ReceiveWallPlacement(WallPlacedEventArgs e)
+    private void ReceiveWallPlacement(WallPlacedEventArgs wallPlacement)
     {
-        if (!_turnOrdersByNickname.TryGetValue(e.PlacerNickname, out byte placerTurnOrder)
-            || !BoardLayout.TryParseSquare(e.Groove, out BoardCoordinates groove))
+        if (!_turnOrdersByNickname.TryGetValue(wallPlacement.PlacerNickname, out byte placerTurnOrder)
+            || !BoardLayout.TryParseSquare(wallPlacement.Groove, out BoardCoordinates groove))
         {
-            _logger.Warn($"A wall arrived that the board cannot place. MatchId={e.MatchId}; Groove={e.Groove}");
+            _logger.Warn(
+                $"A wall arrived that the board cannot place. MatchId={wallPlacement.MatchId}; "
+                + $"Groove={wallPlacement.Groove}");
             return;
         }
 
-        var orientation = MatchWallTranslator.ToWallOrientation(e.Orientation);
+        var orientation = MatchWallTranslator.ToWallOrientation(wallPlacement.Orientation);
         var wall = new Wall(groove, orientation);
         _walls.Add(wall);
-        _remainingWallsByTurnOrder[placerTurnOrder] = e.RemainingWalls;
-        TakeServerTurn(e.NextTurnOrder, e.NextMoveNumber);
+        _remainingWallsByTurnOrder[placerTurnOrder] = wallPlacement.RemainingWalls;
+        TakeServerTurn(wallPlacement.NextTurnOrder, wallPlacement.NextMoveNumber);
         ClearSelection();
         OnStateChanged();
     }
