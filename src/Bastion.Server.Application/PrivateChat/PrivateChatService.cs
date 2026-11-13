@@ -39,8 +39,8 @@ public sealed class PrivateChatService : IPrivateChatService
         IReadOnlyList<Message> latestMessages = _unitOfWork.Messages.ListLatestPerPartner(player.AccountId);
         IReadOnlyDictionary<int, int> unreadByAuthor = _unitOfWork.Messages.CountUnreadByAuthor(player.AccountId);
         var friendIds = new HashSet<int>(_unitOfWork.Friendships.ListFriendAccountIds(player.AccountId));
-        IEnumerable<int> partnerIdSequence = latestMessages.Select(message => message.GetPartnerId(player.AccountId));
-        var partnerIds = new List<int>(partnerIdSequence);
+        IEnumerable<int> messagePartnerIds = latestMessages.Select(message => message.GetPartnerId(player.AccountId));
+        var partnerIds = new List<int>(messagePartnerIds);
         IReadOnlyList<PlayerIdentity> partnerIdentities = _unitOfWork.Accounts.ListPlayerIdentities(partnerIds);
         var partnersById = new Dictionary<int, PlayerIdentity>(partnerIdentities.Count);
         foreach (PlayerIdentity identity in partnerIdentities)
@@ -60,12 +60,13 @@ public sealed class PrivateChatService : IPrivateChatService
             var conversationPartner = new ConversationPartner(partner, friendIds.Contains(partnerId));
             var lastMessage = new PrivateMessageEntry(message, message.IsSentBy(player.AccountId));
             int unreadCount = unreadByAuthor.GetValueOrDefault(partnerId);
-            summaries.Add(new ConversationSummary(conversationPartner, lastMessage, unreadCount));
+            var summary = new ConversationSummary(conversationPartner, lastMessage, unreadCount);
+            summaries.Add(summary);
         }
 
-        IEnumerable<ConversationSummary> latestFirst = summaries
+        IEnumerable<ConversationSummary> orderedSummaries = summaries
             .OrderByDescending(summary => summary.LastMessage.Message.SentAt);
-        return new List<ConversationSummary>(latestFirst);
+        return new List<ConversationSummary>(orderedSummaries);
     }
 
     /// <inheritdoc/>
@@ -86,13 +87,13 @@ public sealed class PrivateChatService : IPrivateChatService
             throw new ChatMessageRejectedException(ChatRejection.NotFriends);
         }
 
-        _unitOfWork.Messages.MarkRead(new MessageParticipants(partner.AccountId, player.AccountId), now);
-        IEnumerable<PrivateMessageEntry> entries = messages
+        MarkPartnerMessagesRead(partner.AccountId, player.AccountId, now);
+        IEnumerable<PrivateMessageEntry> messageEntries = messages
             .Select(message => new PrivateMessageEntry(message, message.IsSentBy(player.AccountId)));
-        var entryList = new List<PrivateMessageEntry>(entries);
+        var entries = new List<PrivateMessageEntry>(messageEntries);
         var conversationPartner = new ConversationPartner(partner, isFriend);
         ChatMute mute = _chatModerator.FindMute(player.AccountId, now);
-        return new PrivateConversation(conversationPartner, entryList, mute);
+        return new PrivateConversation(conversationPartner, entries, mute);
     }
 
     /// <inheritdoc/>
@@ -118,7 +119,8 @@ public sealed class PrivateChatService : IPrivateChatService
         var message = Message.CreatePrivate(participants, screenedText, now);
         _unitOfWork.Messages.Add(message);
         _unitOfWork.SaveChanges();
-        _chatRoom.Deliver(new PrivateMessageDelivery(author, message));
+        var delivery = new PrivateMessageDelivery(author, message);
+        _chatRoom.Deliver(delivery);
         return message;
     }
 
@@ -130,7 +132,7 @@ public sealed class PrivateChatService : IPrivateChatService
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
         PlayerIdentity partner = FindPartner(player.AccountId, friendCode);
-        _unitOfWork.Messages.MarkRead(new MessageParticipants(partner.AccountId, player.AccountId), now);
+        MarkPartnerMessagesRead(partner.AccountId, player.AccountId, now);
     }
 
     private PlayerIdentity FindPartner(int accountId, string friendCode)
@@ -148,5 +150,11 @@ public sealed class PrivateChatService : IPrivateChatService
     {
         IReadOnlyList<int> friendAccountIds = _unitOfWork.Friendships.ListFriendAccountIds(accountId);
         return friendAccountIds.Contains(partnerAccountId);
+    }
+
+    private void MarkPartnerMessagesRead(int partnerAccountId, int readerAccountId, DateTime now)
+    {
+        var participants = new MessageParticipants(partnerAccountId, readerAccountId);
+        _unitOfWork.Messages.MarkRead(participants, now);
     }
 }
