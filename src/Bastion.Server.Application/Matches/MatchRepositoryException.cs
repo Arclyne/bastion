@@ -14,6 +14,7 @@ public sealed class MatchRepositoryException : Exception
     public MatchRepositoryException(Exception innerException)
         : base(DefaultMessage, innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
     }
 
     public MatchRepositoryException(string? message)

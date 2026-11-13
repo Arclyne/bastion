@@ -49,11 +49,11 @@ public sealed class MatchAbandonmentService : IMatchAbandonmentService
         _matchRepository.SaveAbandonment(match);
         _logger.Info(
             $"A player left the match. AccountId={player.AccountId}; MatchId={matchId}; IsMatchOver={isMatchOver}");
-        IEnumerable<int> recipientAccountIds = match.Participations
+        IEnumerable<int> remainingAccountIds = match.Participations
             .Where(participation => participation.AccountId != player.AccountId && !participation.EndReason.HasValue)
             .Select(participation => participation.AccountId);
-        var recipientAccountIdList = new List<int>(recipientAccountIds);
+        var recipientAccountIds = new List<int>(remainingAccountIds);
         var notice = new AbandonmentNotice(player.Nickname, isMatchOver);
-        _matchEndNotifier.NotifyMatchAbandoned(matchId, recipientAccountIdList, notice);
+        _matchEndNotifier.NotifyMatchAbandoned(matchId, recipientAccountIds, notice);
     }
 }
