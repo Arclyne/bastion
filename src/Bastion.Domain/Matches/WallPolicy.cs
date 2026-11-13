@@ -18,7 +18,7 @@ public static class WallPolicy
             return new WallRejection(WallRejectionReason.OutOfBoard, BlockedTurnOrder: null);
         }
 
-        if (CollidesWithPlacedWall(board, wall))
+        if (IsGrooveTaken(board, wall))
         {
             return new WallRejection(WallRejectionReason.GrooveTaken, BlockedTurnOrder: null);
         }
@@ -37,7 +37,7 @@ public static class WallPolicy
         return isColumnInside && isRowInside;
     }
 
-    private static bool CollidesWithPlacedWall(Board board, Wall wall)
+    private static bool IsGrooveTaken(Board board, Wall wall)
     {
         WallOrientation crossingOrientation = wall.Orientation == WallOrientation.Horizontal
             ? WallOrientation.Vertical
