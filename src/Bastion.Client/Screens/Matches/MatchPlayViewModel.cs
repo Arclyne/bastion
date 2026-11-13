@@ -150,7 +150,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     public bool CanPlaceWall()
     {
         byte ownRemainingWalls = GetRemainingWalls(OwnTurnOrder);
-        return CanChooseMove() && IsOwnTurn() && ownRemainingWalls > Participation.NoWallsLeft;
+        return CanChooseMove() && IsOwnTurn() && ownRemainingWalls > 0;
     }
 
     public async Task<bool> PlaceWall(Wall wall)

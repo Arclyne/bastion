@@ -54,7 +54,7 @@ public static class BoardLayout
 
     public static int GetLastIndex(byte boardSize)
     {
-        int lastIndex = boardSize - RowNumberOffset;
+        int lastIndex = boardSize - 1;
         return lastIndex;
     }
 
