@@ -28,9 +28,9 @@ public sealed record RoomSnapshot
     {
         ArgumentNullException.ThrowIfNull(room);
 
-        IEnumerable<RoomMemberSnapshot> members = room.Members.Select(member => CaptureMember(room, member));
-        var memberList = new List<RoomMemberSnapshot>(members);
-        return new RoomSnapshot(room.Identity, room.Settings, memberList);
+        IEnumerable<RoomMemberSnapshot> capturedMembers = room.Members.Select(member => CaptureMember(room, member));
+        var members = new List<RoomMemberSnapshot>(capturedMembers);
+        return new RoomSnapshot(room.Identity, room.Settings, members);
     }
 
     public int GetSeatCount()

@@ -29,6 +29,8 @@ public sealed class FakeRoomRepository : IRoomRepository
 
     public RoomRepositoryException? MatchSaveFailure { get; set; }
 
+    public RoomRepositoryException? InMatchCheckFailure { get; set; }
+
     public bool IsCodeTaken(string code)
     {
         return TakenCodes.Contains(code);
@@ -36,6 +38,11 @@ public sealed class FakeRoomRepository : IRoomRepository
 
     public bool IsRoomInMatch(string code)
     {
+        if (InMatchCheckFailure is not null)
+        {
+            throw InMatchCheckFailure;
+        }
+
         return CodesInMatch.Contains(code);
     }
 

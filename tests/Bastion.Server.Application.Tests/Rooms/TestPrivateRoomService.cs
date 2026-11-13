@@ -276,6 +276,17 @@ public sealed class TestPrivateRoomService
     }
 
     [Fact]
+    public void JoinRoom_InMatchCheckFails_ThrowsRepositoryFailure()
+    {
+        AddPlayer(GuestToken, _guest);
+        _roomRepository.InMatchCheckFailure = new RoomRepositoryException();
+
+        Action join = () => _privateRoomService.JoinRoom(GuestToken, FirstCode, _now);
+
+        Assert.Throws<RoomRepositoryException>(join);
+    }
+
+    [Fact]
     public void JoinRoom_RoomAlreadyInMatch_RejectsMatchStarted()
     {
         AddPlayer(GuestToken, _guest);

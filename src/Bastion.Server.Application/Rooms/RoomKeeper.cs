@@ -29,11 +29,12 @@ public sealed class RoomKeeper : IRoomKeeper
         ArgumentNullException.ThrowIfNull(settings);
 
         string code = CreateFreeCode();
-        int roomId = _roomRepository.AddRoom(Room.Open(new RoomOpening(code, host.AccountId, now), settings));
-        var room = new WaitingRoom(
-            new RoomIdentity(roomId, code),
-            settings,
-            new RoomMember(host.AccountId, host.Nickname));
+        var opening = new RoomOpening(code, host.AccountId, now);
+        var storedRoom = Room.Open(opening, settings);
+        int roomId = _roomRepository.AddRoom(storedRoom);
+        var identity = new RoomIdentity(roomId, code);
+        var hostMember = new RoomMember(host.AccountId, host.Nickname);
+        var room = new WaitingRoom(identity, settings, hostMember);
         RoomSnapshot? openedRoom = _roomRegistry.TryOpen(room);
         if (openedRoom is null)
         {
@@ -49,7 +50,8 @@ public sealed class RoomKeeper : IRoomKeeper
         ArgumentNullException.ThrowIfNull(player);
         ArgumentNullException.ThrowIfNull(code);
 
-        RoomSnapshot room = AdmitToOpenRoom(new RoomMember(player.AccountId, player.Nickname), code, now);
+        var member = new RoomMember(player.AccountId, player.Nickname);
+        RoomSnapshot room = AdmitToOpenRoom(member, code, now);
         _roomNotifier.NotifyRoomUpdated(room, player.AccountId);
         return room;
     }
@@ -105,23 +107,6 @@ public sealed class RoomKeeper : IRoomKeeper
         return _roomRepository.CloseOpenRooms(now);
     }
 
-    private RoomSnapshot AdmitToOpenRoom(RoomMember member, string code, DateTime now)
-    {
-        try
-        {
-            return _roomRegistry.Admit(code, member, now);
-        }
-        catch (RoomRejectedException ex) when (IsCodeOfStartedRoom(ex, code))
-        {
-            throw new RoomRejectedException(RoomRejection.MatchStarted);
-        }
-    }
-
-    private bool IsCodeOfStartedRoom(RoomRejectedException rejection, string code)
-    {
-        return rejection.Rejection == RoomRejection.RoomNotFound && _roomRepository.IsRoomInMatch(code);
-    }
-
     private string CreateFreeCode()
     {
         for (int attempt = 0; attempt < MaximumCodeAttempts; attempt++)
@@ -134,5 +119,23 @@ public sealed class RoomKeeper : IRoomKeeper
         }
 
         throw new InvalidOperationException("No free room code was found.");
+    }
+
+    private RoomSnapshot AdmitToOpenRoom(RoomMember member, string code, DateTime now)
+    {
+        try
+        {
+            return _roomRegistry.Admit(code, member, now);
+        }
+        catch (OpenRoomNotFoundException ex)
+        {
+            RoomRejection rejection = GetMissingRoomRejection(code);
+            throw new RoomRejectedException(rejection, ex);
+        }
+    }
+
+    private RoomRejection GetMissingRoomRejection(string code)
+    {
+        return _roomRepository.IsRoomInMatch(code) ? RoomRejection.MatchStarted : RoomRejection.RoomNotFound;
     }
 }
