@@ -65,13 +65,13 @@ public sealed class LanguagePreferenceStore : ILanguagePreferenceStore
         }
     }
 
-    private void LogReadFailure(Exception ex)
+    private void LogReadFailure(Exception cause)
     {
-        _logger.Warn($"The saved language could not be read. Path={_filePath}", ex);
+        _logger.Warn($"The saved language could not be read. Path={_filePath}", cause);
     }
 
-    private void LogSaveFailure(string cultureName, Exception ex)
+    private void LogSaveFailure(string cultureName, Exception cause)
     {
-        _logger.Warn($"The chosen language could not be saved. Path={_filePath}; Language={cultureName}", ex);
+        _logger.Warn($"The chosen language could not be saved. Path={_filePath}; Language={cultureName}", cause);
     }
 }
