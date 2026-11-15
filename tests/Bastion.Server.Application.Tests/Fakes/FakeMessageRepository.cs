@@ -42,9 +42,9 @@ public sealed class FakeMessageRepository : IMessageRepository
         return new Dictionary<int, int>(unreadCounts);
     }
 
-    public void MarkRead(MessageParticipants participants, DateTime readAt)
+    public void MarkRead(MessageRoute route, DateTime readAt)
     {
-        IEnumerable<Message> authorMessages = Messages.Where(message => IsFrom(message, participants));
+        IEnumerable<Message> authorMessages = Messages.Where(message => IsFrom(message, route));
         foreach (Message message in authorMessages)
         {
             message.MarkRead(readAt);
@@ -62,8 +62,8 @@ public sealed class FakeMessageRepository : IMessageRepository
         return messagesInOrder.Last();
     }
 
-    private static bool IsFrom(Message message, MessageParticipants participants)
+    private static bool IsFrom(Message message, MessageRoute route)
     {
-        return message.AuthorId == participants.AuthorId && message.RecipientId == participants.RecipientId;
+        return message.AuthorId == route.AuthorId && message.RecipientId == route.RecipientId;
     }
 }

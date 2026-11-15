@@ -41,7 +41,8 @@ public static class ChatWordFilter
     {
         if (char.IsLetterOrDigit(character))
         {
-            builder.Append(char.ToLowerInvariant(character));
+            char lowerCharacter = char.ToLowerInvariant(character);
+            builder.Append(lowerCharacter);
         }
         else if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
         {

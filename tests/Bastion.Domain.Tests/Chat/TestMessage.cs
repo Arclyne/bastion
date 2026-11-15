@@ -27,9 +27,9 @@ public sealed class TestMessage
     [Fact]
     public void CreatePrivate_SameAuthorAndRecipient_ThrowsArgumentException()
     {
-        var participants = new MessageParticipants(AuthorId, AuthorId);
+        var route = new MessageRoute(AuthorId, AuthorId);
 
-        Action createSelfMessage = () => Message.CreatePrivate(participants, PrivateText, _sentAt);
+        Action createSelfMessage = () => Message.CreatePrivate(route, PrivateText, _sentAt);
 
         Assert.Throws<ArgumentException>(createSelfMessage);
     }
@@ -52,6 +52,17 @@ public sealed class TestMessage
         int partnerId = message.GetPartnerId(RecipientId);
 
         Assert.Equal(AuthorId, partnerId);
+    }
+
+    [Fact]
+    public void GetPartnerId_MatchMessageAuthor_ThrowsInvalidOperationException()
+    {
+        var submission = new MatchChatSubmission(MatchId, MatchChatText);
+        var message = Message.CreateForMatch(submission, AuthorId, _sentAt);
+
+        Action getPartnerId = () => message.GetPartnerId(AuthorId);
+
+        Assert.Throws<InvalidOperationException>(getPartnerId);
     }
 
     [Fact]
@@ -89,7 +100,7 @@ public sealed class TestMessage
 
     private static Message CreateMessage()
     {
-        var participants = new MessageParticipants(AuthorId, RecipientId);
-        return Message.CreatePrivate(participants, PrivateText, _sentAt);
+        var route = new MessageRoute(AuthorId, RecipientId);
+        return Message.CreatePrivate(route, PrivateText, _sentAt);
     }
 }

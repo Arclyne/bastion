@@ -66,11 +66,11 @@ public sealed class MessageRepository : IMessageRepository
         return new Dictionary<int, int>(unreadCounts);
     }
 
-    public void MarkRead(MessageParticipants participants, DateTime readAt)
+    public void MarkRead(MessageRoute route, DateTime readAt)
     {
-        ArgumentNullException.ThrowIfNull(participants);
+        ArgumentNullException.ThrowIfNull(route);
 
-        IQueryable<Message> unreadMessages = SelectMessagesFrom(participants.AuthorId, participants.RecipientId)
+        IQueryable<Message> unreadMessages = SelectMessagesFrom(route.AuthorId, route.RecipientId)
             .Where(message => message.ReadAt == null);
         unreadMessages.ExecuteUpdate(setters => setters.SetProperty(_readAt, readAt));
     }

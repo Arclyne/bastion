@@ -27,19 +27,19 @@ public class Message
 
     public DateTime? ReadAt { get; private set; }
 
-    public static Message CreatePrivate(MessageParticipants participants, string text, DateTime sentAt)
+    public static Message CreatePrivate(MessageRoute route, string text, DateTime sentAt)
     {
-        ArgumentNullException.ThrowIfNull(participants);
+        ArgumentNullException.ThrowIfNull(route);
         ArgumentNullException.ThrowIfNull(text);
-        if (participants.AuthorId == participants.RecipientId)
+        if (route.AuthorId == route.RecipientId)
         {
-            throw new ArgumentException(SameAccountMessage, nameof(participants));
+            throw new ArgumentException(SameAccountMessage, nameof(route));
         }
 
         return new Message
         {
-            AuthorId = participants.AuthorId,
-            RecipientId = participants.RecipientId,
+            AuthorId = route.AuthorId,
+            RecipientId = route.RecipientId,
             Channel = MessageChannel.Friends,
             Text = text,
             SentAt = sentAt,
@@ -67,12 +67,17 @@ public class Message
 
     public int GetPartnerId(int accountId)
     {
-        if (IsSentBy(accountId))
+        if (!IsSentBy(accountId))
         {
-            return RecipientId.GetValueOrDefault();
+            return AuthorId;
         }
 
-        return AuthorId;
+        if (RecipientId is not int recipientId)
+        {
+            throw new InvalidOperationException("Only a private message has a partner.");
+        }
+
+        return recipientId;
     }
 
     public void MarkRead(DateTime readAt)

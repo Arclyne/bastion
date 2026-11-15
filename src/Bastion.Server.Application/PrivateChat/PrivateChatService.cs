@@ -115,8 +115,8 @@ public sealed class PrivateChatService : IPrivateChatService
             throw new ChatMessageRejectedException(ChatRejection.TooFast);
         }
 
-        var participants = new MessageParticipants(author.AccountId, partner.AccountId);
-        var message = Message.CreatePrivate(participants, screenedText, now);
+        var route = new MessageRoute(author.AccountId, partner.AccountId);
+        var message = Message.CreatePrivate(route, screenedText, now);
         _unitOfWork.Messages.Add(message);
         _unitOfWork.SaveChanges();
         var delivery = new PrivateMessageDelivery(author, message);
@@ -154,7 +154,7 @@ public sealed class PrivateChatService : IPrivateChatService
 
     private void MarkPartnerMessagesRead(int partnerAccountId, int readerAccountId, DateTime now)
     {
-        var participants = new MessageParticipants(partnerAccountId, readerAccountId);
-        _unitOfWork.Messages.MarkRead(participants, now);
+        var route = new MessageRoute(partnerAccountId, readerAccountId);
+        _unitOfWork.Messages.MarkRead(route, now);
     }
 }

@@ -422,8 +422,8 @@ public sealed class TestPrivateChatService
 
     private Message AddMessage(int authorId, int recipientId, string text, DateTime sentAt)
     {
-        var participants = new MessageParticipants(authorId, recipientId);
-        var message = Message.CreatePrivate(participants, text, sentAt);
+        var route = new MessageRoute(authorId, recipientId);
+        var message = Message.CreatePrivate(route, text, sentAt);
         _unitOfWork.MessageRepository.Add(message);
         return message;
     }
