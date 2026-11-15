@@ -3,6 +3,7 @@ using Bastion.Client.Screens;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 
 namespace Bastion.Client.Controls;
 
@@ -18,8 +19,10 @@ public sealed class CountBadge : Panel
         WidthUnits = DimensionUnitType.Absolute;
         Height = Size;
         HeightUnits = DimensionUnitType.Absolute;
-        ShapeFactory.InsertBehindContent(Visual, ShapeFactory.CreateCircle(Palette.PlayerOne, Size));
-        AddChild(CreateCount(countProperty));
+        RectangleRuntime circle = ShapeFactory.CreateCircle(Palette.PlayerOne, Size);
+        Label count = CreateCount(countProperty);
+        ShapeFactory.InsertBehindContent(Visual, circle);
+        AddChild(count);
     }
 
     private static Label CreateCount(string countProperty)
