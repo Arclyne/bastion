@@ -39,7 +39,8 @@ public sealed class SessionVerifier : ISessionVerifier
 
     private Account FindSessionAccount(string sessionToken, DateTime now)
     {
-        Session? session = _unitOfWork.Sessions.FindByTokenHash(_tokenGenerator.Hash(sessionToken));
+        byte[] tokenHash = _tokenGenerator.Hash(sessionToken);
+        Session? session = _unitOfWork.Sessions.FindByTokenHash(tokenHash);
         if (session is null || !session.IsActiveAt(now))
         {
             throw new InvalidSessionException();
