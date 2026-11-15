@@ -102,11 +102,6 @@ public sealed class FriendshipService : IFriendshipService
         TranslateFriendshipFailures(nameof(RemoveFriend), removeFriend);
     }
 
-    private static string RequireFriendCode(string? friendCode, FriendshipRejection rejectionWhenMissing)
-    {
-        return friendCode ?? throw FriendshipTranslator.ToFault(new FriendshipRejectedException(rejectionWhenMissing));
-    }
-
     private FriendList ListFriendsInRequestScope(string token)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
@@ -121,6 +116,17 @@ public sealed class FriendshipService : IFriendshipService
         IFriendRequestService friendRequests = scope.ServiceProvider.GetRequiredService<IFriendRequestService>();
         IReadOnlyList<PlayerSearchResult> results = friendRequests.SearchPlayers(token, searchText, GetUtcNow());
         return FriendshipTranslator.ToSearchEntries(results);
+    }
+
+    private static string RequireFriendCode(string? friendCode, FriendshipRejection rejectionWhenMissing)
+    {
+        if (friendCode is null)
+        {
+            var missingFriendCode = new FriendshipRejectedException(rejectionWhenMissing);
+            throw FriendshipTranslator.ToFault(missingFriendCode);
+        }
+
+        return friendCode;
     }
 
     private FriendRequestResult SendFriendRequestInRequestScope(string token, string recipientCode)
