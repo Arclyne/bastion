@@ -18,6 +18,8 @@ public sealed class FakeMatchClient : IMatchClient
 
     public ChosenWall? LastWall { get; private set; }
 
+    public int PlacedWallCount { get; private set; }
+
     public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
 
     public event EventHandler<PawnMovedEventArgs>? PawnMoved;
@@ -60,6 +62,7 @@ public sealed class FakeMatchClient : IMatchClient
         }
 
         LastWall = wall;
+        PlacedWallCount++;
     }
 
     public bool HasMatchAbandonedSubscribers()

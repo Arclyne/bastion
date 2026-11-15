@@ -34,8 +34,10 @@ public sealed class TestMatchViewModel : IDisposable
         PawnSymbol.Red,
         PawnSymbol.Green,
     };
+    private static readonly DateTimeOffset _startedAt = new DateTimeOffset(2026, 11, 15, 18, 0, 0, TimeSpan.Zero);
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
+    private readonly ManualTimeProvider _timeProvider = new ManualTimeProvider(_startedAt);
     private readonly List<IDisposable> _companionViewModels = new List<IDisposable>();
 
     public void Dispose()
@@ -314,7 +316,7 @@ public sealed class TestMatchViewModel : IDisposable
 
     private MatchPlayViewModel CreatePlayViewModel(JoinedMatch joinedMatch)
     {
-        var viewModel = new MatchPlayViewModel(joinedMatch, _matchClient);
+        var viewModel = new MatchPlayViewModel(joinedMatch, _matchClient, _timeProvider);
         _companionViewModels.Add(viewModel);
         return viewModel;
     }

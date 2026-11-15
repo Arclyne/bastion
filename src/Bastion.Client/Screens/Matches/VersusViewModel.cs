@@ -38,7 +38,7 @@ public sealed class VersusViewModel : ViewModel, IDisposable
         ModeText = MatchScreenText.FormatMode(format.BoardSize, format.WallsPerPlayer);
         _secondsLeft = CountdownSeconds;
         CountdownText = FormatCountdown(_secondsLeft);
-        _countdownTimer = timeProvider.CreateTimer(HandleCountdownTick, null, _countdownTick, _countdownTick);
+        _countdownTimer = timeProvider.CreateTimer(HandleCountdownTick, state: null, _countdownTick, _countdownTick);
     }
 
     public VersusPlayer Own { get; }
@@ -72,6 +72,11 @@ public sealed class VersusViewModel : ViewModel, IDisposable
         return string.Format(CultureInfo.CurrentCulture, Strings.VersusStartsInFormat, secondsLeft);
     }
 
+    private void HandleCountdownTick(object? state)
+    {
+        UiThread.Run(_uiContext, AdvanceCountdown);
+    }
+
     private void AdvanceCountdown()
     {
         if (_countdownTimer is null)
@@ -92,16 +97,11 @@ public sealed class VersusViewModel : ViewModel, IDisposable
 
     private void StopCountdown()
     {
-        Interlocked.Exchange(ref _countdownTimer, null)?.Dispose();
+        Interlocked.Exchange(ref _countdownTimer, value: null)?.Dispose();
     }
 
     private void OnCountdownFinished()
     {
         CountdownFinished?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void HandleCountdownTick(object? state)
-    {
-        UiThread.Run(_uiContext, AdvanceCountdown);
     }
 }

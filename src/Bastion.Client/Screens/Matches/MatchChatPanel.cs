@@ -47,10 +47,13 @@ public sealed class MatchChatPanel : Panel
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = ContentSpacing,
         };
-        content.AddChild(ViewFactory.CreateLabel(nameof(Strings.MatchChatTitle), TextStyleCatalog.SectionLabel));
+        Label title = ViewFactory.CreateLabel(nameof(Strings.MatchChatTitle), TextStyleCatalog.SectionLabel);
+        Label status = CreateStatus();
+        StackPanel inputRow = ConversationParts.CreateInputRow(HandleSendClick, ContentWidth);
+        content.AddChild(title);
         content.AddChild(_messageScroller);
-        content.AddChild(CreateStatus());
-        content.AddChild(ConversationParts.CreateInputRow(HandleSendClick, ContentWidth));
+        content.AddChild(status);
+        content.AddChild(inputRow);
         AddChild(content);
         CardSkin.Apply(Visual);
 
@@ -76,11 +79,6 @@ public sealed class MatchChatPanel : Panel
         return status;
     }
 
-    private void HandleMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        ConversationParts.ScrollToLatest(_messageScroller);
-    }
-
     private async void HandleSendClick(object? sender, EventArgs e)
     {
         try
@@ -91,5 +89,10 @@ public sealed class MatchChatPanel : Panel
         {
             _logger.Warn("The match chat message could not be sent because the connection is closed.", ex);
         }
+    }
+
+    private void HandleMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        ConversationParts.ScrollToLatest(_messageScroller);
     }
 }

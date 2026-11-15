@@ -37,12 +37,15 @@ public sealed class VersusView : ScreenView
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = SectionSpacing,
         };
-        content.AddChild(ViewFactory.CreateUntranslatedLabel(viewModel.ModeText, TextStyleCatalog.SectionLabel));
-        content.AddChild(CreatePlayersRow(viewModel));
-        content.AddChild(ViewFactory.CreateBoundUntranslatedLabel(
+        Label mode = ViewFactory.CreateUntranslatedLabel(viewModel.ModeText, TextStyleCatalog.SectionLabel);
+        StackPanel playersRow = CreatePlayersRow(viewModel);
+        Label countdown = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(VersusViewModel.CountdownText),
             TextStyleCatalog.DialogTitle,
-            contentWidth));
+            contentWidth);
+        content.AddChild(mode);
+        content.AddChild(playersRow);
+        content.AddChild(countdown);
 
         var card = new Panel
         {
@@ -68,11 +71,13 @@ public sealed class VersusView : ScreenView
         {
             Orientation = Orientation.Horizontal,
         };
-        row.AddChild(CreatePlayerCard(viewModel.Own));
+        StackPanel ownCard = CreatePlayerCard(viewModel.Own);
+        row.AddChild(ownCard);
         row.AddChild(versus);
         foreach (VersusPlayer rival in viewModel.Rivals)
         {
-            row.AddChild(CreatePlayerCard(rival));
+            StackPanel rivalCard = CreatePlayerCard(rival);
+            row.AddChild(rivalCard);
         }
 
         return row;
@@ -98,9 +103,11 @@ public sealed class VersusView : ScreenView
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = PlayerSpacing,
         };
+        Label nickname = ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyleCatalog.IdentityName);
+        Label elo = ViewFactory.CreateUntranslatedLabel(player.EloText, TextStyleCatalog.IdentityDetail);
         card.AddChild(avatar);
-        card.AddChild(ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyleCatalog.IdentityName));
-        card.AddChild(ViewFactory.CreateUntranslatedLabel(player.EloText, TextStyleCatalog.IdentityDetail));
+        card.AddChild(nickname);
+        card.AddChild(elo);
         return card;
     }
 }

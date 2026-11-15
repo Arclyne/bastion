@@ -124,7 +124,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         var matchChatViewModel = new MatchChatViewModel(joinedMatch, _connection.Chat, _timeProvider);
         var matchAbandonmentViewModel = new MatchAbandonmentViewModel(joinedMatch, _connection.Matches);
         matchAbandonmentViewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
-        var matchPlayViewModel = new MatchPlayViewModel(joinedMatch, _connection.Matches);
+        var matchPlayViewModel = new MatchPlayViewModel(joinedMatch, _connection.Matches, _timeProvider);
         var versusViewModel = new VersusViewModel(joinedMatch, _timeProvider);
         versusViewModel.CountdownFinished += HandleCountdownFinished;
         var versusView = new VersusView(versusViewModel);
