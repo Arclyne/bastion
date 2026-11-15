@@ -15,7 +15,7 @@ public static class BoardSceneLayout
     private const int FirstRowNumber = 1;
     private const int FirstIndex = 0;
     private const float BoardHalves = 2f;
-    private const float SurfaceHeight = 0f;
+    public const float SurfaceHeight = 0f;
     private const float BoardCenter = 0f;
     private const float CameraHeight = 16f;
     private const float CameraDistance = 12.5f;
