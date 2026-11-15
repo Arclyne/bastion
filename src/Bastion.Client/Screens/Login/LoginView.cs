@@ -44,9 +44,12 @@ public sealed class LoginView : ScreenView
         _viewModel = viewModel;
         _languages = languages;
         BindingContext = viewModel;
-        AddChild(CreateCard());
-        AddChild(CreateExitButton());
-        AddChild(ViewFactory.CreateVersionLabel());
+        Panel card = CreateCard();
+        Button exitButton = CreateExitButton();
+        Label version = ViewFactory.CreateVersionLabel();
+        AddChild(card);
+        AddChild(exitButton);
+        AddChild(version);
         var failureDialog = new ServerFailureDialogView(viewModel);
         AddDialog(failureDialog, viewModel, nameof(LoginViewModel.IsDialogOpen));
     }
@@ -62,7 +65,8 @@ public sealed class LoginView : ScreenView
         };
         card.Anchor(Gum.Wireframe.Anchor.Left);
         card.X = CardX;
-        card.AddChild(CreateCardContent());
+        StackPanel content = CreateCardContent();
+        card.AddChild(content);
         CardSkin.Apply(card.Visual);
         return card;
     }
@@ -77,14 +81,22 @@ public sealed class LoginView : ScreenView
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = SectionSpacing,
         };
-        content.AddChild(CreateHeader());
-        content.AddChild(CreateIdentifierField());
-        content.AddChild(CreatePasswordField());
-        content.AddChild(CreateNotice());
-        content.AddChild(CreateLogInButton());
-        content.AddChild(ViewFactory.CreateLabel(nameof(Strings.LoginNoAccount), TextStyleCatalog.Divider));
-        content.AddChild(CreateCreateAccountButton());
-        content.AddChild(CreateTwoFactorHint());
+        Panel header = CreateHeader();
+        StackPanel identifierField = CreateIdentifierField();
+        StackPanel passwordField = CreatePasswordField();
+        NoticeBox notice = CreateNotice();
+        Button logInButton = CreateLogInButton();
+        Label noAccountLabel = ViewFactory.CreateLabel(nameof(Strings.LoginNoAccount), TextStyleCatalog.Divider);
+        Button createAccountButton = CreateCreateAccountButton();
+        Label twoFactorHint = CreateTwoFactorHint();
+        content.AddChild(header);
+        content.AddChild(identifierField);
+        content.AddChild(passwordField);
+        content.AddChild(notice);
+        content.AddChild(logInButton);
+        content.AddChild(noAccountLabel);
+        content.AddChild(createAccountButton);
+        content.AddChild(twoFactorHint);
         return content;
     }
 
@@ -94,8 +106,10 @@ public sealed class LoginView : ScreenView
         {
             Spacing = HeaderSpacing,
         };
-        brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.AppName), TextStyleCatalog.Title));
-        brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.LoginTagline), TextStyleCatalog.Tagline));
+        Label appName = ViewFactory.CreateLabel(nameof(Strings.AppName), TextStyleCatalog.Title);
+        Label tagline = ViewFactory.CreateLabel(nameof(Strings.LoginTagline), TextStyleCatalog.Tagline);
+        brand.AddChild(appName);
+        brand.AddChild(tagline);
 
         var header = new Panel
         {
@@ -103,8 +117,9 @@ public sealed class LoginView : ScreenView
             WidthUnits = DimensionUnitType.Absolute,
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
+        LanguagePicker languagePicker = CreateLanguagePicker();
         header.AddChild(brand);
-        header.AddChild(CreateLanguagePicker());
+        header.AddChild(languagePicker);
         return header;
     }
 
@@ -117,6 +132,11 @@ public sealed class LoginView : ScreenView
         picker.Anchor(Gum.Wireframe.Anchor.TopRight);
         picker.Y = LanguagePickerMarginY;
         return picker;
+    }
+
+    private static void BindEnabledToIdle(FrameworkElement control)
+    {
+        control.SetBinding(nameof(IsEnabled), nameof(LoginViewModel.IsIdle));
     }
 
     private static StackPanel CreateIdentifierField()
@@ -153,7 +173,8 @@ public sealed class LoginView : ScreenView
         {
             Spacing = FieldSpacing,
         };
-        group.AddChild(ViewFactory.CreateLabel(captionKey, TextStyleCatalog.FieldLabel));
+        Label caption = ViewFactory.CreateLabel(captionKey, TextStyleCatalog.FieldLabel);
+        group.AddChild(caption);
         group.AddChild(input);
         foreach (Label warning in warnings)
         {
@@ -237,6 +258,18 @@ public sealed class LoginView : ScreenView
         return button;
     }
 
+    private async void HandleLogInClick(object? sender, EventArgs e)
+    {
+        try
+        {
+            await _viewModel.LogIn();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The login could not be completed because the connection is closed.", ex);
+        }
+    }
+
     private static Button CreateCreateAccountButton()
     {
         Button button = ViewFactory.CreateButton(
@@ -264,22 +297,5 @@ public sealed class LoginView : ScreenView
         button.X = -ScreenMetrics.MarginX;
         button.Y = ScreenMetrics.MarginY;
         return button;
-    }
-
-    private static void BindEnabledToIdle(FrameworkElement control)
-    {
-        control.SetBinding(nameof(IsEnabled), nameof(LoginViewModel.IsIdle));
-    }
-
-    private async void HandleLogInClick(object? sender, EventArgs e)
-    {
-        try
-        {
-            await _viewModel.LogIn();
-        }
-        catch (ObjectDisposedException ex)
-        {
-            _logger.Warn("The login could not be completed because the connection is closed.", ex);
-        }
     }
 }

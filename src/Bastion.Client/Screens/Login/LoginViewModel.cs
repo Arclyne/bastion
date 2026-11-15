@@ -75,10 +75,12 @@ public sealed class LoginViewModel : ViewModel
         get => Get<string>();
         set
         {
-            if (Set(value))
+            if (!Set(value))
             {
-                IsPasswordMissing = false;
+                return;
             }
+
+            IsPasswordMissing = false;
         }
     }
 

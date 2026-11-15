@@ -22,15 +22,18 @@ public sealed class ServerFailureDialogView : DialogCard
 
         _viewModel = viewModel;
         Anchor(Gum.Wireframe.Anchor.Center);
-        Content.AddChild(ViewFactory.CreateBoundLabel(
+        Label title = ViewFactory.CreateBoundLabel(
             nameof(LoginViewModel.DialogTitleKey),
             TextStyleCatalog.DialogTitle,
-            DialogMetrics.ContentWidth));
-        Content.AddChild(ViewFactory.CreateBoundLabel(
+            DialogMetrics.ContentWidth);
+        Label message = ViewFactory.CreateBoundLabel(
             nameof(LoginViewModel.DialogMessageKey),
             TextStyleCatalog.DialogMessage,
-            DialogMetrics.ContentWidth));
-        Content.AddChild(CreateButtons());
+            DialogMetrics.ContentWidth);
+        StackPanel buttons = CreateButtons();
+        Content.AddChild(title);
+        Content.AddChild(message);
+        Content.AddChild(buttons);
     }
 
     private StackPanel CreateButtons()
