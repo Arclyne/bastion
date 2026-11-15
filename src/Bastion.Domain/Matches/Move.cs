@@ -5,23 +5,25 @@ namespace Bastion.Domain.Matches;
 public class Move
 {
     internal Move(PawnMove pawnMove, string fromSquare, MoveTiming timing)
+        : this(pawnMove.MoveNumber, pawnMove.AccountId, timing)
     {
-        MoveNumber = pawnMove.MoveNumber;
-        AccountId = pawnMove.AccountId;
         MoveType = MoveType.PawnMove;
         FromSquare = fromSquare;
         ToSquare = BoardLayout.ToSquare(pawnMove.Destination);
-        TimeSpentMilliseconds = timing.TimeSpentMilliseconds;
-        PlayedAt = timing.PlayedAt;
     }
 
     internal Move(WallPlacement placement, MoveTiming timing)
+        : this(placement.MoveNumber, placement.AccountId, timing)
     {
-        MoveNumber = placement.MoveNumber;
-        AccountId = placement.AccountId;
         MoveType = MoveType.Wall;
         Groove = BoardLayout.ToSquare(placement.Wall.Groove);
         Orientation = placement.Wall.Orientation;
+    }
+
+    private Move(short moveNumber, int accountId, MoveTiming timing)
+    {
+        MoveNumber = moveNumber;
+        AccountId = accountId;
         TimeSpentMilliseconds = timing.TimeSpentMilliseconds;
         PlayedAt = timing.PlayedAt;
     }

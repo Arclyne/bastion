@@ -77,7 +77,16 @@ public sealed record Board
         return HasWallAlongColumn(leftColumnIndex, from.RowIndex);
     }
 
-    public Board WithWall(Wall wall)
+    public bool IsStepOpen(BoardCoordinates from, BoardStep step)
+    {
+        ArgumentNullException.ThrowIfNull(from);
+        ArgumentNullException.ThrowIfNull(step);
+
+        BoardCoordinates destination = step.Advance(from);
+        return IsInside(destination) && !IsBlocked(from, step);
+    }
+
+    public Board CopyWithWall(Wall wall)
     {
         ArgumentNullException.ThrowIfNull(wall);
 

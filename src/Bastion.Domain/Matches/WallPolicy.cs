@@ -5,9 +5,6 @@ namespace Bastion.Domain.Matches;
 
 public static class WallPolicy
 {
-    private const int FirstGrooveIndex = 0;
-    private const int GrooveCountOffset = 1;
-
     public static WallRejection? FindRejection(Board board, Wall wall)
     {
         ArgumentNullException.ThrowIfNull(board);
@@ -23,7 +20,7 @@ public static class WallPolicy
             return new WallRejection(WallRejectionReason.GrooveTaken, BlockedTurnOrder: null);
         }
 
-        Board boardWithWall = board.WithWall(wall);
+        Board boardWithWall = board.CopyWithWall(wall);
         WallRejection? blockingRejection = FindBlockedPlayer(boardWithWall);
         return blockingRejection;
     }
@@ -32,10 +29,8 @@ public static class WallPolicy
     {
         ArgumentNullException.ThrowIfNull(groove);
 
-        int grooveCount = boardSize - GrooveCountOffset;
-        bool isColumnInside = groove.ColumnIndex >= FirstGrooveIndex && groove.ColumnIndex < grooveCount;
-        bool isRowInside = groove.RowIndex >= FirstGrooveIndex && groove.RowIndex < grooveCount;
-        return isColumnInside && isRowInside;
+        int lastIndex = BoardLayout.GetLastIndex(boardSize);
+        return BoardLayout.AreIndexesBelow(groove, lastIndex);
     }
 
     private static bool IsGrooveTaken(Board board, Wall wall)
@@ -104,9 +99,9 @@ public static class WallPolicy
         var openNeighbors = new List<BoardCoordinates>();
         foreach (BoardStep step in BoardStep.OrthogonalSteps)
         {
-            BoardCoordinates neighbor = step.Advance(square);
-            if (board.IsInside(neighbor) && !board.IsBlocked(square, step))
+            if (board.IsStepOpen(square, step))
             {
+                BoardCoordinates neighbor = step.Advance(square);
                 openNeighbors.Add(neighbor);
             }
         }

@@ -242,8 +242,13 @@ public class Match
 
     private Participation? FindActiveParticipation(int accountId)
     {
+        if (Status != MatchStatus.InProgress)
+        {
+            return null;
+        }
+
         Participation? participation = FindParticipation(accountId);
-        if (Status != MatchStatus.InProgress || participation is null || participation.Result.HasValue)
+        if (participation is null || participation.Result is not null)
         {
             return null;
         }
@@ -293,28 +298,29 @@ public class Match
             return;
         }
 
-        activeParticipations.Single().Win(FirstPlacement);
+        Participation lastStanding = activeParticipations.Single();
+        lastStanding.Win(FirstPlacement);
         Finish(MatchEndReason.Abandonment, abandonedAt);
     }
 
     private List<Participation> ListActiveParticipations()
     {
         IEnumerable<Participation> activeParticipations = _participations
-            .Where(participation => !participation.Result.HasValue)
+            .Where(participation => participation.Result is null)
             .OrderBy(participation => participation.TurnOrder);
         return new List<Participation>(activeParticipations);
     }
 
-    private void PassTurnFrom(byte leavingTurnOrder)
+    private void PassTurnFrom(byte turnOrder)
     {
-        if (CurrentTurnOrder != leavingTurnOrder)
+        if (CurrentTurnOrder != turnOrder)
         {
             return;
         }
 
         List<Participation> activeParticipations = ListActiveParticipations();
         Participation nextPlayer =
-            activeParticipations.FirstOrDefault(participation => participation.TurnOrder > leavingTurnOrder)
+            activeParticipations.FirstOrDefault(participation => participation.TurnOrder > turnOrder)
             ?? activeParticipations.First();
         CurrentTurnOrder = nextPlayer.TurnOrder;
     }

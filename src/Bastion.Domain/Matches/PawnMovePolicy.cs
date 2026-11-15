@@ -22,20 +22,20 @@ public static class PawnMovePolicy
 
     private static List<BoardCoordinates> ListSquaresInDirection(Board board, BoardCoordinates pawn, BoardStep step)
     {
-        BoardCoordinates neighbor = step.Advance(pawn);
-        if (!board.IsInside(neighbor) || board.IsBlocked(pawn, step))
+        if (!board.IsStepOpen(pawn, step))
         {
             return new List<BoardCoordinates>();
         }
 
+        BoardCoordinates neighbor = step.Advance(pawn);
         if (!board.IsOccupied(neighbor))
         {
             return new List<BoardCoordinates> { neighbor };
         }
 
-        BoardCoordinates straightLanding = step.Advance(neighbor);
-        if (CanStepTo(board, neighbor, step))
+        if (CanStepFrom(board, neighbor, step))
         {
+            BoardCoordinates straightLanding = step.Advance(neighbor);
             return new List<BoardCoordinates> { straightLanding };
         }
 
@@ -54,7 +54,7 @@ public static class PawnMovePolicy
         var diagonalLandings = new List<BoardCoordinates>();
         foreach (BoardStep side in sides)
         {
-            if (CanStepTo(board, jumpedPawn, side))
+            if (CanStepFrom(board, jumpedPawn, side))
             {
                 BoardCoordinates landing = side.Advance(jumpedPawn);
                 diagonalLandings.Add(landing);
@@ -64,9 +64,9 @@ public static class PawnMovePolicy
         return diagonalLandings;
     }
 
-    private static bool CanStepTo(Board board, BoardCoordinates from, BoardStep step)
+    private static bool CanStepFrom(Board board, BoardCoordinates from, BoardStep step)
     {
         BoardCoordinates landing = step.Advance(from);
-        return board.IsInside(landing) && !board.IsBlocked(from, step) && !board.IsOccupied(landing);
+        return board.IsStepOpen(from, step) && !board.IsOccupied(landing);
     }
 }

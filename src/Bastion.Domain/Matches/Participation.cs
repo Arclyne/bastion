@@ -71,7 +71,7 @@ public class Participation
 
     internal void Finish(ParticipationResult result)
     {
-        if (Result.HasValue)
+        if (Result is not null)
         {
             throw new InvalidOperationException("The participation has already ended.");
         }
