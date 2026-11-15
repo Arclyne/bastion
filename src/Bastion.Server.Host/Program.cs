@@ -89,11 +89,11 @@ public static class Program
     private static int GetNetTcpPort(IConfiguration configuration)
     {
         int netTcpPort = configuration.GetValue<int>(NetTcpPortKey);
-        if (!ServiceEndpoints.IsRegisteredPort(netTcpPort))
+        if (!EndpointCatalog.IsRegisteredPort(netTcpPort))
         {
             throw new InvalidOperationException(
                 $"The net.tcp port is missing or is not a registered port. Key={NetTcpPortKey}; Port={netTcpPort}; "
-                + $"FirstPort={ServiceEndpoints.FirstRegisteredPort}; LastPort={ServiceEndpoints.LastRegisteredPort}");
+                + $"FirstPort={EndpointCatalog.FirstRegisteredPort}; LastPort={EndpointCatalog.LastRegisteredPort}");
         }
 
         return netTcpPort;

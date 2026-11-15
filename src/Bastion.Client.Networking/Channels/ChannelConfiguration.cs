@@ -4,20 +4,24 @@ using System.ServiceModel.Security;
 
 namespace Bastion.Client.Networking.Channels;
 
-public static class ChannelSettings
+public static class ChannelConfiguration
 {
     private const string ServerCertificateName = "bastion-server";
     private const int OpenTimeoutSeconds = 10;
     private const int SendTimeoutSeconds = 20;
     private const int ReceiveTimeoutMinutes = 30;
 
+    private static readonly TimeSpan _openTimeout = TimeSpan.FromSeconds(OpenTimeoutSeconds);
+    private static readonly TimeSpan _sendTimeout = TimeSpan.FromSeconds(SendTimeoutSeconds);
+    private static readonly TimeSpan _receiveTimeout = TimeSpan.FromMinutes(ReceiveTimeoutMinutes);
+
     public static NetTcpBinding CreateBinding()
     {
         var binding = new NetTcpBinding(SecurityMode.Transport)
         {
-            OpenTimeout = TimeSpan.FromSeconds(OpenTimeoutSeconds),
-            SendTimeout = TimeSpan.FromSeconds(SendTimeoutSeconds),
-            ReceiveTimeout = TimeSpan.FromMinutes(ReceiveTimeoutMinutes),
+            OpenTimeout = _openTimeout,
+            SendTimeout = _sendTimeout,
+            ReceiveTimeout = _receiveTimeout,
         };
         binding.Security.Transport.ClientCredentialType = TcpClientCredentialType.None;
         return binding;

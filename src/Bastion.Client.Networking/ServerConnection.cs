@@ -35,13 +35,13 @@ public sealed class ServerConnection : IDisposable
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
 
-        _accountChannel = new ServiceChannel<IAccountService>(ServiceEndpoints.AccountsPath);
-        _chatChannel = new ServiceChannel<IChatService>(ServiceEndpoints.ChatPath);
-        _matchmakingChannel = new ServiceChannel<IMatchmakingService>(ServiceEndpoints.MatchmakingPath);
-        _matchChannel = new ServiceChannel<IMatchService>(ServiceEndpoints.MatchesPath);
-        _friendshipChannel = new ServiceChannel<IFriendshipService>(ServiceEndpoints.FriendsPath);
-        _conversationChannel = new ServiceChannel<IConversationService>(ServiceEndpoints.ConversationsPath);
-        _roomChannel = new ServiceChannel<IRoomService>(ServiceEndpoints.RoomsPath);
+        _accountChannel = new ServiceChannel<IAccountService>(EndpointCatalog.AccountsPath);
+        _chatChannel = new ServiceChannel<IChatService>(EndpointCatalog.ChatPath);
+        _matchmakingChannel = new ServiceChannel<IMatchmakingService>(EndpointCatalog.MatchmakingPath);
+        _matchChannel = new ServiceChannel<IMatchService>(EndpointCatalog.MatchesPath);
+        _friendshipChannel = new ServiceChannel<IFriendshipService>(EndpointCatalog.FriendsPath);
+        _conversationChannel = new ServiceChannel<IConversationService>(EndpointCatalog.ConversationsPath);
+        _roomChannel = new ServiceChannel<IRoomService>(EndpointCatalog.RoomsPath);
         var notificationCallback = new NotificationCallback();
         _sessionChannelFactory = new SessionChannelFactory(notificationCallback);
         _notifications = new NotificationClient(notificationCallback, _sessionChannelFactory, timeProvider);

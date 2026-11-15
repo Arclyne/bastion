@@ -16,7 +16,7 @@ public static class ServerAddress
 
         string host = GetHost();
         int port = GetPort();
-        return ServiceEndpoints.CreateAddress(host, port, path);
+        return EndpointCatalog.CreateAddress(host, port, path);
     }
 
     public static string GetCertificateThumbprint()
@@ -30,7 +30,7 @@ public static class ServerAddress
         string? host = Environment.GetEnvironmentVariable(HostVariable);
         if (string.IsNullOrWhiteSpace(host))
         {
-            return ServiceEndpoints.DefaultHost;
+            return EndpointCatalog.DefaultHost;
         }
 
         return host;
@@ -40,9 +40,9 @@ public static class ServerAddress
     {
         string? portText = Environment.GetEnvironmentVariable(PortVariable);
         bool isNumber = int.TryParse(portText, NumberStyles.None, CultureInfo.InvariantCulture, out int port);
-        if (!isNumber || !ServiceEndpoints.IsRegisteredPort(port))
+        if (!isNumber || !EndpointCatalog.IsRegisteredPort(port))
         {
-            return ServiceEndpoints.DefaultPort;
+            return EndpointCatalog.DefaultPort;
         }
 
         return port;
