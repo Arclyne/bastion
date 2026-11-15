@@ -56,8 +56,8 @@ public sealed class MainMenuViewModel : ViewModel
         }
     }
 
-    private static void ReportConnectFailure(Exception ex)
+    private static void ReportConnectFailure(Exception cause)
     {
-        _logger.Error("The notification channel could not be connected.", ex);
+        _logger.Error("The notification channel could not be connected.", cause);
     }
 }

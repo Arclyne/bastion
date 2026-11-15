@@ -18,7 +18,6 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
     private const int ClockTickSeconds = 1;
     private const string ElapsedFormat = "{0:00}:{1:00}";
     private const string DetailSeparator = " · ";
-    private const int MinimumSecondsLeft = 0;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchSearchViewModel));
     private static readonly TimeSpan _clockTick = TimeSpan.FromSeconds(ClockTickSeconds);
@@ -180,6 +179,104 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         _matchmakingClient.Disconnected -= HandleDisconnected;
     }
 
+    private void HandleMatchFound(object? sender, MatchFoundEventArgs e)
+    {
+        UiThread.Run(_uiContext, () => EndSearchWithMatch(e));
+    }
+
+    private void EndSearchWithMatch(MatchFoundEventArgs foundMatch)
+    {
+        if (Stage == MatchSearchStage.MatchFound)
+        {
+            return;
+        }
+
+        StopClock();
+        IsPresenceDialogOpen = false;
+        Stage = MatchSearchStage.MatchFound;
+        OnMatchFound(foundMatch);
+    }
+
+    private void StopClock()
+    {
+        Interlocked.Exchange(ref _clockTimer, value: null)?.Dispose();
+    }
+
+    private void OnMatchFound(MatchFoundEventArgs foundMatch)
+    {
+        MatchFound?.Invoke(this, foundMatch);
+    }
+
+    private void HandlePresenceRequested(object? sender, PresenceRequestedEventArgs e)
+    {
+        UiThread.Run(_uiContext, () => ShowPresenceCheck(e.ResponseWindow));
+    }
+
+    private void ShowPresenceCheck(TimeSpan responseWindow)
+    {
+        if (Stage != MatchSearchStage.Searching)
+        {
+            return;
+        }
+
+        _presenceDeadline = _timeProvider.GetUtcNow() + responseWindow;
+        UpdatePresenceMessage();
+        IsPresenceDialogOpen = true;
+    }
+
+    private void UpdatePresenceMessage()
+    {
+        TimeSpan remaining = _presenceDeadline - _timeProvider.GetUtcNow();
+        double roundedUpSeconds = Math.Ceiling(remaining.TotalSeconds);
+        int wholeSecondsLeft = (int)roundedUpSeconds;
+        int secondsLeft = Math.Max(0, wholeSecondsLeft);
+        PresenceMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Strings.MatchSearchPresenceMessageFormat,
+            secondsLeft);
+    }
+
+    private void HandleSearchEnded(object? sender, SearchEndedEventArgs e)
+    {
+        UiThread.Run(_uiContext, () => FinishSearch(e.Reason));
+    }
+
+    private void FinishSearch(SearchEndReason reason)
+    {
+        switch (reason)
+        {
+            case SearchEndReason.Cancelled:
+                EndActiveSearch(string.Empty);
+                break;
+            case SearchEndReason.PresenceExpired:
+                EndActiveSearch(nameof(Strings.MatchSearchPresenceExpired));
+                break;
+            case SearchEndReason.MatchCreationFailed:
+                EndActiveSearch(nameof(Strings.MatchSearchMatchCreationFailed));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported search end reason.");
+        }
+    }
+
+    private void EndActiveSearch(string statusKey)
+    {
+        if (Stage != MatchSearchStage.Searching)
+        {
+            return;
+        }
+
+        StopClock();
+        IsPresenceDialogOpen = false;
+        Stage = MatchSearchStage.Idle;
+        StatusKey = statusKey;
+    }
+
+    private void HandleDisconnected(object? sender, EventArgs e)
+    {
+        UiThread.Run(_uiContext, () => EndActiveSearch(nameof(Strings.MatchSearchConnectionLost)));
+    }
+
     private async Task<string?> SendRequest(Action<string> request, string operationName)
     {
         try
@@ -209,9 +306,9 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         }
     }
 
-    private static void LogRequestFailure(Exception ex, string operationName)
+    private static void LogRequestFailure(Exception cause, string operationName)
     {
-        _logger.Error($"A match search request failed. Operation={operationName}", ex);
+        _logger.Error($"A match search request failed. Operation={operationName}", cause);
     }
 
     private void ShowSearching()
@@ -224,7 +321,7 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         _searchStartedAt = _timeProvider.GetUtcNow();
         Stage = MatchSearchStage.Searching;
         UpdateClock();
-        _clockTimer = _timeProvider.CreateTimer(HandleClockTick, null, _clockTick, _clockTick);
+        _clockTimer = _timeProvider.CreateTimer(HandleClockTick, state: null, _clockTick, _clockTick);
     }
 
     private void UpdateClock()
@@ -249,16 +346,9 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         return string.Format(CultureInfo.InvariantCulture, ElapsedFormat, wholeMinutes, elapsed.Seconds);
     }
 
-    private void UpdatePresenceMessage()
+    private void HandleClockTick(object? state)
     {
-        TimeSpan remaining = _presenceDeadline - _timeProvider.GetUtcNow();
-        double roundedUpSeconds = Math.Ceiling(remaining.TotalSeconds);
-        int wholeSecondsLeft = (int)roundedUpSeconds;
-        int secondsLeft = Math.Max(MinimumSecondsLeft, wholeSecondsLeft);
-        PresenceMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            Strings.MatchSearchPresenceMessageFormat,
-            secondsLeft);
+        UiThread.Run(_uiContext, UpdateClock);
     }
 
     private static string ToStatusKey(SearchRejection rejection)
@@ -274,96 +364,5 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
             default:
                 throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported search rejection.");
         }
-    }
-
-    private void EndActiveSearch(string statusKey)
-    {
-        if (Stage != MatchSearchStage.Searching)
-        {
-            return;
-        }
-
-        StopClock();
-        IsPresenceDialogOpen = false;
-        Stage = MatchSearchStage.Idle;
-        StatusKey = statusKey;
-    }
-
-    private void StopClock()
-    {
-        Interlocked.Exchange(ref _clockTimer, null)?.Dispose();
-    }
-
-    private void EndSearchWithMatch(MatchFoundEventArgs foundMatch)
-    {
-        if (Stage == MatchSearchStage.MatchFound)
-        {
-            return;
-        }
-
-        StopClock();
-        IsPresenceDialogOpen = false;
-        Stage = MatchSearchStage.MatchFound;
-        OnMatchFound(foundMatch);
-    }
-
-    private void OnMatchFound(MatchFoundEventArgs foundMatch)
-    {
-        MatchFound?.Invoke(this, foundMatch);
-    }
-
-    private void ShowPresenceCheck(TimeSpan responseWindow)
-    {
-        if (Stage != MatchSearchStage.Searching)
-        {
-            return;
-        }
-
-        _presenceDeadline = _timeProvider.GetUtcNow() + responseWindow;
-        UpdatePresenceMessage();
-        IsPresenceDialogOpen = true;
-    }
-
-    private void FinishSearch(SearchEndReason reason)
-    {
-        switch (reason)
-        {
-            case SearchEndReason.Cancelled:
-                EndActiveSearch(string.Empty);
-                break;
-            case SearchEndReason.PresenceExpired:
-                EndActiveSearch(nameof(Strings.MatchSearchPresenceExpired));
-                break;
-            case SearchEndReason.MatchCreationFailed:
-                EndActiveSearch(nameof(Strings.MatchSearchMatchCreationFailed));
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported search end reason.");
-        }
-    }
-
-    private void HandleMatchFound(object? sender, MatchFoundEventArgs e)
-    {
-        UiThread.Run(_uiContext, () => EndSearchWithMatch(e));
-    }
-
-    private void HandlePresenceRequested(object? sender, PresenceRequestedEventArgs e)
-    {
-        UiThread.Run(_uiContext, () => ShowPresenceCheck(e.ResponseWindow));
-    }
-
-    private void HandleSearchEnded(object? sender, SearchEndedEventArgs e)
-    {
-        UiThread.Run(_uiContext, () => FinishSearch(e.Reason));
-    }
-
-    private void HandleDisconnected(object? sender, EventArgs e)
-    {
-        UiThread.Run(_uiContext, () => EndActiveSearch(nameof(Strings.MatchSearchConnectionLost)));
-    }
-
-    private void HandleClockTick(object? state)
-    {
-        UiThread.Run(_uiContext, UpdateClock);
     }
 }
