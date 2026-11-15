@@ -32,9 +32,9 @@ public static class ChannelCloser
         }
     }
 
-    private static void LogAndAbort(ICommunicationObject channel, Exception ex)
+    private static void LogAndAbort(ICommunicationObject channel, Exception cause)
     {
-        _logger.Warn($"The channel could not be closed and was aborted. Channel={channel.GetType().Name}", ex);
+        _logger.Warn($"The channel could not be closed and was aborted. Channel={channel.GetType().Name}", cause);
         channel.Abort();
     }
 }

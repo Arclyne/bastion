@@ -12,7 +12,9 @@ public sealed class ServiceChannel<TContract> : IServiceChannel<TContract>, IDis
     {
         ArgumentNullException.ThrowIfNull(path);
 
-        _channelFactory = new ChannelFactory<TContract>(ChannelSettings.CreateBinding(), ChannelSettings.CreateAddress(path));
+        NetTcpBinding binding = ChannelSettings.CreateBinding();
+        EndpointAddress address = ChannelSettings.CreateAddress(path);
+        _channelFactory = new ChannelFactory<TContract>(binding, address);
         ChannelSettings.ApplyCertificateValidation(_channelFactory);
     }
 
@@ -20,7 +22,8 @@ public sealed class ServiceChannel<TContract> : IServiceChannel<TContract>, IDis
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        Call(channel => InvokeAndReturnTrue(operation, channel));
+        Func<TContract, bool> operationAsFunction = channel => CompleteOperation(operation, channel);
+        Call(operationAsFunction);
     }
 
     public TResult Call<TResult>(Func<TContract, TResult> operation)
@@ -52,7 +55,7 @@ public sealed class ServiceChannel<TContract> : IServiceChannel<TContract>, IDis
         ChannelCloser.CloseOrAbort(_channelFactory);
     }
 
-    private static bool InvokeAndReturnTrue(Action<TContract> operation, TContract channel)
+    private static bool CompleteOperation(Action<TContract> operation, TContract channel)
     {
         operation(channel);
         return true;

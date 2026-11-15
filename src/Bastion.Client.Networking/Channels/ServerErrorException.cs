@@ -24,5 +24,6 @@ public sealed class ServerErrorException : Exception
     public ServerErrorException(Exception innerException)
         : base(DefaultMessage, innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
     }
 }

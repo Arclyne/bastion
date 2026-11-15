@@ -24,5 +24,6 @@ public sealed class ServerUnreachableException : Exception
     public ServerUnreachableException(Exception innerException)
         : base(DefaultMessage, innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
     }
 }

@@ -7,23 +7,23 @@ namespace Bastion.Client.Networking.Channels;
 
 public static class ServiceFailureTranslator
 {
-    public static Exception ToClientException(Exception ex)
+    public static Exception ToClientException(Exception cause)
     {
-        ArgumentNullException.ThrowIfNull(ex);
+        ArgumentNullException.ThrowIfNull(cause);
 
-        switch (ex)
+        switch (cause)
         {
             case EndpointNotFoundException:
-                return new ServerUnreachableException(ex);
+                return new ServerUnreachableException(cause);
             case FaultException<InvalidSessionFault>:
-                return new InvalidSessionException(ex);
+                return new InvalidSessionException(cause);
             case FaultException:
-                return new ServerErrorException(ex);
+                return new ServerErrorException(cause);
             case CommunicationException:
             case TimeoutException:
-                return new ConnectionLostException(ex);
+                return new ConnectionLostException(cause);
             default:
-                throw new ArgumentOutOfRangeException(nameof(ex), ex.GetType(), "Unsupported exception type.");
+                throw new ArgumentException($"Unsupported exception type. Type={cause.GetType().Name}", nameof(cause));
         }
     }
 }

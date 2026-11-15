@@ -36,10 +36,12 @@ public static class ChannelSettings
     {
         ArgumentNullException.ThrowIfNull(factory);
 
-        factory.Credentials.ServiceCertificate.SslCertificateAuthentication = new X509ServiceCertificateAuthentication
+        var certificateValidator = new ThumbprintX509CertificateValidator(ServerAddress.GetCertificateThumbprint());
+        var certificateAuthentication = new X509ServiceCertificateAuthentication
         {
             CertificateValidationMode = X509CertificateValidationMode.Custom,
-            CustomCertificateValidator = new ThumbprintX509CertificateValidator(ServerAddress.GetCertificateThumbprint()),
+            CustomCertificateValidator = certificateValidator,
         };
+        factory.Credentials.ServiceCertificate.SslCertificateAuthentication = certificateAuthentication;
     }
 }
