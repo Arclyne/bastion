@@ -1,4 +1,3 @@
-using System;
 using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Screens;
 
@@ -12,6 +11,5 @@ public sealed class FakeNavigator : INavigator
 
     public void ShowMainMenu(LoggedInSession session)
     {
-        ArgumentNullException.ThrowIfNull(session);
     }
 }

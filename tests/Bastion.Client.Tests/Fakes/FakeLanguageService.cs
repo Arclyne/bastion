@@ -24,8 +24,6 @@ public sealed class FakeLanguageService : ILanguageService
 
     public void ChangeLanguage(SupportedLanguage language)
     {
-        ArgumentNullException.ThrowIfNull(language);
-
         CurrentLanguage = language;
         LanguageChanged?.Invoke(this, EventArgs.Empty);
     }

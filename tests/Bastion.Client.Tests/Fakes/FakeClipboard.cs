@@ -1,4 +1,3 @@
-using System;
 using Bastion.Client.Screens;
 
 namespace Bastion.Client.Tests.Fakes;
@@ -14,8 +13,6 @@ public sealed class FakeClipboard : IClipboard
 
     public bool TryCopyText(string text)
     {
-        ArgumentNullException.ThrowIfNull(text);
-
         return IsAvailable;
     }
 }
