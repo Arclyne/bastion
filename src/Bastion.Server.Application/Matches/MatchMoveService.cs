@@ -164,6 +164,13 @@ public sealed class MatchMoveService : IMatchMoveService
         _matchMoveNotifier.NotifyPawnMoved(match.MatchId, recipientAccountIds, notice);
     }
 
+    private static List<int> ListParticipantAccountIds(Match match)
+    {
+        IEnumerable<int> participantAccountIds =
+            match.Participations.Select(participation => participation.AccountId);
+        return new List<int>(participantAccountIds);
+    }
+
     private static Wall ReadWall(ConnectedPlayer player, ChosenWall chosenWall)
     {
         if (!BoardLayout.TryParseSquare(chosenWall.Groove, out BoardCoordinates groove))
@@ -186,19 +193,12 @@ public sealed class MatchMoveService : IMatchMoveService
         }
 
         string groove = BoardLayout.ToSquare(placement.Wall.Groove);
-        string rejectionContext = $"AccountId={placement.AccountId}; MatchId={match.MatchId}; Groove={groove}; "
-            + $"Orientation={placement.Wall.Orientation}; Reason={rejection.Reason}";
-        if (rejection.Reason == WallRejectionReason.NoWallsLeft)
-        {
-            _logger.Warn(
-                "The server rejected a wall the interface does not allow; the client may be modified. "
-                + rejectionContext);
-        }
-        else
-        {
-            _logger.Info($"The server rejected a wall. {rejectionContext}");
-        }
-
+        string rejectionSentence = rejection.Reason == WallRejectionReason.NoWallsLeft
+            ? "The server rejected a wall the interface does not allow; the client may be modified."
+            : "The server rejected a wall.";
+        _logger.Warn(
+            $"{rejectionSentence} AccountId={placement.AccountId}; MatchId={match.MatchId}; Groove={groove}; "
+            + $"Orientation={placement.Wall.Orientation}; Reason={rejection.Reason}");
         throw new IllegalWallException(rejection.Reason, rejection.BlockedTurnOrder);
     }
 
@@ -219,12 +219,5 @@ public sealed class MatchMoveService : IMatchMoveService
         };
         List<int> recipientAccountIds = ListParticipantAccountIds(match);
         _matchMoveNotifier.NotifyWallPlaced(match.MatchId, recipientAccountIds, notice);
-    }
-
-    private static List<int> ListParticipantAccountIds(Match match)
-    {
-        IEnumerable<int> participantAccountIds =
-            match.Participations.Select(participation => participation.AccountId);
-        return new List<int>(participantAccountIds);
     }
 }
