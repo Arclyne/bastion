@@ -49,9 +49,8 @@ public static class ConversationContractTranslator
     {
         var partner = FriendContractTranslator.ToPlayerTag(entry.PartnerNickname, entry.PartnerFriendCode);
         var contact = new ConversationContact(partner, entry.IsFriend);
-        PrivateMessage lastMessage = entry.LastMessage is null
-            ? new PrivateMessage(string.Empty, DateTime.MinValue, isOwn: false)
-            : ToPrivateMessage(entry.LastMessage);
+        PrivateChatMessage lastEntry = entry.LastMessage ?? new PrivateChatMessage();
+        PrivateMessage lastMessage = ToPrivateMessage(lastEntry);
         return new ConversationPreview(contact, lastMessage, entry.UnreadCount);
     }
 

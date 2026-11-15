@@ -30,7 +30,7 @@ public sealed class FriendClient : IFriendClient
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(text);
 
-        PlayerSearchEntry[] entries = Call(service => service.SearchPlayers(sessionToken, text));
+        PlayerSearchEntry[]? entries = Call(service => service.SearchPlayers(sessionToken, text));
         return FriendContractTranslator.ToFoundPlayers(entries);
     }
 

@@ -38,7 +38,7 @@ public interface IFriendshipService
     /// <exception cref="FaultException">The server could not reach the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
-    PlayerSearchEntry[] SearchPlayers(string? sessionToken, string? text);
+    PlayerSearchEntry[]? SearchPlayers(string? sessionToken, string? text);
 
     /// <summary>
     /// Sends a friend request to the player with the given friend code, who receives it as a notification. If that
