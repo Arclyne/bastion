@@ -40,12 +40,15 @@ public sealed class FriendRowView : Panel
             Orientation = Orientation.Horizontal,
             Spacing = ContentSpacing,
         };
-        content.AddChild(CreatePresenceDot(viewModel.IsConnected));
-        content.AddChild(CreateText());
+        Panel presenceDot = CreatePresenceDot(viewModel.IsConnected);
+        StackPanel text = CreateText();
+        content.AddChild(presenceDot);
+        content.AddChild(text);
         content.Anchor(Gum.Wireframe.Anchor.Left);
         content.X = ContentPaddingX;
+        Button moreButton = CreateMoreButton();
         AddChild(content);
-        AddChild(CreateMoreButton());
+        AddChild(moreButton);
     }
 
     private static Panel CreatePresenceDot(bool isConnected)
@@ -70,8 +73,10 @@ public sealed class FriendRowView : Panel
         {
             Spacing = TextSpacing,
         };
-        text.AddChild(CreateBoundLabel(nameof(FriendRowViewModel.Nickname), TextStyleCatalog.IdentityName));
-        text.AddChild(CreateBoundLabel(nameof(FriendRowViewModel.StatusText), TextStyleCatalog.Hint));
+        Label nickname = CreateBoundLabel(nameof(FriendRowViewModel.Nickname), TextStyleCatalog.IdentityName);
+        Label status = CreateBoundLabel(nameof(FriendRowViewModel.StatusText), TextStyleCatalog.Hint);
+        text.AddChild(nickname);
+        text.AddChild(status);
         ViewFactory.CenterVertically(text);
         return text;
     }

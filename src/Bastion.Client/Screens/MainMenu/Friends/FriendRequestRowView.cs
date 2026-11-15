@@ -35,8 +35,10 @@ public sealed class FriendRequestRowView : Panel
         WidthUnits = DimensionUnitType.Absolute;
         Height = RowHeight;
         HeightUnits = DimensionUnitType.Absolute;
-        AddChild(CreateText());
-        AddChild(row.IsReceived ? CreateReceivedActions() : CreateSentActions());
+        StackPanel text = CreateText();
+        StackPanel actions = row.IsReceived ? CreateReceivedActions() : CreateSentActions();
+        AddChild(text);
+        AddChild(actions);
     }
 
     private static StackPanel CreateText()
@@ -46,8 +48,10 @@ public sealed class FriendRequestRowView : Panel
             X = ContentPaddingX,
             Spacing = TextSpacing,
         };
-        text.AddChild(CreateBoundLabel(nameof(FriendRequestRowViewModel.Nickname), TextStyleCatalog.IdentityName));
-        text.AddChild(CreateBoundLabel(nameof(FriendRequestRowViewModel.DetailText), TextStyleCatalog.Hint));
+        Label nickname = CreateBoundLabel(nameof(FriendRequestRowViewModel.Nickname), TextStyleCatalog.IdentityName);
+        Label detail = CreateBoundLabel(nameof(FriendRequestRowViewModel.DetailText), TextStyleCatalog.Hint);
+        text.AddChild(nickname);
+        text.AddChild(detail);
         ViewFactory.CenterVertically(text);
         return text;
     }
@@ -74,6 +78,28 @@ public sealed class FriendRequestRowView : Panel
         return button;
     }
 
+    private void HandleRejectClick(object? sender, EventArgs e)
+    {
+        _ = RespondSafely(_requests.Reject(_row));
+    }
+
+    private static async Task RespondSafely(Task response)
+    {
+        try
+        {
+            await response;
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The friend request response could not be sent because the connection is closed.", ex);
+        }
+    }
+
+    private void HandleAcceptClick(object? sender, EventArgs e)
+    {
+        _ = RespondSafely(_requests.Accept(_row));
+    }
+
     private StackPanel CreateActionRow(params Button[] buttons)
     {
         var actions = new StackPanel
@@ -95,28 +121,6 @@ public sealed class FriendRequestRowView : Panel
         Button cancel = CreateActionButton(nameof(Strings.FriendsCancelRequest), ButtonLookCatalog.Secondary);
         cancel.Click += HandleCancelClick;
         return CreateActionRow(cancel);
-    }
-
-    private static async Task RespondSafely(Task response)
-    {
-        try
-        {
-            await response;
-        }
-        catch (ObjectDisposedException ex)
-        {
-            _logger.Warn("The friend request response could not be sent because the connection is closed.", ex);
-        }
-    }
-
-    private void HandleRejectClick(object? sender, EventArgs e)
-    {
-        _ = RespondSafely(_requests.Reject(_row));
-    }
-
-    private void HandleAcceptClick(object? sender, EventArgs e)
-    {
-        _ = RespondSafely(_requests.Accept(_row));
     }
 
     private void HandleCancelClick(object? sender, EventArgs e)

@@ -33,11 +33,16 @@ public sealed class AddFriendView : StackPanel
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = ViewSpacing;
 
-        AddChild(CreateBackButton());
-        AddChild(CreateSearchRow());
-        AddChild(ViewFactory.CreateLabel(nameof(Strings.FriendsSearchHint), TextStyleCatalog.Hint));
-        AddChild(CreateStatus());
-        AddChild(CreateResults());
+        Button backButton = CreateBackButton();
+        StackPanel searchRow = CreateSearchRow();
+        Label searchHint = ViewFactory.CreateLabel(nameof(Strings.FriendsSearchHint), TextStyleCatalog.Hint);
+        Label status = CreateStatus();
+        ItemsControl results = CreateResults();
+        AddChild(backButton);
+        AddChild(searchRow);
+        AddChild(searchHint);
+        AddChild(status);
+        AddChild(results);
     }
 
     private Button CreateBackButton()
@@ -46,6 +51,11 @@ public sealed class AddFriendView : StackPanel
         ButtonSkin.CreateAndAttach(back, ButtonLookCatalog.Pill);
         back.Click += HandleBackClick;
         return back;
+    }
+
+    private void HandleBackClick(object? sender, EventArgs e)
+    {
+        _friendsPanelViewModel.CloseAddFriend();
     }
 
     private StackPanel CreateSearchRow()
@@ -73,6 +83,18 @@ public sealed class AddFriendView : StackPanel
         return row;
     }
 
+    private async void HandleSearchClick(object? sender, EventArgs e)
+    {
+        try
+        {
+            await _friendsPanelViewModel.AddFriend.SearchPlayers();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The player search could not run because the connection is closed.", ex);
+        }
+    }
+
     private static Label CreateStatus()
     {
         return ViewFactory.CreateBoundNotice(
@@ -94,22 +116,5 @@ public sealed class AddFriendView : StackPanel
         FoundPlayerRowViewModel row = ViewFactory.RequireRow<FoundPlayerRowViewModel>(item);
         var rowView = new FoundPlayerRowView(_friendsPanelViewModel.AddFriend, row);
         return rowView.Visual;
-    }
-
-    private void HandleBackClick(object? sender, EventArgs e)
-    {
-        _friendsPanelViewModel.CloseAddFriend();
-    }
-
-    private async void HandleSearchClick(object? sender, EventArgs e)
-    {
-        try
-        {
-            await _friendsPanelViewModel.AddFriend.SearchPlayers();
-        }
-        catch (ObjectDisposedException ex)
-        {
-            _logger.Warn("The player search could not run because the connection is closed.", ex);
-        }
     }
 }

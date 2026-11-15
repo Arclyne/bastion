@@ -29,7 +29,8 @@ public sealed class FriendActionsMenu : Panel
         Height = PaddingBottom;
         HeightUnits = DimensionUnitType.RelativeToChildren;
         this.SetBinding(nameof(IsVisible), nameof(FriendActionsViewModel.IsMenuOpen));
-        AddChild(CreateContent());
+        StackPanel content = CreateContent();
+        AddChild(content);
         CardSkin.Apply(Visual);
     }
 

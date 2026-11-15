@@ -23,11 +23,16 @@ public sealed class RemoveFriendDialogView : DialogCard
         _actions = actions;
         BindingContext = actions;
         Anchor(Gum.Wireframe.Anchor.Center);
-        Content.AddChild(CreateBoundLabel(nameof(FriendActionsViewModel.DialogTitle), TextStyleCatalog.DialogTitle));
-        Content.AddChild(CreateBoundLabel(nameof(FriendActionsViewModel.DialogMessage), TextStyleCatalog.DialogMessage));
-        Content.AddChild(CreateKeepsHistoryNotice());
-        Content.AddChild(CreateError());
-        Content.AddChild(CreateButtons());
+        Label title = CreateBoundLabel(nameof(FriendActionsViewModel.DialogTitle), TextStyleCatalog.DialogTitle);
+        Label message = CreateBoundLabel(nameof(FriendActionsViewModel.DialogMessage), TextStyleCatalog.DialogMessage);
+        Label keepsHistoryNotice = CreateKeepsHistoryNotice();
+        Label error = CreateError();
+        StackPanel buttons = CreateButtons();
+        Content.AddChild(title);
+        Content.AddChild(message);
+        Content.AddChild(keepsHistoryNotice);
+        Content.AddChild(error);
+        Content.AddChild(buttons);
     }
 
     private static Label CreateBoundLabel(string textProperty, TextStyle style)

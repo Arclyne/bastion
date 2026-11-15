@@ -32,8 +32,10 @@ public sealed class FriendRequestToast : Panel
         Height = ToastHeight;
         HeightUnits = DimensionUnitType.Absolute;
         this.SetBinding(nameof(IsVisible), nameof(FriendRequestsViewModel.IsToastVisible));
-        AddChild(CreateMessage());
-        AddChild(CreateActions());
+        Label message = CreateMessage();
+        StackPanel actions = CreateActions();
+        AddChild(message);
+        AddChild(actions);
         CardSkin.Apply(Visual);
     }
 
@@ -72,6 +74,11 @@ public sealed class FriendRequestToast : Panel
         return button;
     }
 
+    private void HandleRejectClick(object? sender, EventArgs e)
+    {
+        _ = RespondSafely(_requests.RejectToast());
+    }
+
     private static async Task RespondSafely(Task response)
     {
         try
@@ -82,11 +89,6 @@ public sealed class FriendRequestToast : Panel
         {
             _logger.Warn("The friend request toast could not respond because the connection is closed.", ex);
         }
-    }
-
-    private void HandleRejectClick(object? sender, EventArgs e)
-    {
-        _ = RespondSafely(_requests.RejectToast());
     }
 
     private void HandleAcceptClick(object? sender, EventArgs e)

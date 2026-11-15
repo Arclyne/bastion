@@ -160,7 +160,7 @@ public sealed class FriendRequestsViewModel : ViewModel
         }
     }
 
-    public void ReceiveRequest(PendingFriendRequest request, bool showsToast)
+    public void ReceiveRequest(PendingFriendRequest request, bool shouldShowToast)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -172,7 +172,7 @@ public sealed class FriendRequestsViewModel : ViewModel
         var row = new FriendRequestRowViewModel(request, request.RequestedAt, isReceived: true);
         _receivedRequests.Insert(NewestPosition, row);
         UpdateSummary();
-        if (showsToast)
+        if (shouldShowToast)
         {
             ShowToast(row);
         }
@@ -182,21 +182,21 @@ public sealed class FriendRequestsViewModel : ViewModel
     {
         ArgumentNullException.ThrowIfNull(row);
 
-        return Respond(row, _friends.AcceptFriendRequest, startsFriendship: true);
+        return Respond(row, _friends.AcceptFriendRequest, shouldStartFriendship: true);
     }
 
     public Task Reject(FriendRequestRowViewModel row)
     {
         ArgumentNullException.ThrowIfNull(row);
 
-        return Respond(row, _friends.RejectFriendRequest, startsFriendship: false);
+        return Respond(row, _friends.RejectFriendRequest, shouldStartFriendship: false);
     }
 
     public Task Cancel(FriendRequestRowViewModel row)
     {
         ArgumentNullException.ThrowIfNull(row);
 
-        return Respond(row, _friends.CancelFriendRequest, startsFriendship: false);
+        return Respond(row, _friends.CancelFriendRequest, shouldStartFriendship: false);
     }
 
     public async Task AcceptToast()
@@ -207,7 +207,7 @@ public sealed class FriendRequestsViewModel : ViewModel
             return;
         }
 
-        bool isAccepted = await Respond(row, _friends.AcceptFriendRequest, startsFriendship: true);
+        bool isAccepted = await Respond(row, _friends.AcceptFriendRequest, shouldStartFriendship: true);
         if (!isAccepted)
         {
             HideToast(row);
@@ -228,7 +228,7 @@ public sealed class FriendRequestsViewModel : ViewModel
         }
 
         HideToast(row);
-        await Respond(row, _friends.RejectFriendRequest, startsFriendship: false);
+        await Respond(row, _friends.RejectFriendRequest, shouldStartFriendship: false);
     }
 
     private void UpdateSummary()
@@ -267,9 +267,9 @@ public sealed class FriendRequestsViewModel : ViewModel
         UpdateSummary();
     }
 
-    private void ReportLoadFailure(Exception ex)
+    private void ReportLoadFailure(Exception cause)
     {
-        _logger.Error("The friend requests could not be loaded.", ex);
+        _logger.Error("The friend requests could not be loaded.", cause);
         StatusText = Strings.FriendsRequestsFailed;
     }
 
@@ -303,7 +303,7 @@ public sealed class FriendRequestsViewModel : ViewModel
     private async Task<bool> Respond(
         FriendRequestRowViewModel row,
         Action<string, string> response,
-        bool startsFriendship)
+        bool shouldStartFriendship)
     {
         row.IsBusy = true;
         StatusText = string.Empty;
@@ -311,7 +311,7 @@ public sealed class FriendRequestsViewModel : ViewModel
         {
             await Task.Run(() => response(_session.Token, row.FriendCode));
             RemoveRow(row);
-            if (startsFriendship)
+            if (shouldStartFriendship)
             {
                 OnFriendshipStarted();
             }
@@ -370,9 +370,9 @@ public sealed class FriendRequestsViewModel : ViewModel
         StatusText = FriendRejectionText.Describe(rejection);
     }
 
-    private void ReportResponseFailure(Exception ex)
+    private void ReportResponseFailure(Exception cause)
     {
-        _logger.Error("The friend request response could not reach the server.", ex);
+        _logger.Error("The friend request response could not reach the server.", cause);
         StatusText = Strings.FriendsRespondFailed;
     }
 }
