@@ -33,34 +33,47 @@ public sealed class PrivateConversationView : StackPanel
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = SectionSpacing;
         _messages = CreateMessages();
-
-        AddChild(CreateHeader());
-        AddChild(ConversationParts.CreateNoticeLabel(
+        StackPanel header = CreateHeader();
+        Label greeting = ConversationParts.CreateNoticeLabel(
             nameof(PrivateConversationViewModel.GreetingText),
             nameof(PrivateConversationViewModel.IsGreetingVisible),
-            TextStyleCatalog.NoticeTitle));
-        AddChild(CreateGreetingHint());
-        AddChild(CreateVisibleLabel(nameof(Strings.ChatLoading), nameof(PrivateConversationViewModel.IsLoading)));
-        AddChild(CreateLoadFailure());
-        AddChild(_messages);
-        AddChild(ConversationParts.CreateNoticeLabel(
+            TextStyleCatalog.NoticeTitle);
+        Label greetingHint = CreateGreetingHint();
+        Label loadingLabel = CreateVisibleLabel(
+            nameof(Strings.ChatLoading),
+            nameof(PrivateConversationViewModel.IsLoading));
+        StackPanel loadFailure = CreateLoadFailure();
+        Label offlineNotice = ConversationParts.CreateNoticeLabel(
             nameof(PrivateConversationViewModel.OfflineText),
             nameof(PrivateConversationViewModel.IsOfflineNoticeVisible),
-            TextStyleCatalog.Hint));
-        AddChild(CreateNotFriendsNotice());
-        AddChild(ConversationParts.CreateNoticeLabel(
+            TextStyleCatalog.Hint);
+        Label notFriendsNotice = CreateNotFriendsNotice();
+        Label muteNotice = ConversationParts.CreateNoticeLabel(
             nameof(PrivateConversationViewModel.MuteText),
             nameof(PrivateConversationViewModel.IsMuteNoticeVisible),
-            TextStyleCatalog.FieldError));
-        AddChild(ConversationParts.CreateNoticeLabel(
+            TextStyleCatalog.FieldError);
+        Label statusNotice = ConversationParts.CreateNoticeLabel(
             nameof(PrivateConversationViewModel.StatusText),
             nameof(PrivateConversationViewModel.HasStatus),
-            TextStyleCatalog.FieldError));
-        AddChild(ConversationParts.CreateNoticeLabel(
+            TextStyleCatalog.FieldError);
+        Label counterNotice = ConversationParts.CreateNoticeLabel(
             nameof(PrivateConversationViewModel.CounterText),
             nameof(PrivateConversationViewModel.IsCounterVisible),
-            TextStyleCatalog.Hint));
-        AddChild(ConversationParts.CreateInputRow(HandleSendClick, ConversationParts.ViewWidth));
+            TextStyleCatalog.Hint);
+        StackPanel inputRow = ConversationParts.CreateInputRow(HandleSendClick, ConversationParts.ViewWidth);
+
+        AddChild(header);
+        AddChild(greeting);
+        AddChild(greetingHint);
+        AddChild(loadingLabel);
+        AddChild(loadFailure);
+        AddChild(_messages);
+        AddChild(offlineNotice);
+        AddChild(notFriendsNotice);
+        AddChild(muteNotice);
+        AddChild(statusNotice);
+        AddChild(counterNotice);
+        AddChild(inputRow);
 
         _conversation.Messages.CollectionChanged += HandleMessagesChanged;
         _conversation.PropertyChanged += HandleConversationPropertyChanged;
@@ -83,6 +96,11 @@ public sealed class PrivateConversationView : StackPanel
             nameof(PrivateConversationViewModel.PresenceText),
             TextStyleCatalog.Hint);
         return ConversationParts.CreateHeader(HandleBackClick, title, detail);
+    }
+
+    private void HandleBackClick(object? sender, EventArgs e)
+    {
+        _conversation.Close();
     }
 
     private static Label CreateGreetingHint()
@@ -109,22 +127,11 @@ public sealed class PrivateConversationView : StackPanel
         {
             Spacing = SectionSpacing,
         };
-        failure.AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatLoadFailed), TextStyleCatalog.FieldError));
+        Label message = ViewFactory.CreateLabel(nameof(Strings.ChatLoadFailed), TextStyleCatalog.FieldError);
+        failure.AddChild(message);
         failure.AddChild(retry);
         failure.SetBinding(nameof(IsVisible), nameof(PrivateConversationViewModel.HasLoadFailed));
         return failure;
-    }
-
-    private static Label CreateNotFriendsNotice()
-    {
-        Label notice = ConversationParts.CreateWrappedLabel(nameof(Strings.PrivateNotFriends), TextStyleCatalog.FieldError);
-        notice.SetBinding(nameof(IsVisible), nameof(PrivateConversationViewModel.IsNotFriendsNoticeVisible));
-        return notice;
-    }
-
-    private void HandleBackClick(object? sender, EventArgs e)
-    {
-        _conversation.Close();
     }
 
     private async void HandleRetryClick(object? sender, EventArgs e)
@@ -137,6 +144,13 @@ public sealed class PrivateConversationView : StackPanel
         {
             _logger.Warn("The private conversation could not be reloaded because the connection is closed.", ex);
         }
+    }
+
+    private static Label CreateNotFriendsNotice()
+    {
+        Label notice = ConversationParts.CreateWrappedLabel(nameof(Strings.PrivateNotFriends), TextStyleCatalog.FieldError);
+        notice.SetBinding(nameof(IsVisible), nameof(PrivateConversationViewModel.IsNotFriendsNoticeVisible));
+        return notice;
     }
 
     private async void HandleSendClick(object? sender, EventArgs e)

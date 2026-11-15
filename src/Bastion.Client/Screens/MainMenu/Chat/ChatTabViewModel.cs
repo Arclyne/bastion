@@ -19,7 +19,6 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 public sealed class ChatTabViewModel : ViewModel, IDisposable
 {
     private const int FirstPosition = 0;
-    private const int NoUnread = 0;
     private const int OneUnread = 1;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(ChatTabViewModel));
@@ -147,7 +146,7 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
 
         Pane = ChatPane.Private;
         ConversationRowViewModel? row = FindRow(partner.FriendCode);
-        row?.UpdateUnread(NoUnread);
+        row?.UpdateUnread(0);
         UpdateUnreadTotal();
         _ = PrivateConversation.Open(partner, _friends.FindPresence(partner.FriendCode));
     }
@@ -181,33 +180,19 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         LobbyChat.Dispose();
     }
 
-    private void ShowPreviews(IEnumerable<ConversationRowViewModel> rows)
+    private void HandleLobbyPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        Conversations.Clear();
-        foreach (ConversationRowViewModel row in rows)
+        if (e.PropertyName == nameof(LobbyChatViewModel.IsConversationOpen)
+            && !LobbyChat.IsConversationOpen
+            && Pane == ChatPane.Global)
         {
-            Conversations.Add(row);
+            Pane = ChatPane.List;
         }
-
-        HasConversations = Conversations.Count > 0;
-        UpdateUnreadTotal();
     }
 
-    private void UpdateUnreadTotal()
+    private void HandlePrivateMessageSent(object? sender, ConversationUpdatedEventArgs e)
     {
-        int total = Conversations.Sum(row => row.UnreadCount);
-        UnreadText = BadgeText.FormatCount(total);
-    }
-
-    private void ReportLoadFailure(Exception ex)
-    {
-        _logger.Error("The private conversations could not be loaded.", ex);
-        HasConversationsLoadFailed = true;
-    }
-
-    private ConversationRowViewModel? FindRow(string friendCode)
-    {
-        return Conversations.FirstOrDefault(row => row.Partner.FriendCode == friendCode);
+        UpdateConversation(e.Partner, e.Message, 0);
     }
 
     private void UpdateConversation(PlayerTag partner, PrivateMessage message, int newUnread)
@@ -231,31 +216,15 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         UpdateUnreadTotal();
     }
 
-    private void ReceivePrivateMessage(PlayerTag sender, PrivateMessage message)
+    private ConversationRowViewModel? FindRow(string friendCode)
     {
-        if (PrivateConversation.IsShowing(sender.FriendCode))
-        {
-            PrivateConversation.Receive(message);
-            UpdateConversation(sender, message, NoUnread);
-            return;
-        }
-
-        UpdateConversation(sender, message, OneUnread);
+        return Conversations.FirstOrDefault(row => row.Partner.FriendCode == friendCode);
     }
 
-    private void HandleLobbyPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void UpdateUnreadTotal()
     {
-        if (e.PropertyName == nameof(LobbyChatViewModel.IsConversationOpen)
-            && !LobbyChat.IsConversationOpen
-            && Pane == ChatPane.Global)
-        {
-            Pane = ChatPane.List;
-        }
-    }
-
-    private void HandlePrivateMessageSent(object? sender, ConversationUpdatedEventArgs e)
-    {
-        UpdateConversation(e.Partner, e.Message, NoUnread);
+        int total = Conversations.Sum(row => row.UnreadCount);
+        UnreadText = BadgeText.FormatCount(total);
     }
 
     private void HandlePrivateClosed(object? sender, EventArgs e)
@@ -266,5 +235,35 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
     private void HandlePrivateMessageReceived(object? sender, PrivateMessageReceivedEventArgs e)
     {
         UiThread.Run(_uiContext, () => ReceivePrivateMessage(e.Sender, e.Message));
+    }
+
+    private void ReceivePrivateMessage(PlayerTag sender, PrivateMessage message)
+    {
+        if (PrivateConversation.IsShowing(sender.FriendCode))
+        {
+            PrivateConversation.Receive(message);
+            UpdateConversation(sender, message, 0);
+            return;
+        }
+
+        UpdateConversation(sender, message, OneUnread);
+    }
+
+    private void ShowPreviews(IEnumerable<ConversationRowViewModel> rows)
+    {
+        Conversations.Clear();
+        foreach (ConversationRowViewModel row in rows)
+        {
+            Conversations.Add(row);
+        }
+
+        HasConversations = Conversations.Count > 0;
+        UpdateUnreadTotal();
+    }
+
+    private void ReportLoadFailure(Exception cause)
+    {
+        _logger.Error("The private conversations could not be loaded.", cause);
+        HasConversationsLoadFailed = true;
     }
 }

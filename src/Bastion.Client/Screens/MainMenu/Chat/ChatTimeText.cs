@@ -9,7 +9,6 @@ public static class ChatTimeText
     private const string TimeFormat = "HH:mm";
     private const string DayFormat = "d MMM";
     private const string MomentFormat = "g";
-    private const int OneDay = 1;
 
     public static string FormatTime(DateTime sentAt)
     {
@@ -45,7 +44,7 @@ public static class ChatTimeText
             return Strings.ChatToday;
         }
 
-        if (day == today.AddDays(-OneDay))
+        if (day == today.AddDays(-1))
         {
             return Strings.ChatYesterday;
         }

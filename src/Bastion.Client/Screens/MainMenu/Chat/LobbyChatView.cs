@@ -36,25 +36,35 @@ public sealed class LobbyChatView : StackPanel
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = SectionSpacing;
         _messages = CreateMessages();
-
-        AddChild(CreateHeader());
-        AddChild(ConversationParts.CreateWrappedLabel(nameof(Strings.ChatSystemNotice), TextStyleCatalog.Hint));
-        AddChild(CreateEmptyLabel());
-        AddChild(_messages);
-        AddChild(CreateUnreadButton());
-        AddChild(ConversationParts.CreateNoticeLabel(
+        StackPanel header = CreateHeader();
+        Label systemNotice = ConversationParts.CreateWrappedLabel(
+            nameof(Strings.ChatSystemNotice),
+            TextStyleCatalog.Hint);
+        Label emptyLabel = CreateEmptyLabel();
+        Button unreadButton = CreateUnreadButton();
+        Label muteNotice = ConversationParts.CreateNoticeLabel(
             nameof(LobbyChatViewModel.MuteText),
             nameof(LobbyChatViewModel.IsMuted),
-            TextStyleCatalog.FieldError));
-        AddChild(ConversationParts.CreateNoticeLabel(
+            TextStyleCatalog.FieldError);
+        Label statusNotice = ConversationParts.CreateNoticeLabel(
             nameof(LobbyChatViewModel.StatusText),
             nameof(LobbyChatViewModel.HasStatus),
-            TextStyleCatalog.FieldError));
-        AddChild(ConversationParts.CreateNoticeLabel(
+            TextStyleCatalog.FieldError);
+        Label counterNotice = ConversationParts.CreateNoticeLabel(
             nameof(LobbyChatViewModel.CounterText),
             nameof(LobbyChatViewModel.IsCounterVisible),
-            TextStyleCatalog.Hint));
-        AddChild(ConversationParts.CreateInputRow(HandleSendClick, ConversationParts.ViewWidth));
+            TextStyleCatalog.Hint);
+        StackPanel inputRow = ConversationParts.CreateInputRow(HandleSendClick, ConversationParts.ViewWidth);
+
+        AddChild(header);
+        AddChild(systemNotice);
+        AddChild(emptyLabel);
+        AddChild(_messages);
+        AddChild(unreadButton);
+        AddChild(muteNotice);
+        AddChild(statusNotice);
+        AddChild(counterNotice);
+        AddChild(inputRow);
 
         _chat.Messages.CollectionChanged += HandleMessagesChanged;
         _chat.PropertyChanged += HandleChatPropertyChanged;
@@ -75,11 +85,22 @@ public sealed class LobbyChatView : StackPanel
         return messages;
     }
 
+    private void HandleScrollChanged(object? sender, EventArgs e)
+    {
+        bool isReadingLatest = _messages.VerticalScrollBarValue >= _messages.VerticalScrollBarMaximum - LatestTolerance;
+        _chat.UpdateReadingPosition(isReadingLatest);
+    }
+
     private StackPanel CreateHeader()
     {
         Label title = ViewFactory.CreateLabel(nameof(Strings.ChatGlobalChannel), TextStyleCatalog.IdentityName);
         Label detail = ViewFactory.CreateBoundUntranslatedLabel(nameof(LobbyChatViewModel.ChannelDetail), TextStyleCatalog.Hint);
         return ConversationParts.CreateHeader(HandleBackClick, title, detail);
+    }
+
+    private void HandleBackClick(object? sender, EventArgs e)
+    {
+        _chat.CloseConversation();
     }
 
     private static Label CreateEmptyLabel()
@@ -99,17 +120,6 @@ public sealed class LobbyChatView : StackPanel
         unread.SetBinding(nameof(IsVisible), nameof(LobbyChatViewModel.HasUnread));
         unread.Click += HandleUnreadClick;
         return unread;
-    }
-
-    private void HandleScrollChanged(object? sender, EventArgs e)
-    {
-        bool isReadingLatest = _messages.VerticalScrollBarValue >= _messages.VerticalScrollBarMaximum - LatestTolerance;
-        _chat.UpdateReadingPosition(isReadingLatest);
-    }
-
-    private void HandleBackClick(object? sender, EventArgs e)
-    {
-        _chat.CloseConversation();
     }
 
     private void HandleUnreadClick(object? sender, EventArgs e)

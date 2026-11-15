@@ -37,12 +37,20 @@ public sealed class ChatChannelListView : StackPanel
         Width = ListWidth;
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = ListSpacing;
-        AddChild(CreateGlobalRow());
-        AddChild(CreateLobbyLoadFailure());
-        AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatWithFriendsTitle), TextStyleCatalog.SectionLabel));
-        AddChild(CreateNoConversations());
-        AddChild(CreateConversationsLoadFailure());
-        AddChild(CreateConversations());
+        Panel globalRow = CreateGlobalRow();
+        StackPanel lobbyLoadFailure = CreateLobbyLoadFailure();
+        Label friendsTitle = ViewFactory.CreateLabel(
+            nameof(Strings.ChatWithFriendsTitle),
+            TextStyleCatalog.SectionLabel);
+        StackPanel noConversations = CreateNoConversations();
+        StackPanel conversationsLoadFailure = CreateConversationsLoadFailure();
+        ItemsControl conversations = CreateConversations();
+        AddChild(globalRow);
+        AddChild(lobbyLoadFailure);
+        AddChild(friendsTitle);
+        AddChild(noConversations);
+        AddChild(conversationsLoadFailure);
+        AddChild(conversations);
     }
 
     private Panel CreateGlobalRow()
@@ -63,9 +71,15 @@ public sealed class ChatChannelListView : StackPanel
         };
         RectangleRuntime background = ShapeFactory.CreateRounded(Palette.Selected, RowRadius);
         ShapeFactory.InsertBehindContent(row.Visual, background);
-        row.AddChild(CreateGlobalText());
+        StackPanel globalText = CreateGlobalText();
+        row.AddChild(globalText);
         row.AddChild(open);
         return row;
+    }
+
+    private void HandleOpenGlobalClick(object? sender, EventArgs e)
+    {
+        _chatTab.OpenGlobal();
     }
 
     private static StackPanel CreateGlobalText()
@@ -77,7 +91,8 @@ public sealed class ChatChannelListView : StackPanel
             Spacing = TextSpacing,
             X = RowPaddingX,
         };
-        text.AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatGlobalChannel), TextStyleCatalog.IdentityName));
+        Label title = ViewFactory.CreateLabel(nameof(Strings.ChatGlobalChannel), TextStyleCatalog.IdentityName);
+        text.AddChild(title);
         text.AddChild(detail);
         ViewFactory.CenterVertically(text);
         return text;
@@ -101,9 +116,22 @@ public sealed class ChatChannelListView : StackPanel
         {
             Spacing = ListSpacing,
         };
-        failure.AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatLoadFailed), TextStyleCatalog.FieldError));
+        Label message = ViewFactory.CreateLabel(nameof(Strings.ChatLoadFailed), TextStyleCatalog.FieldError);
+        failure.AddChild(message);
         failure.AddChild(retry);
         return failure;
+    }
+
+    private async void HandleRetryLobbyClick(object? sender, EventArgs e)
+    {
+        try
+        {
+            await _chatTab.LobbyChat.LoadChannel();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The lobby chat could not be reloaded because the connection is closed.", ex);
+        }
     }
 
     private static StackPanel CreateNoConversations()
@@ -112,7 +140,8 @@ public sealed class ChatChannelListView : StackPanel
         {
             Spacing = TextSpacing,
         };
-        empty.AddChild(ViewFactory.CreateLabel(nameof(Strings.ChatNoConversationsTitle), TextStyleCatalog.NoticeTitle));
+        Label title = ViewFactory.CreateLabel(nameof(Strings.ChatNoConversationsTitle), TextStyleCatalog.NoticeTitle);
+        empty.AddChild(title);
         Label hint = ViewFactory.CreateLabel(nameof(Strings.ChatNoConversationsHint), TextStyleCatalog.Hint);
         hint.Width = ListWidth;
         hint.WidthUnits = DimensionUnitType.Absolute;
@@ -126,6 +155,18 @@ public sealed class ChatChannelListView : StackPanel
         StackPanel failure = CreateLoadFailure(HandleRetryConversationsClick);
         failure.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.HasConversationsLoadFailed));
         return failure;
+    }
+
+    private async void HandleRetryConversationsClick(object? sender, EventArgs e)
+    {
+        try
+        {
+            await _chatTab.LoadConversations();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The private conversations could not be reloaded because the connection is closed.", ex);
+        }
     }
 
     private ItemsControl CreateConversations()
@@ -143,34 +184,5 @@ public sealed class ChatChannelListView : StackPanel
         ConversationRowViewModel row = ViewFactory.RequireRow<ConversationRowViewModel>(item);
         var rowView = new ConversationRowView(row, _chatTab);
         return rowView.Visual;
-    }
-
-    private void HandleOpenGlobalClick(object? sender, EventArgs e)
-    {
-        _chatTab.OpenGlobal();
-    }
-
-    private async void HandleRetryLobbyClick(object? sender, EventArgs e)
-    {
-        try
-        {
-            await _chatTab.LobbyChat.LoadChannel();
-        }
-        catch (ObjectDisposedException ex)
-        {
-            _logger.Warn("The lobby chat could not be reloaded because the connection is closed.", ex);
-        }
-    }
-
-    private async void HandleRetryConversationsClick(object? sender, EventArgs e)
-    {
-        try
-        {
-            await _chatTab.LoadConversations();
-        }
-        catch (ObjectDisposedException ex)
-        {
-            _logger.Warn("The private conversations could not be reloaded because the connection is closed.", ex);
-        }
     }
 }
