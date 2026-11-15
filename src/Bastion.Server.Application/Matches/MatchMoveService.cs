@@ -149,7 +149,7 @@ public sealed class MatchMoveService : IMatchMoveService
     {
         Participation mover = match.GetParticipation(player.AccountId);
         short nextMoveNumber = match.GetNextMoveNumber();
-        bool isMatchOver = match.Status == MatchStatus.Finished;
+        bool isMatchOver = match.IsFinished();
         var notice = new PawnMoveNotice
         {
             MoverNickname = player.Nickname,
