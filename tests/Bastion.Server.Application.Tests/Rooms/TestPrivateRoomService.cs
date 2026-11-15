@@ -62,7 +62,7 @@ public sealed class TestPrivateRoomService
     }
 
     [Fact]
-    public void CreateRoom_InvalidSession_ThrowsInvalidSession()
+    public void CreateRoom_InvalidSession_ThrowsInvalidSessionException()
     {
         RequestedRoomSettings settings = CreateClassicSettings();
 
@@ -276,7 +276,7 @@ public sealed class TestPrivateRoomService
     }
 
     [Fact]
-    public void JoinRoom_InMatchCheckFails_ThrowsRepositoryFailure()
+    public void JoinRoom_InMatchCheckFails_ThrowsRoomRepositoryException()
     {
         AddPlayer(GuestToken, _guest);
         _roomRepository.InMatchCheckFailure = new RoomRepositoryException();
