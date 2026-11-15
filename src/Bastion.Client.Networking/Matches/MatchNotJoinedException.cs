@@ -24,5 +24,6 @@ public sealed class MatchNotJoinedException : Exception
     public MatchNotJoinedException(Exception innerException)
         : base(DefaultMessage, innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
     }
 }
