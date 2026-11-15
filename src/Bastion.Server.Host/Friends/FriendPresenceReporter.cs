@@ -2,6 +2,7 @@ using System;
 using System.Data.Common;
 using Bastion.Server.Application.Friends;
 using log4net;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Host.Friends;
@@ -54,6 +55,12 @@ public sealed class FriendPresenceReporter : IFriendPresenceReporter
         try
         {
             report();
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.Error(
+                $"The friend presence could not be saved. Operation={operationName}; AccountId={accountId}",
+                ex);
         }
         catch (DbException ex)
         {
