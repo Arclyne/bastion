@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Bastion.Client.Networking.Matchmaking;
 
 namespace Bastion.Client.Networking.Notifications;
 

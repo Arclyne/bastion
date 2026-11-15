@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Matchmaking;
 using Bastion.Client.Networking.Notifications;
 
 namespace Bastion.Client.Screens.Matches;
