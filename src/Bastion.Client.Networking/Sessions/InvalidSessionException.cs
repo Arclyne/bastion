@@ -24,5 +24,6 @@ public sealed class InvalidSessionException : Exception
     public InvalidSessionException(Exception innerException)
         : base(DefaultMessage, innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
     }
 }
