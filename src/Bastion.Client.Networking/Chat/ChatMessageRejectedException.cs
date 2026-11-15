@@ -7,6 +7,8 @@ public sealed class ChatMessageRejectedException : Exception
     public ChatMessageRejectedException(ChatRejection rejection, DateTime? mutedUntil, Exception innerException)
         : base($"The chat message was rejected. Rejection={rejection}", innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
+
         Rejection = rejection;
         MutedUntil = mutedUntil;
     }

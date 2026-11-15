@@ -24,5 +24,6 @@ public sealed class ChatChannelForbiddenException : Exception
     public ChatChannelForbiddenException(Exception innerException)
         : base(DefaultMessage, innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
     }
 }

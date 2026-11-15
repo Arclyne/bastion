@@ -68,18 +68,18 @@ public sealed class ChatClient : IChatClient
         }
     }
 
-    private static Exception ToClientException(Exception ex)
+    private static Exception ToClientException(Exception cause)
     {
-        if (ex is FaultException<ChatMessageRejectedFault> rejected)
+        if (cause is FaultException<ChatMessageRejectedFault> rejected)
         {
             return ChatContractTranslator.ToMessageRejectedException(rejected);
         }
 
-        if (ex is FaultException<ChatChannelForbiddenFault>)
+        if (cause is FaultException<ChatChannelForbiddenFault>)
         {
-            return new ChatChannelForbiddenException(ex);
+            return new ChatChannelForbiddenException(cause);
         }
 
-        return ServiceFailureTranslator.ToClientException(ex);
+        return ServiceFailureTranslator.ToClientException(cause);
     }
 }
