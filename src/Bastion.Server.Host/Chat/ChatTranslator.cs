@@ -71,7 +71,13 @@ public static class ChatTranslator
 
     public static string RequireText(string? text)
     {
-        return text ?? throw ToFault(new ChatMessageRejectedException(ChatRejection.InvalidMessage));
+        if (text is null)
+        {
+            var missingText = new ChatMessageRejectedException(ChatRejection.InvalidMessage);
+            throw ToFault(missingText);
+        }
+
+        return text;
     }
 
     public static FaultException<ChatMessageRejectedFault> ToFault(ChatMessageRejectedException rejection)
