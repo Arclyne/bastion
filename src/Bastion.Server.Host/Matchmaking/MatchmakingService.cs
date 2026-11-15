@@ -60,20 +60,6 @@ public sealed class MatchmakingService : IMatchmakingService
         matchSearch.StartSearch(token, GetUtcNow());
     }
 
-    private void CancelSearchInRequestScope(string token)
-    {
-        using IServiceScope scope = _scopeFactory.CreateScope();
-        IMatchSearchService matchSearch = scope.ServiceProvider.GetRequiredService<IMatchSearchService>();
-        matchSearch.CancelSearch(token, GetUtcNow());
-    }
-
-    private void ConfirmPresenceInRequestScope(string token)
-    {
-        using IServiceScope scope = _scopeFactory.CreateScope();
-        IMatchSearchService matchSearch = scope.ServiceProvider.GetRequiredService<IMatchSearchService>();
-        matchSearch.ConfirmPresence(token, GetUtcNow());
-    }
-
     private void TranslateMatchmakingFailures(string operationName, Action operation)
     {
         try
@@ -100,6 +86,13 @@ public sealed class MatchmakingService : IMatchmakingService
         }
     }
 
+    private void CancelSearchInRequestScope(string token)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchSearchService matchSearch = scope.ServiceProvider.GetRequiredService<IMatchSearchService>();
+        matchSearch.CancelSearch(token, GetUtcNow());
+    }
+
     private static void LogOneWayFailures(string operationName, string? sessionToken, Action<string> operation)
     {
         if (sessionToken is null)
@@ -124,6 +117,13 @@ public sealed class MatchmakingService : IMatchmakingService
                 $"The database could not be reached during a one-way matchmaking request. Operation={operationName}",
                 ex);
         }
+    }
+
+    private void ConfirmPresenceInRequestScope(string token)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchSearchService matchSearch = scope.ServiceProvider.GetRequiredService<IMatchSearchService>();
+        matchSearch.ConfirmPresence(token, GetUtcNow());
     }
 
     private DateTime GetUtcNow()
