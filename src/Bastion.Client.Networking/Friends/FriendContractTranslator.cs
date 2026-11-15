@@ -14,9 +14,9 @@ public static class FriendContractTranslator
 
         string ownFriendCode = list.OwnFriendCode ?? string.Empty;
         FriendListEntry[] entries = list.Friends ?? Array.Empty<FriendListEntry>();
-        IEnumerable<ListedFriend> friends = entries.Select(ToListedFriend);
-        var friendList = new List<ListedFriend>(friends);
-        return new FriendListing(ownFriendCode, friendList, list.ListedAt);
+        IEnumerable<ListedFriend> listedFriends = entries.Select(ToListedFriend);
+        var friends = new List<ListedFriend>(listedFriends);
+        return new FriendListing(ownFriendCode, friends, list.ListedAt);
     }
 
     public static ListedFriend ToListedFriend(FriendPresenceNotification notification)

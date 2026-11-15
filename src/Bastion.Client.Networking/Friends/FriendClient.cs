@@ -99,15 +99,15 @@ public sealed class FriendClient : IFriendClient
         }
     }
 
-    private static Exception ToClientException(Exception ex)
+    private static Exception ToClientException(Exception cause)
     {
-        if (ex is FaultException<FriendshipRejectedFault> rejected)
+        if (cause is FaultException<FriendshipRejectedFault> rejected)
         {
             FriendshipRejection rejection = FriendContractTranslator.ToRejection(rejected.Detail.Reason);
-            return new FriendshipRejectedException(rejection, ex);
+            return new FriendshipRejectedException(rejection, cause);
         }
 
-        return ServiceFailureTranslator.ToClientException(ex);
+        return ServiceFailureTranslator.ToClientException(cause);
     }
 
     private void Call(Action<IFriendshipService> operation)

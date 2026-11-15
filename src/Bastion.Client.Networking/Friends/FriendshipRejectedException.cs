@@ -7,6 +7,8 @@ public sealed class FriendshipRejectedException : Exception
     public FriendshipRejectedException(FriendshipRejection rejection, Exception innerException)
         : base($"The friendship operation was rejected. Rejection={rejection}", innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
+
         Rejection = rejection;
     }
 
