@@ -40,10 +40,12 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
     {
         lock (_searchesLock)
         {
-            if (_searches.TryGetValue(accountId, out MatchSearch? search))
+            if (!_searches.TryGetValue(accountId, out MatchSearch? search))
             {
-                search.ConfirmPresence(now);
+                return;
             }
+
+            search.ConfirmPresence(now);
         }
     }
 
@@ -83,6 +85,14 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
         return pairings;
     }
 
+    private void RemoveAll(IEnumerable<MatchSearch> searches)
+    {
+        foreach (MatchSearch search in searches)
+        {
+            _searches.Remove(search.AccountId);
+        }
+    }
+
     private List<PresenceRequest> StartPresenceChecks(DateTime now)
     {
         IEnumerable<MatchSearch> idleSearches = _searches.Values.Where(search => search.ShouldStartPresenceCheck(now));
@@ -95,13 +105,5 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
         }
 
         return presenceRequests;
-    }
-
-    private void RemoveAll(IEnumerable<MatchSearch> searches)
-    {
-        foreach (MatchSearch search in searches)
-        {
-            _searches.Remove(search.AccountId);
-        }
     }
 }
