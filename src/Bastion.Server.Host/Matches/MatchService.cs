@@ -61,7 +61,7 @@ public sealed class MatchService : IMatchService
         if (wall is null || !Enum.IsDefined(wall.Orientation))
         {
             _logger.Warn("A wall arrived without its data or with an unknown orientation.");
-            throw MatchTranslator.ToUnreadableWallFault();
+            throw MatchTranslator.CreateUnreadableWallFault();
         }
 
         var chosenWall = MatchTranslator.ToChosenWall(wall);
