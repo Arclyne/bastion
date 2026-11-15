@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using Bastion.Domain.Matches;
+using Bastion.Domain.Tests.GameModes;
 using Xunit;
 
 namespace Bastion.Domain.Tests.Matches;
 
 public sealed class TestWallPolicy
 {
-    private const byte ClassicBoardSize = 9;
     private const int FirstIndex = 0;
     private const int SecondIndex = 1;
     private const int ThirdIndex = 2;
@@ -132,6 +132,6 @@ public sealed class TestWallPolicy
             [Match.FirstTurnOrder] = firstPawn,
             [Match.SecondTurnOrder] = _secondStart,
         };
-        return new Board(ClassicBoardSize, pawnsByTurnOrder, walls);
+        return new Board(GameModeSampleFactory.ClassicBoardSize, pawnsByTurnOrder, walls);
     }
 }

@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using Bastion.Domain.Matches;
+using Bastion.Domain.Tests.GameModes;
 using Xunit;
 
 namespace Bastion.Domain.Tests.Matches;
 
 public sealed class TestPawnMovePolicy
 {
-    private const byte ClassicBoardSize = 9;
     private const int OpenBoardReachableCount = 4;
     private const int CornerReachableCount = 2;
     private const int FirstIndex = 0;
@@ -88,7 +88,7 @@ public sealed class TestPawnMovePolicy
             [Match.ThirdTurnOrder] = _twoAheadOfCenter,
         };
         Wall[] noWalls = Array.Empty<Wall>();
-        var board = new Board(ClassicBoardSize, pawnsByTurnOrder, noWalls);
+        var board = new Board(GameModeSampleFactory.ClassicBoardSize, pawnsByTurnOrder, noWalls);
 
         IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 
@@ -146,6 +146,6 @@ public sealed class TestPawnMovePolicy
             [Match.FirstTurnOrder] = firstPawn,
             [Match.SecondTurnOrder] = secondPawn,
         };
-        return new Board(ClassicBoardSize, pawnsByTurnOrder, walls);
+        return new Board(GameModeSampleFactory.ClassicBoardSize, pawnsByTurnOrder, walls);
     }
 }
