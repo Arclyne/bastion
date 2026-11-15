@@ -35,7 +35,7 @@ public sealed class TestFriendRequest
     }
 
     [Fact]
-    public void Constructor_SameAccount_ThrowsArgument()
+    public void Constructor_SameAccount_ThrowsArgumentException()
     {
         Action requestSelf = () => new FriendRequest(RequesterId, RequesterId, _requestedAt);
 
