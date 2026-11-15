@@ -12,15 +12,13 @@ public sealed class FakeMessageRepository : IMessageRepository
 
     public void Add(Message message)
     {
-        ArgumentNullException.ThrowIfNull(message);
-
         Messages.Add(message);
     }
 
     public IReadOnlyList<Message> ListConversation(int accountId, int partnerId, int count)
     {
         IEnumerable<Message> conversationMessages = Messages
-            .Where(message => message.GetPartnerId(accountId) == partnerId && Involves(message, accountId))
+            .Where(message => message.GetPartnerId(accountId) == partnerId && IsInvolving(message, accountId))
             .OrderBy(message => message.SentAt)
             .TakeLast(count);
         return new List<Message>(conversationMessages);
@@ -29,7 +27,7 @@ public sealed class FakeMessageRepository : IMessageRepository
     public IReadOnlyList<Message> ListLatestPerPartner(int accountId)
     {
         IEnumerable<Message> latestMessages = Messages
-            .Where(message => Involves(message, accountId))
+            .Where(message => IsInvolving(message, accountId))
             .GroupBy(message => message.GetPartnerId(accountId))
             .Select(FindLatest);
         return new List<Message>(latestMessages);
@@ -46,8 +44,6 @@ public sealed class FakeMessageRepository : IMessageRepository
 
     public void MarkRead(MessageParticipants participants, DateTime readAt)
     {
-        ArgumentNullException.ThrowIfNull(participants);
-
         IEnumerable<Message> authorMessages = Messages.Where(message => IsFrom(message, participants));
         foreach (Message message in authorMessages)
         {
@@ -55,7 +51,7 @@ public sealed class FakeMessageRepository : IMessageRepository
         }
     }
 
-    private static bool Involves(Message message, int accountId)
+    private static bool IsInvolving(Message message, int accountId)
     {
         return message.AuthorId == accountId || message.RecipientId == accountId;
     }

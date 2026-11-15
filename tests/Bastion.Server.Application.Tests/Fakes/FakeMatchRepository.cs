@@ -54,15 +54,11 @@ public sealed class FakeMatchRepository : IMatchRepository
         byte gameModeId,
         IReadOnlyCollection<int> accountIds)
     {
-        ArgumentNullException.ThrowIfNull(accountIds);
-
         return EloRatingsByAccountId;
     }
 
     public int SaveMatch(Match match)
     {
-        ArgumentNullException.ThrowIfNull(match);
-
         if (MatchSaveFailure is not null)
         {
             throw MatchSaveFailure;
@@ -84,8 +80,6 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public long SaveMatchChatMessage(Message message)
     {
-        ArgumentNullException.ThrowIfNull(message);
-
         if (MatchChatMessageSaveFailure is not null)
         {
             throw MatchChatMessageSaveFailure;
@@ -102,8 +96,6 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public void SaveAbandonment(Match match)
     {
-        ArgumentNullException.ThrowIfNull(match);
-
         SavedAbandonments.Add(match);
     }
 
@@ -119,8 +111,6 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public void SaveMove(Match match)
     {
-        ArgumentNullException.ThrowIfNull(match);
-
         SavedMoves.Add(match);
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bastion.Server.Application.Matchmaking;
@@ -11,8 +10,6 @@ public sealed class FakeTurnOrderShuffler : ITurnOrderShuffler
 
     public IReadOnlyList<TPlayer> ShuffleTurnOrder<TPlayer>(IReadOnlyList<TPlayer> players)
     {
-        ArgumentNullException.ThrowIfNull(players);
-
         if (!ShouldReverseOrder)
         {
             return players;

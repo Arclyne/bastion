@@ -9,8 +9,7 @@ namespace Bastion.Server.Application.Tests.Fakes;
 public sealed class FakeRoomRepository : IRoomRepository
 {
     private const int FirstRoomId = 1;
-    private const int FirstMatchId = 100;
-    private const int NoOpenRooms = 0;
+    public const int FirstMatchId = 100;
 
     private int _nextRoomId = FirstRoomId;
     private int _nextMatchId = FirstMatchId;
@@ -61,8 +60,6 @@ public sealed class FakeRoomRepository : IRoomRepository
 
     public int AddRoom(Room room)
     {
-        ArgumentNullException.ThrowIfNull(room);
-
         AddedRooms.Add(room);
         int roomId = _nextRoomId;
         _nextRoomId++;
@@ -81,6 +78,6 @@ public sealed class FakeRoomRepository : IRoomRepository
 
     public int CloseOpenRooms(DateTime closedAt)
     {
-        return NoOpenRooms;
+        return 0;
     }
 }

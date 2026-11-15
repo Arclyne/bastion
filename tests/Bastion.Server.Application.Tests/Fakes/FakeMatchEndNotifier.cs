@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Bastion.Server.Application.Matches;
 
@@ -13,9 +12,6 @@ public sealed class FakeMatchEndNotifier : IMatchEndNotifier
         IReadOnlyCollection<int> recipientAccountIds,
         AbandonmentNotice notice)
     {
-        ArgumentNullException.ThrowIfNull(recipientAccountIds);
-        ArgumentNullException.ThrowIfNull(notice);
-
         var notifiedAbandonment = new NotifiedMatchAbandonment(matchId, recipientAccountIds, notice);
         NotifiedAbandonments.Add(notifiedAbandonment);
     }

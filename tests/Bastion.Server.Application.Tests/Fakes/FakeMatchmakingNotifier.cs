@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Bastion.Server.Application.Matchmaking;
 
@@ -21,15 +20,11 @@ public sealed class FakeMatchmakingNotifier : IMatchmakingNotifier
 
     public void NotifyMatchFound(CreatedMatch createdMatch)
     {
-        ArgumentNullException.ThrowIfNull(createdMatch);
-
         CreatedMatches.Add(createdMatch);
     }
 
     public void NotifyPresenceRequested(PresenceRequest request)
     {
-        ArgumentNullException.ThrowIfNull(request);
-
         PresenceRequests.Add(request);
     }
 

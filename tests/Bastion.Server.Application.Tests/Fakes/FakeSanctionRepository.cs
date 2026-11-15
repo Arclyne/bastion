@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Moderation;
@@ -12,8 +11,6 @@ public sealed class FakeSanctionRepository : ISanctionRepository
 
     public void AddSanction(Sanction sanction)
     {
-        ArgumentNullException.ThrowIfNull(sanction);
-
         _sanctions.Add(sanction);
     }
 

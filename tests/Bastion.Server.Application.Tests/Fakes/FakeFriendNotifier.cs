@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
@@ -17,24 +16,17 @@ public sealed class FakeFriendNotifier : IFriendNotifier
 
     public void NotifyPresenceChanged(IReadOnlyList<int> recipientAccountIds, FriendPresenceChange change)
     {
-        ArgumentNullException.ThrowIfNull(recipientAccountIds);
-        ArgumentNullException.ThrowIfNull(change);
-
         RecipientAccountIds.AddRange(recipientAccountIds);
         Changes.Add(change);
     }
 
     public void NotifyFriendRequestReceived(int recipientAccountId, FriendRequestSummary request)
     {
-        ArgumentNullException.ThrowIfNull(request);
-
         RequestRecipientAccountIds.Add(recipientAccountId);
     }
 
     public void NotifyFriendshipStarted(int accountId, PlayerIdentity friend)
     {
-        ArgumentNullException.ThrowIfNull(friend);
-
         FriendshipStartedAccountIds.Add(accountId);
     }
 }

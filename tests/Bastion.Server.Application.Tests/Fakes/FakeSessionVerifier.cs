@@ -12,25 +12,17 @@ public sealed class FakeSessionVerifier : ISessionVerifier
 
     public void Add(string sessionToken, ConnectedPlayer player)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
-        ArgumentNullException.ThrowIfNull(player);
-
         _players[sessionToken] = player;
     }
 
     public void Add(string sessionToken, PlayerIdentity identity)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
-        ArgumentNullException.ThrowIfNull(identity);
-
         _players[sessionToken] = new ConnectedPlayer(identity.AccountId, identity.Nickname);
         _identities[sessionToken] = identity;
     }
 
     public ConnectedPlayer Verify(string sessionToken, DateTime now)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
-
         if (!_players.TryGetValue(sessionToken, out ConnectedPlayer? player))
         {
             throw new InvalidSessionException();
@@ -41,8 +33,6 @@ public sealed class FakeSessionVerifier : ISessionVerifier
 
     public PlayerIdentity VerifyIdentity(string sessionToken, DateTime now)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
-
         if (!_identities.TryGetValue(sessionToken, out PlayerIdentity? identity))
         {
             throw new InvalidSessionException();
