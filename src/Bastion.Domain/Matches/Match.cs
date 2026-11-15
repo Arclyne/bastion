@@ -92,6 +92,11 @@ public class Match
         return participation is not null;
     }
 
+    public bool IsFinished()
+    {
+        return Status == MatchStatus.Finished;
+    }
+
     public Participation GetParticipation(int accountId)
     {
         Participation? participation = FindParticipation(accountId);
