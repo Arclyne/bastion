@@ -74,24 +74,21 @@ public sealed class MatchService : IMatchService
         using IServiceScope scope = _scopeFactory.CreateScope();
         IMatchAbandonmentService abandonmentService =
             scope.ServiceProvider.GetRequiredService<IMatchAbandonmentService>();
-        DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
-        abandonmentService.AbandonMatch(token, matchId, now);
+        abandonmentService.AbandonMatch(token, matchId, GetUtcNow());
     }
 
     private void MovePawnInRequestScope(string token, ChosenPawnMove move)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         IMatchMoveService matchMoveService = scope.ServiceProvider.GetRequiredService<IMatchMoveService>();
-        DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
-        matchMoveService.MovePawn(token, move, now);
+        matchMoveService.MovePawn(token, move, GetUtcNow());
     }
 
     private void PlaceWallInRequestScope(string token, ChosenWall chosenWall)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         IMatchMoveService matchMoveService = scope.ServiceProvider.GetRequiredService<IMatchMoveService>();
-        DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
-        matchMoveService.PlaceWall(token, chosenWall, now);
+        matchMoveService.PlaceWall(token, chosenWall, GetUtcNow());
     }
 
     private void TranslateMatchFailures(string operationName, int matchId, Action operation)
@@ -130,5 +127,10 @@ public sealed class MatchService : IMatchService
             _logger.Error($"The database could not be reached. Operation={operationName}; MatchId={matchId}", ex);
             throw new FaultException(ServerFailureReason);
         }
+    }
+
+    private DateTime GetUtcNow()
+    {
+        return _timeProvider.GetUtcNow().UtcDateTime;
     }
 }
