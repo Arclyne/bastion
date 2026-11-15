@@ -12,6 +12,6 @@ public sealed class ModeStatisticConfiguration : IEntityTypeConfiguration<ModeSt
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.ToTable(nameof(ModeStatistic));
-        builder.HasKey(nameof(ModeStatistic.AccountId), nameof(ModeStatistic.GameModeId));
+        builder.HasKey(statistic => new { statistic.AccountId, statistic.GameModeId });
     }
 }

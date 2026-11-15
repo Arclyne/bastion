@@ -1,7 +1,7 @@
 using System;
+using Bastion.Domain.Chat;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Bastion.Domain.Chat;
 
 namespace Bastion.Server.Adapters.Persistence.Configurations;
 

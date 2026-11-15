@@ -7,8 +7,9 @@ namespace Bastion.Server.Adapters.Persistence.Configurations;
 
 public sealed class MoveConfiguration : IEntityTypeConfiguration<Move>
 {
+    public const int SquareLength = 3;
+
     private const int MoveTypeLength = 10;
-    private const int SquareLength = 3;
     private const int OrientationLength = 10;
     private const string TimeSpentColumn = "TimeSpent";
 
@@ -17,7 +18,7 @@ public sealed class MoveConfiguration : IEntityTypeConfiguration<Move>
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.ToTable(nameof(Move));
-        builder.HasKey(nameof(Move.MatchId), nameof(Move.MoveNumber));
+        builder.HasKey(move => new { move.MatchId, move.MoveNumber });
         builder.Property(move => move.MoveNumber).ValueGeneratedNever();
         builder.Property(move => move.MoveType).HasUpperSnakeCaseConversion(MoveTypeLength);
         builder.Property(move => move.FromSquare).HasMaxLength(SquareLength).IsUnicode(false);

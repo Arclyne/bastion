@@ -92,6 +92,14 @@ public sealed class MatchRepository : IMatchRepository
         return accountUnfinishedParticipations.Any();
     }
 
+    private static IQueryable<Participation> SelectUnfinishedParticipations(BastionDbContext context)
+    {
+        IQueryable<Participation> unfinishedParticipations = context.Participations
+            .AsNoTracking()
+            .Where(participation => !participation.Result.HasValue);
+        return unfinishedParticipations;
+    }
+
     private static GameMode? LoadActiveGameMode(BastionDbContext context, GameModeCode code)
     {
         IQueryable<GameMode> activeModesWithCode = context.GameModes
@@ -146,31 +154,9 @@ public sealed class MatchRepository : IMatchRepository
         return matchesWithId.FirstOrDefault();
     }
 
-    private static GameMode? LoadGameMode(BastionDbContext context, byte gameModeId)
-    {
-        IQueryable<GameMode> modesWithId = context.GameModes
-            .AsNoTracking()
-            .Where(gameMode => gameMode.GameModeId == gameModeId);
-        return modesWithId.FirstOrDefault();
-    }
-
     private static int UpdateMatchAndRoom(BastionDbContext context, Match match)
     {
         context.Matches.Update(match);
-        int savedRowCount = SaveMatchAndRoom(context, match);
-        return savedRowCount;
-    }
-
-    private static int UpdateMatchWithNewestMove(BastionDbContext context, Match match)
-    {
-        context.Matches.Update(match);
-        short newestMoveNumber = match.Moves.Max(move => move.MoveNumber);
-        foreach (Move move in match.Moves)
-        {
-            bool isNewest = move.MoveNumber == newestMoveNumber;
-            context.Entry(move).State = isNewest ? EntityState.Added : EntityState.Unchanged;
-        }
-
         int savedRowCount = SaveMatchAndRoom(context, match);
         return savedRowCount;
     }
@@ -194,12 +180,25 @@ public sealed class MatchRepository : IMatchRepository
         room?.FinishMatch(match.EndedAt.GetValueOrDefault(match.StartedAt));
     }
 
-    private static IQueryable<Participation> SelectUnfinishedParticipations(BastionDbContext context)
+    private static GameMode? LoadGameMode(BastionDbContext context, byte gameModeId)
     {
-        IQueryable<Participation> unfinishedParticipations = context.Participations
+        IQueryable<GameMode> modesWithId = context.GameModes
             .AsNoTracking()
-            .Where(participation => !participation.Result.HasValue);
-        return unfinishedParticipations;
+            .Where(gameMode => gameMode.GameModeId == gameModeId);
+        return modesWithId.FirstOrDefault();
     }
 
+    private static int UpdateMatchWithNewestMove(BastionDbContext context, Match match)
+    {
+        context.Matches.Update(match);
+        short newestMoveNumber = match.Moves.Max(move => move.MoveNumber);
+        foreach (Move move in match.Moves)
+        {
+            bool isNewest = move.MoveNumber == newestMoveNumber;
+            context.Entry(move).State = isNewest ? EntityState.Added : EntityState.Unchanged;
+        }
+
+        int savedRowCount = SaveMatchAndRoom(context, match);
+        return savedRowCount;
+    }
 }

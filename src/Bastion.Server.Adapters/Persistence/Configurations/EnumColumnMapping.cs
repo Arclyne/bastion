@@ -31,7 +31,8 @@ public static class EnumColumnMapping
     private static void StoreAsCode<TEnum>(PropertyBuilder property, int maximumLength)
         where TEnum : struct, Enum
     {
-        property.HasConversion(new UpperSnakeCaseEnumConverter<TEnum>());
+        var converter = new UpperSnakeCaseEnumConverter<TEnum>();
+        property.HasConversion(converter);
         property.HasMaxLength(maximumLength);
         property.IsUnicode(false);
     }
