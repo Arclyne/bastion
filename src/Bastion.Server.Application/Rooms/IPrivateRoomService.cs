@@ -1,4 +1,5 @@
 using System;
+using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Sessions;
 
 namespace Bastion.Server.Application.Rooms;
@@ -19,6 +20,9 @@ public interface IPrivateRoomService
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="RoomRejectedException">The player cannot open a room; the rejection says why.</exception>
     /// <exception cref="RoomRepositoryException">The room could not be saved.</exception>
+    /// <exception cref="MatchRepositoryException">
+    /// The unfinished matches of the player or the game mode could not be read.
+    /// </exception>
     RoomSnapshot CreateRoom(string sessionToken, RequestedRoomSettings requestedSettings, DateTime now);
 
     /// <summary>
@@ -31,6 +35,8 @@ public interface IPrivateRoomService
     /// <exception cref="ArgumentNullException">An argument is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="RoomRejectedException">The player cannot join; the rejection says why.</exception>
+    /// <exception cref="RoomRepositoryException">The match of a room that is gone could not be read.</exception>
+    /// <exception cref="MatchRepositoryException">The unfinished matches of the player could not be read.</exception>
     RoomSnapshot JoinRoom(string sessionToken, string code, DateTime now);
 
     /// <summary>
@@ -56,6 +62,7 @@ public interface IPrivateRoomService
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="RoomRejectedException">The settings cannot change; the rejection says why.</exception>
     /// <exception cref="RoomRepositoryException">The room could not be saved.</exception>
+    /// <exception cref="MatchRepositoryException">The game mode could not be read.</exception>
     RoomSnapshot ChangeSettings(string sessionToken, RequestedRoomSettings requestedSettings, DateTime now);
 
     /// <summary>

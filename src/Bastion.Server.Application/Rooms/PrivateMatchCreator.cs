@@ -48,23 +48,23 @@ public sealed class PrivateMatchCreator : IPrivateMatchCreator
         var match = Match.StartPrivate(format, entrants, startedAt);
         int matchId = _roomRepository.SaveRoomMatch(room.Identity.RoomId, match);
         _logger.Info($"Private match created. MatchId={matchId}; RoomId={room.Identity.RoomId}");
-        List<CreatedMatchParticipant> participants = ToParticipants(membersInTurnOrder, eloRatingsByAccountId);
+        List<CreatedMatchParticipant> participants = ToParticipants(match, membersInTurnOrder, eloRatingsByAccountId);
         return new CreatedMatch(matchId, format, participants);
     }
 
     private static List<CreatedMatchParticipant> ToParticipants(
+        Match match,
         IReadOnlyList<RoomMemberSnapshot> membersInTurnOrder,
         IReadOnlyDictionary<int, short> eloRatingsByAccountId)
     {
         var participants = new List<CreatedMatchParticipant>();
-        for (int memberIndex = 0; memberIndex < membersInTurnOrder.Count; memberIndex++)
+        foreach (Participation participation in match.Participations)
         {
-            RoomMemberSnapshot member = membersInTurnOrder[memberIndex];
+            RoomMemberSnapshot member =
+                membersInTurnOrder.First(candidate => candidate.AccountId == participation.AccountId);
             short eloRating = eloRatingsByAccountId.GetValueOrDefault(member.AccountId, ModeStatistic.DefaultEloRating);
             var player = new ConnectedPlayer(member.AccountId, member.Nickname);
-            int turnOrderNumber = Match.FirstTurnOrder + memberIndex;
-            byte turnOrder = (byte)turnOrderNumber;
-            var participant = new CreatedMatchParticipant(player, eloRating, turnOrder);
+            var participant = new CreatedMatchParticipant(player, eloRating, participation.TurnOrder);
             participants.Add(participant);
         }
 

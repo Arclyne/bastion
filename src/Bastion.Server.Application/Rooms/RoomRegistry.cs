@@ -122,13 +122,13 @@ public sealed class RoomRegistry : IRoomRegistry
             {
                 RemoveRoom(room);
                 var closedRoom = RoomSnapshot.Capture(room);
-                return new RoomDeparture(closedRoom, accountId, isRoomClosed: true);
+                return new RoomDeparture(closedRoom, isRoomClosed: true);
             }
 
             room.Remove(accountId);
             _roomsByAccountId.Remove(accountId);
             var remainingRoom = RoomSnapshot.Capture(room);
-            return new RoomDeparture(remainingRoom, accountId, isRoomClosed: false);
+            return new RoomDeparture(remainingRoom, isRoomClosed: false);
         }
     }
 
@@ -157,7 +157,8 @@ public sealed class RoomRegistry : IRoomRegistry
                 throw new RoomRejectedException(RoomRejection.NotReadyToStart);
             }
 
-            TResult result = startMatch(RoomSnapshot.Capture(room));
+            var capturedRoom = RoomSnapshot.Capture(room);
+            TResult result = startMatch(capturedRoom);
             RemoveRoom(room);
             return result;
         }
@@ -215,22 +216,22 @@ public sealed class RoomRegistry : IRoomRegistry
         }
     }
 
-    private WaitingRoom GetRoomOf(int accountId)
-    {
-        if (!_roomsByAccountId.TryGetValue(accountId, out WaitingRoom? room))
-        {
-            throw new RoomRejectedException(RoomRejection.NotInRoom);
-        }
-
-        return room;
-    }
-
     private WaitingRoom GetHostedRoom(int accountId)
     {
         WaitingRoom room = GetRoomOf(accountId);
         if (!room.IsHost(accountId))
         {
             throw new RoomRejectedException(RoomRejection.NotHost);
+        }
+
+        return room;
+    }
+
+    private WaitingRoom GetRoomOf(int accountId)
+    {
+        if (!_roomsByAccountId.TryGetValue(accountId, out WaitingRoom? room))
+        {
+            throw new RoomRejectedException(RoomRejection.NotInRoom);
         }
 
         return room;
