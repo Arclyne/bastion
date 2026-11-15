@@ -15,8 +15,6 @@ public static class ViewFactory
 {
     private const float VersionMarginY = 16;
     private const int VersionFieldCount = 3;
-    private const float MiddleOffsetY = 0;
-    private const float MiddleOffsetX = 0;
 
     public static Label CreateLabel(string textKey, TextStyle style)
     {
@@ -104,7 +102,7 @@ public static class ViewFactory
 
         element.YUnits = GeneralUnitType.PixelsFromMiddle;
         element.YOrigin = VerticalAlignment.Center;
-        element.Y = MiddleOffsetY;
+        element.Y = 0;
     }
 
     public static void CenterHorizontally(FrameworkElement element)
@@ -113,7 +111,7 @@ public static class ViewFactory
 
         element.XUnits = GeneralUnitType.PixelsFromMiddle;
         element.XOrigin = HorizontalAlignment.Center;
-        element.X = MiddleOffsetX;
+        element.X = 0;
     }
 
     public static TList CreateScrollList<TList>(float width, float height)

@@ -4,11 +4,9 @@ namespace Bastion.Client.Screens;
 
 public static class BadgeText
 {
-    private const int NoItems = 0;
-
     public static string FormatCount(int count)
     {
-        if (count <= NoItems)
+        if (count <= 0)
         {
             return string.Empty;
         }

@@ -15,6 +15,6 @@ public static class UiThread
             return;
         }
 
-        uiContext.Post(_ => action(), null);
+        uiContext.Post(_ => action(), state: null);
     }
 }

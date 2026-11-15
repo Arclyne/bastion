@@ -71,54 +71,6 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         DisposeViewModelsExcept(Array.Empty<IDisposable>());
     }
 
-    private MainMenuViewModel OpenMainMenu(LoggedInSession session)
-    {
-        var mainMenuViewModel = new MainMenuViewModel(session, _connection.Notifications);
-        var chatClients = new ChatClients(_connection.Chat, _connection.Conversations, _connection.Notifications);
-        var clients = new SocialClients(_connection.Friends, chatClients, _connection.Notifications);
-        var friendsPanel = new FriendsPanelViewModel(session, clients, _localServices);
-        var matchSearchViewModel = new MatchSearchViewModel(session, _connection.Matchmaking, _timeProvider);
-        matchSearchViewModel.MatchFound += HandleMatchFound;
-        var mainMenuView = new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel);
-        ShowScreen(mainMenuView, friendsPanel, matchSearchViewModel);
-        _loggedInSession = session;
-        _ = friendsPanel.LoadFriends();
-        _ = friendsPanel.Requests.LoadRequests();
-        _ = friendsPanel.Chat.LoadConversations();
-        return mainMenuViewModel;
-    }
-
-    private void ShowVersus(JoinedMatch joinedMatch)
-    {
-        var matchChatViewModel = new MatchChatViewModel(joinedMatch, _connection.Chat, _timeProvider);
-        var matchAbandonmentViewModel = new MatchAbandonmentViewModel(joinedMatch, _connection.Matches);
-        matchAbandonmentViewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
-        var matchPlayViewModel = new MatchPlayViewModel(joinedMatch, _connection.Matches);
-        var versusViewModel = new VersusViewModel(joinedMatch, _timeProvider);
-        versusViewModel.CountdownFinished += HandleCountdownFinished;
-        var versusView = new VersusView(versusViewModel);
-        ShowScreen(versusView, versusViewModel, matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel);
-        _joinedMatch = joinedMatch;
-        _joinedMatchViewModels =
-            new JoinedMatchViewModels(matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel);
-    }
-
-    private void ShowMatch(JoinedMatch joinedMatch, JoinedMatchViewModels joinedMatchViewModels)
-    {
-        var matchViewModel = new MatchViewModel(
-            joinedMatch,
-            joinedMatchViewModels.Abandonment,
-            joinedMatchViewModels.Play);
-        var matchView = new MatchView(matchViewModel, joinedMatchViewModels.Chat, joinedMatchViewModels.Abandonment);
-        ShowScreen(
-            matchView,
-            joinedMatchViewModels.Chat,
-            joinedMatchViewModels.Abandonment,
-            joinedMatchViewModels.Play,
-            matchViewModel);
-        ShownMatch = matchViewModel;
-    }
-
     private void ShowScreen(ScreenView screen, params IDisposable[] screenViewModels)
     {
         ShownMatch = null;
@@ -139,6 +91,23 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         _screenViewModels.Clear();
     }
 
+    private MainMenuViewModel OpenMainMenu(LoggedInSession session)
+    {
+        var mainMenuViewModel = new MainMenuViewModel(session, _connection.Notifications);
+        var chatClients = new ChatClients(_connection.Chat, _connection.Conversations, _connection.Notifications);
+        var clients = new SocialClients(_connection.Friends, chatClients, _connection.Notifications);
+        var friendsPanel = new FriendsPanelViewModel(session, clients, _localServices);
+        var matchSearchViewModel = new MatchSearchViewModel(session, _connection.Matchmaking, _timeProvider);
+        matchSearchViewModel.MatchFound += HandleMatchFound;
+        var mainMenuView = new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel);
+        ShowScreen(mainMenuView, friendsPanel, matchSearchViewModel);
+        _loggedInSession = session;
+        _ = friendsPanel.LoadFriends();
+        _ = friendsPanel.Requests.LoadRequests();
+        _ = friendsPanel.Chat.LoadConversations();
+        return mainMenuViewModel;
+    }
+
     private void HandleMatchFound(object? sender, MatchFoundEventArgs e)
     {
         if (_loggedInSession is null)
@@ -148,6 +117,31 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 
         var joinedMatch = new JoinedMatch(_loggedInSession, e);
         ShowVersus(joinedMatch);
+    }
+
+    private void ShowVersus(JoinedMatch joinedMatch)
+    {
+        var matchChatViewModel = new MatchChatViewModel(joinedMatch, _connection.Chat, _timeProvider);
+        var matchAbandonmentViewModel = new MatchAbandonmentViewModel(joinedMatch, _connection.Matches);
+        matchAbandonmentViewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
+        var matchPlayViewModel = new MatchPlayViewModel(joinedMatch, _connection.Matches);
+        var versusViewModel = new VersusViewModel(joinedMatch, _timeProvider);
+        versusViewModel.CountdownFinished += HandleCountdownFinished;
+        var versusView = new VersusView(versusViewModel);
+        ShowScreen(versusView, versusViewModel, matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel);
+        _joinedMatch = joinedMatch;
+        _joinedMatchViewModels =
+            new JoinedMatchViewModels(matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel);
+    }
+
+    private void HandleReturnToMenuRequested(object? sender, EventArgs e)
+    {
+        if (_loggedInSession is null)
+        {
+            return;
+        }
+
+        OpenMainMenu(_loggedInSession);
     }
 
     private void HandleCountdownFinished(object? sender, EventArgs e)
@@ -160,13 +154,19 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         ShowMatch(_joinedMatch, _joinedMatchViewModels);
     }
 
-    private void HandleReturnToMenuRequested(object? sender, EventArgs e)
+    private void ShowMatch(JoinedMatch joinedMatch, JoinedMatchViewModels joinedMatchViewModels)
     {
-        if (_loggedInSession is null)
-        {
-            return;
-        }
-
-        OpenMainMenu(_loggedInSession);
+        var matchViewModel = new MatchViewModel(
+            joinedMatch,
+            joinedMatchViewModels.Abandonment,
+            joinedMatchViewModels.Play);
+        var matchView = new MatchView(matchViewModel, joinedMatchViewModels.Chat, joinedMatchViewModels.Abandonment);
+        ShowScreen(
+            matchView,
+            joinedMatchViewModels.Chat,
+            joinedMatchViewModels.Abandonment,
+            joinedMatchViewModels.Play,
+            matchViewModel);
+        ShownMatch = matchViewModel;
     }
 }
