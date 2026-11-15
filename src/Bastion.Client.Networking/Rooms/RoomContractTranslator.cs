@@ -48,17 +48,17 @@ public static class RoomContractTranslator
         RoomOptions options = state.Options ?? new RoomOptions();
         PrivateRoomGameMode gameMode = ToPrivateRoomGameMode(options.GameMode);
         var privateOptions = new PrivateRoomOptions(gameMode, options.WallsPerPlayer, options.ClockMinutes);
-        RoomMemberState[] members = state.Members ?? Array.Empty<RoomMemberState>();
-        IEnumerable<PrivateRoomMember> seatedMembers = members
+        RoomMemberState[] stateMembers = state.Members ?? Array.Empty<RoomMemberState>();
+        IEnumerable<PrivateRoomMember> seatedMembers = stateMembers
             .Select(ToMember)
             .OrderBy(member => member.SeatIndex);
-        var memberList = new List<PrivateRoomMember>(seatedMembers);
+        var members = new List<PrivateRoomMember>(seatedMembers);
         return new PrivateRoom
         {
             Code = code,
             Options = privateOptions,
             SeatCount = state.SeatCount,
-            Members = memberList,
+            Members = members,
         };
     }
 

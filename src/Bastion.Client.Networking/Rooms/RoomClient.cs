@@ -120,16 +120,16 @@ public sealed class RoomClient : IRoomClient
         }
     }
 
-    private static Exception ToClientException(Exception ex)
+    private static Exception ToClientException(Exception cause)
     {
-        if (ex is FaultException<RoomRejectedFault> rejected)
+        if (cause is FaultException<RoomRejectedFault> rejected)
         {
             RoomRejection rejection = RoomContractTranslator.ToRejection(rejected.Detail.Reason);
             var retryDelay = TimeSpan.FromSeconds(rejected.Detail.RetryAfterSeconds);
-            return new RoomRejectedException(rejection, retryDelay, ex);
+            return new RoomRejectedException(rejection, retryDelay, cause);
         }
 
-        return ServiceFailureTranslator.ToClientException(ex);
+        return ServiceFailureTranslator.ToClientException(cause);
     }
 
     private void Call(Action<IRoomService> operation)
