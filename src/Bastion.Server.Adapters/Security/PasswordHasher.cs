@@ -42,9 +42,9 @@ public sealed class PasswordHasher : IPasswordHasher
 
     private static byte[] DeriveHash(string password, byte[] salt)
     {
-        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        byte[] encodedPassword = Encoding.UTF8.GetBytes(password);
         return Rfc2898DeriveBytes.Pbkdf2(
-            passwordBytes,
+            encodedPassword,
             salt,
             Iterations,
             HashAlgorithmName.SHA512,
