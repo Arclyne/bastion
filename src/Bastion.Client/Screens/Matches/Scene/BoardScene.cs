@@ -21,17 +21,16 @@ public sealed class BoardScene : IDisposable
     private const float FarPlaneDistance = 60f;
     private const float NearScreenDepth = 0f;
     private const float FarScreenDepth = 1f;
-    private const float BoardSurfaceDistance = 0f;
     private const int OffBoardIndex = -1;
     private const float HighlightHalfSize = 0.4f;
     private const float HighlightHeight = 0.02f;
-    private const int QuadVertexCount = 6;
+    private const int FirstVertex = 0;
     private const int QuadTriangleCount = 2;
     private const float SelectedPawnLightening = 0.35f;
     private const float OpaqueAlpha = 1f;
     private const float GhostAlpha = 0.55f;
 
-    private static readonly Plane _boardSurface = new Plane(Vector3.Up, BoardSurfaceDistance);
+    private static readonly VertexPositionColor[] _highlightVertices = CreateHighlightQuad();
     private static readonly BoardCoordinates _offBoardCoordinates = new BoardCoordinates(OffBoardIndex, OffBoardIndex);
 
     private readonly GraphicsDevice _graphicsDevice;
@@ -40,7 +39,6 @@ public sealed class BoardScene : IDisposable
     private readonly SceneModel _pawnModel;
     private readonly BasicEffect _highlightEffect;
     private readonly BasicEffect _wallEffect;
-    private readonly VertexPositionColor[] _highlightVertices = new VertexPositionColor[QuadVertexCount];
     private readonly Dictionary<string, Color> _goalColorsByMeshName = new Dictionary<string, Color>();
     private MatchViewModel? _preparedMatch;
     private int _preparedPawnCount;
@@ -113,6 +111,21 @@ public sealed class BoardScene : IDisposable
         _wallEffect.Dispose();
     }
 
+    private static VertexPositionColor[] CreateHighlightQuad()
+    {
+        var nearLeftCorner = new Vector3(-HighlightHalfSize, HighlightHeight, HighlightHalfSize);
+        var nearRightCorner = new Vector3(HighlightHalfSize, HighlightHeight, HighlightHalfSize);
+        var farLeftCorner = new Vector3(-HighlightHalfSize, HighlightHeight, -HighlightHalfSize);
+        var farRightCorner = new Vector3(HighlightHalfSize, HighlightHeight, -HighlightHalfSize);
+        Color color = Palette.ReachableSquare;
+        var nearLeft = new VertexPositionColor(nearLeftCorner, color);
+        var nearRight = new VertexPositionColor(nearRightCorner, color);
+        var farLeft = new VertexPositionColor(farLeftCorner, color);
+        var farRight = new VertexPositionColor(farRightCorner, color);
+        VertexPositionColor[] quadVertices = new[] { nearLeft, farLeft, farRight, nearLeft, farRight, nearRight };
+        return quadVertices;
+    }
+
     private static SceneModel LoadSceneModel(ContentManager content, string assetName)
     {
         Model model = content.Load<Model>(assetName);
@@ -148,8 +161,9 @@ public sealed class BoardScene : IDisposable
     {
         Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(ownTurnOrder);
         var view = Matrix.CreateLookAt(cameraPosition, Vector3.Zero, Vector3.Up);
+        float fieldOfView = MathHelper.ToRadians(FieldOfViewDegrees);
         var projection = Matrix.CreatePerspectiveFieldOfView(
-            MathHelper.ToRadians(FieldOfViewDegrees),
+            fieldOfView,
             _graphicsDevice.Viewport.AspectRatio,
             NearPlaneDistance,
             FarPlaneDistance);
@@ -217,25 +231,15 @@ public sealed class BoardScene : IDisposable
     private void DrawSquareHighlight(byte boardSize, BoardCoordinates square)
     {
         Vector3 center = BoardSceneLayout.GetCellCenter(boardSize, square);
-        float left = center.X - HighlightHalfSize;
-        float right = center.X + HighlightHalfSize;
-        float near = center.Z + HighlightHalfSize;
-        float far = center.Z - HighlightHalfSize;
-        var nearLeft = new Vector3(left, HighlightHeight, near);
-        var nearRight = new Vector3(right, HighlightHeight, near);
-        var farLeft = new Vector3(left, HighlightHeight, far);
-        var farRight = new Vector3(right, HighlightHeight, far);
-        Color color = Palette.ReachableSquare;
-        _highlightVertices[0] = new VertexPositionColor(nearLeft, color);
-        _highlightVertices[1] = new VertexPositionColor(farLeft, color);
-        _highlightVertices[2] = new VertexPositionColor(farRight, color);
-        _highlightVertices[3] = new VertexPositionColor(nearLeft, color);
-        _highlightVertices[4] = new VertexPositionColor(farRight, color);
-        _highlightVertices[5] = new VertexPositionColor(nearRight, color);
+        _highlightEffect.World = Matrix.CreateTranslation(center);
         foreach (EffectPass pass in _highlightEffect.CurrentTechnique.Passes)
         {
             pass.Apply();
-            _graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _highlightVertices, 0, QuadTriangleCount);
+            _graphicsDevice.DrawUserPrimitives(
+                PrimitiveType.TriangleList,
+                _highlightVertices,
+                FirstVertex,
+                QuadTriangleCount);
         }
     }
 
@@ -281,7 +285,8 @@ public sealed class BoardScene : IDisposable
 
     private void DrawPawn(MatchViewModel match, BoardPawn pawn, SceneCamera camera)
     {
-        var world = Matrix.CreateTranslation(BoardSceneLayout.GetCellCenter(match.BoardSize, pawn.Coordinates));
+        Vector3 pawnCenter = BoardSceneLayout.GetCellCenter(match.BoardSize, pawn.Coordinates);
+        var world = Matrix.CreateTranslation(pawnCenter);
         Color pawnColor = GetPawnColor(match.Play, pawn);
         foreach (ModelMesh mesh in _pawnModel.Model.Meshes)
         {
@@ -306,7 +311,7 @@ public sealed class BoardScene : IDisposable
     {
         SceneCamera camera = CreateCamera(match.OwnTurnOrder);
         Ray cursorRay = CreateCursorRay(cursorPosition, camera);
-        float? surfaceDistance = cursorRay.Intersects(_boardSurface);
+        float? surfaceDistance = cursorRay.Intersects(BoardSceneLayout.Surface);
         if (surfaceDistance is not float distance)
         {
             surfacePoint = Vector3.Zero;

@@ -13,7 +13,7 @@ public static class WallPolicy
         ArgumentNullException.ThrowIfNull(board);
         ArgumentNullException.ThrowIfNull(wall);
 
-        if (!IsGrooveOnBoard(board.Size, wall))
+        if (!IsGrooveOnBoard(board.Size, wall.Groove))
         {
             return new WallRejection(WallRejectionReason.OutOfBoard, BlockedTurnOrder: null);
         }
@@ -28,10 +28,11 @@ public static class WallPolicy
         return blockingRejection;
     }
 
-    private static bool IsGrooveOnBoard(byte boardSize, Wall wall)
+    public static bool IsGrooveOnBoard(byte boardSize, BoardCoordinates groove)
     {
+        ArgumentNullException.ThrowIfNull(groove);
+
         int grooveCount = boardSize - GrooveCountOffset;
-        BoardCoordinates groove = wall.Groove;
         bool isColumnInside = groove.ColumnIndex >= FirstGrooveIndex && groove.ColumnIndex < grooveCount;
         bool isRowInside = groove.RowIndex >= FirstGrooveIndex && groove.RowIndex < grooveCount;
         return isColumnInside && isRowInside;

@@ -5,8 +5,6 @@ namespace Bastion.Domain.Matches;
 
 public sealed record Board
 {
-    private const int FirstIndex = 0;
-
     private readonly Dictionary<byte, BoardCoordinates> _pawnsByTurnOrder;
     private readonly HashSet<Wall> _walls;
 
@@ -47,9 +45,7 @@ public sealed record Board
     {
         ArgumentNullException.ThrowIfNull(coordinates);
 
-        bool isColumnInside = coordinates.ColumnIndex >= FirstIndex && coordinates.ColumnIndex < Size;
-        bool isRowInside = coordinates.RowIndex >= FirstIndex && coordinates.RowIndex < Size;
-        return isColumnInside && isRowInside;
+        return BoardLayout.IsInside(Size, coordinates);
     }
 
     public bool IsOccupied(BoardCoordinates coordinates)
