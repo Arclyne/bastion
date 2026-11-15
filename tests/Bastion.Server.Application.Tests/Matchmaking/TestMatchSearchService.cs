@@ -43,7 +43,7 @@ public sealed class TestMatchSearchService
     }
 
     [Fact]
-    public void StartSearch_InvalidSession_ThrowsInvalidSession()
+    public void StartSearch_InvalidSession_ThrowsInvalidSessionException()
     {
         Action start = () => _matchSearchService.StartSearch(UnknownToken, _now);
 
@@ -51,7 +51,7 @@ public sealed class TestMatchSearchService
     }
 
     [Fact]
-    public void StartSearch_PlayerWithoutNotifications_ThrowsSearchRejected()
+    public void StartSearch_PlayerWithoutNotifications_ThrowsSearchRejectedException()
     {
         _sessionVerifier.Add(Token, _player);
 
@@ -61,7 +61,7 @@ public sealed class TestMatchSearchService
     }
 
     [Fact]
-    public void StartSearch_PlayerWithUnfinishedMatch_ThrowsSearchRejected()
+    public void StartSearch_PlayerWithUnfinishedMatch_ThrowsSearchRejectedException()
     {
         AddPlayer();
         _matchRepository.AccountIdsWithUnfinishedParticipation.Add(AccountId);
