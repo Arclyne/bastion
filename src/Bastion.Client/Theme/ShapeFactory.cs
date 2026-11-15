@@ -8,7 +8,6 @@ namespace Bastion.Client.Theme;
 
 public static class ShapeFactory
 {
-    public const float NoStrokeWidth = 0;
     public const float FullPercentage = 100;
 
     private const string BackgroundPartName = "Background";
@@ -24,7 +23,7 @@ public static class ShapeFactory
             CornerRadius = radius,
             IsFilled = true,
             FillColor = fill,
-            StrokeWidth = NoStrokeWidth,
+            StrokeWidth = 0,
         };
         shape.Dock(Dock.Fill);
         return shape;

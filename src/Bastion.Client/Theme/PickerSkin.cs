@@ -16,7 +16,6 @@ public sealed class PickerSkin : InteractiveSkin
     private const float ListItemHeight = 36;
     private const float ListShadowOffsetY = 6;
     private const float ListShadowBlur = 16;
-    private const float MiddleOffsetY = 0;
     private const int RadiiPerHeight = 2;
 
     private readonly RectangleRuntime _halo;
@@ -39,7 +38,7 @@ public sealed class PickerSkin : InteractiveSkin
         visual.ForegroundColor = TextStyleCatalog.Picker.Color;
         visual.DropdownIndicatorColor = TextStyleCatalog.Picker.Color;
         visual.DropdownIndicator.YUnits = GeneralUnitType.PixelsFromMiddle;
-        visual.DropdownIndicator.Y = MiddleOffsetY;
+        visual.DropdownIndicator.Y = 0;
 
         StyleList(picker.ListBox);
     }
@@ -80,6 +79,20 @@ public sealed class PickerSkin : InteractiveSkin
         ShapeFactory.InsertBehindContent(list.Visual, surface);
     }
 
+    private static void HandleListItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (sender is not ListBox list)
+        {
+            return;
+        }
+
+        foreach (ListBoxItem item in list.ListBoxItems)
+        {
+            var itemVisual = (ListBoxItemVisual)item.Visual;
+            StyleListItem(itemVisual);
+        }
+    }
+
     private static void StyleListItem(ListBoxItemVisual item)
     {
         TextStyleCatalog.Picker.ApplyTo(item.TextInstance);
@@ -97,19 +110,5 @@ public sealed class PickerSkin : InteractiveSkin
         string? shownText = text.Text;
         text.LocalizeText = false;
         text.Text = shownText;
-    }
-
-    private static void HandleListItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (sender is not ListBox list)
-        {
-            return;
-        }
-
-        foreach (ListBoxItem item in list.ListBoxItems)
-        {
-            var itemVisual = (ListBoxItemVisual)item.Visual;
-            StyleListItem(itemVisual);
-        }
     }
 }

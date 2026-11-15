@@ -11,7 +11,6 @@ public sealed class FieldSkin : InteractiveSkin
     private const float Radius = 13;
     private const float BorderWidth = 1.8f;
     private const float PaddingX = 14;
-    private const float TextOffsetX = 0;
     private const int HorizontalSideCount = 2;
 
     private readonly RectangleRuntime _halo;
@@ -36,6 +35,11 @@ public sealed class FieldSkin : InteractiveSkin
         get => _hasError;
         set
         {
+            if (_hasError == value)
+            {
+                return;
+            }
+
             _hasError = value;
             ShowState(_flags);
         }
@@ -64,9 +68,9 @@ public sealed class FieldSkin : InteractiveSkin
     private static void StyleText(TextBoxBaseVisual visual)
     {
         visual.ClipContainer.Width = -(PaddingX * HorizontalSideCount);
-        visual.TextInstance.X = TextOffsetX;
+        visual.TextInstance.X = 0;
         visual.TextInstance.LocalizeText = false;
-        visual.PlaceholderTextInstance.X = TextOffsetX;
+        visual.PlaceholderTextInstance.X = 0;
         TextStyleCatalog.FieldText.ApplyTo(visual.TextInstance);
         TextStyleCatalog.Placeholder.ApplyTo(visual.PlaceholderTextInstance);
         visual.ForegroundColor = TextStyleCatalog.FieldText.Color;
