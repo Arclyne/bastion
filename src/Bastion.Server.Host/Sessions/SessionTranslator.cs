@@ -10,7 +10,13 @@ public static class SessionTranslator
 {
     public static string RequireSessionToken(string? sessionToken)
     {
-        return sessionToken ?? throw ToFault(new InvalidSessionException());
+        if (sessionToken is null)
+        {
+            var missingSessionToken = new InvalidSessionException();
+            throw ToFault(missingSessionToken);
+        }
+
+        return sessionToken;
     }
 
     public static FaultException<InvalidSessionFault> ToFault(InvalidSessionException rejection)
