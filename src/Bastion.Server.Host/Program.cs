@@ -68,12 +68,6 @@ public static class Program
         XmlConfigurator.Configure(LogManager.GetRepository(typeof(Program).Assembly), configurationFile);
     }
 
-    private static void ConfigureServiceModel(IServiceBuilder serviceBuilder, ServerCertificate certificate)
-    {
-        serviceBuilder.AddBastionServices();
-        certificate.ApplyTo(serviceBuilder);
-    }
-
     private static void LogUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         var exception = e.ExceptionObject as Exception;
@@ -103,5 +97,11 @@ public static class Program
         }
 
         return netTcpPort;
+    }
+
+    private static void ConfigureServiceModel(IServiceBuilder serviceBuilder, ServerCertificate certificate)
+    {
+        serviceBuilder.AddBastionServices();
+        certificate.ApplyTo(serviceBuilder);
     }
 }
