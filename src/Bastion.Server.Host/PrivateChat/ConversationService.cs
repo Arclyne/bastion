@@ -73,18 +73,23 @@ public sealed class ConversationService : IConversationService
         TranslateConversationFailures(nameof(MarkConversationRead), markConversationRead);
     }
 
-    private static string RequireFriendCode(string? friendCode)
-    {
-        return friendCode
-            ?? throw ChatTranslator.ToFault(new ChatMessageRejectedException(ChatRejection.PlayerNotFound));
-    }
-
     private ConversationEntry[] ListConversationsInRequestScope(string token)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         IPrivateChatService privateChat = scope.ServiceProvider.GetRequiredService<IPrivateChatService>();
         IReadOnlyList<ConversationSummary> summaries = privateChat.ListConversations(token, GetUtcNow());
         return PrivateChatTranslator.ToConversationEntries(summaries);
+    }
+
+    private static string RequireFriendCode(string? friendCode)
+    {
+        if (friendCode is null)
+        {
+            var missingFriendCode = new ChatMessageRejectedException(ChatRejection.PlayerNotFound);
+            throw ChatTranslator.ToFault(missingFriendCode);
+        }
+
+        return friendCode;
     }
 
     private PrivateConversationLog OpenConversationInRequestScope(string token, string partnerCode)
