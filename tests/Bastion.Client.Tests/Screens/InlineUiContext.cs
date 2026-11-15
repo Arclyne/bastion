@@ -7,8 +7,6 @@ public static class InlineUiContext
 {
     public static TViewModel CreateViewModel<TViewModel>(Func<TViewModel> createViewModel)
     {
-        ArgumentNullException.ThrowIfNull(createViewModel);
-
         SynchronizationContext? previousContext = SynchronizationContext.Current;
         SynchronizationContext.SetSynchronizationContext(null);
         try
