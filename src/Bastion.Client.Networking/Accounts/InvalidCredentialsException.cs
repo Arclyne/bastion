@@ -24,5 +24,6 @@ public sealed class InvalidCredentialsException : Exception
     public InvalidCredentialsException(Exception innerException)
         : base(DefaultMessage, innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
     }
 }
