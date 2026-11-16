@@ -22,8 +22,8 @@ public sealed class ServiceChannel<TContract> : IServiceChannel<TContract>, IDis
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        Func<TContract, bool> operationAsFunction = channel => CompleteOperation(operation, channel);
-        Call(operationAsFunction);
+        Func<TContract, bool> completeOperation = channel => CompleteOperation(operation, channel);
+        Call(completeOperation);
     }
 
     public TResult Call<TResult>(Func<TContract, TResult> operation)
