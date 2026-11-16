@@ -161,8 +161,9 @@ public class Match
         }
 
         Board board = BuildBoard(boardSize);
-        IReadOnlyList<BoardCoordinates> reachableSquares =
-            PawnMovePolicy.ListReachableSquares(board, participation.TurnOrder);
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(
+            board,
+            participation.TurnOrder);
         return reachableSquares;
     }
 
@@ -324,8 +325,8 @@ public class Match
         }
 
         List<Participation> activeParticipations = ListActiveParticipations();
-        Participation nextPlayer =
-            activeParticipations.FirstOrDefault(participation => participation.TurnOrder > turnOrder)
+        Participation nextPlayer = activeParticipations.FirstOrDefault(
+            participation => participation.TurnOrder > turnOrder)
             ?? activeParticipations.First();
         CurrentTurnOrder = nextPlayer.TurnOrder;
     }
@@ -338,8 +339,9 @@ public class Match
             .LastOrDefault();
         if (lastPawnMove is null)
         {
-            BoardCoordinates startingCoordinates =
-                BoardLayout.GetStartingCoordinates(boardSize, participation.TurnOrder);
+            BoardCoordinates startingCoordinates = BoardLayout.GetStartingCoordinates(
+                boardSize,
+                participation.TurnOrder);
             return startingCoordinates;
         }
 
