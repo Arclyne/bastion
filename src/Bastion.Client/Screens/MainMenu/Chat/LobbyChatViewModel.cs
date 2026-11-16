@@ -167,7 +167,7 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
         IsSending = true;
         try
         {
-            DateTime sentAt = await Task.Run(() => _chat.SendMessage(_session.Token, trimmedText));
+            DateTime sentAt = await Task.Run(() => _chat.SendLobbyChatMessage(_session.Token, trimmedText));
             row.Confirm(sentAt);
         }
         catch (ChatMessageRejectedException ex)

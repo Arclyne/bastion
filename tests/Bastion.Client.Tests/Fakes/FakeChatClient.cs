@@ -18,7 +18,7 @@ public sealed class FakeChatClient : IChatClient
 
     public event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
 
-    public DateTime SendMessage(string sessionToken, string text)
+    public DateTime SendLobbyChatMessage(string sessionToken, string text)
     {
         throw new NotSupportedException(LobbyChatNotSupported);
     }

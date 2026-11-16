@@ -65,14 +65,16 @@ public static class ChatContractTranslator
 
     private static ChatMessage ToChatMessage(LobbyChatMessage message)
     {
-        var author = new ChatAuthor(message.SenderNickname ?? string.Empty, message.IsOwn);
+        string senderNickname = message.SenderNickname ?? string.Empty;
+        var author = new ChatAuthor(senderNickname, message.IsOwn);
         string text = message.Text ?? string.Empty;
         return new ChatMessage(author, text, message.SentAt);
     }
 
     private static ChatMessage ToReceivedMessage(string? senderNickname, string? text, DateTime sentAt)
     {
-        var author = new ChatAuthor(senderNickname ?? string.Empty, isOwn: false);
+        string authorNickname = senderNickname ?? string.Empty;
+        var author = new ChatAuthor(authorNickname, isOwn: false);
         string messageText = text ?? string.Empty;
         return new ChatMessage(author, messageText, sentAt);
     }

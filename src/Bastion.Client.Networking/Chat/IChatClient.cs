@@ -7,7 +7,7 @@ public interface IChatClient
 {
     event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
 
-    DateTime SendMessage(string sessionToken, string text);
+    DateTime SendLobbyChatMessage(string sessionToken, string text);
 
     DateTime SendMatchChatMessage(string sessionToken, int matchId, string text);
 
