@@ -80,10 +80,11 @@ public static class ConversationPartFactory
     {
         ArgumentNullException.ThrowIfNull(handleSendClick);
 
+        float inputWidth = rowWidth - SendButtonWidth - InputSpacing;
         var input = new TextField
         {
             Placeholder = nameof(Strings.ChatPlaceholder),
-            Width = rowWidth - SendButtonWidth - InputSpacing,
+            Width = inputWidth,
             Height = InputHeight,
         };
         input.SetBinding(nameof(TextField.Text), nameof(ChatComposerViewModel.Draft));

@@ -17,7 +17,6 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
 {
     private const int SingleMessage = 1;
-    private const int OldestMessageIndex = 0;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(LobbyChatViewModel));
 
@@ -225,12 +224,7 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
 
     private void AddMessage(ChatMessageRowViewModel row)
     {
-        Messages.Add(row);
-        if (Messages.Count > ChatPolicy.MaximumRecentMessages)
-        {
-            Messages.RemoveAt(OldestMessageIndex);
-        }
-
+        AddRecentMessage(Messages, row);
         IsEmpty = false;
     }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using Bastion.Client.Localization;
 using Bastion.Domain.Chat;
@@ -9,6 +10,7 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 public abstract class ChatComposerViewModel : ViewModel
 {
     private const int CounterVisibleFromLength = 180;
+    private const int OldestMessageIndex = 0;
 
     protected ChatComposerViewModel(TimeProvider timeProvider)
     {
@@ -81,6 +83,18 @@ public abstract class ChatComposerViewModel : ViewModel
         ArgumentNullException.ThrowIfNull(arguments);
 
         return string.Format(CultureInfo.CurrentCulture, format, arguments);
+    }
+
+    protected static void AddRecentMessage<TRow>(ObservableCollection<TRow> messages, TRow row)
+    {
+        ArgumentNullException.ThrowIfNull(messages);
+        ArgumentNullException.ThrowIfNull(row);
+
+        messages.Add(row);
+        if (messages.Count > ChatPolicy.MaximumRecentMessages)
+        {
+            messages.RemoveAt(OldestMessageIndex);
+        }
     }
 
     protected DateTime GetUtcNow()
