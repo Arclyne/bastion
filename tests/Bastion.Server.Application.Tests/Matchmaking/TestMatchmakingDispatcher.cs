@@ -21,12 +21,12 @@ public sealed class TestMatchmakingDispatcher
     private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
     private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
     private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
-    private readonly FakeTurnOrderShuffler _turnOrderShuffler = new FakeTurnOrderShuffler();
     private readonly MatchmakingDispatcher _matchmakingDispatcher;
 
     public TestMatchmakingDispatcher()
     {
-        var rankedMatchCreator = new RankedMatchCreator(_matchRepository, _turnOrderShuffler);
+        var turnOrderShuffler = new FakeTurnOrderShuffler();
+        var rankedMatchCreator = new RankedMatchCreator(_matchRepository, turnOrderShuffler);
         _matchmakingDispatcher = new MatchmakingDispatcher(_matchmakingQueue, _matchmakingNotifier, rankedMatchCreator);
         var firstSearch = new MatchSearch(FirstAccountId, FirstNickname, _startedAt);
         _matchmakingQueue.TryAdd(firstSearch);
