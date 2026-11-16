@@ -17,7 +17,9 @@ public interface ILoginService
     /// <param name="password">The password the player entered.</param>
     /// <returns>The token of the new session, with the nickname and preferred language of the player.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="attempt"/> or <paramref name="password"/> is null.</exception>
-    /// <exception cref="InvalidCredentialsException">No account matches the identifier, the account was deleted, or the password is wrong.</exception>
+    /// <exception cref="InvalidCredentialsException">
+    /// No account matches the identifier, the account has no password or was deleted, or the password is wrong.
+    /// </exception>
     /// <exception cref="AccountRestrictedException">The account is locked, pending, suspended or banned; the exception says which, and for how many minutes it stays locked.</exception>
     LoggedInPlayer LogIn(AccessAttempt attempt, string password);
 }
