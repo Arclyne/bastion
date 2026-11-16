@@ -48,21 +48,24 @@ public sealed class MatchmakingClient : IMatchmakingClient
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        Call(service => service.StartSearch(sessionToken));
+        Action<IMatchmakingService> startSearch = service => service.StartSearch(sessionToken);
+        Call(startSearch);
     }
 
     public void CancelSearch(string sessionToken)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        Call(service => service.CancelSearch(sessionToken));
+        Action<IMatchmakingService> cancelSearch = service => service.CancelSearch(sessionToken);
+        Call(cancelSearch);
     }
 
     public void ConfirmPresence(string sessionToken)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        Call(service => service.ConfirmPresence(sessionToken));
+        Action<IMatchmakingService> confirmPresence = service => service.ConfirmPresence(sessionToken);
+        Call(confirmPresence);
     }
 
     private void Call(Action<IMatchmakingService> operation)
