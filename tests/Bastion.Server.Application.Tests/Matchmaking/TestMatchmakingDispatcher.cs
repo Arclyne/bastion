@@ -51,7 +51,7 @@ public sealed class TestMatchmakingDispatcher
 
         _matchmakingDispatcher.ReviewAndNotify(_startedAt);
 
-        SearchEndReason reason = _matchmakingNotifier.EndReasons[FirstAccountId];
+        SearchEndReason reason = _matchmakingNotifier.EndReasonsByAccountId[FirstAccountId];
         Assert.Equal(SearchEndReason.MatchCreationFailed, reason);
     }
 
@@ -71,7 +71,7 @@ public sealed class TestMatchmakingDispatcher
 
         _matchmakingDispatcher.ReviewAndNotify(responseDeadline);
 
-        SearchEndReason reason = _matchmakingNotifier.EndReasons[FirstAccountId];
+        SearchEndReason reason = _matchmakingNotifier.EndReasonsByAccountId[FirstAccountId];
         Assert.Equal(SearchEndReason.PresenceExpired, reason);
     }
 
