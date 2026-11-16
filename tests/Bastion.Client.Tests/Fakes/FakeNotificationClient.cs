@@ -39,10 +39,6 @@ public sealed class FakeNotificationClient : INotificationClient
     {
     }
 
-    public void Disconnect()
-    {
-    }
-
     public bool HasAnySubscribers()
     {
         var handlers = new Delegate?[]

@@ -35,6 +35,4 @@ public interface INotificationClient
     event EventHandler? Disconnected;
 
     void Connect(string sessionToken);
-
-    void Disconnect();
 }

@@ -60,7 +60,7 @@ public sealed class NotificationCallback : INotificationCallback
         try
         {
             if (TryDispatchChatNotification(notification)
-                || TryDispatchMatchEndNotification(notification)
+                || TryDispatchMatchAbandonedNotification(notification)
                 || TryDispatchMatchMoveNotification(notification)
                 || TryDispatchFriendNotification(notification)
                 || TryDispatchPrivateMessageNotification(notification)
@@ -73,7 +73,8 @@ public sealed class NotificationCallback : INotificationCallback
         catch (ArgumentOutOfRangeException ex)
         {
             _logger.Warn(
-                $"A notification with an unknown value was ignored. Type={notification.GetType().Name}",
+                "A notification was ignored because one of its values is out of range. "
+                + $"Type={notification.GetType().Name}",
                 ex);
             return;
         }
@@ -123,7 +124,7 @@ public sealed class NotificationCallback : INotificationCallback
         MatchChatMessageReceived?.Invoke(this, e);
     }
 
-    private bool TryDispatchMatchEndNotification(Notification notification)
+    private bool TryDispatchMatchAbandonedNotification(Notification notification)
     {
         if (notification is not MatchAbandonedNotification matchAbandoned)
         {
