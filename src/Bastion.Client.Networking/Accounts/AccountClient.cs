@@ -30,7 +30,8 @@ public sealed class AccountClient : IAccountClient
             DeviceFingerprint = DeviceIdentity.GetFingerprint(),
             ClientVersion = DeviceIdentity.GetClientVersion(),
         };
-        PlayerSession session = Call(service => service.LogIn(playerCredentials, device));
+        Func<IAccountService, PlayerSession> logIn = service => service.LogIn(playerCredentials, device);
+        PlayerSession session = Call(logIn);
         return ToLoggedInSession(session);
     }
 
