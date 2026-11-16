@@ -258,6 +258,9 @@
   <data name="FriendsReject" xml:space="preserve">
     <value>Rechazar</value>
   </data>
+  <data name="FriendsCancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
   <data name="FriendsCancelRequest" xml:space="preserve">
     <value>Cancelar</value>
   </data>
