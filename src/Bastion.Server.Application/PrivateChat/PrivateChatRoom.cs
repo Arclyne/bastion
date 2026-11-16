@@ -5,13 +5,14 @@ namespace Bastion.Server.Application.PrivateChat;
 
 public sealed class PrivateChatRoom : IPrivateChatRoom
 {
-    private readonly ChatCooldown _cooldown = new ChatCooldown();
+    private readonly ChatCooldown _cooldown;
     private readonly IPrivateMessageNotifier _notifier;
 
     public PrivateChatRoom(IPrivateMessageNotifier notifier)
     {
         ArgumentNullException.ThrowIfNull(notifier);
 
+        _cooldown = new ChatCooldown();
         _notifier = notifier;
     }
 
