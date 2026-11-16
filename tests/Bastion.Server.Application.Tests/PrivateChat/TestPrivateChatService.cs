@@ -99,8 +99,22 @@ public sealed class TestPrivateChatService
         Assert.Equal(CleanText, storedMessage.Text);
     }
 
+    [Theory]
+    [InlineData("See you in the next match.")]
+    [InlineData("¿Jugamos otra? ¡Qué peón, Ñandú!")]
+    public void SendPrivateMessage_EnglishOrSpanishText_StoresSameText(string text)
+    {
+        AddPlayers();
+        PrivateMessageDraft draft = CreateDraftToFriend(text);
+
+        _privateChatService.SendPrivateMessage(Token, draft, _now);
+
+        Message storedMessage = _unitOfWork.MessageRepository.Messages[0];
+        Assert.Equal(text, storedMessage.Text);
+    }
+
     [Fact]
-    public void SendPrivateMessage_Friend_SavesChanges()
+    public void SendPrivateMessage_Friend_SavesChangesOnce()
     {
         AddPlayers();
         PrivateMessageDraft draft = CreateDraftToFriend(CleanText);
@@ -134,7 +148,7 @@ public sealed class TestPrivateChatService
     }
 
     [Fact]
-    public void SendPrivateMessage_FormattedFriendCode_FindsTheFriend()
+    public void SendPrivateMessage_HyphenatedFriendCode_StoresMessage()
     {
         AddPlayers();
         var draft = new PrivateMessageDraft(HyphenatedFriendFriendCode, CleanText);
