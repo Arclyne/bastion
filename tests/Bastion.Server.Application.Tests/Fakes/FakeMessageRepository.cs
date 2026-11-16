@@ -8,7 +8,12 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeMessageRepository : IMessageRepository
 {
-    public List<Message> Messages { get; } = new List<Message>();
+    public FakeMessageRepository()
+    {
+        Messages = new List<Message>();
+    }
+
+    public List<Message> Messages { get; }
 
     public void Add(Message message)
     {
@@ -38,7 +43,7 @@ public sealed class FakeMessageRepository : IMessageRepository
         IEnumerable<KeyValuePair<int, int>> unreadCounts = Messages
             .Where(message => message.RecipientId == recipientId && message.ReadAt is null)
             .GroupBy(message => message.AuthorId)
-            .Select(unread => new KeyValuePair<int, int>(unread.Key, unread.Count()));
+            .Select(unreadMessages => new KeyValuePair<int, int>(unreadMessages.Key, unreadMessages.Count()));
         return new Dictionary<int, int>(unreadCounts);
     }
 
@@ -56,9 +61,9 @@ public sealed class FakeMessageRepository : IMessageRepository
         return message.AuthorId == accountId || message.RecipientId == accountId;
     }
 
-    private static Message FindLatest(IGrouping<int, Message> conversation)
+    private static Message FindLatest(IGrouping<int, Message> conversationMessages)
     {
-        IEnumerable<Message> messagesInOrder = conversation.OrderBy(message => message.SentAt);
+        IEnumerable<Message> messagesInOrder = conversationMessages.OrderBy(message => message.SentAt);
         return messagesInOrder.Last();
     }
 

@@ -6,18 +6,26 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeFriendNotifier : IFriendNotifier
 {
-    public List<int> RecipientAccountIds { get; } = new List<int>();
+    public FakeFriendNotifier()
+    {
+        PresenceRecipientAccountIds = new List<int>();
+        PresenceChanges = new List<FriendPresenceChange>();
+        RequestRecipientAccountIds = new List<int>();
+        FriendshipStartedAccountIds = new List<int>();
+    }
 
-    public List<FriendPresenceChange> Changes { get; } = new List<FriendPresenceChange>();
+    public List<int> PresenceRecipientAccountIds { get; }
 
-    public List<int> RequestRecipientAccountIds { get; } = new List<int>();
+    public List<FriendPresenceChange> PresenceChanges { get; }
 
-    public List<int> FriendshipStartedAccountIds { get; } = new List<int>();
+    public List<int> RequestRecipientAccountIds { get; }
+
+    public List<int> FriendshipStartedAccountIds { get; }
 
     public void NotifyPresenceChanged(IReadOnlyList<int> recipientAccountIds, FriendPresenceChange change)
     {
-        RecipientAccountIds.AddRange(recipientAccountIds);
-        Changes.Add(change);
+        PresenceRecipientAccountIds.AddRange(recipientAccountIds);
+        PresenceChanges.Add(change);
     }
 
     public void NotifyFriendRequestReceived(int recipientAccountId, FriendRequestSummary request)

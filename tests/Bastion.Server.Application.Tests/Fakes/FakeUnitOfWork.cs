@@ -10,21 +10,33 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeUnitOfWork : IUnitOfWork
 {
-    public FakeAccountRepository AccountRepository { get; } = new FakeAccountRepository();
+    public FakeUnitOfWork()
+    {
+        AccountRepository = new FakeAccountRepository();
+        SessionRepository = new FakeSessionRepository();
+        AccessLogRepository = new FakeAccessLogRepository();
+        FriendshipRepository = new FakeFriendshipRepository();
+        FriendRequestRepository = new FakeFriendRequestRepository();
+        SanctionRepository = new FakeSanctionRepository();
+        BannedWordRepository = new FakeBannedWordRepository();
+        MessageRepository = new FakeMessageRepository();
+    }
 
-    public FakeSessionRepository SessionRepository { get; } = new FakeSessionRepository();
+    public FakeAccountRepository AccountRepository { get; }
 
-    public FakeAccessLogRepository AccessLogRepository { get; } = new FakeAccessLogRepository();
+    public FakeSessionRepository SessionRepository { get; }
 
-    public FakeFriendshipRepository FriendshipRepository { get; } = new FakeFriendshipRepository();
+    public FakeAccessLogRepository AccessLogRepository { get; }
 
-    public FakeFriendRequestRepository FriendRequestRepository { get; } = new FakeFriendRequestRepository();
+    public FakeFriendshipRepository FriendshipRepository { get; }
 
-    public FakeSanctionRepository SanctionRepository { get; } = new FakeSanctionRepository();
+    public FakeFriendRequestRepository FriendRequestRepository { get; }
 
-    public FakeBannedWordRepository BannedWordRepository { get; } = new FakeBannedWordRepository();
+    public FakeSanctionRepository SanctionRepository { get; }
 
-    public FakeMessageRepository MessageRepository { get; } = new FakeMessageRepository();
+    public FakeBannedWordRepository BannedWordRepository { get; }
+
+    public FakeMessageRepository MessageRepository { get; }
 
     public int SaveCount { get; private set; }
 

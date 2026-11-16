@@ -43,7 +43,7 @@ public sealed class TestFriendPresenceService
 
         _friendPresenceService.ReportConnected(AccountId);
 
-        Assert.Equal(expectedRecipients, _friendNotifier.RecipientAccountIds);
+        Assert.Equal(expectedRecipients, _friendNotifier.PresenceRecipientAccountIds);
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public sealed class TestFriendPresenceService
 
         _friendPresenceService.ReportConnected(AccountId);
 
-        FriendPresenceChange change = _friendNotifier.Changes[0];
+        FriendPresenceChange change = _friendNotifier.PresenceChanges[0];
         Assert.Equal(FriendPresence.Connected, change.Presence);
     }
 
@@ -65,7 +65,7 @@ public sealed class TestFriendPresenceService
 
         _friendPresenceService.ReportConnected(AccountId);
 
-        Assert.Empty(_friendNotifier.Changes);
+        Assert.Empty(_friendNotifier.PresenceChanges);
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public sealed class TestFriendPresenceService
 
         _friendPresenceService.ReportConnected(UnknownAccountId);
 
-        Assert.Empty(_friendNotifier.Changes);
+        Assert.Empty(_friendNotifier.PresenceChanges);
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public sealed class TestFriendPresenceService
 
         _friendPresenceService.ReportDisconnected(UnsavedAccountId, _now);
 
-        FriendPresenceChange change = _friendNotifier.Changes[0];
+        FriendPresenceChange change = _friendNotifier.PresenceChanges[0];
         Assert.Equal(FriendPresence.Disconnected, change.Presence);
     }
 
@@ -118,7 +118,7 @@ public sealed class TestFriendPresenceService
 
         _friendPresenceService.ReportDisconnected(UnsavedAccountId, _now);
 
-        FriendPresenceChange change = _friendNotifier.Changes[0];
+        FriendPresenceChange change = _friendNotifier.PresenceChanges[0];
         Assert.Equal(_now, change.LastSeenAt);
     }
 

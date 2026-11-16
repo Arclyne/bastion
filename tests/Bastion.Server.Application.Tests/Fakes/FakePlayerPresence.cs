@@ -5,7 +5,12 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakePlayerPresence : IPlayerPresence
 {
-    public HashSet<int> ConnectedAccountIds { get; } = new HashSet<int>();
+    public FakePlayerPresence()
+    {
+        ConnectedAccountIds = new HashSet<int>();
+    }
+
+    public HashSet<int> ConnectedAccountIds { get; }
 
     public bool IsPlayerConnected(int accountId)
     {

@@ -5,9 +5,15 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeMatchMoveNotifier : IMatchMoveNotifier
 {
-    public List<NotifiedPawnMove> NotifiedPawnMoves { get; } = new List<NotifiedPawnMove>();
+    public FakeMatchMoveNotifier()
+    {
+        NotifiedPawnMoves = new List<NotifiedPawnMove>();
+        NotifiedWallPlacements = new List<NotifiedWallPlacement>();
+    }
 
-    public List<NotifiedWallPlacement> NotifiedWallPlacements { get; } = new List<NotifiedWallPlacement>();
+    public List<NotifiedPawnMove> NotifiedPawnMoves { get; }
+
+    public List<NotifiedWallPlacement> NotifiedWallPlacements { get; }
 
     public void NotifyPawnMoved(int matchId, IReadOnlyCollection<int> recipientAccountIds, PawnMoveNotice notice)
     {

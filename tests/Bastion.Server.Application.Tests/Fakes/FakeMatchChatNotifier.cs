@@ -5,7 +5,12 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeMatchChatNotifier : IMatchChatNotifier
 {
-    public List<NotifiedMatchChatMessage> NotifiedMessages { get; } = new List<NotifiedMatchChatMessage>();
+    public FakeMatchChatNotifier()
+    {
+        NotifiedMessages = new List<NotifiedMatchChatMessage>();
+    }
+
+    public List<NotifiedMatchChatMessage> NotifiedMessages { get; }
 
     public void NotifyMatchChatMessage(
         int matchId,

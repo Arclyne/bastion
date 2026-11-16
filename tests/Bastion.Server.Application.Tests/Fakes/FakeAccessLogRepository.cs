@@ -6,7 +6,12 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeAccessLogRepository : IAccessLogRepository
 {
-    public List<AccessLog> AccessLogs { get; } = new List<AccessLog>();
+    public FakeAccessLogRepository()
+    {
+        AccessLogs = new List<AccessLog>();
+    }
+
+    public List<AccessLog> AccessLogs { get; }
 
     public void Add(AccessLog accessLog)
     {

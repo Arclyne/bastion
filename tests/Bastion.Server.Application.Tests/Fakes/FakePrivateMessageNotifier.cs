@@ -5,7 +5,12 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakePrivateMessageNotifier : IPrivateMessageNotifier
 {
-    public List<PrivateMessageDelivery> Deliveries { get; } = new List<PrivateMessageDelivery>();
+    public FakePrivateMessageNotifier()
+    {
+        Deliveries = new List<PrivateMessageDelivery>();
+    }
+
+    public List<PrivateMessageDelivery> Deliveries { get; }
 
     public void NotifyPrivateMessage(PrivateMessageDelivery delivery)
     {

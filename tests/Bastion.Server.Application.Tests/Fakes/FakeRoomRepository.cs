@@ -11,20 +11,32 @@ public sealed class FakeRoomRepository : IRoomRepository
     private const int FirstRoomId = 1;
     public const int FirstMatchId = 100;
 
-    private int _nextRoomId = FirstRoomId;
-    private int _nextMatchId = FirstMatchId;
+    private int _nextRoomId;
+    private int _nextMatchId;
 
-    public HashSet<string> TakenCodes { get; } = new HashSet<string>();
+    public FakeRoomRepository()
+    {
+        _nextRoomId = FirstRoomId;
+        _nextMatchId = FirstMatchId;
+        TakenCodes = new HashSet<string>();
+        AddedRooms = new List<Room>();
+        ChangedSettingsByRoomId = new Dictionary<int, RoomSettings>();
+        ClosedRoomIds = new List<int>();
+        CodesInMatch = new HashSet<string>();
+        SavedMatchesByRoomId = new Dictionary<int, Match>();
+    }
 
-    public List<Room> AddedRooms { get; } = new List<Room>();
+    public HashSet<string> TakenCodes { get; }
 
-    public Dictionary<int, RoomSettings> ChangedSettingsByRoomId { get; } = new Dictionary<int, RoomSettings>();
+    public List<Room> AddedRooms { get; }
 
-    public List<int> ClosedRoomIds { get; } = new List<int>();
+    public Dictionary<int, RoomSettings> ChangedSettingsByRoomId { get; }
 
-    public HashSet<string> CodesInMatch { get; } = new HashSet<string>();
+    public List<int> ClosedRoomIds { get; }
 
-    public Dictionary<int, Match> SavedMatchesByRoomId { get; } = new Dictionary<int, Match>();
+    public HashSet<string> CodesInMatch { get; }
+
+    public Dictionary<int, Match> SavedMatchesByRoomId { get; }
 
     public RoomRepositoryException? MatchSaveFailure { get; set; }
 
