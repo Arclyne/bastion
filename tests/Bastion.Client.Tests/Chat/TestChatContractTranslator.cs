@@ -66,6 +66,40 @@ public sealed class TestChatContractTranslator
     }
 
     [Theory]
+    [InlineData("Good game, well played!")]
+    [InlineData("¿Otra partida? ¡Qué peón, Ñandú!")]
+    public void ToChatMessage_EnglishOrSpanishText_KeepsText(string text)
+    {
+        var notification = new ChatMessageNotification
+        {
+            SenderNickname = SenderNickname,
+            Text = text,
+            OccurredAt = _sentAt,
+        };
+
+        var message = ChatContractTranslator.ToChatMessage(notification);
+
+        Assert.Equal(text, message.Text);
+    }
+
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void ToChatMessage_EnglishOrSpanishNickname_KeepsNickname(string nickname)
+    {
+        var notification = new ChatMessageNotification
+        {
+            SenderNickname = nickname,
+            Text = Text,
+            OccurredAt = _sentAt,
+        };
+
+        var message = ChatContractTranslator.ToChatMessage(notification);
+
+        Assert.Equal(nickname, message.Author.Nickname);
+    }
+
+    [Theory]
     [InlineData(ChatRejectionReason.InvalidMessage, ChatRejection.InvalidMessage)]
     [InlineData(ChatRejectionReason.Muted, ChatRejection.Muted)]
     [InlineData(ChatRejectionReason.BannedTerm, ChatRejection.BannedTerm)]
