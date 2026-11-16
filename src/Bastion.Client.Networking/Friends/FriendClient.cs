@@ -131,8 +131,8 @@ public sealed class FriendClient : IFriendClient
 
     private void Call(Action<IFriendshipService> operation)
     {
-        Func<IFriendshipService, bool> operationAsFunction = service => CompleteOperation(operation, service);
-        Call(operationAsFunction);
+        Func<IFriendshipService, bool> completeOperation = service => CompleteOperation(operation, service);
+        Call(completeOperation);
     }
 
     private static bool CompleteOperation(Action<IFriendshipService> operation, IFriendshipService service)
