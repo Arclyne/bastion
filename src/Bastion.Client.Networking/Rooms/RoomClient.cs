@@ -141,8 +141,8 @@ public sealed class RoomClient : IRoomClient
 
     private void Call(Action<IRoomService> operation)
     {
-        Func<IRoomService, bool> operationAsFunction = service => CompleteOperation(operation, service);
-        Call(operationAsFunction);
+        Func<IRoomService, bool> completeOperation = service => CompleteOperation(operation, service);
+        Call(completeOperation);
     }
 
     private static bool CompleteOperation(Action<IRoomService> operation, IRoomService service)
