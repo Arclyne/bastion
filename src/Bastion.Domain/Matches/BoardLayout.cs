@@ -8,7 +8,7 @@ public static class BoardLayout
     private const char FirstColumn = 'a';
     private const char LastColumn = 'z';
     private const int RowNumberOffset = 1;
-    private const int FirstIndex = 0;
+    public const int FirstIndex = 0;
     private const int BoardHalves = 2;
     private const int ColumnLength = 1;
     private const int ShortestSquareLength = 2;
