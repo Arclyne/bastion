@@ -31,7 +31,10 @@ public sealed class ChatClient : IChatClient
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(text);
 
-        ChatMessageReceipt receipt = Call(service => service.SendChatMessage(sessionToken, text));
+        Func<IChatService, ChatMessageReceipt> sendLobbyChatMessage = service => service.SendChatMessage(
+            sessionToken,
+            text);
+        ChatMessageReceipt receipt = Call(sendLobbyChatMessage);
         return receipt.SentAt;
     }
 
@@ -40,7 +43,11 @@ public sealed class ChatClient : IChatClient
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(text);
 
-        ChatMessageReceipt receipt = Call(service => service.SendMatchChatMessage(sessionToken, matchId, text));
+        Func<IChatService, ChatMessageReceipt> sendMatchChatMessage = service => service.SendMatchChatMessage(
+            sessionToken,
+            matchId,
+            text);
+        ChatMessageReceipt receipt = Call(sendMatchChatMessage);
         return receipt.SentAt;
     }
 
@@ -48,7 +55,8 @@ public sealed class ChatClient : IChatClient
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        LobbyChatLog log = Call(service => service.OpenLobbyChat(sessionToken));
+        Func<IChatService, LobbyChatLog> openLobbyChat = service => service.OpenLobbyChat(sessionToken);
+        LobbyChatLog log = Call(openLobbyChat);
         return ChatContractTranslator.ToTranscript(log);
     }
 
