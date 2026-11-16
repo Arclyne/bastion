@@ -8,6 +8,7 @@ namespace Bastion.Client.Screens.Matches.Scene;
 public sealed class SceneModel
 {
     private const float DisplayGamma = 2.2f;
+    private const float InverseDisplayGamma = 1f / DisplayGamma;
 
     private readonly Matrix[] _absoluteBoneTransforms;
 
@@ -75,10 +76,9 @@ public sealed class SceneModel
 
     private static Vector3 ConvertLinearToDisplay(Vector3 linearColor)
     {
-        float inverseGamma = 1f / DisplayGamma;
-        float red = MathF.Pow(linearColor.X, inverseGamma);
-        float green = MathF.Pow(linearColor.Y, inverseGamma);
-        float blue = MathF.Pow(linearColor.Z, inverseGamma);
+        float red = MathF.Pow(linearColor.X, InverseDisplayGamma);
+        float green = MathF.Pow(linearColor.Y, InverseDisplayGamma);
+        float blue = MathF.Pow(linearColor.Z, InverseDisplayGamma);
         return new Vector3(red, green, blue);
     }
 }

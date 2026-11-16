@@ -181,7 +181,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
             Groove = groove,
             Orientation = orientation,
         };
-        bool isSent = await TrySendToServer(() => PlaceInJoinedMatch(chosenWall));
+        Action placeInJoinedMatch = () => PlaceInJoinedMatch(chosenWall);
+        bool isSent = await TrySendToServer(placeInJoinedMatch);
         if (isSent)
         {
             WaitForMoveNotification(chosenWall.MoveNumber);
@@ -215,7 +216,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
             return;
         }
 
-        UiThread.Run(_uiContext, () => ReceivePawnMove(e));
+        Action receivePawnMove = () => ReceivePawnMove(e);
+        UiThread.Run(_uiContext, receivePawnMove);
     }
 
     private void ReceivePawnMove(PawnMovedEventArgs pawnMove)
@@ -225,7 +227,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         {
             _logger.Warn(
                 $"A pawn move arrived that the board cannot place. MatchId={pawnMove.MatchId}; "
-                + $"Square={pawnMove.ToSquare}");
+                + $"Mover={pawnMove.MoverNickname}; Square={pawnMove.ToSquare}");
             return;
         }
 
@@ -285,7 +287,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
             return;
         }
 
-        UiThread.Run(_uiContext, () => ReceiveWallPlacement(e));
+        Action receiveWallPlacement = () => ReceiveWallPlacement(e);
+        UiThread.Run(_uiContext, receiveWallPlacement);
     }
 
     private void ReceiveWallPlacement(WallPlacedEventArgs wallPlacement)
@@ -295,7 +298,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         {
             _logger.Warn(
                 $"A wall arrived that the board cannot place. MatchId={wallPlacement.MatchId}; "
-                + $"Groove={wallPlacement.Groove}");
+                + $"Placer={wallPlacement.PlacerNickname}; Groove={wallPlacement.Groove}");
             return;
         }
 
@@ -320,7 +323,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
             return;
         }
 
-        UiThread.Run(_uiContext, () => ReceiveAbandonment(e.AbandoningNickname, e.IsMatchOver));
+        Action receiveAbandonment = () => ReceiveAbandonment(e.AbandoningNickname, e.IsMatchOver);
+        UiThread.Run(_uiContext, receiveAbandonment);
     }
 
     private void ReceiveAbandonment(string abandoningNickname, bool isMatchOver)
@@ -369,7 +373,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     {
         string toSquare = BoardLayout.ToSquare(destination);
         var move = new ChosenPawnMove(_joinedMatch.FoundMatch.MatchId, NextMoveNumber, toSquare);
-        bool isSent = await TrySendToServer(() => MoveInJoinedMatch(move));
+        Action moveInJoinedMatch = () => MoveInJoinedMatch(move);
+        bool isSent = await TrySendToServer(moveInJoinedMatch);
         if (isSent)
         {
             ClearSelection();

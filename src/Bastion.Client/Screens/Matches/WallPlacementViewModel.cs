@@ -135,9 +135,7 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
         if (rejection is not null)
         {
             PendingWall = null;
-            HoveredWall = wall;
-            IsHoveredWallValid = false;
-            HintText = _play.DescribeWallRejection(rejection.Reason, rejection.BlockedTurnOrder);
+            ShowHoveredWall(wall, rejection);
             return;
         }
 
@@ -181,11 +179,7 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
     {
         var wall = new Wall(groove, _orientation);
         WallRejection? rejection = FindRejection(wall);
-        HoveredWall = wall;
-        IsHoveredWallValid = rejection is null;
-        HintText = rejection is null
-            ? Strings.MatchWallChooseHint
-            : _play.DescribeWallRejection(rejection.Reason, rejection.BlockedTurnOrder);
+        ShowHoveredWall(wall, rejection);
     }
 
     private WallRejection? FindRejection(Wall wall)
@@ -193,5 +187,14 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
         Board board = _play.BuildBoard();
         WallRejection? rejection = WallPolicy.FindRejection(board, wall);
         return rejection;
+    }
+
+    private void ShowHoveredWall(Wall wall, WallRejection? rejection)
+    {
+        HoveredWall = wall;
+        IsHoveredWallValid = rejection is null;
+        HintText = rejection is null
+            ? Strings.MatchWallChooseHint
+            : _play.DescribeWallRejection(rejection.Reason, rejection.BlockedTurnOrder);
     }
 }

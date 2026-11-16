@@ -8,7 +8,6 @@ using Bastion.Client.Networking.Chat;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.Sessions;
 using Bastion.Client.Screens.MainMenu.Chat;
-using Bastion.Domain.Chat;
 using Gum.Mvvm;
 using log4net;
 
@@ -16,7 +15,6 @@ namespace Bastion.Client.Screens.Matches;
 
 public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
 {
-
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchChatViewModel));
 
     private readonly JoinedMatch _joinedMatch;
@@ -111,7 +109,8 @@ public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
         }
 
         var row = new ChatMessageRowViewModel(e.Message, TimeProvider);
-        UiThread.Run(_uiContext, () => AddRecentMessage(Messages, row));
+        Action addRecentMessage = () => AddRecentMessage(Messages, row);
+        UiThread.Run(_uiContext, addRecentMessage);
     }
 
     private DateTime SendToJoinedMatch(string text)
