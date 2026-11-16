@@ -25,8 +25,8 @@ public sealed class FriendRequestsViewModel : ViewModel
     private readonly LoggedInSession _session;
     private readonly IFriendClient _friends;
     private readonly TimeProvider _timeProvider;
-    private readonly List<FriendRequestRowViewModel> _receivedRequests = new List<FriendRequestRowViewModel>();
-    private readonly List<FriendRequestRowViewModel> _sentRequests = new List<FriendRequestRowViewModel>();
+    private readonly List<FriendRequestRowViewModel> _receivedRequests;
+    private readonly List<FriendRequestRowViewModel> _sentRequests;
     private FriendRequestRowViewModel? _toastRow;
 
     public FriendRequestsViewModel(LoggedInSession session, IFriendClient friends, TimeProvider timeProvider)
@@ -38,7 +38,9 @@ public sealed class FriendRequestsViewModel : ViewModel
         _session = session;
         _friends = friends;
         _timeProvider = timeProvider;
-        ShowsReceived = true;
+        _receivedRequests = new List<FriendRequestRowViewModel>();
+        _sentRequests = new List<FriendRequestRowViewModel>();
+        IsReceivedTab = true;
         VisibleRows = new ObservableCollection<FriendRequestRowViewModel>();
         ReceivedTitle = string.Empty;
         SentTitle = string.Empty;
@@ -51,14 +53,14 @@ public sealed class FriendRequestsViewModel : ViewModel
 
     public ObservableCollection<FriendRequestRowViewModel> VisibleRows { get; }
 
-    public bool ShowsReceived
+    public bool IsReceivedTab
     {
         get => Get<bool>();
         private set => Set(value);
     }
 
-    [DependsOn(nameof(ShowsReceived))]
-    public bool ShowsSent => !ShowsReceived;
+    [DependsOn(nameof(IsReceivedTab))]
+    public bool IsSentTab => !IsReceivedTab;
 
     public string ReceivedTitle
     {
@@ -111,10 +113,10 @@ public sealed class FriendRequestsViewModel : ViewModel
         private set => Set(value);
     }
 
-    public bool IsToastAccepted
+    private bool IsToastAccepted
     {
         get => Get<bool>();
-        private set => Set(value);
+        set => Set(value);
     }
 
     [DependsOn(nameof(IsToastAccepted))]
@@ -124,13 +126,13 @@ public sealed class FriendRequestsViewModel : ViewModel
 
     public void ShowReceived()
     {
-        ShowsReceived = true;
+        IsReceivedTab = true;
         UpdateSummary();
     }
 
     public void ShowSent()
     {
-        ShowsReceived = false;
+        IsReceivedTab = false;
         UpdateSummary();
     }
 
@@ -207,8 +209,8 @@ public sealed class FriendRequestsViewModel : ViewModel
             return;
         }
 
-        bool isAccepted = await Respond(row, _friends.AcceptFriendRequest, shouldStartFriendship: true);
-        if (!isAccepted)
+        await Respond(row, _friends.AcceptFriendRequest, shouldStartFriendship: true);
+        if (HasStatus)
         {
             HideToast(row);
             return;
@@ -237,14 +239,14 @@ public sealed class FriendRequestsViewModel : ViewModel
         SentTitle = FormatText(Strings.FriendsSentFormat, _sentRequests.Count);
         PendingCountText = BadgeText.FormatCount(_receivedRequests.Count);
 
-        List<FriendRequestRowViewModel> rows = ShowsReceived ? _receivedRequests : _sentRequests;
+        List<FriendRequestRowViewModel> rows = IsReceivedTab ? _receivedRequests : _sentRequests;
         VisibleRows.Clear();
         foreach (FriendRequestRowViewModel row in rows)
         {
             VisibleRows.Add(row);
         }
 
-        string emptyText = ShowsReceived ? Strings.FriendsNoReceivedRequests : Strings.FriendsNoSentRequests;
+        string emptyText = IsReceivedTab ? Strings.FriendsNoReceivedRequests : Strings.FriendsNoSentRequests;
         EmptyText = rows.Count == 0 ? emptyText : string.Empty;
     }
 
@@ -312,7 +314,7 @@ public sealed class FriendRequestsViewModel : ViewModel
         }
     }
 
-    private async Task<bool> Respond(
+    private async Task Respond(
         FriendRequestRowViewModel row,
         Action<string, string> response,
         bool shouldStartFriendship)
@@ -327,8 +329,6 @@ public sealed class FriendRequestsViewModel : ViewModel
             {
                 OnFriendshipStarted();
             }
-
-            return true;
         }
         catch (FriendshipRejectedException ex)
         {
@@ -356,8 +356,6 @@ public sealed class FriendRequestsViewModel : ViewModel
         {
             row.IsBusy = false;
         }
-
-        return false;
     }
 
     private void RemoveRow(FriendRequestRowViewModel row)
@@ -384,7 +382,7 @@ public sealed class FriendRequestsViewModel : ViewModel
 
     private void ReportResponseFailure(Exception cause)
     {
-        _logger.Error("The friend request response could not reach the server.", cause);
+        _logger.Error("The friend request response could not be sent.", cause);
         StatusText = Strings.FriendsRespondFailed;
     }
 }

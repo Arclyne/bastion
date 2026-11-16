@@ -17,27 +17,30 @@ public sealed class FriendListView : StackPanel
     private const float AddFriendButtonWidth = 150;
     private const float ScrollHeight = 460;
     private const float ListSpacing = 10;
-    private const float RetryButtonWidth = 140;
-    private const float RetryButtonHeight = 40;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(FriendListView));
 
     private readonly FriendsPanelViewModel _viewModel;
-    private readonly StackPanel _connectedRows = new StackPanel();
-    private readonly StackPanel _offlineRows = new StackPanel();
+    private readonly StackPanel _connectedRows;
+    private readonly StackPanel _offlineRows;
 
     public FriendListView(FriendsPanelViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
 
         _viewModel = viewModel;
+        _connectedRows = new StackPanel();
+        _offlineRows = new StackPanel();
         Width = ListWidth;
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = ListSpacing;
 
         StackPanel filterRow = CreateFilterRow();
         ScrollViewer groups = CreateGroups();
-        Label emptyLabel = CreateVisibleLabel(nameof(Strings.FriendsEmptyTitle), nameof(FriendsPanelViewModel.IsEmpty));
+        Label emptyLabel = ViewFactory.CreateToggledLabel(
+            nameof(Strings.FriendsEmptyTitle),
+            nameof(FriendsPanelViewModel.IsEmpty),
+            TextStyleCatalog.NoticeTitle);
         Label noMatchLabel = CreateNoMatchLabel();
         StackPanel loadFailure = CreateLoadFailure();
         AddChild(filterRow);
@@ -100,13 +103,6 @@ public sealed class FriendListView : StackPanel
         return groups;
     }
 
-    private static Label CreateVisibleLabel(string textKey, string visibilityProperty)
-    {
-        Label label = ViewFactory.CreateLabel(textKey, TextStyleCatalog.NoticeTitle);
-        label.SetBinding(nameof(IsVisible), visibilityProperty);
-        return label;
-    }
-
     private static Label CreateNoMatchLabel()
     {
         return ViewFactory.CreateBoundNotice(
@@ -117,17 +113,10 @@ public sealed class FriendListView : StackPanel
 
     private StackPanel CreateLoadFailure()
     {
-        Button retry = ViewFactory.CreateButton(nameof(Strings.FriendsRetry), RetryButtonWidth, RetryButtonHeight);
-        ButtonSkin.CreateAndAttach(retry, ButtonLookCatalog.Secondary);
-        retry.Click += HandleRetryClick;
-
-        var failure = new StackPanel
-        {
-            Spacing = ListSpacing,
-        };
-        Label message = ViewFactory.CreateLabel(nameof(Strings.FriendsLoadFailed), TextStyleCatalog.FieldError);
-        failure.AddChild(message);
-        failure.AddChild(retry);
+        StackPanel failure = ViewFactory.CreateLoadFailure(
+            nameof(Strings.FriendsLoadFailed),
+            nameof(Strings.FriendsRetry),
+            HandleRetryClick);
         failure.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.HasLoadFailed));
         return failure;
     }

@@ -44,7 +44,7 @@ public sealed class FriendActionsMenu : Panel
         sendMessage.Click += HandleSendMessageClick;
         Button remove = CreateItem(nameof(Strings.FriendsRemoveFriend), ButtonLookCatalog.Secondary);
         remove.Click += HandleRemoveClick;
-        Button cancel = CreateItem(nameof(Strings.FriendsCancelRequest), ButtonLookCatalog.Pill);
+        Button cancel = CreateItem(nameof(Strings.FriendsCancel), ButtonLookCatalog.Pill);
         cancel.Click += HandleCancelClick;
 
         var content = new StackPanel

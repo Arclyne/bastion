@@ -79,8 +79,8 @@ public sealed class AddFriendViewModel : ViewModel
         StatusText = string.Empty;
         try
         {
-            IReadOnlyList<FoundPlayer> players =
-                await Task.Run(() => _friends.SearchPlayers(_session.Token, searchText));
+            IReadOnlyList<FoundPlayer> players = await Task.Run(
+                () => _friends.SearchPlayers(_session.Token, searchText));
             ShowResults(players, searchText);
         }
         catch (InvalidSessionException ex)
@@ -119,8 +119,8 @@ public sealed class AddFriendViewModel : ViewModel
         StatusText = string.Empty;
         try
         {
-            FriendRequestOutcome outcome =
-                await Task.Run(() => _friends.SendFriendRequest(_session.Token, row.FriendCode));
+            FriendRequestOutcome outcome = await Task.Run(
+                () => _friends.SendFriendRequest(_session.Token, row.FriendCode));
             ApplyOutcome(row, outcome);
         }
         catch (FriendshipRejectedException ex)
@@ -168,7 +168,7 @@ public sealed class AddFriendViewModel : ViewModel
 
     private void ReportSearchFailure(Exception cause)
     {
-        _logger.Error("The friend search could not reach the server.", cause);
+        _logger.Error("The friend search could not be completed.", cause);
         StatusText = Strings.FriendsSearchFailed;
     }
 
@@ -198,7 +198,7 @@ public sealed class AddFriendViewModel : ViewModel
 
     private void ReportSendFailure(Exception cause)
     {
-        _logger.Error("The friend request could not reach the server.", cause);
+        _logger.Error("The friend request could not be sent.", cause);
         StatusText = Strings.FriendsSendRequestFailed;
     }
 }

@@ -76,14 +76,14 @@ public sealed class FriendRequestToast : Panel
 
     private void HandleRejectClick(object? sender, EventArgs e)
     {
-        _ = RespondSafely(_requests.RejectToast());
+        _ = RunSafely(_requests.RejectToast());
     }
 
-    private static async Task RespondSafely(Task response)
+    private static async Task RunSafely(Task task)
     {
         try
         {
-            await response;
+            await task;
         }
         catch (ObjectDisposedException ex)
         {
@@ -93,6 +93,6 @@ public sealed class FriendRequestToast : Panel
 
     private void HandleAcceptClick(object? sender, EventArgs e)
     {
-        _ = RespondSafely(_requests.AcceptToast());
+        _ = RunSafely(_requests.AcceptToast());
     }
 }

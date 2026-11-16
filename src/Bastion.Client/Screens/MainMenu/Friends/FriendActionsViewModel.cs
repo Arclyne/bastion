@@ -71,10 +71,10 @@ public sealed class FriendActionsViewModel : ViewModel
     [DependsOn(nameof(ErrorText))]
     public bool HasError => ErrorText.Length > 0;
 
-    public bool IsRemoving
+    private bool IsRemoving
     {
         get => Get<bool>();
-        private set => Set(value);
+        set => Set(value);
     }
 
     [DependsOn(nameof(IsRemoving))]
@@ -134,7 +134,7 @@ public sealed class FriendActionsViewModel : ViewModel
         }
         catch (FriendshipRejectedException ex)
         {
-            _logger.Warn("The friend was already gone when removing it.", ex);
+            _logger.Warn($"The friend was already gone when removing it. Rejection={ex.Rejection}", ex);
             CompleteRemoval(friendCode);
         }
         catch (InvalidSessionException ex)

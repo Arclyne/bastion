@@ -20,34 +20,18 @@ public sealed class FriendRequestRowViewModel : ViewModel
         DetailText = DescribeExpiry(request.ExpiresAt, listedAt);
     }
 
-    public string Nickname
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
+    public string Nickname { get; }
 
-    public string FriendCode
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
+    public string FriendCode { get; }
 
-    public string DetailText
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
+    public string DetailText { get; }
 
-    public bool IsReceived
-    {
-        get => Get<bool>();
-        private set => Set(value);
-    }
+    public bool IsReceived { get; }
 
     public bool IsBusy
     {
         get => Get<bool>();
-        set => Set(value);
+        internal set => Set(value);
     }
 
     [DependsOn(nameof(IsBusy))]

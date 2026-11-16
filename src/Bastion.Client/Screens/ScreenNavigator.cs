@@ -21,7 +21,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
     private readonly ServerConnection _connection;
     private readonly LocalServiceSet _localServices;
     private readonly IScreenHost _screenHost;
-    private readonly List<IDisposable> _screenViewModels = new List<IDisposable>();
+    private readonly List<IDisposable> _screenViewModels;
     private ScreenView? _currentScreen;
     private LoggedInSession? _loggedInSession;
     private JoinedMatch? _joinedMatch;
@@ -36,6 +36,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         _connection = connection;
         _localServices = localServices;
         _screenHost = screenHost;
+        _screenViewModels = new List<IDisposable>();
     }
 
     public MatchViewModel? ShownMatch { get; private set; }
@@ -94,10 +95,12 @@ public sealed class ScreenNavigator : INavigator, IDisposable
     {
         var mainMenuViewModel = new MainMenuViewModel(session, _connection.Notifications);
         var chatClients = new ChatClientSet(_connection.Chat, _connection.Conversations, _connection.Notifications);
-        var clients = new SocialClientSet(_connection.Friends, chatClients, _connection.Notifications);
+        var clients = new SocialClientSet(_connection.Friends, chatClients);
         var friendsPanel = new FriendsPanelViewModel(session, clients, _localServices);
-        var matchSearchViewModel =
-            new MatchSearchViewModel(session, _connection.Matchmaking, _localServices.TimeProvider);
+        var matchSearchViewModel = new MatchSearchViewModel(
+            session,
+            _connection.Matchmaking,
+            _localServices.TimeProvider);
         matchSearchViewModel.MatchFound += HandleMatchFound;
         var mainMenuView = new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel);
         ShowScreen(mainMenuView, friendsPanel, matchSearchViewModel);
@@ -130,8 +133,10 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         var versusView = new VersusView(versusViewModel);
         ShowScreen(versusView, versusViewModel, matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel);
         _joinedMatch = joinedMatch;
-        _joinedMatchViewModels =
-            new JoinedMatchViewModelSet(matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel);
+        _joinedMatchViewModels = new JoinedMatchViewModelSet(
+            matchChatViewModel,
+            matchAbandonmentViewModel,
+            matchPlayViewModel);
     }
 
     private void HandleReturnToMenuRequested(object? sender, EventArgs e)

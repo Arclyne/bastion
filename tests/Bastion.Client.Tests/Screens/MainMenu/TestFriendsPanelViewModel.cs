@@ -67,7 +67,7 @@ public sealed class TestFriendsPanelViewModel
         var conversationClient = new FakeConversationClient();
         var chatClients = new ChatClientSet(chatClient, conversationClient, _notifications);
         var friendClient = new FakeFriendClient();
-        var clients = new SocialClientSet(friendClient, chatClients, _notifications);
+        var clients = new SocialClientSet(friendClient, chatClients);
         var languages = new FakeLanguageService();
         var timeProvider = new ManualTimeProvider(_now);
         var localServices = new LocalServiceSet(languages, _clipboard, timeProvider);

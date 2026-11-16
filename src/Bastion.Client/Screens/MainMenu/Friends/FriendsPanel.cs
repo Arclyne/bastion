@@ -17,10 +17,11 @@ public sealed class FriendsPanel : Panel
     private const float PaddingBottom = 18;
     private const float ContentWidth = PanelMetrics.ContentWidth;
     private const float ContentSpacing = 12;
-    private const float TabWidth = 104;
+    private const float TabWidth = (ContentWidth - CloseButtonSize - (TabSpacing * TabCount)) / TabCount;
     private const float TabHeight = 36;
     private const float TabSpacing = 4;
     private const float CloseButtonSize = 36;
+    private const int TabCount = 3;
     private const int HorizontalSideCount = 2;
 
     private readonly FriendsPanelViewModel _viewModel;
@@ -141,31 +142,19 @@ public sealed class FriendsPanel : Panel
     private static Panel CreateAddFriend(FriendsPanelViewModel viewModel)
     {
         var addFriend = new AddFriendView(viewModel);
-        return CreateToggledContainer(addFriend, nameof(FriendsPanelViewModel.IsAddFriendVisible));
-    }
-
-    private static Panel CreateToggledContainer(FrameworkElement content, string visibilityProperty)
-    {
-        var container = new Panel
-        {
-            WidthUnits = DimensionUnitType.RelativeToChildren,
-            HeightUnits = DimensionUnitType.RelativeToChildren,
-        };
-        container.AddChild(content);
-        container.SetBinding(nameof(IsVisible), visibilityProperty);
-        return container;
+        return ViewFactory.CreateToggledContainer(addFriend, nameof(FriendsPanelViewModel.IsAddFriendVisible));
     }
 
     private static Panel CreateRequests(FriendsPanelViewModel viewModel)
     {
         var requests = new FriendRequestsView(viewModel.Requests);
-        return CreateToggledContainer(requests, nameof(FriendsPanelViewModel.IsRequestsTab));
+        return ViewFactory.CreateToggledContainer(requests, nameof(FriendsPanelViewModel.IsRequestsTab));
     }
 
     private static Panel CreateChat(FriendsPanelViewModel viewModel)
     {
         var chatTab = new ChatTabView(viewModel.Chat);
-        return CreateToggledContainer(chatTab, nameof(FriendsPanelViewModel.IsChatTab));
+        return ViewFactory.CreateToggledContainer(chatTab, nameof(FriendsPanelViewModel.IsChatTab));
     }
 
     private static FriendCodeFooter CreateFooter(FriendsPanelViewModel viewModel)
@@ -174,7 +163,7 @@ public sealed class FriendsPanel : Panel
         footer.Anchor(Gum.Wireframe.Anchor.BottomLeft);
         footer.X = PaddingX;
         footer.Y = -PaddingBottom;
-        footer.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.ShowsFriendCode));
+        footer.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsFriendCodeVisible));
         return footer;
     }
 

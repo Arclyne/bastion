@@ -12,8 +12,6 @@ public sealed class FriendRequestRowView : Panel
 {
     private const float RowWidth = PanelMetrics.ContentWidth;
     private const float RowHeight = 56;
-    private const float ContentPaddingX = 6;
-    private const float TextSpacing = 2;
     private const float ButtonSpacing = 6;
     private const float ActionButtonWidth = 92;
     private const float ActionButtonHeight = 34;
@@ -45,20 +43,19 @@ public sealed class FriendRequestRowView : Panel
     {
         var text = new StackPanel
         {
-            X = ContentPaddingX,
-            Spacing = TextSpacing,
+            X = PanelMetrics.RowContentPaddingX,
+            Spacing = PanelMetrics.TextSpacing,
         };
-        Label nickname = CreateBoundLabel(nameof(FriendRequestRowViewModel.Nickname), TextStyleCatalog.IdentityName);
-        Label detail = CreateBoundLabel(nameof(FriendRequestRowViewModel.DetailText), TextStyleCatalog.Hint);
+        Label nickname = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(FriendRequestRowViewModel.Nickname),
+            TextStyleCatalog.IdentityName);
+        Label detail = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(FriendRequestRowViewModel.DetailText),
+            TextStyleCatalog.Hint);
         text.AddChild(nickname);
         text.AddChild(detail);
         ViewFactory.CenterVertically(text);
         return text;
-    }
-
-    private static Label CreateBoundLabel(string propertyName, TextStyle style)
-    {
-        return ViewFactory.CreateBoundUntranslatedLabel(propertyName, style);
     }
 
     private StackPanel CreateReceivedActions()
@@ -80,14 +77,14 @@ public sealed class FriendRequestRowView : Panel
 
     private void HandleRejectClick(object? sender, EventArgs e)
     {
-        _ = RespondSafely(_requests.Reject(_row));
+        _ = RunSafely(_requests.Reject(_row));
     }
 
-    private static async Task RespondSafely(Task response)
+    private static async Task RunSafely(Task task)
     {
         try
         {
-            await response;
+            await task;
         }
         catch (ObjectDisposedException ex)
         {
@@ -97,7 +94,7 @@ public sealed class FriendRequestRowView : Panel
 
     private void HandleAcceptClick(object? sender, EventArgs e)
     {
-        _ = RespondSafely(_requests.Accept(_row));
+        _ = RunSafely(_requests.Accept(_row));
     }
 
     private StackPanel CreateActionRow(params Button[] buttons)
@@ -125,6 +122,6 @@ public sealed class FriendRequestRowView : Panel
 
     private void HandleCancelClick(object? sender, EventArgs e)
     {
-        _ = RespondSafely(_requests.Cancel(_row));
+        _ = RunSafely(_requests.Cancel(_row));
     }
 }

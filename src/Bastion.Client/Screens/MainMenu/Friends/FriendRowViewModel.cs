@@ -19,27 +19,11 @@ public sealed class FriendRowViewModel : ViewModel
             : LastSeenText.DescribeLastSeen(friend.LastSeenAt, listedAt);
     }
 
-    public string Nickname
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
+    public string Nickname { get; }
 
-    public string FriendCode
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
+    public string FriendCode { get; }
 
-    public bool IsConnected
-    {
-        get => Get<bool>();
-        private set => Set(value);
-    }
+    public bool IsConnected { get; }
 
-    public string StatusText
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
+    public string StatusText { get; }
 }
