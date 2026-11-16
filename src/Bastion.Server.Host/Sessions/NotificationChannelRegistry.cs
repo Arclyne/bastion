@@ -132,8 +132,7 @@ public sealed class NotificationChannelRegistry
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
         ArgumentNullException.ThrowIfNull(notice);
 
-        MatchAbandonedNotification notification =
-            MatchTranslator.ToAbandonedNotification(matchId, notice, GetUtcNow());
+        MatchAbandonedNotification notification = MatchTranslator.ToAbandonedNotification(matchId, notice, GetUtcNow());
         NotifyPlayers(recipientAccountIds, notification);
     }
 
