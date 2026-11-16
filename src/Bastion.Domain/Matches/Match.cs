@@ -16,10 +16,11 @@ public class Match
     private const int LastStandingPlayerCount = 1;
     private const byte FirstPlacement = 1;
 
-    private readonly List<Participation> _participations = new List<Participation>();
-    private readonly List<Move> _moves = new List<Move>();
+    private readonly List<Participation> _participations;
+    private readonly List<Move> _moves;
 
     private Match(MatchType matchType, MatchFormat format, DateTime startedAt)
+        : this()
     {
         GameModeId = format.GameMode.GameModeId;
         MatchType = matchType;
@@ -31,6 +32,8 @@ public class Match
 
     private Match()
     {
+        _participations = new List<Participation>();
+        _moves = new List<Move>();
     }
 
     public int MatchId { get; private set; }
@@ -309,14 +312,6 @@ public class Match
         Finish(MatchEndReason.Abandonment, abandonedAt);
     }
 
-    private List<Participation> ListActiveParticipations()
-    {
-        IEnumerable<Participation> activeParticipations = _participations
-            .Where(participation => participation.Result is null)
-            .OrderBy(participation => participation.TurnOrder);
-        return new List<Participation>(activeParticipations);
-    }
-
     private void PassTurnFrom(byte turnOrder)
     {
         if (CurrentTurnOrder != turnOrder)
@@ -329,6 +324,14 @@ public class Match
             participation => participation.TurnOrder > turnOrder)
             ?? activeParticipations.First();
         CurrentTurnOrder = nextPlayer.TurnOrder;
+    }
+
+    private List<Participation> ListActiveParticipations()
+    {
+        IEnumerable<Participation> activeParticipations = _participations
+            .Where(participation => participation.Result is null)
+            .OrderBy(participation => participation.TurnOrder);
+        return new List<Participation>(activeParticipations);
     }
 
     private BoardCoordinates FindPawnCoordinates(Participation participation, byte boardSize)

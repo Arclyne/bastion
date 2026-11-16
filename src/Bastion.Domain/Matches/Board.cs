@@ -41,13 +41,6 @@ public sealed record Board
         return turnOrders;
     }
 
-    public bool IsInside(BoardCoordinates coordinates)
-    {
-        ArgumentNullException.ThrowIfNull(coordinates);
-
-        return BoardLayout.IsInside(Size, coordinates);
-    }
-
     public bool IsOccupied(BoardCoordinates coordinates)
     {
         ArgumentNullException.ThrowIfNull(coordinates);
@@ -60,21 +53,6 @@ public sealed record Board
         ArgumentNullException.ThrowIfNull(wall);
 
         return _walls.Contains(wall);
-    }
-
-    public bool IsBlocked(BoardCoordinates from, BoardStep step)
-    {
-        ArgumentNullException.ThrowIfNull(from);
-        ArgumentNullException.ThrowIfNull(step);
-
-        if (step.IsBetweenRows())
-        {
-            int lowerRowIndex = Math.Min(from.RowIndex, from.RowIndex + step.RowStep);
-            return HasWallAlongRow(from.ColumnIndex, lowerRowIndex);
-        }
-
-        int leftColumnIndex = Math.Min(from.ColumnIndex, from.ColumnIndex + step.ColumnStep);
-        return HasWallAlongColumn(leftColumnIndex, from.RowIndex);
     }
 
     public bool IsStepOpen(BoardCoordinates from, BoardStep step)
@@ -92,6 +70,23 @@ public sealed record Board
 
         var walls = new List<Wall>(_walls) { wall };
         return new Board(Size, _pawnsByTurnOrder, walls);
+    }
+
+    private bool IsInside(BoardCoordinates coordinates)
+    {
+        return BoardLayout.IsInside(Size, coordinates);
+    }
+
+    private bool IsBlocked(BoardCoordinates from, BoardStep step)
+    {
+        if (step.IsBetweenRows())
+        {
+            int lowerRowIndex = Math.Min(from.RowIndex, from.RowIndex + step.RowStep);
+            return HasWallAlongRow(from.ColumnIndex, lowerRowIndex);
+        }
+
+        int leftColumnIndex = Math.Min(from.ColumnIndex, from.ColumnIndex + step.ColumnStep);
+        return HasWallAlongColumn(leftColumnIndex, from.RowIndex);
     }
 
     private bool HasWallAlongRow(int columnIndex, int lowerRowIndex)
