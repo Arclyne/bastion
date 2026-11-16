@@ -14,7 +14,7 @@ public sealed class TestLoginService
     private const string Email = "marta@example.com";
     private const string Password = "Secreta#2026";
     private const string WrongPassword = "Incorrecta#1";
-    private const string UnknownIdentifier = "nadie";
+    private const string UnknownIdentifier = "nobody";
     private const int FailuresThatLock = 3;
     private const int FirstLockMinutes = 5;
     private const int OneSimulatedCheck = 1;
