@@ -20,6 +20,7 @@ public sealed class TestMatchChatViewModel : IDisposable
     private const string RivalMessageText = "You too";
     private const string TooFastMessage = "The player is sending messages too fast.";
     private const int OtherMatchId = 40;
+    private const int FirstMessageNumber = 1;
     private const int SecondMessageNumber = 2;
     private const int NoMessagesSent = 0;
 
@@ -27,14 +28,14 @@ public sealed class TestMatchChatViewModel : IDisposable
     private static readonly DateTime _rivalSentAt = new DateTime(2026, 11, 5, 18, 1, 30, DateTimeKind.Utc);
 
     private readonly FakeChatClient _chatClient = new FakeChatClient();
-    private readonly ManualTimeProvider _timeProvider = new ManualTimeProvider(_openedAt);
     private readonly MatchChatViewModel _viewModel;
 
     public TestMatchChatViewModel()
     {
+        var timeProvider = new ManualTimeProvider(_openedAt);
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
         _viewModel = InlineUiContext.CreateViewModel(
-            () => new MatchChatViewModel(joinedMatch, _chatClient, _timeProvider));
+            () => new MatchChatViewModel(joinedMatch, _chatClient, timeProvider));
     }
 
     public void Dispose()
@@ -157,7 +158,7 @@ public sealed class TestMatchChatViewModel : IDisposable
         int messageCount = ChatPolicy.MaximumRecentMessages + 1;
         string expectedOldestText = SecondMessageNumber.ToString(CultureInfo.InvariantCulture);
 
-        for (int messageNumber = 1; messageNumber <= messageCount; messageNumber++)
+        for (int messageNumber = FirstMessageNumber; messageNumber <= messageCount; messageNumber++)
         {
             string text = messageNumber.ToString(CultureInfo.InvariantCulture);
             ChatMessage rivalMessage = CreateRivalMessage(text);

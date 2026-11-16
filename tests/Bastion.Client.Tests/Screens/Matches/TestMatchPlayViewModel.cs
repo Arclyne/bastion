@@ -344,7 +344,8 @@ public sealed class TestMatchPlayViewModel : IDisposable
 
         await viewModel.PlaceWall(_centerWall);
 
-        Assert.False(viewModel.CanPlaceWall());
+        bool canPlaceWall = viewModel.CanPlaceWall();
+        Assert.False(canPlaceWall);
     }
 
     [Fact]

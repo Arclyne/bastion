@@ -103,8 +103,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     [Fact]
     public void Rotate_PendingWall_TurnsPendingWallVertical()
     {
-        WallPlacementViewModel viewModel = CreateActiveViewModel();
-        viewModel.ChooseGroove(_centerGroove);
+        WallPlacementViewModel viewModel = CreateViewModelWithChosenGroove();
 
         viewModel.Rotate();
 
@@ -114,8 +113,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     [Fact]
     public async Task Confirm_PendingWall_SendsWall()
     {
-        WallPlacementViewModel viewModel = CreateActiveViewModel();
-        viewModel.ChooseGroove(_centerGroove);
+        WallPlacementViewModel viewModel = CreateViewModelWithChosenGroove();
 
         await viewModel.Confirm();
 
@@ -125,8 +123,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     [Fact]
     public async Task Confirm_AcceptedBeforeWallPlaced_KeepsPendingWall()
     {
-        WallPlacementViewModel viewModel = CreateActiveViewModel();
-        viewModel.ChooseGroove(_centerGroove);
+        WallPlacementViewModel viewModel = CreateViewModelWithChosenGroove();
 
         await viewModel.Confirm();
 
@@ -136,8 +133,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     [Fact]
     public async Task Confirm_TwiceBeforeWallPlaced_SendsOneWall()
     {
-        WallPlacementViewModel viewModel = CreateActiveViewModel();
-        viewModel.ChooseGroove(_centerGroove);
+        WallPlacementViewModel viewModel = CreateViewModelWithChosenGroove();
         await viewModel.Confirm();
 
         await viewModel.Confirm();
@@ -148,8 +144,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     [Fact]
     public async Task Confirm_Rejected_StaysInWallMode()
     {
-        WallPlacementViewModel viewModel = CreateActiveViewModel();
-        viewModel.ChooseGroove(_centerGroove);
+        WallPlacementViewModel viewModel = CreateViewModelWithChosenGroove();
         var cause = new InvalidOperationException();
         var grooveTaken = new IllegalWallException(WallPlacementRejection.GrooveTaken, blockedTurnOrder: null, cause);
         _matchClient.WallFailure = grooveTaken;
@@ -162,8 +157,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     [Fact]
     public void Cancel_PendingWall_ClearsPendingWall()
     {
-        WallPlacementViewModel viewModel = CreateActiveViewModel();
-        viewModel.ChooseGroove(_centerGroove);
+        WallPlacementViewModel viewModel = CreateViewModelWithChosenGroove();
 
         viewModel.Cancel();
 
@@ -186,6 +180,13 @@ public sealed class TestWallPlacementViewModel : IDisposable
     private static void DisposeViewModel(IDisposable viewModel)
     {
         viewModel.Dispose();
+    }
+
+    private WallPlacementViewModel CreateViewModelWithChosenGroove()
+    {
+        WallPlacementViewModel viewModel = CreateActiveViewModel();
+        viewModel.ChooseGroove(_centerGroove);
+        return viewModel;
     }
 
     private WallPlacementViewModel CreateActiveViewModel()
