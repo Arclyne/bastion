@@ -35,8 +35,7 @@ public sealed class NotificationChannelRegistry
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationChannelRegistry));
 
-    private readonly ConcurrentDictionary<int, INotificationCallback> _callbacksByAccountId =
-        new ConcurrentDictionary<int, INotificationCallback>();
+    private readonly ConcurrentDictionary<int, INotificationCallback> _callbacksByAccountId;
     private readonly IMatchmakingQueue _matchmakingQueue;
     private readonly IFriendPresenceReporter _presenceReporter;
     private readonly TimeProvider _timeProvider;
@@ -50,6 +49,7 @@ public sealed class NotificationChannelRegistry
         ArgumentNullException.ThrowIfNull(presenceReporter);
         ArgumentNullException.ThrowIfNull(timeProvider);
 
+        _callbacksByAccountId = new ConcurrentDictionary<int, INotificationCallback>();
         _matchmakingQueue = matchmakingQueue;
         _presenceReporter = presenceReporter;
         _timeProvider = timeProvider;
