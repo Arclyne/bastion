@@ -32,11 +32,6 @@ public static class RoomSampleFactory
         return CreateRoom(settings);
     }
 
-    private static RoomSettings CreateSettings(GameMode gameMode)
-    {
-        return new RoomSettings(gameMode, WallsPerPlayer, ClockMinutes);
-    }
-
     private static WaitingRoom CreateRoom(RoomSettings settings)
     {
         var identity = new RoomIdentity(RoomId, Code);
@@ -48,5 +43,10 @@ public static class RoomSampleFactory
     {
         GameMode gameMode = GameModeSampleFactory.CreateFourPlayers();
         return CreateSettings(gameMode);
+    }
+
+    private static RoomSettings CreateSettings(GameMode gameMode)
+    {
+        return new RoomSettings(gameMode, WallsPerPlayer, ClockMinutes);
     }
 }

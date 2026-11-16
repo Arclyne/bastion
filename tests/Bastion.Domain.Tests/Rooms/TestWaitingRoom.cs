@@ -26,7 +26,7 @@ public sealed class TestWaitingRoom
         RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
         var host = new RoomMember(RoomSampleFactory.HostAccountId, HostNickname);
 
-        var room = new WaitingRoom(identity, settings, host);
+        _ = new WaitingRoom(identity, settings, host);
 
         Assert.Equal(expectedSeat, (host.SeatIndex, host.IsReady));
     }
@@ -35,7 +35,7 @@ public sealed class TestWaitingRoom
     public void Admit_Guest_TakesNextSeatNotReady()
     {
         WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
-        var guest = new RoomMember(GuestAccountId, GuestNickname);
+        RoomMember guest = CreateGuest();
         (int SeatIndex, bool IsReady) expectedSeat = (SecondSeatIndex, false);
 
         room.Admit(guest);
@@ -48,7 +48,7 @@ public sealed class TestWaitingRoom
     {
         WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
         AdmitGuest(room);
-        var third = new RoomMember(ThirdAccountId, ThirdNickname);
+        RoomMember third = CreateThird();
 
         Action admitThird = () => room.Admit(third);
 
@@ -165,23 +165,33 @@ public sealed class TestWaitingRoom
         return room;
     }
 
+    private static void AdmitGuest(WaitingRoom room)
+    {
+        RoomMember guest = CreateGuest();
+        room.Admit(guest);
+    }
+
+    private static RoomMember CreateGuest()
+    {
+        return new RoomMember(GuestAccountId, GuestNickname);
+    }
+
+    private static void AdmitThird(WaitingRoom room)
+    {
+        RoomMember third = CreateThird();
+        room.Admit(third);
+    }
+
+    private static RoomMember CreateThird()
+    {
+        return new RoomMember(ThirdAccountId, ThirdNickname);
+    }
+
     private static WaitingRoom CreateTwoPlayerRoomWithReadyGuest()
     {
         WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
         AdmitGuest(room);
         room.SetReady(GuestAccountId, isReady: true);
         return room;
-    }
-
-    private static void AdmitGuest(WaitingRoom room)
-    {
-        var guest = new RoomMember(GuestAccountId, GuestNickname);
-        room.Admit(guest);
-    }
-
-    private static void AdmitThird(WaitingRoom room)
-    {
-        var third = new RoomMember(ThirdAccountId, ThirdNickname);
-        room.Admit(third);
     }
 }

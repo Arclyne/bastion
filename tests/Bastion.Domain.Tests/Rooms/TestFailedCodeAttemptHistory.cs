@@ -35,9 +35,9 @@ public sealed class TestFailedCodeAttemptHistory
     public void IsLimitReached_WindowPassedSinceFirstAttempt_ReturnsFalse()
     {
         FailedCodeAttemptHistory attempts = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts);
-        DateTime afterFirstExpires = _firstAttemptAt + RoomPolicy.FailedCodeWindow;
+        DateTime firstAttemptExpiry = _firstAttemptAt + RoomPolicy.FailedCodeWindow;
 
-        bool isLimitReached = attempts.IsLimitReached(afterFirstExpires);
+        bool isLimitReached = attempts.IsLimitReached(firstAttemptExpiry);
 
         Assert.False(isLimitReached);
     }

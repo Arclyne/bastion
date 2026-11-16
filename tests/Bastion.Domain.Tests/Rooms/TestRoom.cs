@@ -12,6 +12,10 @@ public sealed class TestRoom
 
     private static readonly DateTime _openedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _changedAt = _openedAt.AddMinutes(2);
+    private static readonly RoomOpening _opening = new RoomOpening(
+        RoomSampleFactory.Code,
+        RoomSampleFactory.HostAccountId,
+        _openedAt);
 
     [Fact]
     public void Open_InvalidCode_ThrowsArgumentException()
@@ -27,10 +31,9 @@ public sealed class TestRoom
     [Fact]
     public void Open_ValidCode_StartsOpen()
     {
-        var opening = new RoomOpening(RoomSampleFactory.Code, RoomSampleFactory.HostAccountId, _openedAt);
         RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
 
-        var room = Room.Open(opening, settings);
+        var room = Room.Open(_opening, settings);
 
         Assert.Equal(RoomStatus.Open, room.Status);
     }
@@ -115,8 +118,7 @@ public sealed class TestRoom
 
     private static Room OpenRoom()
     {
-        var opening = new RoomOpening(RoomSampleFactory.Code, RoomSampleFactory.HostAccountId, _openedAt);
         RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
-        return Room.Open(opening, settings);
+        return Room.Open(_opening, settings);
     }
 }
