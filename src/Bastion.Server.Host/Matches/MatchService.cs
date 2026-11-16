@@ -77,11 +77,11 @@ public sealed class MatchService : IMatchService
         abandonmentService.AbandonMatch(token, matchId, GetUtcNow());
     }
 
-    private void MovePawnInRequestScope(string token, ChosenPawnMove move)
+    private void MovePawnInRequestScope(string token, ChosenPawnMove chosenMove)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         IMatchMoveService matchMoveService = scope.ServiceProvider.GetRequiredService<IMatchMoveService>();
-        matchMoveService.MovePawn(token, move, GetUtcNow());
+        matchMoveService.MovePawn(token, chosenMove, GetUtcNow());
     }
 
     private void PlaceWallInRequestScope(string token, ChosenWall chosenWall)
@@ -124,7 +124,7 @@ public sealed class MatchService : IMatchService
         }
         catch (DbException ex)
         {
-            _logger.Error($"The database could not be reached. Operation={operationName}; MatchId={matchId}", ex);
+            _logger.Error($"A database command failed. Operation={operationName}; MatchId={matchId}", ex);
             throw new FaultException(ServerFailureReason);
         }
     }
