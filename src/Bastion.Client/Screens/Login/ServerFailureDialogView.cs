@@ -34,17 +34,11 @@ public sealed class ServerFailureDialogView : DialogCard
 
     private StackPanel CreateButtons()
     {
-        Button retryButton = CreateButton(
-            nameof(Strings.CommonRetryButton),
-            DialogMetrics.ButtonWidth,
-            ButtonLookCatalog.Primary);
+        Button retryButton = CreateDialogButton(nameof(Strings.CommonRetryButton), ButtonLookCatalog.Primary);
         retryButton.SetBinding(nameof(IsVisible), nameof(LoginViewModel.CanRetry));
         retryButton.Click += HandleRetryClick;
 
-        Button acceptButton = CreateButton(
-            nameof(Strings.CommonAcceptButton),
-            DialogMetrics.ButtonWidth,
-            ButtonLookCatalog.Secondary);
+        Button acceptButton = CreateDialogButton(nameof(Strings.CommonAcceptButton), ButtonLookCatalog.Secondary);
         acceptButton.Click += HandleAcceptClick;
 
         var row = new StackPanel
@@ -55,13 +49,6 @@ public sealed class ServerFailureDialogView : DialogCard
         row.AddChild(retryButton);
         row.AddChild(acceptButton);
         return row;
-    }
-
-    private static Button CreateButton(string textKey, float width, ButtonLook look)
-    {
-        Button button = ViewFactory.CreateButton(textKey, width, DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(button, look);
-        return button;
     }
 
     private async void HandleRetryClick(object? sender, EventArgs e)
