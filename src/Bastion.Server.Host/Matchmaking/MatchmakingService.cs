@@ -81,7 +81,7 @@ public sealed class MatchmakingService : IMatchmakingService
         }
         catch (DbException ex)
         {
-            _logger.Error($"The database could not be reached. Operation={operationName}", ex);
+            _logger.Error($"A database command failed. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
     }
@@ -114,7 +114,7 @@ public sealed class MatchmakingService : IMatchmakingService
         catch (DbException ex)
         {
             _logger.Error(
-                $"The database could not be reached during a one-way matchmaking request. Operation={operationName}",
+                $"A database command failed during a one-way matchmaking request. Operation={operationName}",
                 ex);
         }
     }
