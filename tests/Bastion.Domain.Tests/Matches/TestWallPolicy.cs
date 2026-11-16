@@ -20,10 +20,12 @@ public sealed class TestWallPolicy
     private static readonly BoardCoordinates _secondStart = new BoardCoordinates(CenterIndex, LastIndex);
     private static readonly BoardCoordinates _corner = new BoardCoordinates(FirstIndex, FirstIndex);
     private static readonly BoardCoordinates _centerGroove = new BoardCoordinates(CenterIndex, FourthIndex);
-    private static readonly BoardCoordinates _rightOfCenterGroove =
-        new BoardCoordinates(RightOfCenterIndex, FourthIndex);
-    private static readonly BoardCoordinates _twoRightOfCenterGroove =
-        new BoardCoordinates(TwoRightOfCenterIndex, FourthIndex);
+    private static readonly BoardCoordinates _rightOfCenterGroove = new BoardCoordinates(
+        RightOfCenterIndex,
+        FourthIndex);
+    private static readonly BoardCoordinates _twoRightOfCenterGroove = new BoardCoordinates(
+        TwoRightOfCenterIndex,
+        FourthIndex);
     private static readonly BoardCoordinates _lowColumnGroove = new BoardCoordinates(ThirdIndex, ThirdIndex);
     private static readonly BoardCoordinates _highColumnGroove = new BoardCoordinates(ThirdIndex, FourthIndex);
     private static readonly BoardCoordinates _lastColumnGroove = new BoardCoordinates(LastIndex, FirstIndex);

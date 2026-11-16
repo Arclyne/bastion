@@ -91,8 +91,10 @@ public sealed class TestBoardSceneLayout
     [Fact]
     public void GetGoalMeshName_FirstTurnOrder_ReturnsLastRowGoal()
     {
-        string goalMeshName =
-            BoardSceneLayout.GetGoalMeshName(ClassicBoardSize, Match.FirstTurnOrder, Match.TwoPlayerCount);
+        string goalMeshName = BoardSceneLayout.GetGoalMeshName(
+            ClassicBoardSize,
+            Match.FirstTurnOrder,
+            Match.TwoPlayerCount);
 
         Assert.Equal(ClassicLastRowGoal, goalMeshName);
     }
@@ -100,8 +102,10 @@ public sealed class TestBoardSceneLayout
     [Fact]
     public void GetGoalMeshName_SecondTurnOrder_ReturnsFirstRowGoal()
     {
-        string goalMeshName =
-            BoardSceneLayout.GetGoalMeshName(ClassicBoardSize, Match.SecondTurnOrder, Match.TwoPlayerCount);
+        string goalMeshName = BoardSceneLayout.GetGoalMeshName(
+            ClassicBoardSize,
+            Match.SecondTurnOrder,
+            Match.TwoPlayerCount);
 
         Assert.Equal(ClassicFirstRowGoal, goalMeshName);
     }
@@ -109,8 +113,10 @@ public sealed class TestBoardSceneLayout
     [Fact]
     public void GetGoalMeshName_QuickBoardFirstTurnOrder_ReturnsLastRowGoal()
     {
-        string goalMeshName =
-            BoardSceneLayout.GetGoalMeshName(QuickBoardSize, Match.FirstTurnOrder, Match.TwoPlayerCount);
+        string goalMeshName = BoardSceneLayout.GetGoalMeshName(
+            QuickBoardSize,
+            Match.FirstTurnOrder,
+            Match.TwoPlayerCount);
 
         Assert.Equal(QuickLastRowGoal, goalMeshName);
     }

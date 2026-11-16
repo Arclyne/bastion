@@ -79,8 +79,10 @@ public sealed class TestFriendRequestService
     {
         AddPlayers();
 
-        IReadOnlyList<PlayerSearchResult> results =
-            _friendRequestService.SearchPlayers(Token, HyphenatedOtherFriendCode, _now);
+        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(
+            Token,
+            HyphenatedOtherFriendCode,
+            _now);
 
         PlayerSearchResult first = results[0];
         Assert.Equal(OtherNickname, first.Player.Nickname);

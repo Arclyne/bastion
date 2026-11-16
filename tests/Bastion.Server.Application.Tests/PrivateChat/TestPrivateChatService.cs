@@ -56,8 +56,10 @@ public sealed class TestPrivateChatService
     private static readonly DateTime _twoMinutesAgo = _now.AddMinutes(-TwoMinutes);
     private static readonly PlayerIdentity _caller = new PlayerIdentity(AccountId, Nickname, FriendCode);
     private static readonly PlayerIdentity _friend = new PlayerIdentity(FriendAccountId, FriendNickname, FriendFriendCode);
-    private static readonly PlayerIdentity _stranger =
-        new PlayerIdentity(StrangerAccountId, StrangerNickname, StrangerFriendCode);
+    private static readonly PlayerIdentity _stranger = new PlayerIdentity(
+        StrangerAccountId,
+        StrangerNickname,
+        StrangerFriendCode);
 
     private readonly FakeUnitOfWork _unitOfWork = new FakeUnitOfWork();
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();

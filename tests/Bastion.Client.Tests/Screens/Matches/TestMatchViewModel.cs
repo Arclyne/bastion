@@ -154,8 +154,9 @@ public sealed class TestMatchViewModel : IDisposable
             Strings.MatchWallsFormat,
             WallPlacedSampleFactory.WallsLeftAfterOne);
         MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
-        WallPlacedEventArgs rivalWall =
-            WallPlacedSampleFactory.CreateFirstWall(JoinedMatchSampleFactory.RivalNickname, CenterGroove);
+        WallPlacedEventArgs rivalWall = WallPlacedSampleFactory.CreateFirstWall(
+            JoinedMatchSampleFactory.RivalNickname,
+            CenterGroove);
 
         _matchClient.RaiseWallPlaced(rivalWall);
 
@@ -167,8 +168,9 @@ public sealed class TestMatchViewModel : IDisposable
     public void PawnMoved_OwnPawnReachedGoal_ShowsOwnWin()
     {
         MatchViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
-        PawnMovedEventArgs winningMove =
-            PawnMovedSampleFactory.CreateWinningMove(JoinedMatchSampleFactory.OwnNickname, FirstGoalSquare);
+        PawnMovedEventArgs winningMove = PawnMovedSampleFactory.CreateWinningMove(
+            JoinedMatchSampleFactory.OwnNickname,
+            FirstGoalSquare);
 
         _matchClient.RaisePawnMoved(winningMove);
 
@@ -183,8 +185,9 @@ public sealed class TestMatchViewModel : IDisposable
             Strings.MatchPlayerWonFormat,
             JoinedMatchSampleFactory.RivalNickname);
         MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
-        PawnMovedEventArgs winningMove =
-            PawnMovedSampleFactory.CreateWinningMove(JoinedMatchSampleFactory.RivalNickname, FirstGoalSquare);
+        PawnMovedEventArgs winningMove = PawnMovedSampleFactory.CreateWinningMove(
+            JoinedMatchSampleFactory.RivalNickname,
+            FirstGoalSquare);
 
         _matchClient.RaisePawnMoved(winningMove);
 

@@ -36,8 +36,10 @@ public sealed class TestMatchSearchViewModel : IDisposable
 
     private static readonly DateTimeOffset _searchStartedAt = new DateTimeOffset(2026, 11, 5, 18, 0, 0, TimeSpan.Zero);
     private static readonly FoundMatchParticipant _own = new FoundMatchParticipant(OwnNickname, OwnEloRating, OwnTurnOrder);
-    private static readonly FoundMatchParticipant _rival =
-        new FoundMatchParticipant(RivalNickname, RivalEloRating, RivalTurnOrder);
+    private static readonly FoundMatchParticipant _rival = new FoundMatchParticipant(
+        RivalNickname,
+        RivalEloRating,
+        RivalTurnOrder);
     private static readonly FoundMatchParticipant[] _foundMatchParticipants = { _own, _rival };
     private static readonly TimeSpan _presenceWindow = TimeSpan.FromSeconds(PresenceWindowSeconds);
 

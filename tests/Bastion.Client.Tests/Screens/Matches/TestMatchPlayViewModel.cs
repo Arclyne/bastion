@@ -36,12 +36,15 @@ public sealed class TestMatchPlayViewModel : IDisposable
     private static readonly BoardCoordinates _forward = new BoardCoordinates(CenterColumnIndex, SecondRowIndex);
     private static readonly BoardCoordinates _rightOfFirstStart = new BoardCoordinates(RightColumnIndex, FirstRowIndex);
     private static readonly BoardCoordinates _leftOfFirstStart = new BoardCoordinates(LeftColumnIndex, FirstRowIndex);
-    private static readonly BoardCoordinates _secondForward =
-        new BoardCoordinates(CenterColumnIndex, BeforeLastRowIndex);
-    private static readonly BoardCoordinates _centerGrooveCoordinates =
-        new BoardCoordinates(CenterColumnIndex, FourthRowIndex);
-    private static readonly BoardCoordinates _twoSquaresForward =
-        new BoardCoordinates(CenterColumnIndex, ThirdRowIndex);
+    private static readonly BoardCoordinates _secondForward = new BoardCoordinates(
+        CenterColumnIndex,
+        BeforeLastRowIndex);
+    private static readonly BoardCoordinates _centerGrooveCoordinates = new BoardCoordinates(
+        CenterColumnIndex,
+        FourthRowIndex);
+    private static readonly BoardCoordinates _twoSquaresForward = new BoardCoordinates(
+        CenterColumnIndex,
+        ThirdRowIndex);
     private static readonly BoardCoordinates[] _firstStartReachableSquares =
     {
         _forward,
@@ -50,8 +53,8 @@ public sealed class TestMatchPlayViewModel : IDisposable
     };
     private static readonly Wall _centerWall = new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal);
     private static readonly DateTimeOffset _startedAt = new DateTimeOffset(2026, 11, 15, 18, 0, 0, TimeSpan.Zero);
-    private static readonly TimeSpan _moveNotificationWait =
-        TimeSpan.FromSeconds(MatchPlayViewModel.MoveNotificationWaitSeconds);
+    private static readonly TimeSpan _moveNotificationWait = TimeSpan.FromSeconds(
+        MatchPlayViewModel.MoveNotificationWaitSeconds);
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
     private readonly ManualTimeProvider _timeProvider = new ManualTimeProvider(_startedAt);
@@ -212,8 +215,9 @@ public sealed class TestMatchPlayViewModel : IDisposable
     public void PawnMoved_RivalReachedGoal_NamesRivalWinner()
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
-        PawnMovedEventArgs winningMove =
-            PawnMovedSampleFactory.CreateWinningMove(JoinedMatchSampleFactory.RivalNickname, FirstGoalSquare);
+        PawnMovedEventArgs winningMove = PawnMovedSampleFactory.CreateWinningMove(
+            JoinedMatchSampleFactory.RivalNickname,
+            FirstGoalSquare);
 
         _matchClient.RaisePawnMoved(winningMove);
 
@@ -347,8 +351,9 @@ public sealed class TestMatchPlayViewModel : IDisposable
     public async Task WallPlaced_OwnWallSent_StopsSending()
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
-        WallPlacedEventArgs ownWall =
-            WallPlacedSampleFactory.CreateFirstWall(JoinedMatchSampleFactory.OwnNickname, CenterGroove);
+        WallPlacedEventArgs ownWall = WallPlacedSampleFactory.CreateFirstWall(
+            JoinedMatchSampleFactory.OwnNickname,
+            CenterGroove);
         await viewModel.PlaceWall(_centerWall);
 
         _matchClient.RaiseWallPlaced(ownWall);
@@ -393,8 +398,8 @@ public sealed class TestMatchPlayViewModel : IDisposable
     private MatchPlayViewModel CreateViewModel(byte ownTurnOrder)
     {
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
-        MatchPlayViewModel viewModel =
-            InlineUiContext.CreateViewModel(() => new MatchPlayViewModel(joinedMatch, _matchClient, _timeProvider));
+        MatchPlayViewModel viewModel = InlineUiContext.CreateViewModel(
+            () => new MatchPlayViewModel(joinedMatch, _matchClient, _timeProvider));
         _viewModels.Add(viewModel);
         return viewModel;
     }

@@ -89,8 +89,9 @@ public sealed class TestWallPlacementViewModel : IDisposable
     public void ChooseGroove_GrooveTaken_ShowsGrooveTaken()
     {
         WallPlacementViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
-        WallPlacedEventArgs rivalWall =
-            WallPlacedSampleFactory.CreateFirstWall(JoinedMatchSampleFactory.RivalNickname, CenterGroove);
+        WallPlacedEventArgs rivalWall = WallPlacedSampleFactory.CreateFirstWall(
+            JoinedMatchSampleFactory.RivalNickname,
+            CenterGroove);
         _matchClient.RaiseWallPlaced(rivalWall);
         viewModel.Start();
 
@@ -173,8 +174,9 @@ public sealed class TestWallPlacementViewModel : IDisposable
     public void WallPlaced_TurnPassed_LeavesWallMode()
     {
         WallPlacementViewModel viewModel = CreateActiveViewModel();
-        WallPlacedEventArgs ownWall =
-            WallPlacedSampleFactory.CreateFirstWall(JoinedMatchSampleFactory.OwnNickname, CenterGroove);
+        WallPlacedEventArgs ownWall = WallPlacedSampleFactory.CreateFirstWall(
+            JoinedMatchSampleFactory.OwnNickname,
+            CenterGroove);
 
         _matchClient.RaiseWallPlaced(ownWall);
 
@@ -196,8 +198,8 @@ public sealed class TestWallPlacementViewModel : IDisposable
     private WallPlacementViewModel CreateViewModel(byte ownTurnOrder)
     {
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
-        MatchPlayViewModel play =
-            InlineUiContext.CreateViewModel(() => new MatchPlayViewModel(joinedMatch, _matchClient, _timeProvider));
+        MatchPlayViewModel play = InlineUiContext.CreateViewModel(
+            () => new MatchPlayViewModel(joinedMatch, _matchClient, _timeProvider));
         var viewModel = new WallPlacementViewModel(play);
         _viewModels.Add(viewModel);
         _viewModels.Add(play);

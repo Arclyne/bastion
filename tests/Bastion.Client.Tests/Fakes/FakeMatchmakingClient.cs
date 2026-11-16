@@ -12,8 +12,10 @@ public sealed class FakeMatchmakingClient : IMatchmakingClient
     private const byte ClassicWallsPerPlayer = 10;
     private const byte ClockMinutes = 5;
 
-    private static readonly FoundMatchFormat _classicFormat =
-        new FoundMatchFormat(ClassicBoardSize, ClassicWallsPerPlayer, ClockMinutes);
+    private static readonly FoundMatchFormat _classicFormat = new FoundMatchFormat(
+        ClassicBoardSize,
+        ClassicWallsPerPlayer,
+        ClockMinutes);
 
     public Exception? StartSearchFailure { get; set; }
 

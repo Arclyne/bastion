@@ -626,8 +626,9 @@ public sealed class TestMatch
         PlaceFirstPlayerWall(match, _wallAheadOfFirstPawn);
         BoardCoordinates squareBehindWall = BoardLayout.ParseSquare(ClassicForwardSquare);
 
-        IReadOnlyList<BoardCoordinates> reachableSquares =
-            match.ListReachableSquares(FirstAccountId, GameModeSampleFactory.ClassicBoardSize);
+        IReadOnlyList<BoardCoordinates> reachableSquares = match.ListReachableSquares(
+            FirstAccountId,
+            GameModeSampleFactory.ClassicBoardSize);
 
         Assert.DoesNotContain(squareBehindWall, reachableSquares);
     }

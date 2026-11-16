@@ -91,8 +91,8 @@ public sealed class TestFriendContractTranslator
     [Fact]
     public void ToRejection_FriendLimitReached_MapsFriendLimitReached()
     {
-        FriendshipRejection rejection =
-            FriendContractTranslator.ToRejection(FriendshipRejectionReason.FriendLimitReached);
+        FriendshipRejection rejection = FriendContractTranslator.ToRejection(
+            FriendshipRejectionReason.FriendLimitReached);
 
         Assert.Equal(FriendshipRejection.FriendLimitReached, rejection);
     }
