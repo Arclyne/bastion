@@ -70,7 +70,7 @@ public sealed class SessionService : ISessionService
         }
         catch (DbException ex)
         {
-            _logger.Error($"The database could not be reached. Operation={operationName}", ex);
+            _logger.Error($"A database command failed. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
     }

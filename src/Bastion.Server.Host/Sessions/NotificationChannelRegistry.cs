@@ -251,6 +251,11 @@ public sealed class NotificationChannelRegistry
         {
             AbortFailedChannel(accountId, callback, ex);
         }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn($"A notification was not delivered because the channel was closed. AccountId={accountId}", ex);
+            UnregisterChannel(accountId, callback);
+        }
     }
 
     private void AbortFailedChannel(int accountId, INotificationCallback callback, Exception cause)
