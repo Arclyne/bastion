@@ -9,7 +9,7 @@ namespace Bastion.Client.Tests.Chat;
 public sealed class TestChatContractTranslator
 {
     private const string SenderNickname = "luis_quo";
-    private const string Text = "hola";
+    private const string Text = "hello";
     private const int ConnectedPlayerCount = 4;
 
     private static readonly DateTime _sentAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
@@ -36,7 +36,7 @@ public sealed class TestChatContractTranslator
     }
 
     [Fact]
-    public void ToTranscript_MutedLog_MapsMuteEnd()
+    public void ToTranscript_MutedLog_KeepsMuteEnd()
     {
         var log = new LobbyChatLog
         {
