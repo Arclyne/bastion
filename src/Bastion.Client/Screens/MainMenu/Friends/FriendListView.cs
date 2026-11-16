@@ -17,6 +17,7 @@ public sealed class FriendListView : StackPanel
     private const float AddFriendButtonWidth = 150;
     private const float ScrollHeight = 460;
     private const float ListSpacing = 10;
+    private const float FilterFieldWidth = ListWidth - AddFriendButtonWidth - ListSpacing;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(FriendListView));
 
@@ -58,7 +59,7 @@ public sealed class FriendListView : StackPanel
         var filter = new TextField
         {
             Placeholder = nameof(Strings.FriendsFilterPlaceholder),
-            Width = ListWidth - AddFriendButtonWidth - ListSpacing,
+            Width = FilterFieldWidth,
             Height = FilterHeight,
         };
         filter.SetBinding(nameof(TextField.Text), nameof(FriendsPanelViewModel.FilterText));

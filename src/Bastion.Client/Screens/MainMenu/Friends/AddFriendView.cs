@@ -17,6 +17,7 @@ public sealed class AddFriendView : StackPanel
     private const float BackButtonWidth = 110;
     private const float ControlHeight = 40;
     private const float SearchButtonWidth = 96;
+    private const float SearchFieldWidth = ViewWidth - SearchButtonWidth - ViewSpacing;
     private const float ResultsHeight = 380;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(AddFriendView));
@@ -63,7 +64,7 @@ public sealed class AddFriendView : StackPanel
         var input = new TextField
         {
             Placeholder = nameof(Strings.FriendsSearchPlaceholder),
-            Width = ViewWidth - SearchButtonWidth - ViewSpacing,
+            Width = SearchFieldWidth,
             Height = ControlHeight,
         };
         input.SetBinding(nameof(TextField.Text), nameof(AddFriendViewModel.SearchText));
