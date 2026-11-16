@@ -5,13 +5,13 @@ using Gum.Wireframe;
 
 namespace Bastion.Client.Platform;
 
-public sealed class GumScreenHost : IScreenHost
+public sealed class ScreenHost : IScreenHost
 {
     private readonly InteractiveGue _root;
     private readonly InteractiveGue _modalRoot;
     private ScreenView? _shownScreen;
 
-    public GumScreenHost(InteractiveGue root, InteractiveGue modalRoot)
+    public ScreenHost(InteractiveGue root, InteractiveGue modalRoot)
     {
         ArgumentNullException.ThrowIfNull(root);
         ArgumentNullException.ThrowIfNull(modalRoot);

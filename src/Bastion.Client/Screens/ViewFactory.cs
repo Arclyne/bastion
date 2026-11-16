@@ -214,8 +214,7 @@ public static class ViewFactory
         string version = typeof(ViewFactory).Assembly.GetName().Version?.ToString(fieldCount: 3) ?? string.Empty;
         string text = string.Format(CultureInfo.CurrentCulture, Strings.AppVersionFormat, version);
 
-        Label label = CreateLabel(string.Empty, TextStyleCatalog.Version);
-        label.SetTextNoTranslate(text);
+        Label label = CreateUntranslatedLabel(text, TextStyleCatalog.Version);
         label.Anchor(Gum.Wireframe.Anchor.BottomRight);
         label.X = -ScreenMetrics.MarginX;
         label.Y = -VersionMarginY;
