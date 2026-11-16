@@ -42,7 +42,8 @@ public sealed class MatchClient : IMatchClient
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        Call(service => service.AbandonMatch(sessionToken, matchId));
+        Action<IMatchService> abandonMatch = service => service.AbandonMatch(sessionToken, matchId);
+        Call(abandonMatch);
     }
 
     public void MovePawn(string sessionToken, ChosenPawnMove move)
@@ -51,7 +52,8 @@ public sealed class MatchClient : IMatchClient
         ArgumentNullException.ThrowIfNull(move);
 
         var contractMove = MatchContractTranslator.ToPawnMove(move);
-        Call(service => service.MovePawn(sessionToken, contractMove));
+        Action<IMatchService> movePawn = service => service.MovePawn(sessionToken, contractMove);
+        Call(movePawn);
     }
 
     public void PlaceWall(string sessionToken, ChosenWall wall)
@@ -60,7 +62,8 @@ public sealed class MatchClient : IMatchClient
         ArgumentNullException.ThrowIfNull(wall);
 
         var contractWall = MatchContractTranslator.ToWallPlacement(wall);
-        Call(service => service.PlaceWall(sessionToken, contractWall));
+        Action<IMatchService> placeWall = service => service.PlaceWall(sessionToken, contractWall);
+        Call(placeWall);
     }
 
     private void Call(Action<IMatchService> operation)
