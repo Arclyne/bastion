@@ -9,9 +9,6 @@ namespace Bastion.Client.Screens.MainMenu.Friends;
 
 public sealed class RemoveFriendDialogView : DialogCard
 {
-    private const float ButtonSpacing = 12;
-    private const int ButtonsPerRow = 2;
-
     private static readonly ILog _logger = LogManager.GetLogger(typeof(RemoveFriendDialogView));
 
     private readonly FriendActionsViewModel _actions;
@@ -45,8 +42,7 @@ public sealed class RemoveFriendDialogView : DialogCard
     private static Label CreateKeepsHistoryNotice()
     {
         Label keepsHistory = ViewFactory.CreateLabel(nameof(Strings.FriendsRemoveKeepsHistory), TextStyleCatalog.DialogMessage);
-        keepsHistory.Width = DialogMetrics.ContentWidth;
-        keepsHistory.WidthUnits = DimensionUnitType.Absolute;
+        ViewFactory.SetFixedWidth(keepsHistory, DialogMetrics.ContentWidth);
         return keepsHistory;
     }
 
@@ -59,16 +55,17 @@ public sealed class RemoveFriendDialogView : DialogCard
 
     private StackPanel CreateButtons()
     {
-        float buttonWidth = (DialogMetrics.ContentWidth - ButtonSpacing) / ButtonsPerRow;
-
         Button cancel = ViewFactory.CreateButton(
             nameof(Strings.FriendsCancel),
-            buttonWidth,
+            DialogMetrics.ButtonWidth,
             DialogMetrics.ButtonHeight);
         ButtonSkin.CreateAndAttach(cancel, ButtonLookCatalog.Secondary);
         cancel.Click += HandleCancelClick;
 
-        Button remove = ViewFactory.CreateButton(nameof(Strings.FriendsRemove), buttonWidth, DialogMetrics.ButtonHeight);
+        Button remove = ViewFactory.CreateButton(
+            nameof(Strings.FriendsRemove),
+            DialogMetrics.ButtonWidth,
+            DialogMetrics.ButtonHeight);
         ButtonSkin.CreateAndAttach(remove, ButtonLookCatalog.Primary);
         remove.SetBinding(nameof(IsEnabled), nameof(FriendActionsViewModel.CanConfirm));
         remove.Click += HandleRemoveClick;
@@ -76,7 +73,7 @@ public sealed class RemoveFriendDialogView : DialogCard
         var row = new StackPanel
         {
             Orientation = Orientation.Horizontal,
-            Spacing = ButtonSpacing,
+            Spacing = DialogMetrics.ButtonSpacing,
         };
         row.AddChild(cancel);
         row.AddChild(remove);

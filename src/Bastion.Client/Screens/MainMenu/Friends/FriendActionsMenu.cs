@@ -15,6 +15,7 @@ public sealed class FriendActionsMenu : Panel
     private const float ItemSpacing = 8;
     private const float ItemHeight = 40;
     private const int HorizontalSideCount = 2;
+    private const float ItemWidth = MenuWidth - (PaddingX * HorizontalSideCount);
 
     private readonly FriendActionsViewModel _actions;
 
@@ -63,7 +64,7 @@ public sealed class FriendActionsMenu : Panel
 
     private static Button CreateItem(string textKey, ButtonLook look)
     {
-        Button item = ViewFactory.CreateButton(textKey, MenuWidth - (PaddingX * HorizontalSideCount), ItemHeight);
+        Button item = ViewFactory.CreateButton(textKey, ItemWidth, ItemHeight);
         ButtonSkin.CreateAndAttach(item, look);
         return item;
     }
