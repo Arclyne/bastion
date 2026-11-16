@@ -90,7 +90,7 @@ public sealed class TestLobbyChatService
     }
 
     [Fact]
-    public void SendMessage_ValidText_BroadcastsTrimmedText()
+    public void SendMessage_PaddedText_BroadcastsTrimmedText()
     {
         _sessionVerifier.Add(Token, _player);
 
