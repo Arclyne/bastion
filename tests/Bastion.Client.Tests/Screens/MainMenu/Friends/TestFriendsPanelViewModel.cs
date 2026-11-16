@@ -18,13 +18,12 @@ public sealed class TestFriendsPanelViewModel
 
     private readonly FakeNotificationClient _notifications = new FakeNotificationClient();
     private readonly FakeClipboard _clipboard = new FakeClipboard();
-    private readonly LoggedInSession _session;
+    private readonly LoggedInSession _session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
     private readonly SocialClientSet _clients;
     private readonly LocalServiceSet _localServices;
 
     public TestFriendsPanelViewModel()
     {
-        _session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
         var chatClient = new FakeChatClient();
         var conversationClient = new FakeConversationClient();
         var chatClients = new ChatClientSet(chatClient, conversationClient, _notifications);
@@ -38,8 +37,12 @@ public sealed class TestFriendsPanelViewModel
     [Fact]
     public void Constructor_Created_SubscribesToNotifications()
     {
-        using FriendsPanelViewModel viewModel = InlineUiContext.CreateViewModel(
-            () => new FriendsPanelViewModel(_session, _clients, _localServices));
+        Func<FriendsPanelViewModel> createViewModel = () => new FriendsPanelViewModel(
+            _session,
+            _clients,
+            _localServices);
+
+        using FriendsPanelViewModel viewModel = InlineUiContext.CreateViewModel(createViewModel);
 
         bool hasSubscribers = _notifications.HasAnySubscribers();
         Assert.True(hasSubscribers);
@@ -79,7 +82,10 @@ public sealed class TestFriendsPanelViewModel
 
     private FriendsPanelViewModel CreateViewModel()
     {
-        return InlineUiContext.CreateViewModel(
-            () => new FriendsPanelViewModel(_session, _clients, _localServices));
+        Func<FriendsPanelViewModel> createViewModel = () => new FriendsPanelViewModel(
+            _session,
+            _clients,
+            _localServices);
+        return InlineUiContext.CreateViewModel(createViewModel);
     }
 }

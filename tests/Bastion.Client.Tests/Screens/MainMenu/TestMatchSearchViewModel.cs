@@ -51,8 +51,11 @@ public sealed class TestMatchSearchViewModel : IDisposable
     public TestMatchSearchViewModel()
     {
         var session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
-        _viewModel = InlineUiContext.CreateViewModel(
-            () => new MatchSearchViewModel(session, _matchmakingClient, _timeProvider));
+        Func<MatchSearchViewModel> createViewModel = () => new MatchSearchViewModel(
+            session,
+            _matchmakingClient,
+            _timeProvider);
+        _viewModel = InlineUiContext.CreateViewModel(createViewModel);
     }
 
     public void Dispose()
