@@ -4,6 +4,10 @@ namespace Bastion.Domain.Matchmaking;
 
 public class MatchSearch
 {
+    private DateTime _lastConfirmedAt;
+    private DateTime? _presenceRequestedAt;
+    private SearchStatus _status;
+
     public MatchSearch(int accountId, string nickname, DateTime startedAt)
     {
         ArgumentNullException.ThrowIfNull(nickname);
@@ -11,8 +15,8 @@ public class MatchSearch
         AccountId = accountId;
         Nickname = nickname;
         StartedAt = startedAt;
-        LastConfirmedAt = startedAt;
-        Status = SearchStatus.Searching;
+        _lastConfirmedAt = startedAt;
+        _status = SearchStatus.Searching;
     }
 
     public int AccountId { get; }
@@ -21,26 +25,20 @@ public class MatchSearch
 
     public DateTime StartedAt { get; }
 
-    public DateTime LastConfirmedAt { get; private set; }
-
-    public DateTime? PresenceRequestedAt { get; private set; }
-
-    public SearchStatus Status { get; private set; }
-
     public bool IsSearching()
     {
-        return Status == SearchStatus.Searching;
+        return _status == SearchStatus.Searching;
     }
 
     public bool ShouldStartPresenceCheck(DateTime now)
     {
-        TimeSpan timeSinceConfirmation = now - LastConfirmedAt;
+        TimeSpan timeSinceConfirmation = now - _lastConfirmedAt;
         return IsSearching() && timeSinceConfirmation >= MatchmakingPolicy.PresenceCheckInterval;
     }
 
     public bool HasPresenceExpired(DateTime now)
     {
-        if (PresenceRequestedAt is not DateTime requestedAt)
+        if (_presenceRequestedAt is not DateTime requestedAt)
         {
             return false;
         }
@@ -56,22 +54,22 @@ public class MatchSearch
             throw new InvalidOperationException("Presence was already requested for this search.");
         }
 
-        Status = SearchStatus.AwaitingPresence;
-        PresenceRequestedAt = now;
+        _status = SearchStatus.AwaitingPresence;
+        _presenceRequestedAt = now;
         DateTime presenceDeadline = now + MatchmakingPolicy.PresenceResponseWindow;
         return presenceDeadline;
     }
 
     public void ConfirmPresence(DateTime now)
     {
-        if (Status != SearchStatus.AwaitingPresence)
+        if (_status != SearchStatus.AwaitingPresence)
         {
             return;
         }
 
-        Status = SearchStatus.Searching;
-        PresenceRequestedAt = null;
-        LastConfirmedAt = now;
+        _status = SearchStatus.Searching;
+        _presenceRequestedAt = null;
+        _lastConfirmedAt = now;
     }
 
     public override bool Equals(object? obj)
