@@ -15,7 +15,7 @@ public static class MatchmakingTranslator
 
         var fault = new SearchRejectedFault
         {
-            Reason = ToReason(rejection.Rejection),
+            Reason = ToRejectionReason(rejection.Rejection),
         };
         return FaultExceptionFactory.Create(fault, rejection);
     }
@@ -51,7 +51,7 @@ public static class MatchmakingTranslator
 
     public static SearchEndedNotification ToSearchEndedNotification(SearchEndReason reason, DateTime now)
     {
-        SearchEndedReason searchEndedReason = ToReason(reason);
+        SearchEndedReason searchEndedReason = ToSearchEndedReason(reason);
         return new SearchEndedNotification
         {
             OccurredAt = now,
@@ -59,7 +59,7 @@ public static class MatchmakingTranslator
         };
     }
 
-    private static SearchRejectionReason ToReason(SearchRejection rejection)
+    private static SearchRejectionReason ToRejectionReason(SearchRejection rejection)
     {
         switch (rejection)
         {
@@ -84,7 +84,7 @@ public static class MatchmakingTranslator
         };
     }
 
-    private static SearchEndedReason ToReason(SearchEndReason reason)
+    private static SearchEndedReason ToSearchEndedReason(SearchEndReason reason)
     {
         switch (reason)
         {
