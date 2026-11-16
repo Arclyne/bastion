@@ -83,26 +83,18 @@ public sealed class BoardScene : IDisposable
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        if (!TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint))
-        {
-            square = _offBoardCoordinates;
-            return false;
-        }
-
-        return BoardSceneLayout.TryGetCoordinates(match.BoardSize, surfacePoint, out square);
+        square = _offBoardCoordinates;
+        return TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint)
+            && BoardSceneLayout.TryGetCoordinates(match.BoardSize, surfacePoint, out square);
     }
 
     public bool TryFindGrooveUnderCursor(MatchViewModel match, Point cursorPosition, out BoardCoordinates groove)
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        if (!TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint))
-        {
-            groove = _offBoardCoordinates;
-            return false;
-        }
-
-        return BoardSceneLayout.TryGetGroove(match.BoardSize, surfacePoint, out groove);
+        groove = _offBoardCoordinates;
+        return TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint)
+            && BoardSceneLayout.TryGetGroove(match.BoardSize, surfacePoint, out groove);
     }
 
     public void Dispose()
