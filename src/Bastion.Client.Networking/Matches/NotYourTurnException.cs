@@ -5,7 +5,10 @@ namespace Bastion.Client.Networking.Matches;
 public sealed class NotYourTurnException : Exception
 {
     public NotYourTurnException(byte currentTurnOrder, short nextMoveNumber, Exception innerException)
-        : base($"Another player has the turn. CurrentTurnOrder={currentTurnOrder}", innerException)
+        : base(
+            $"Another player has the turn or the move is out of order. CurrentTurnOrder={currentTurnOrder}; "
+            + $"NextMoveNumber={nextMoveNumber}",
+            innerException)
     {
         ArgumentNullException.ThrowIfNull(innerException);
 
