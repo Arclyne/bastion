@@ -52,7 +52,7 @@ public static class ChatTimeText
             return Strings.ChatToday;
         }
 
-        if (day == today.AddDays(-1))
+        if (IsYesterday(day, today))
         {
             return Strings.ChatYesterday;
         }
@@ -76,5 +76,11 @@ public static class ChatTimeText
     private static DateTime ConvertToLocalTime(DateTime moment, TimeProvider timeProvider)
     {
         return TimeZoneInfo.ConvertTimeFromUtc(moment, timeProvider.LocalTimeZone);
+    }
+
+    private static bool IsYesterday(DateTime day, DateTime today)
+    {
+        DateTime yesterday = today.AddDays(-1);
+        return day == yesterday;
     }
 }

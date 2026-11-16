@@ -80,28 +80,19 @@ public sealed class ChatChannelListView : StackPanel
 
     private static StackPanel CreateGlobalText()
     {
-        Label detail = ConversationPartFactory.CreateGlobalChannelDetail();
-
-        var text = new StackPanel
-        {
-            Spacing = PanelMetrics.TextSpacing,
-            X = RowPaddingX,
-        };
         Label title = ConversationPartFactory.CreateGlobalChannelTitle();
-        text.AddChild(title);
-        text.AddChild(detail);
-        ViewFactory.CenterVertically(text);
+        Label detail = ConversationPartFactory.CreateGlobalChannelDetail();
+        StackPanel text = ViewFactory.CreateCenteredLines(title, detail);
+        text.X = RowPaddingX;
         return text;
     }
 
     private StackPanel CreateLobbyLoadFailure()
     {
-        StackPanel failure = ViewFactory.CreateLoadFailure(
-            nameof(Strings.ChatLoadFailed),
-            nameof(Strings.ChatRetry),
-            HandleRetryLobbyClick);
+        StackPanel failure = ConversationPartFactory.CreateLoadFailure(
+            HandleRetryLobbyClick,
+            nameof(LobbyChatViewModel.HasLoadFailed));
         failure.BindingContext = _chatTab.LobbyChat;
-        failure.SetBinding(nameof(IsVisible), nameof(LobbyChatViewModel.HasLoadFailed));
         return failure;
     }
 
@@ -135,11 +126,9 @@ public sealed class ChatChannelListView : StackPanel
 
     private StackPanel CreateConversationsLoadFailure()
     {
-        StackPanel failure = ViewFactory.CreateLoadFailure(
-            nameof(Strings.ChatLoadFailed),
-            nameof(Strings.ChatRetry),
-            HandleRetryConversationsClick);
-        failure.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.HasConversationsLoadFailed));
+        StackPanel failure = ConversationPartFactory.CreateLoadFailure(
+            HandleRetryConversationsClick,
+            nameof(ChatTabViewModel.HasConversationsLoadFailed));
         return failure;
     }
 

@@ -87,6 +87,19 @@ public static class ConversationPartFactory
             TextStyleCatalog.Hint);
     }
 
+    public static StackPanel CreateLoadFailure(EventHandler handleRetryClick, string visibilityProperty)
+    {
+        ArgumentNullException.ThrowIfNull(handleRetryClick);
+        ArgumentNullException.ThrowIfNull(visibilityProperty);
+
+        StackPanel failure = ViewFactory.CreateLoadFailure(
+            nameof(Strings.ChatLoadFailed),
+            nameof(Strings.ChatRetry),
+            handleRetryClick);
+        failure.SetBinding(nameof(StackPanel.IsVisible), visibilityProperty);
+        return failure;
+    }
+
     public static StackPanel CreateComposer(EventHandler handleSendClick)
     {
         ArgumentNullException.ThrowIfNull(handleSendClick);
