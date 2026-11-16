@@ -23,7 +23,9 @@ public sealed class ConversationClient : IConversationClient
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        ConversationEntry[]? entries = Call(service => service.ListConversations(sessionToken));
+        Func<IConversationService, ConversationEntry[]?> listConversations = service => service.ListConversations(
+            sessionToken);
+        ConversationEntry[]? entries = Call(listConversations);
         return ConversationContractTranslator.ToPreviews(entries);
     }
 
@@ -32,7 +34,10 @@ public sealed class ConversationClient : IConversationClient
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(friendCode);
 
-        PrivateConversationLog log = Call(service => service.OpenConversation(sessionToken, friendCode));
+        Func<IConversationService, PrivateConversationLog> openConversation = service => service.OpenConversation(
+            sessionToken,
+            friendCode);
+        PrivateConversationLog log = Call(openConversation);
         return ConversationContractTranslator.ToTranscript(log);
     }
 
@@ -42,7 +47,11 @@ public sealed class ConversationClient : IConversationClient
         ArgumentNullException.ThrowIfNull(friendCode);
         ArgumentNullException.ThrowIfNull(text);
 
-        ChatMessageReceipt receipt = Call(service => service.SendPrivateMessage(sessionToken, friendCode, text));
+        Func<IConversationService, ChatMessageReceipt> sendMessage = service => service.SendPrivateMessage(
+            sessionToken,
+            friendCode,
+            text);
+        ChatMessageReceipt receipt = Call(sendMessage);
         return receipt.SentAt;
     }
 
@@ -51,7 +60,10 @@ public sealed class ConversationClient : IConversationClient
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(friendCode);
 
-        Call(service => service.MarkConversationRead(sessionToken, friendCode));
+        Action<IConversationService> markConversationRead = service => service.MarkConversationRead(
+            sessionToken,
+            friendCode);
+        Call(markConversationRead);
     }
 
     private TResult Call<TResult>(Func<IConversationService, TResult> operation)
