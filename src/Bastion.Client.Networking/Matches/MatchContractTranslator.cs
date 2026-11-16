@@ -1,7 +1,6 @@
 using System;
 using System.ServiceModel;
 using Bastion.Contracts.Matches;
-using Bastion.Contracts.Notifications;
 
 namespace Bastion.Client.Networking.Matches;
 
@@ -41,6 +40,22 @@ public static class MatchContractTranslator
         return new IllegalWallException(rejection, fault.Detail.BlockedTurnOrder, fault);
     }
 
+    public static PlacedWallOrientation ToPlacedOrientation(WallOrientation orientation)
+    {
+        switch (orientation)
+        {
+            case WallOrientation.Horizontal:
+                return PlacedWallOrientation.Horizontal;
+            case WallOrientation.Vertical:
+                return PlacedWallOrientation.Vertical;
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(orientation),
+                    orientation,
+                    "Unsupported wall orientation.");
+        }
+    }
+
     private static WallOrientation ToContractOrientation(PlacedWallOrientation orientation)
     {
         switch (orientation)
@@ -71,22 +86,6 @@ public static class MatchContractTranslator
                 return WallPlacementRejection.WouldBlockPlayer;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported wall rejection reason.");
-        }
-    }
-
-    public static PlacedWallOrientation ToPlacedOrientation(WallOrientation orientation)
-    {
-        switch (orientation)
-        {
-            case WallOrientation.Horizontal:
-                return PlacedWallOrientation.Horizontal;
-            case WallOrientation.Vertical:
-                return PlacedWallOrientation.Vertical;
-            default:
-                throw new ArgumentOutOfRangeException(
-                    nameof(orientation),
-                    orientation,
-                    "Unsupported wall orientation.");
         }
     }
 }
