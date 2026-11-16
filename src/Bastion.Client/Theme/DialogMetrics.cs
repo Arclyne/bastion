@@ -9,6 +9,9 @@ public static class DialogMetrics
     public const float SectionSpacing = 14;
     public const float ButtonHeight = 46;
     public const float ContentWidth = Width - (PaddingX * HorizontalSideCount);
+    public const float ButtonSpacing = 12;
+    public const float ButtonWidth = (ContentWidth - ButtonSpacing) / ButtonsPerRow;
 
     private const int HorizontalSideCount = 2;
+    private const int ButtonsPerRow = 2;
 }
