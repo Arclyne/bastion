@@ -10,8 +10,10 @@ public static class TextStyleCatalog
 
     public static TextStyle FieldText { get; } = new TextStyle(FontCatalog.Bold, fontSize: 16, Palette.Ink);
 
-    public static TextStyle Placeholder { get; } =
-        new TextStyle(FontCatalog.SemiBold, fontSize: 15, Palette.Placeholder);
+    public static TextStyle Placeholder { get; } = new TextStyle(
+        FontCatalog.SemiBold,
+        fontSize: 15,
+        Palette.Placeholder);
 
     public static TextStyle FieldError { get; } = new TextStyle(FontCatalog.Bold, fontSize: 13, Palette.Error);
 
