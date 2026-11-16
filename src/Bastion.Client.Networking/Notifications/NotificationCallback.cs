@@ -183,6 +183,11 @@ public sealed class NotificationCallback : INotificationCallback
         };
     }
 
+    private void OnPawnMoved(PawnMovedEventArgs e)
+    {
+        PawnMoved?.Invoke(this, e);
+    }
+
     private static WallPlacedEventArgs ToWallPlacedEventArgs(WallPlacedNotification notification)
     {
         string placerNickname = notification.PlacerNickname ?? string.Empty;
@@ -199,11 +204,6 @@ public sealed class NotificationCallback : INotificationCallback
             NextMoveNumber = notification.NextMoveNumber,
             RemainingClockMilliseconds = notification.RemainingClockMilliseconds,
         };
-    }
-
-    private void OnPawnMoved(PawnMovedEventArgs e)
-    {
-        PawnMoved?.Invoke(this, e);
     }
 
     private void OnWallPlaced(WallPlacedEventArgs e)
