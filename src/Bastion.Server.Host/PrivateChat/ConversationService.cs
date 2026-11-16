@@ -60,8 +60,8 @@ public sealed class ConversationService : IConversationService
         string recipientCode = RequireFriendCode(friendCode);
         string messageText = ChatTranslator.RequireText(text);
         var draft = new PrivateMessageDraft(recipientCode, messageText);
-        Func<ChatMessageReceipt> sendMessage = () => SendPrivateMessageInRequestScope(token, draft);
-        return TranslateConversationFailures(nameof(SendPrivateMessage), sendMessage);
+        Func<ChatMessageReceipt> sendPrivateMessage = () => SendPrivateMessageInRequestScope(token, draft);
+        return TranslateConversationFailures(nameof(SendPrivateMessage), sendPrivateMessage);
     }
 
     /// <inheritdoc/>
@@ -136,7 +136,7 @@ public sealed class ConversationService : IConversationService
         }
         catch (DbException ex)
         {
-            _logger.Error($"The database could not be reached. Operation={operationName}", ex);
+            _logger.Error($"A database command failed. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
     }
