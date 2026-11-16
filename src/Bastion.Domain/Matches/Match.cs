@@ -121,7 +121,7 @@ public class Match
             throw new InvalidOperationException("Only a player of a match in progress can abandon it.");
         }
 
-        if (_participations.Count == TwoPlayerCount)
+        if (IsTwoPlayerMatch())
         {
             EndTwoPlayerMatchByAbandonment(abandoningAccountId, abandonedAt);
             return;
@@ -182,7 +182,7 @@ public class Match
         string destinationSquare = BoardLayout.ToSquare(pawnMove.Destination);
         mover.MoveTo(destinationSquare);
         bool hasReachedGoal = BoardLayout.IsGoal(boardSize, mover.TurnOrder, pawnMove.Destination);
-        if (hasReachedGoal && _participations.Count == TwoPlayerCount)
+        if (hasReachedGoal && IsTwoPlayerMatch())
         {
             FinishTwoPlayerMatch(mover.AccountId, MatchEndReason.Goal, playedAt);
             return;
@@ -257,7 +257,7 @@ public class Match
         }
 
         Participation? participation = FindParticipation(accountId);
-        if (participation is null || participation.Result is not null)
+        if (participation is null || participation.HasEnded())
         {
             return null;
         }
@@ -268,6 +268,11 @@ public class Match
     private Participation? FindParticipation(int accountId)
     {
         return _participations.FirstOrDefault(participation => participation.AccountId == accountId);
+    }
+
+    private bool IsTwoPlayerMatch()
+    {
+        return _participations.Count == TwoPlayerCount;
     }
 
     private void EndTwoPlayerMatchByAbandonment(int abandoningAccountId, DateTime endedAt)
@@ -329,7 +334,7 @@ public class Match
     private List<Participation> ListActiveParticipations()
     {
         IEnumerable<Participation> activeParticipations = _participations
-            .Where(participation => participation.Result is null)
+            .Where(participation => !participation.HasEnded())
             .OrderBy(participation => participation.TurnOrder);
         return new List<Participation>(activeParticipations);
     }

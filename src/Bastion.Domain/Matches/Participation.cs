@@ -69,9 +69,14 @@ public class Participation
         return RemainingWalls > 0;
     }
 
+    public bool HasEnded()
+    {
+        return Result is not null;
+    }
+
     internal void Finish(ParticipationResult result)
     {
-        if (Result is not null)
+        if (HasEnded())
         {
             throw new InvalidOperationException("The participation has already ended.");
         }
