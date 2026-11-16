@@ -7,7 +7,6 @@ using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
-using Gum.Wireframe;
 using log4net;
 
 namespace Bastion.Client.Screens.MainMenu;
@@ -118,7 +117,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
             Orientation = Orientation.Horizontal,
             Spacing = ChipSpacing,
         };
-        Panel avatar = ShapeFactory.CreateAvatar(AvatarSize, Palette.PlayerOne, AvatarRingWidth);
+        Panel avatar = ShapeFactory.CreateAvatar(AvatarSize, Palette.IdentityAccent, AvatarRingWidth);
         StackPanel identityText = CreateIdentityText();
         content.AddChild(avatar);
         content.AddChild(identityText);

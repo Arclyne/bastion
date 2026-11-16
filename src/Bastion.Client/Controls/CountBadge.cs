@@ -19,7 +19,7 @@ public sealed class CountBadge : Panel
         WidthUnits = DimensionUnitType.Absolute;
         Height = Size;
         HeightUnits = DimensionUnitType.Absolute;
-        RectangleRuntime circle = ShapeFactory.CreateCircle(Palette.PlayerOne, Size);
+        RectangleRuntime circle = ShapeFactory.CreateCircle(Palette.IdentityAccent, Size);
         Label count = CreateCount(countProperty);
         ShapeFactory.InsertBehindContent(Visual, circle);
         AddChild(count);

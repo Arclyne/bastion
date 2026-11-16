@@ -9,6 +9,7 @@ public static class Palette
     private const byte FocusHaloAlpha = 0x29;
     private const byte ErrorHaloAlpha = 0x1A;
     private const byte ReachableSquareAlpha = 0xC8;
+    private const byte HeroIconFillAlpha = 0x29;
 
     private static readonly Color _pawnBlue = new Color(0x2F, 0x6F, 0xB8);
     private static readonly Color _pawnRed = new Color(0xC2, 0x3B, 0x2E);
@@ -75,7 +76,7 @@ public static class Palette
 
     public static Color Overlay { get; } = new Color(0x1E, 0x12, 0x0A, 0x73);
 
-    public static Color PlayerOne { get; } = new Color(0xD8, 0x5A, 0x30);
+    public static Color IdentityAccent { get; } = new Color(0xD8, 0x5A, 0x30);
 
     public static Color ReachableSquare { get; } = new Color(AccentSoft, ReachableSquareAlpha);
 
@@ -89,7 +90,7 @@ public static class Palette
 
     public static Color AvatarFill { get; } = new Color(0xFB, 0xEC, 0xDA);
 
-    public static Color HeroIconFill { get; } = new Color(0xFF, 0xFF, 0xFF, 0x29);
+    public static Color HeroIconFill { get; } = new Color(White, HeroIconFillAlpha);
 
     public static Color HeroDetail { get; } = new Color(0xFF, 0xF2, 0xEC);
 
