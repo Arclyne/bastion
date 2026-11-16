@@ -6,8 +6,13 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public abstract class MessageRowViewModel : ViewModel
 {
-    protected MessageRowViewModel()
+    private readonly TimeProvider _timeProvider;
+
+    protected MessageRowViewModel(TimeProvider timeProvider)
     {
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
+        _timeProvider = timeProvider;
         Text = string.Empty;
         TimeText = string.Empty;
         StateText = string.Empty;
@@ -59,7 +64,7 @@ public abstract class MessageRowViewModel : ViewModel
 
     protected void ShowSentTime(DateTime sentAt)
     {
-        TimeText = ChatTimeText.FormatTime(sentAt);
+        TimeText = ChatTimeText.FormatTime(sentAt, _timeProvider);
     }
 
     protected void MarkPending()

@@ -4,7 +4,6 @@ using Bastion.Client.Localization;
 using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
-using Gum.Forms;
 using Gum.Forms.Controls;
 using log4net;
 
@@ -63,7 +62,7 @@ public sealed class MatchChatPanel : Panel
     private ItemsControl CreateMessages()
     {
         ItemsControl messages = ViewFactory.CreateScrollList<ItemsControl>(ContentWidth, MessagesHeight);
-        messages.VisualTemplate = new VisualTemplate(ChatMessageRowView.CreateVisual);
+        messages.VisualTemplate = ChatMessageRowView.CreateTemplate(ContentWidth);
         messages.Items = _viewModel.Messages;
         return messages;
     }

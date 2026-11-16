@@ -1,6 +1,7 @@
 using System;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
+using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Wireframe;
 
@@ -8,33 +9,36 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public sealed class ChatMessageRowView : StackPanel
 {
-    private const float RowWidth = 340;
     private const float RowSpacing = 2;
     private const float HeaderSpacing = 8;
 
-    public ChatMessageRowView(ChatMessageRowViewModel row)
+    public ChatMessageRowView(ChatMessageRowViewModel row, float rowWidth)
     {
         ArgumentNullException.ThrowIfNull(row);
 
         BindingContext = row;
-        Width = RowWidth;
+        Width = rowWidth;
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = RowSpacing;
         StackPanel header = CreateHeader(row);
-        Label text = CreateFixedLabel(row.Text, TextStyleCatalog.NoticeMessage);
-        Label pendingState = CreateStateLabel(nameof(ChatMessageRowViewModel.IsPending), TextStyleCatalog.Hint);
-        Label failedState = CreateStateLabel(nameof(ChatMessageRowViewModel.HasFailed), TextStyleCatalog.FieldError);
+        Label text = CreateFixedLabel(row.Text, TextStyleCatalog.NoticeMessage, rowWidth);
+        Label pendingState = CreateStateLabel(
+            nameof(ChatMessageRowViewModel.IsPending),
+            TextStyleCatalog.Hint,
+            rowWidth);
+        Label failedState = CreateStateLabel(
+            nameof(ChatMessageRowViewModel.HasFailed),
+            TextStyleCatalog.FieldError,
+            rowWidth);
         AddChild(header);
         AddChild(text);
         AddChild(pendingState);
         AddChild(failedState);
     }
 
-    public static GraphicalUiElement CreateVisual(object? item)
+    public static VisualTemplate CreateTemplate(float rowWidth)
     {
-        ChatMessageRowViewModel row = ViewFactory.RequireRow<ChatMessageRowViewModel>(item);
-        var rowView = new ChatMessageRowView(row);
-        return rowView.Visual;
+        return new VisualTemplate(item => CreateVisual(item, rowWidth));
     }
 
     private static StackPanel CreateHeader(ChatMessageRowViewModel row)
@@ -53,21 +57,28 @@ public sealed class ChatMessageRowView : StackPanel
         return header;
     }
 
-    private static Label CreateFixedLabel(string text, TextStyle style)
+    private static Label CreateFixedLabel(string text, TextStyle style, float width)
     {
         Label label = ViewFactory.CreateUntranslatedLabel(text, style);
-        label.Width = RowWidth;
+        label.Width = width;
         label.WidthUnits = DimensionUnitType.Absolute;
         return label;
     }
 
-    private static Label CreateStateLabel(string visibilityProperty, TextStyle style)
+    private static Label CreateStateLabel(string visibilityProperty, TextStyle style, float width)
     {
         Label label = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(ChatMessageRowViewModel.StateText),
             style,
-            RowWidth);
+            width);
         label.SetBinding(nameof(IsVisible), visibilityProperty);
         return label;
+    }
+
+    private static GraphicalUiElement CreateVisual(object? item, float rowWidth)
+    {
+        ChatMessageRowViewModel row = ViewFactory.RequireRow<ChatMessageRowViewModel>(item);
+        var rowView = new ChatMessageRowView(row, rowWidth);
+        return rowView.Visual;
     }
 }

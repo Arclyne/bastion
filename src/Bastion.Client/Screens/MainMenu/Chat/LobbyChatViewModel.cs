@@ -154,23 +154,20 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
             return;
         }
 
-        string text = Draft;
-        if (!ChatPolicy.IsValidMessage(text))
+        if (!TryTakeValidDraft(out string trimmedText))
         {
-            StatusText = ChatRejectionText.DescribeInvalidMessage();
             return;
         }
 
-        string trimmedText = text.Trim();
         DateTime createdAt = GetUtcNow();
-        var row = ChatMessageRowViewModel.CreatePending(trimmedText, createdAt);
+        var row = ChatMessageRowViewModel.CreatePending(trimmedText, createdAt, TimeProvider);
         UpdateReadingPosition(isReadingLatest: true);
         AddMessage(row);
         Draft = string.Empty;
         IsSending = true;
         try
         {
-            DateTime sentAt = await Task.Run(() => _chat.SendMessage(_session.Token, text));
+            DateTime sentAt = await Task.Run(() => _chat.SendMessage(_session.Token, trimmedText));
             row.Confirm(sentAt);
         }
         catch (ChatMessageRejectedException ex)
@@ -208,7 +205,7 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
 
     private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)
     {
-        var row = new ChatMessageRowViewModel(e.Message);
+        var row = new ChatMessageRowViewModel(e.Message, TimeProvider);
         UiThread.Run(_uiContext, () => ReceiveMessage(row));
     }
 
@@ -242,7 +239,7 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
         Messages.Clear();
         foreach (ChatMessage message in transcript.Messages)
         {
-            var row = new ChatMessageRowViewModel(message);
+            var row = new ChatMessageRowViewModel(message, TimeProvider);
             Messages.Add(row);
         }
 
@@ -254,7 +251,7 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
     private void ShowMute(ChatMute mute)
     {
         IsMuted = mute.IsMuted;
-        MuteText = ChatRejectionText.DescribeMute(mute);
+        MuteText = ChatRejectionText.DescribeMute(mute, TimeProvider);
     }
 
     private void ReportLoadFailure(Exception cause)

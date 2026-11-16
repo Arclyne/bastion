@@ -9,10 +9,14 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public sealed class ConversationRowViewModel : ViewModel
 {
-    public ConversationRowViewModel(ConversationPreview preview, DateTime today)
+    private readonly TimeProvider _timeProvider;
+
+    public ConversationRowViewModel(ConversationPreview preview, DateTime today, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(preview);
+        ArgumentNullException.ThrowIfNull(timeProvider);
 
+        _timeProvider = timeProvider;
         Partner = preview.Contact.Partner;
         IsFriend = preview.Contact.IsFriend;
         PreviewText = string.Empty;
@@ -55,7 +59,7 @@ public sealed class ConversationRowViewModel : ViewModel
         PreviewText = message.IsOwn
             ? string.Format(CultureInfo.CurrentCulture, Strings.ChatOwnPreviewFormat, message.Text)
             : message.Text;
-        TimeText = ChatTimeText.DescribeLastActivity(message.SentAt, today);
+        TimeText = ChatTimeText.DescribeLastActivity(message.SentAt, today, _timeProvider);
         UpdateUnread(unreadCount);
     }
 

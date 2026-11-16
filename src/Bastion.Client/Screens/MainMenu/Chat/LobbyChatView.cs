@@ -4,7 +4,6 @@ using System.ComponentModel;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
-using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
@@ -54,8 +53,9 @@ public sealed class LobbyChatView : StackPanel
             nameof(LobbyChatViewModel.CounterText),
             nameof(LobbyChatViewModel.IsCounterVisible),
             TextStyleCatalog.Hint);
-        StackPanel inputRow =
-            ConversationPartFactory.CreateInputRow(HandleSendClick, ConversationPartFactory.ViewWidth);
+        StackPanel inputRow = ConversationPartFactory.CreateInputRow(
+            HandleSendClick,
+            ConversationPartFactory.ViewWidth);
 
         AddChild(header);
         AddChild(systemNotice);
@@ -74,7 +74,7 @@ public sealed class LobbyChatView : StackPanel
     private ItemsControl CreateMessages()
     {
         ItemsControl messages = ConversationPartFactory.CreateMessageList(ScrollHeight, RowSpacing);
-        messages.VisualTemplate = new VisualTemplate(ChatMessageRowView.CreateVisual);
+        messages.VisualTemplate = ChatMessageRowView.CreateTemplate(ConversationPartFactory.MessageRowWidth);
         messages.Items = _chat.Messages;
         var messagesVisual = (ScrollViewerVisual)messages.Visual;
         var scrollBarVisual = (InteractiveGue)messagesVisual.VerticalScrollBarInstance;
@@ -106,18 +106,19 @@ public sealed class LobbyChatView : StackPanel
 
     private static Label CreateEmptyLabel()
     {
-        Label empty = ViewFactory.CreateLabel(nameof(Strings.ChatEmpty), TextStyleCatalog.NoticeTitle);
-        empty.SetBinding(nameof(IsVisible), nameof(LobbyChatViewModel.IsEmpty));
-        return empty;
+        return ViewFactory.CreateToggledLabel(
+            nameof(Strings.ChatEmpty),
+            nameof(LobbyChatViewModel.IsEmpty),
+            TextStyleCatalog.NoticeTitle);
     }
 
     private Button CreateUnreadButton()
     {
-        Button unread = ViewFactory.CreateButton(string.Empty, UnreadButtonWidth, UnreadButtonHeight);
+        Button unread = ViewFactory.CreateBoundUntranslatedButton(
+            nameof(LobbyChatViewModel.UnreadText),
+            UnreadButtonWidth,
+            UnreadButtonHeight);
         ButtonSkin.CreateAndAttach(unread, ButtonLookCatalog.Pill);
-        var unreadVisual = (ButtonVisual)unread.Visual;
-        unreadVisual.TextInstance.LocalizeText = false;
-        unread.SetBinding(nameof(Button.Text), nameof(LobbyChatViewModel.UnreadText));
         unread.SetBinding(nameof(IsVisible), nameof(LobbyChatViewModel.HasUnread));
         unread.Click += HandleUnreadClick;
         return unread;

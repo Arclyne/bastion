@@ -13,9 +13,7 @@ public sealed class ConversationRowView : Panel
 {
     private const float RowWidth = PanelMetrics.ContentWidth;
     private const float RowHeight = 60;
-    private const float RowRadius = 10;
     private const float PaddingX = 12;
-    private const float TextSpacing = 2;
     private const float TextWidth = 190;
     private const float SideSpacing = 8;
     private const float OpenButtonWidth = 76;
@@ -37,7 +35,7 @@ public sealed class ConversationRowView : Panel
         WidthUnits = DimensionUnitType.Absolute;
         Height = RowHeight;
         HeightUnits = DimensionUnitType.Absolute;
-        RectangleRuntime background = ShapeFactory.CreateRounded(Palette.Selected, RowRadius);
+        RectangleRuntime background = ShapeFactory.CreateRounded(Palette.Selected, PanelMetrics.RowRadius);
         StackPanel text = CreateText(row);
         StackPanel side = CreateSide();
         ShapeFactory.InsertBehindContent(Visual, background);
@@ -58,7 +56,7 @@ public sealed class ConversationRowView : Panel
 
         var text = new StackPanel
         {
-            Spacing = TextSpacing,
+            Spacing = PanelMetrics.TextSpacing,
             X = PaddingX,
         };
         text.AddChild(nickname);

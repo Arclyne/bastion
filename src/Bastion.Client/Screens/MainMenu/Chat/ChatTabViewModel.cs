@@ -58,10 +58,10 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
 
     public ObservableCollection<ConversationRowViewModel> Conversations { get; }
 
-    public ChatPane Pane
+    private ChatPane Pane
     {
         get => Get<ChatPane>();
-        private set => Set(value);
+        set => Set(value);
     }
 
     [DependsOn(nameof(Pane))]
@@ -112,7 +112,7 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
                 () => _conversations.ListConversations(_session.Token));
             DateTime today = ChatTimeText.GetLocalToday(_timeProvider);
             IEnumerable<ConversationRowViewModel> rows = previews.Select(
-                preview => new ConversationRowViewModel(preview, today));
+                preview => new ConversationRowViewModel(preview, today, _timeProvider));
             ShowPreviews(rows);
         }
         catch (InvalidSessionException ex)
@@ -164,17 +164,6 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         PrivateConversation.ApplyPresence(_friends.FindPresence(friendCode));
     }
 
-    public void BackToList()
-    {
-        LobbyChat.CloseConversation();
-        if (PrivateConversation.IsOpen)
-        {
-            PrivateConversation.Close();
-        }
-
-        Pane = ChatPane.List;
-    }
-
     public void Dispose()
     {
         _notifications.PrivateMessageReceived -= HandlePrivateMessageReceived;
@@ -191,7 +180,7 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         }
     }
 
-    private void HandlePrivateMessageSent(object? sender, ConversationUpdatedEventArgs e)
+    private void HandlePrivateMessageSent(object? sender, PrivateMessageSentEventArgs e)
     {
         UpdateConversation(e.Partner, e.Message, 0);
     }
@@ -204,7 +193,7 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         {
             var contact = new ConversationContact(partner, isFriend: true);
             var preview = new ConversationPreview(contact, message, newUnread);
-            var newRow = new ConversationRowViewModel(preview, today);
+            var newRow = new ConversationRowViewModel(preview, today, _timeProvider);
             Conversations.Insert(FirstPosition, newRow);
         }
         else

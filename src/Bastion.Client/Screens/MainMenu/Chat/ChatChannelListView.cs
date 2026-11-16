@@ -15,13 +15,9 @@ public sealed class ChatChannelListView : StackPanel
     private const float ListWidth = PanelMetrics.ContentWidth;
     private const float ListSpacing = 12;
     private const float RowHeight = 64;
-    private const float RowRadius = 10;
     private const float RowPaddingX = 14;
-    private const float TextSpacing = 2;
     private const float OpenButtonWidth = 88;
     private const float OpenButtonHeight = 36;
-    private const float RetryButtonWidth = 140;
-    private const float RetryButtonHeight = 40;
     private const float ConversationsHeight = 370;
     private const float ConversationSpacing = 8;
 
@@ -69,7 +65,7 @@ public sealed class ChatChannelListView : StackPanel
             HeightUnits = DimensionUnitType.Absolute,
             BindingContext = _chatTab.LobbyChat,
         };
-        RectangleRuntime background = ShapeFactory.CreateRounded(Palette.Selected, RowRadius);
+        RectangleRuntime background = ShapeFactory.CreateRounded(Palette.Selected, PanelMetrics.RowRadius);
         ShapeFactory.InsertBehindContent(row.Visual, background);
         StackPanel globalText = CreateGlobalText();
         row.AddChild(globalText);
@@ -88,7 +84,7 @@ public sealed class ChatChannelListView : StackPanel
 
         var text = new StackPanel
         {
-            Spacing = TextSpacing,
+            Spacing = PanelMetrics.TextSpacing,
             X = RowPaddingX,
         };
         Label title = ViewFactory.CreateLabel(nameof(Strings.ChatGlobalChannel), TextStyleCatalog.IdentityName);
@@ -100,25 +96,12 @@ public sealed class ChatChannelListView : StackPanel
 
     private StackPanel CreateLobbyLoadFailure()
     {
-        StackPanel failure = CreateLoadFailure(HandleRetryLobbyClick);
+        StackPanel failure = ViewFactory.CreateLoadFailure(
+            nameof(Strings.ChatLoadFailed),
+            nameof(Strings.ChatRetry),
+            HandleRetryLobbyClick);
         failure.BindingContext = _chatTab.LobbyChat;
         failure.SetBinding(nameof(IsVisible), nameof(LobbyChatViewModel.HasLoadFailed));
-        return failure;
-    }
-
-    private StackPanel CreateLoadFailure(EventHandler handleRetryClick)
-    {
-        Button retry = ViewFactory.CreateButton(nameof(Strings.ChatRetry), RetryButtonWidth, RetryButtonHeight);
-        ButtonSkin.CreateAndAttach(retry, ButtonLookCatalog.Secondary);
-        retry.Click += handleRetryClick;
-
-        var failure = new StackPanel
-        {
-            Spacing = ListSpacing,
-        };
-        Label message = ViewFactory.CreateLabel(nameof(Strings.ChatLoadFailed), TextStyleCatalog.FieldError);
-        failure.AddChild(message);
-        failure.AddChild(retry);
         return failure;
     }
 
@@ -138,13 +121,13 @@ public sealed class ChatChannelListView : StackPanel
     {
         var empty = new StackPanel
         {
-            Spacing = TextSpacing,
+            Spacing = PanelMetrics.TextSpacing,
         };
         Label title = ViewFactory.CreateLabel(nameof(Strings.ChatNoConversationsTitle), TextStyleCatalog.NoticeTitle);
         empty.AddChild(title);
-        Label hint = ViewFactory.CreateLabel(nameof(Strings.ChatNoConversationsHint), TextStyleCatalog.Hint);
-        hint.Width = ListWidth;
-        hint.WidthUnits = DimensionUnitType.Absolute;
+        Label hint = ConversationPartFactory.CreateWrappedLabel(
+            nameof(Strings.ChatNoConversationsHint),
+            TextStyleCatalog.Hint);
         empty.AddChild(hint);
         empty.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.HasNoConversations));
         return empty;
@@ -152,7 +135,10 @@ public sealed class ChatChannelListView : StackPanel
 
     private StackPanel CreateConversationsLoadFailure()
     {
-        StackPanel failure = CreateLoadFailure(HandleRetryConversationsClick);
+        StackPanel failure = ViewFactory.CreateLoadFailure(
+            nameof(Strings.ChatLoadFailed),
+            nameof(Strings.ChatRetry),
+            HandleRetryConversationsClick);
         failure.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.HasConversationsLoadFailed));
         return failure;
     }

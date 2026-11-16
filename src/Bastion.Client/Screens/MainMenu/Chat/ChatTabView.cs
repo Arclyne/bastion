@@ -18,22 +18,12 @@ public sealed class ChatTabView : Panel
         channels.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.IsListVisible));
         var lobbyChat = new LobbyChatView(chatTab.LobbyChat);
         var privateConversation = new PrivateConversationView(chatTab.PrivateConversation);
-        Panel globalPane = CreateToggledContainer(lobbyChat, nameof(ChatTabViewModel.IsGlobalOpen));
-        Panel privatePane = CreateToggledContainer(privateConversation, nameof(ChatTabViewModel.IsPrivateOpen));
+        Panel globalPane = ViewFactory.CreateToggledContainer(lobbyChat, nameof(ChatTabViewModel.IsGlobalOpen));
+        Panel privatePane = ViewFactory.CreateToggledContainer(
+            privateConversation,
+            nameof(ChatTabViewModel.IsPrivateOpen));
         AddChild(channels);
         AddChild(globalPane);
         AddChild(privatePane);
-    }
-
-    private static Panel CreateToggledContainer(FrameworkElement content, string visibilityProperty)
-    {
-        var container = new Panel
-        {
-            WidthUnits = DimensionUnitType.RelativeToChildren,
-            HeightUnits = DimensionUnitType.RelativeToChildren,
-        };
-        container.AddChild(content);
-        container.SetBinding(nameof(IsVisible), visibilityProperty);
-        return container;
     }
 }

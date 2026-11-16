@@ -10,15 +10,19 @@ public static class ChatTimeText
     private const string DayFormat = "d MMM";
     private const string MomentFormat = "g";
 
-    public static string FormatTime(DateTime sentAt)
+    public static string FormatTime(DateTime sentAt, TimeProvider timeProvider)
     {
-        DateTime localTime = sentAt.ToLocalTime();
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
+        DateTime localTime = ToLocalTime(sentAt, timeProvider);
         return localTime.ToString(TimeFormat, CultureInfo.CurrentCulture);
     }
 
-    public static string FormatMoment(DateTime moment)
+    public static string FormatMoment(DateTime moment, TimeProvider timeProvider)
     {
-        DateTime localMoment = moment.ToLocalTime();
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
+        DateTime localMoment = ToLocalTime(moment, timeProvider);
         return localMoment.ToString(MomentFormat, CultureInfo.CurrentCulture);
     }
 
@@ -30,15 +34,19 @@ public static class ChatTimeText
         return now.Date;
     }
 
-    public static DateTime GetLocalDay(DateTime moment)
+    public static DateTime GetLocalDay(DateTime moment, TimeProvider timeProvider)
     {
-        DateTime localMoment = moment.ToLocalTime();
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
+        DateTime localMoment = ToLocalTime(moment, timeProvider);
         return localMoment.Date;
     }
 
-    public static string DescribeDay(DateTime sentAt, DateTime today)
+    public static string DescribeDay(DateTime sentAt, DateTime today, TimeProvider timeProvider)
     {
-        DateTime day = GetLocalDay(sentAt);
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
+        DateTime day = GetLocalDay(sentAt, timeProvider);
         if (day == today)
         {
             return Strings.ChatToday;
@@ -52,14 +60,21 @@ public static class ChatTimeText
         return day.ToString(DayFormat, CultureInfo.CurrentCulture);
     }
 
-    public static string DescribeLastActivity(DateTime sentAt, DateTime today)
+    public static string DescribeLastActivity(DateTime sentAt, DateTime today, TimeProvider timeProvider)
     {
-        DateTime day = GetLocalDay(sentAt);
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
+        DateTime day = GetLocalDay(sentAt, timeProvider);
         if (day == today)
         {
-            return FormatTime(sentAt);
+            return FormatTime(sentAt, timeProvider);
         }
 
-        return DescribeDay(sentAt, today);
+        return DescribeDay(sentAt, today, timeProvider);
+    }
+
+    private static DateTime ToLocalTime(DateTime moment, TimeProvider timeProvider)
+    {
+        return TimeZoneInfo.ConvertTimeFromUtc(moment, timeProvider.LocalTimeZone);
     }
 }
