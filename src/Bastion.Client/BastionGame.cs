@@ -54,7 +54,7 @@ public sealed class BastionGame : Game
         var languages = new LanguageService(languagePreferenceStore, GumService.Default.LocalizationService);
         languages.LoadInitialLanguage();
         var clipboard = new GumClipboard(GumService.Default.Clipboard);
-        var localServices = new LocalServices(languages, clipboard, TimeProvider.System);
+        var localServices = new LocalServiceSet(languages, clipboard, TimeProvider.System);
         var screenHost = new GumScreenHost(GumService.Default.Root, GumService.Default.ModalRoot);
         _screenNavigator = new ScreenNavigator(_serverConnection, localServices, screenHost);
         _screenNavigator.ShowLogin();

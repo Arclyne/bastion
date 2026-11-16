@@ -65,12 +65,12 @@ public sealed class TestFriendsPanelViewModel
         var session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
         var chatClient = new FakeChatClient();
         var conversationClient = new FakeConversationClient();
-        var chatClients = new ChatClients(chatClient, conversationClient, _notifications);
+        var chatClients = new ChatClientSet(chatClient, conversationClient, _notifications);
         var friendClient = new FakeFriendClient();
-        var clients = new SocialClients(friendClient, chatClients, _notifications);
+        var clients = new SocialClientSet(friendClient, chatClients, _notifications);
         var languages = new FakeLanguageService();
         var timeProvider = new ManualTimeProvider(_now);
-        var localServices = new LocalServices(languages, _clipboard, timeProvider);
+        var localServices = new LocalServiceSet(languages, _clipboard, timeProvider);
         return InlineUiContext.CreateViewModel(() => new FriendsPanelViewModel(session, clients, localServices));
     }
 }

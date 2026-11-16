@@ -29,7 +29,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
     private readonly SynchronizationContext? _uiContext;
     private readonly List<FriendRowViewModel> _allRows = new List<FriendRowViewModel>();
 
-    public FriendsPanelViewModel(LoggedInSession session, SocialClients clients, LocalServices localServices)
+    public FriendsPanelViewModel(LoggedInSession session, SocialClientSet clients, LocalServiceSet localServices)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(clients);

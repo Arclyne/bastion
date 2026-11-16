@@ -3,9 +3,9 @@ using Bastion.Client.Localization;
 
 namespace Bastion.Client.Screens;
 
-public sealed record LocalServices
+public sealed record LocalServiceSet
 {
-    public LocalServices(ILanguageService languages, IClipboard clipboard, TimeProvider timeProvider)
+    public LocalServiceSet(ILanguageService languages, IClipboard clipboard, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(languages);
         ArgumentNullException.ThrowIfNull(clipboard);

@@ -17,16 +17,16 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 {
     private readonly ServerConnection _connection;
     private readonly ILanguageService _languages;
-    private readonly LocalServices _localServices;
+    private readonly LocalServiceSet _localServices;
     private readonly TimeProvider _timeProvider;
     private readonly IScreenHost _screenHost;
     private readonly List<IDisposable> _screenViewModels = new List<IDisposable>();
     private ScreenView? _currentScreen;
     private LoggedInSession? _loggedInSession;
     private JoinedMatch? _joinedMatch;
-    private JoinedMatchViewModels? _joinedMatchViewModels;
+    private JoinedMatchViewModelSet? _joinedMatchViewModels;
 
-    public ScreenNavigator(ServerConnection connection, LocalServices localServices, IScreenHost screenHost)
+    public ScreenNavigator(ServerConnection connection, LocalServiceSet localServices, IScreenHost screenHost)
     {
         ArgumentNullException.ThrowIfNull(connection);
         ArgumentNullException.ThrowIfNull(localServices);
@@ -94,8 +94,8 @@ public sealed class ScreenNavigator : INavigator, IDisposable
     private MainMenuViewModel OpenMainMenu(LoggedInSession session)
     {
         var mainMenuViewModel = new MainMenuViewModel(session, _connection.Notifications);
-        var chatClients = new ChatClients(_connection.Chat, _connection.Conversations, _connection.Notifications);
-        var clients = new SocialClients(_connection.Friends, chatClients, _connection.Notifications);
+        var chatClients = new ChatClientSet(_connection.Chat, _connection.Conversations, _connection.Notifications);
+        var clients = new SocialClientSet(_connection.Friends, chatClients, _connection.Notifications);
         var friendsPanel = new FriendsPanelViewModel(session, clients, _localServices);
         var matchSearchViewModel = new MatchSearchViewModel(session, _connection.Matchmaking, _timeProvider);
         matchSearchViewModel.MatchFound += HandleMatchFound;
@@ -131,7 +131,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         ShowScreen(versusView, versusViewModel, matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel);
         _joinedMatch = joinedMatch;
         _joinedMatchViewModels =
-            new JoinedMatchViewModels(matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel);
+            new JoinedMatchViewModelSet(matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel);
     }
 
     private void HandleReturnToMenuRequested(object? sender, EventArgs e)
@@ -154,7 +154,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         ShowMatch(_joinedMatch, _joinedMatchViewModels);
     }
 
-    private void ShowMatch(JoinedMatch joinedMatch, JoinedMatchViewModels joinedMatchViewModels)
+    private void ShowMatch(JoinedMatch joinedMatch, JoinedMatchViewModelSet joinedMatchViewModels)
     {
         var matchViewModel = new MatchViewModel(
             joinedMatch,

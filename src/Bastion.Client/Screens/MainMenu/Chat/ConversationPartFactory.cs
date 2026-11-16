@@ -7,7 +7,7 @@ using Gum.Forms.Controls;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
-public static class ConversationParts
+public static class ConversationPartFactory
 {
     public const float ViewWidth = PanelMetrics.ContentWidth;
 

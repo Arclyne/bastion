@@ -49,7 +49,7 @@ public sealed class MatchChatPanel : Panel
         };
         Label title = ViewFactory.CreateLabel(nameof(Strings.MatchChatTitle), TextStyleCatalog.SectionLabel);
         Label status = CreateStatus();
-        StackPanel inputRow = ConversationParts.CreateInputRow(HandleSendClick, ContentWidth);
+        StackPanel inputRow = ConversationPartFactory.CreateInputRow(HandleSendClick, ContentWidth);
         content.AddChild(title);
         content.AddChild(_messageScroller);
         content.AddChild(status);
@@ -93,6 +93,6 @@ public sealed class MatchChatPanel : Panel
 
     private void HandleMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        ConversationParts.ScrollToLatest(_messageScroller);
+        ConversationPartFactory.ScrollToLatest(_messageScroller);
     }
 }

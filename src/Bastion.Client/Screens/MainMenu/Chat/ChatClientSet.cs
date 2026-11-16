@@ -5,9 +5,9 @@ using Bastion.Client.Networking.PrivateChat;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
-public sealed record ChatClients
+public sealed record ChatClientSet
 {
-    public ChatClients(IChatClient lobby, IConversationClient conversations, INotificationClient notifications)
+    public ChatClientSet(IChatClient lobby, IConversationClient conversations, INotificationClient notifications)
     {
         ArgumentNullException.ThrowIfNull(lobby);
         ArgumentNullException.ThrowIfNull(conversations);

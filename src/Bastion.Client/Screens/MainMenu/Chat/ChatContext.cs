@@ -5,7 +5,7 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public sealed record ChatContext
 {
-    public ChatContext(LoggedInSession session, ChatClients clients, TimeProvider timeProvider)
+    public ChatContext(LoggedInSession session, ChatClientSet clients, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(clients);
@@ -18,7 +18,7 @@ public sealed record ChatContext
 
     public LoggedInSession Session { get; }
 
-    public ChatClients Clients { get; }
+    public ChatClientSet Clients { get; }
 
     public TimeProvider TimeProvider { get; }
 }

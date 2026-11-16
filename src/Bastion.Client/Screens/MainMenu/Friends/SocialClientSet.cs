@@ -5,9 +5,9 @@ using Bastion.Client.Screens.MainMenu.Chat;
 
 namespace Bastion.Client.Screens.MainMenu.Friends;
 
-public sealed record SocialClients
+public sealed record SocialClientSet
 {
-    public SocialClients(IFriendClient friends, ChatClients chat, INotificationClient notifications)
+    public SocialClientSet(IFriendClient friends, ChatClientSet chat, INotificationClient notifications)
     {
         ArgumentNullException.ThrowIfNull(friends);
         ArgumentNullException.ThrowIfNull(chat);
@@ -20,7 +20,7 @@ public sealed record SocialClients
 
     public IFriendClient Friends { get; }
 
-    public ChatClients Chat { get; }
+    public ChatClientSet Chat { get; }
 
     public INotificationClient Notifications { get; }
 }
