@@ -9,7 +9,6 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public sealed class ChatMessageRowView : StackPanel
 {
-    private const float RowSpacing = 2;
     private const float HeaderSpacing = 8;
 
     public ChatMessageRowView(ChatMessageRowViewModel row, float rowWidth)
@@ -19,7 +18,7 @@ public sealed class ChatMessageRowView : StackPanel
         BindingContext = row;
         Width = rowWidth;
         WidthUnits = DimensionUnitType.Absolute;
-        Spacing = RowSpacing;
+        Spacing = PanelMetrics.TextSpacing;
         StackPanel header = CreateHeader(row);
         Label text = CreateFixedLabel(row.Text, TextStyleCatalog.NoticeMessage, rowWidth);
         Label pendingState = CreateStateLabel(
@@ -60,8 +59,7 @@ public sealed class ChatMessageRowView : StackPanel
     private static Label CreateFixedLabel(string text, TextStyle style, float width)
     {
         Label label = ViewFactory.CreateUntranslatedLabel(text, style);
-        label.Width = width;
-        label.WidthUnits = DimensionUnitType.Absolute;
+        ViewFactory.SetFixedWidth(label, width);
         return label;
     }
 

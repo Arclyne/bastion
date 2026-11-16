@@ -10,7 +10,8 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 public static class ConversationPartFactory
 {
     public const float ViewWidth = PanelMetrics.ContentWidth;
-    public const float MessageRowWidth = 340;
+    public const float MessageRowWidth = ViewWidth - (MessageRowMarginX * HorizontalSideCount);
+    public const float SectionSpacing = 10;
 
     private const float HeaderSpacing = 12;
     private const float BackButtonWidth = 96;
@@ -18,6 +19,8 @@ public static class ConversationPartFactory
     private const float InputHeight = 44;
     private const float SendButtonWidth = 96;
     private const float InputSpacing = 8;
+    private const float MessageRowMarginX = 10;
+    private const int HorizontalSideCount = 2;
 
     public static StackPanel CreateHeader(EventHandler handleBackClick, Label title, Label detail)
     {
@@ -52,8 +55,7 @@ public static class ConversationPartFactory
         ArgumentNullException.ThrowIfNull(style);
 
         Label label = ViewFactory.CreateLabel(textKey, style);
-        label.Width = ViewWidth;
-        label.WidthUnits = DimensionUnitType.Absolute;
+        ViewFactory.SetFixedWidth(label, ViewWidth);
         return label;
     }
 
@@ -64,8 +66,7 @@ public static class ConversationPartFactory
         ArgumentNullException.ThrowIfNull(style);
 
         Label label = ViewFactory.CreateBoundNotice(textProperty, visibilityProperty, style);
-        label.Width = ViewWidth;
-        label.WidthUnits = DimensionUnitType.Absolute;
+        ViewFactory.SetFixedWidth(label, ViewWidth);
         return label;
     }
 
@@ -74,6 +75,41 @@ public static class ConversationPartFactory
         ItemsControl messages = ViewFactory.CreateScrollList<ItemsControl>(ViewWidth, height);
         messages.InnerPanel.StackSpacing = rowSpacing;
         return messages;
+    }
+
+    public static Label CreateGlobalChannelTitle()
+    {
+        return ViewFactory.CreateLabel(nameof(Strings.ChatGlobalChannel), TextStyleCatalog.IdentityName);
+    }
+
+    public static Label CreateGlobalChannelDetail()
+    {
+        return ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(LobbyChatViewModel.ChannelDetail),
+            TextStyleCatalog.Hint);
+    }
+
+    public static StackPanel CreateComposer(EventHandler handleSendClick)
+    {
+        ArgumentNullException.ThrowIfNull(handleSendClick);
+
+        Label statusNotice = CreateNoticeLabel(
+            nameof(ChatComposerViewModel.StatusText),
+            nameof(ChatComposerViewModel.HasStatus),
+            TextStyleCatalog.FieldError);
+        Label counterNotice = CreateNoticeLabel(
+            nameof(ChatComposerViewModel.CounterText),
+            nameof(ChatComposerViewModel.IsCounterVisible),
+            TextStyleCatalog.Hint);
+        StackPanel inputRow = CreateInputRow(handleSendClick, ViewWidth);
+        var composer = new StackPanel
+        {
+            Spacing = SectionSpacing,
+        };
+        composer.AddChild(statusNotice);
+        composer.AddChild(counterNotice);
+        composer.AddChild(inputRow);
+        return composer;
     }
 
     public static StackPanel CreateInputRow(EventHandler handleSendClick, float rowWidth)

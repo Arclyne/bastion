@@ -14,7 +14,7 @@ public static class ChatTimeText
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
 
-        DateTime localTime = ToLocalTime(sentAt, timeProvider);
+        DateTime localTime = ConvertToLocalTime(sentAt, timeProvider);
         return localTime.ToString(TimeFormat, CultureInfo.CurrentCulture);
     }
 
@@ -22,7 +22,7 @@ public static class ChatTimeText
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
 
-        DateTime localMoment = ToLocalTime(moment, timeProvider);
+        DateTime localMoment = ConvertToLocalTime(moment, timeProvider);
         return localMoment.ToString(MomentFormat, CultureInfo.CurrentCulture);
     }
 
@@ -38,7 +38,7 @@ public static class ChatTimeText
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
 
-        DateTime localMoment = ToLocalTime(moment, timeProvider);
+        DateTime localMoment = ConvertToLocalTime(moment, timeProvider);
         return localMoment.Date;
     }
 
@@ -73,7 +73,7 @@ public static class ChatTimeText
         return DescribeDay(sentAt, today, timeProvider);
     }
 
-    private static DateTime ToLocalTime(DateTime moment, TimeProvider timeProvider)
+    private static DateTime ConvertToLocalTime(DateTime moment, TimeProvider timeProvider)
     {
         return TimeZoneInfo.ConvertTimeFromUtc(moment, timeProvider.LocalTimeZone);
     }

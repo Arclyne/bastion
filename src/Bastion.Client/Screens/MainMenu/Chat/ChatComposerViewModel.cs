@@ -60,10 +60,10 @@ public abstract class ChatComposerViewModel : ViewModel
     [DependsOn(nameof(StatusText))]
     public bool HasStatus => StatusText.Length > 0;
 
-    public bool IsSending
+    protected bool IsSending
     {
         get => Get<bool>();
-        protected set => Set(value);
+        set => Set(value);
     }
 
     public abstract bool CanWrite { get; }

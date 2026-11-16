@@ -53,6 +53,17 @@ public sealed class PrivateMessageRowView : StackPanel
     {
         Label day = ViewFactory.CreateUntranslatedLabel(dayLabel, TextStyleCatalog.SectionLabel);
         ViewFactory.CenterHorizontally(day);
+        return CreateAligned(day, shouldAlignRight: false, rowWidth);
+    }
+
+    private static Panel CreateAligned(FrameworkElement content, bool shouldAlignRight, float rowWidth)
+    {
+        if (shouldAlignRight)
+        {
+            content.XUnits = GeneralUnitType.PixelsFromLarge;
+            content.XOrigin = HorizontalAlignment.Right;
+            content.X = 0;
+        }
 
         var holder = new Panel
         {
@@ -60,7 +71,7 @@ public sealed class PrivateMessageRowView : StackPanel
             WidthUnits = DimensionUnitType.Absolute,
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
-        holder.AddChild(day);
+        holder.AddChild(content);
         return holder;
     }
 
@@ -84,25 +95,6 @@ public sealed class PrivateMessageRowView : StackPanel
         ShapeFactory.InsertBehindContent(bubble.Visual, background);
         bubble.AddChild(text);
         return bubble;
-    }
-
-    private static Panel CreateAligned(FrameworkElement content, bool shouldAlignRight, float rowWidth)
-    {
-        if (shouldAlignRight)
-        {
-            content.XUnits = GeneralUnitType.PixelsFromLarge;
-            content.XOrigin = HorizontalAlignment.Right;
-            content.X = 0;
-        }
-
-        var holder = new Panel
-        {
-            Width = rowWidth,
-            WidthUnits = DimensionUnitType.Absolute,
-            HeightUnits = DimensionUnitType.RelativeToChildren,
-        };
-        holder.AddChild(content);
-        return holder;
     }
 
     private static StackPanel CreateMeta()
