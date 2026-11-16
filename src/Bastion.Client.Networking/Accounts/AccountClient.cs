@@ -25,9 +25,10 @@ public sealed class AccountClient : IAccountClient
             Identifier = credentials.Identifier,
             Password = credentials.Password,
         };
+        string fingerprint = DeviceIdentity.GetFingerprint();
         var device = new ClientDevice
         {
-            DeviceFingerprint = DeviceIdentity.GetFingerprint(),
+            DeviceFingerprint = fingerprint,
             ClientVersion = DeviceIdentity.GetClientVersion(),
         };
         Func<IAccountService, PlayerSession> logIn = service => service.LogIn(playerCredentials, device);
