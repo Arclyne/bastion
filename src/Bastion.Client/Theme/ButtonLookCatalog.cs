@@ -3,7 +3,8 @@ namespace Bastion.Client.Theme;
 public static class ButtonLookCatalog
 {
     private const float ButtonRadius = 14;
-    private const float PillRadius = 21;
+    private const float PillRadius = ScreenMetrics.MenuPillHeight / RadiiPerHeight;
+    private const int RadiiPerHeight = 2;
     private const float PrimaryEdge = 4;
     private const float SecondaryEdge = 2;
     private const float PillShadowOffsetY = 6;
