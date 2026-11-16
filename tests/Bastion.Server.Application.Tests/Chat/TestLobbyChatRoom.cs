@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Bastion.Domain.Chat;
 using Bastion.Server.Application.Chat;
 using Bastion.Server.Application.Sessions;
@@ -17,17 +16,16 @@ public sealed class TestLobbyChatRoom
     private const string SecondText = "dos";
     private const string OldestText = "viejo";
     private const string NewerText = "nuevo";
-    private const long OneTick = 1;
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 12, 0, 0, DateTimeKind.Utc);
     private static readonly ConnectedPlayer _sender = new ConnectedPlayer(AccountId, Nickname);
 
-    private readonly FakeChatBroadcaster _broadcaster = new FakeChatBroadcaster();
     private readonly LobbyChatRoom _chatRoom;
 
     public TestLobbyChatRoom()
     {
-        _chatRoom = new LobbyChatRoom(_broadcaster);
+        var broadcaster = new FakeChatBroadcaster();
+        _chatRoom = new LobbyChatRoom(broadcaster);
     }
 
     [Fact]
@@ -56,27 +54,6 @@ public sealed class TestLobbyChatRoom
         }
 
         IReadOnlyList<PostedChatLine> recentLines = _chatRoom.ListRecent();
-        bool isOldestKept = recentLines.Contains(oldest);
-        Assert.False(isOldestKept);
-    }
-
-    [Fact]
-    public void TryStartCooldown_FirstMessage_ReturnsTrue()
-    {
-        bool isCooldownStarted = _chatRoom.TryStartCooldown(AccountId, _now);
-
-        Assert.True(isCooldownStarted);
-    }
-
-    [Fact]
-    public void TryStartCooldown_JustBeforeCooldownEnds_ReturnsFalse()
-    {
-        _chatRoom.TryStartCooldown(AccountId, _now);
-        DateTime cooldownEnd = _now.AddSeconds(ChatPolicy.MessageCooldownSeconds);
-        DateTime justBeforeCooldownEnd = cooldownEnd.AddTicks(-OneTick);
-
-        bool isCooldownStarted = _chatRoom.TryStartCooldown(AccountId, justBeforeCooldownEnd);
-
-        Assert.False(isCooldownStarted);
+        Assert.DoesNotContain(oldest, recentLines);
     }
 }

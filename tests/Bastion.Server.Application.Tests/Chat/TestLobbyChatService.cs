@@ -24,6 +24,7 @@ public sealed class TestLobbyChatService
     private const string CleanText = "hola";
     private const string PaddedText = "  hola  ";
     private const string BlankText = "   ";
+    private const long FirstMessageId = 1;
     private const string ShoutedBannedText = "eres un TONTO";
     private const string RepeatedText = "otra vez";
     private const string ApologyText = "perdón";
@@ -62,7 +63,7 @@ public sealed class TestLobbyChatService
     }
 
     [Fact]
-    public void SendMessage_EmptyText_RejectsInvalidMessage()
+    public void SendMessage_BlankText_RejectsInvalidMessage()
     {
         _sessionVerifier.Add(Token, _player);
         Action send = () => _lobbyChatService.SendMessage(Token, BlankText, _now);
@@ -113,11 +114,12 @@ public sealed class TestLobbyChatService
     public void SendMessage_ValidText_ReturnsPostedLine()
     {
         _sessionVerifier.Add(Token, _player);
+        var expectedLine = new ChatLine(_player, CleanText, _now);
+        var expectedPostedLine = new PostedChatLine(FirstMessageId, expectedLine);
 
         PostedChatLine postedLine = _lobbyChatService.SendMessage(Token, CleanText, _now);
 
-        PostedChatLine broadcastLine = _broadcaster.Lines[0];
-        Assert.Equal(broadcastLine, postedLine);
+        Assert.Equal(expectedPostedLine, postedLine);
     }
 
     [Fact]
@@ -174,8 +176,7 @@ public sealed class TestLobbyChatService
     [Fact]
     public void SendMessage_BannedTerm_RejectsBannedTerm()
     {
-        _sessionVerifier.Add(Token, _player);
-        _unitOfWork.BannedWordRepository.ChatTerms.Add(BannedTerm);
+        AddPlayerWithBannedTerm();
         Action send = () => _lobbyChatService.SendMessage(Token, ShoutedBannedText, _now);
 
         Exception? exception = Record.Exception(send);
@@ -187,8 +188,7 @@ public sealed class TestLobbyChatService
     [Fact]
     public void SendMessage_BannedTerm_DoesNotBroadcast()
     {
-        _sessionVerifier.Add(Token, _player);
-        _unitOfWork.BannedWordRepository.ChatTerms.Add(BannedTerm);
+        AddPlayerWithBannedTerm();
         Action send = () => _lobbyChatService.SendMessage(Token, BannedTerm, _now);
 
         Record.Exception(send);
@@ -199,8 +199,7 @@ public sealed class TestLobbyChatService
     [Fact]
     public void SendMessage_SecondMessageWithinCooldown_RejectsTooFast()
     {
-        _sessionVerifier.Add(Token, _player);
-        _lobbyChatService.SendMessage(Token, CleanText, _now);
+        AddPlayerWithSentMessage();
         Action sendAgain = () => _lobbyChatService.SendMessage(Token, RepeatedText, _withinCooldown);
 
         Exception? exception = Record.Exception(sendAgain);
@@ -212,8 +211,7 @@ public sealed class TestLobbyChatService
     [Fact]
     public void SendMessage_SecondMessageAfterCooldown_BroadcastsBoth()
     {
-        _sessionVerifier.Add(Token, _player);
-        _lobbyChatService.SendMessage(Token, CleanText, _now);
+        AddPlayerWithSentMessage();
         DateTime cooldownEnd = _now.AddSeconds(ChatPolicy.MessageCooldownSeconds);
 
         _lobbyChatService.SendMessage(Token, RepeatedText, cooldownEnd);
@@ -224,8 +222,7 @@ public sealed class TestLobbyChatService
     [Fact]
     public void SendMessage_AfterRejectedMessage_KeepsTurn()
     {
-        _sessionVerifier.Add(Token, _player);
-        _unitOfWork.BannedWordRepository.ChatTerms.Add(BannedTerm);
+        AddPlayerWithBannedTerm();
         Action sendBanned = () => _lobbyChatService.SendMessage(Token, BannedTerm, _now);
         Record.Exception(sendBanned);
 
@@ -237,8 +234,7 @@ public sealed class TestLobbyChatService
     [Fact]
     public void SendMessage_OtherPlayerWithinCooldown_BroadcastsBoth()
     {
-        _sessionVerifier.Add(Token, _player);
-        _sessionVerifier.Add(OtherToken, _otherPlayer);
+        AddBothPlayers();
         _lobbyChatService.SendMessage(Token, CleanText, _now);
 
         _lobbyChatService.SendMessage(OtherToken, CleanText, _withinCooldown);
@@ -257,8 +253,7 @@ public sealed class TestLobbyChatService
     [Fact]
     public void OpenLobbyChat_AfterMessages_ReturnsThemInOrder()
     {
-        _sessionVerifier.Add(Token, _player);
-        _sessionVerifier.Add(OtherToken, _otherPlayer);
+        AddBothPlayers();
         _lobbyChatService.SendMessage(Token, FirstText, _now);
         _lobbyChatService.SendMessage(OtherToken, SecondText, _now);
         string[] expectedTexts = { FirstText, SecondText };
@@ -272,8 +267,7 @@ public sealed class TestLobbyChatService
     [Fact]
     public void OpenLobbyChat_OwnMessage_MarksItAsOwn()
     {
-        _sessionVerifier.Add(Token, _player);
-        _lobbyChatService.SendMessage(Token, CleanText, _now);
+        AddPlayerWithSentMessage();
 
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
 
@@ -284,8 +278,7 @@ public sealed class TestLobbyChatService
     [Fact]
     public void OpenLobbyChat_OtherPlayerMessage_DoesNotMarkItAsOwn()
     {
-        _sessionVerifier.Add(Token, _player);
-        _sessionVerifier.Add(OtherToken, _otherPlayer);
+        AddBothPlayers();
         _lobbyChatService.SendMessage(OtherToken, CleanText, _now);
 
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
@@ -355,5 +348,23 @@ public sealed class TestLobbyChatService
             _sessionVerifier.Add(token, player);
             _lobbyChatService.SendMessage(token, CleanText, _now);
         }
+    }
+
+    private void AddPlayerWithBannedTerm()
+    {
+        _sessionVerifier.Add(Token, _player);
+        _unitOfWork.BannedWordRepository.ChatTerms.Add(BannedTerm);
+    }
+
+    private void AddPlayerWithSentMessage()
+    {
+        _sessionVerifier.Add(Token, _player);
+        _lobbyChatService.SendMessage(Token, CleanText, _now);
+    }
+
+    private void AddBothPlayers()
+    {
+        _sessionVerifier.Add(Token, _player);
+        _sessionVerifier.Add(OtherToken, _otherPlayer);
     }
 }
