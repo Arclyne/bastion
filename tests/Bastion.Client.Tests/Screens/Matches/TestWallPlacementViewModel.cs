@@ -199,8 +199,11 @@ public sealed class TestWallPlacementViewModel : IDisposable
     private WallPlacementViewModel CreateViewModel(byte ownTurnOrder)
     {
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
-        MatchPlayViewModel play = InlineUiContext.CreateViewModel(
-            () => new MatchPlayViewModel(joinedMatch, _matchClient, _timeProvider));
+        Func<MatchPlayViewModel> createViewModel = () => new MatchPlayViewModel(
+            joinedMatch,
+            _matchClient,
+            _timeProvider);
+        MatchPlayViewModel play = InlineUiContext.CreateViewModel(createViewModel);
         var viewModel = new WallPlacementViewModel(play);
         _viewModels.Add(viewModel);
         _viewModels.Add(play);

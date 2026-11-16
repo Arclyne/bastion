@@ -24,7 +24,10 @@ public sealed class TestMatchAbandonmentViewModel : IDisposable
     public TestMatchAbandonmentViewModel()
     {
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
-        _viewModel = InlineUiContext.CreateViewModel(() => new MatchAbandonmentViewModel(joinedMatch, _matchClient));
+        Func<MatchAbandonmentViewModel> createViewModel = () => new MatchAbandonmentViewModel(
+            joinedMatch,
+            _matchClient);
+        _viewModel = InlineUiContext.CreateViewModel(createViewModel);
     }
 
     public void Dispose()

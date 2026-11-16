@@ -28,7 +28,6 @@ public sealed class TestMatchViewModel : IDisposable
 
     private static readonly BoardCoordinates _rivalForward = new BoardCoordinates(ClassicCenterColumnIndex, SecondRowIndex);
     private static readonly BoardPawn _movedRivalPawn = new BoardPawn(_rivalForward, PawnSymbol.Blue);
-    private static readonly byte[] _turnOrders = { Match.FirstTurnOrder, Match.SecondTurnOrder };
     private static readonly PawnSymbol[] _symbolsWithoutFourthPlayer =
     {
         PawnSymbol.Blue,
@@ -50,11 +49,12 @@ public sealed class TestMatchViewModel : IDisposable
     public void Constructor_RivalListedFirst_OrdersPlayersByTurnOrder()
     {
         MatchViewModelParts parts = CreateParts(Match.FirstTurnOrder);
+        byte[] expectedTurnOrders = { Match.FirstTurnOrder, Match.SecondTurnOrder };
 
         using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
 
         IEnumerable<byte> turnOrders = viewModel.Players.Select(player => player.TurnOrder);
-        Assert.Equal(_turnOrders, turnOrders);
+        Assert.Equal(expectedTurnOrders, turnOrders);
     }
 
     [Fact]
@@ -337,16 +337,21 @@ public sealed class TestMatchViewModel : IDisposable
 
     private MatchAbandonmentViewModel CreateAbandonmentViewModel(JoinedMatch joinedMatch)
     {
-        MatchAbandonmentViewModel viewModel = InlineUiContext.CreateViewModel(
-            () => new MatchAbandonmentViewModel(joinedMatch, _matchClient));
+        Func<MatchAbandonmentViewModel> createViewModel = () => new MatchAbandonmentViewModel(
+            joinedMatch,
+            _matchClient);
+        MatchAbandonmentViewModel viewModel = InlineUiContext.CreateViewModel(createViewModel);
         _createdViewModels.Add(viewModel);
         return viewModel;
     }
 
     private MatchPlayViewModel CreatePlayViewModel(JoinedMatch joinedMatch)
     {
-        MatchPlayViewModel viewModel = InlineUiContext.CreateViewModel(
-            () => new MatchPlayViewModel(joinedMatch, _matchClient, _timeProvider));
+        Func<MatchPlayViewModel> createViewModel = () => new MatchPlayViewModel(
+            joinedMatch,
+            _matchClient,
+            _timeProvider);
+        MatchPlayViewModel viewModel = InlineUiContext.CreateViewModel(createViewModel);
         _createdViewModels.Add(viewModel);
         return viewModel;
     }
