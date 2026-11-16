@@ -12,6 +12,7 @@ public sealed class FieldSkin : InteractiveSkin
     private const float BorderWidth = 1.8f;
     private const float PaddingX = 14;
     private const int HorizontalSideCount = 2;
+    private const float ClipWidthReduction = PaddingX * HorizontalSideCount;
 
     private readonly RectangleRuntime _halo;
     private readonly RectangleRuntime _surface;
@@ -67,7 +68,7 @@ public sealed class FieldSkin : InteractiveSkin
 
     private static void StyleText(TextBoxBaseVisual visual)
     {
-        visual.ClipContainer.Width = -(PaddingX * HorizontalSideCount);
+        visual.ClipContainer.Width = -ClipWidthReduction;
         visual.TextInstance.X = 0;
         visual.TextInstance.LocalizeText = false;
         visual.PlaceholderTextInstance.X = 0;
