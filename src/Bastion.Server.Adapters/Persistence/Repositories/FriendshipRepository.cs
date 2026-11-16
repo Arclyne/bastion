@@ -52,8 +52,8 @@ public sealed class FriendshipRepository : IFriendshipRepository
         int largerAccountId = Math.Max(firstAccountId, secondAccountId);
         FormattableString command =
             $"EXEC dbo.usp_Friendship_Delete @AccountAId = {smallerAccountId}, @AccountBId = {largerAccountId}";
-        DeletedRowCount deleted = DeleteProcedure.Run(_context.Database, command);
-        return deleted.DeletedRows > 0;
+        DeletedRowCount deletedRowCount = DeleteProcedure.Run(_context.Database, command);
+        return deletedRowCount.DeletedRows > 0;
     }
 
     private IQueryable<int> SelectFriendAccountIds(int accountId)

@@ -26,21 +26,24 @@ public sealed class RoomRepository : IRoomRepository
     {
         ArgumentNullException.ThrowIfNull(code);
 
-        return _newContextRunner.Run(context => IsCodeTakenInContext(context, code));
+        Func<BastionDbContext, bool> isCodeTaken = context => IsCodeTakenInContext(context, code);
+        return _newContextRunner.Run(isCodeTaken);
     }
 
     public bool IsRoomInMatch(string code)
     {
         ArgumentNullException.ThrowIfNull(code);
 
-        return _newContextRunner.Run(context => IsRoomInMatchInContext(context, code));
+        Func<BastionDbContext, bool> isRoomInMatch = context => IsRoomInMatchInContext(context, code);
+        return _newContextRunner.Run(isRoomInMatch);
     }
 
     public int AddRoom(Room room)
     {
         ArgumentNullException.ThrowIfNull(room);
 
-        return _newContextRunner.Run(context => AddRoomInContext(context, room));
+        Func<BastionDbContext, int> addRoom = context => AddRoomInContext(context, room);
+        return _newContextRunner.Run(addRoom);
     }
 
     public void ChangeRoomSettings(int roomId, RoomSettings settings, DateTime changedAt)
@@ -48,25 +51,29 @@ public sealed class RoomRepository : IRoomRepository
         ArgumentNullException.ThrowIfNull(settings);
 
         Action<Room> changeSettings = room => room.ChangeSettings(settings, changedAt);
-        _newContextRunner.Run(context => UpdateOpenRoom(context, roomId, changeSettings));
+        Func<BastionDbContext, int> updateOpenRoom = context => UpdateOpenRoom(context, roomId, changeSettings);
+        _newContextRunner.Run(updateOpenRoom);
     }
 
     public void CloseRoom(int roomId, DateTime closedAt)
     {
         Action<Room> closeRoom = room => room.Close(closedAt);
-        _newContextRunner.Run(context => UpdateOpenRoom(context, roomId, closeRoom));
+        Func<BastionDbContext, int> updateOpenRoom = context => UpdateOpenRoom(context, roomId, closeRoom);
+        _newContextRunner.Run(updateOpenRoom);
     }
 
     public int CloseOpenRooms(DateTime closedAt)
     {
-        return _newContextRunner.Run(context => CloseOpenRoomsInContext(context, closedAt));
+        Func<BastionDbContext, int> closeOpenRooms = context => CloseOpenRoomsInContext(context, closedAt);
+        return _newContextRunner.Run(closeOpenRooms);
     }
 
     public int SaveRoomMatch(int roomId, Match match)
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        return _newContextRunner.Run(context => AddMatchAndStartRoom(context, roomId, match));
+        Func<BastionDbContext, int> saveRoomMatch = context => AddMatchAndStartRoom(context, roomId, match);
+        return _newContextRunner.Run(saveRoomMatch);
     }
 
     private static bool IsCodeTakenInContext(BastionDbContext context, string code)
