@@ -14,9 +14,9 @@ public sealed class TestFailedCodeAttemptHistory
     public void IsLimitReached_AttemptsBelowLimit_ReturnsFalse()
     {
         int attemptsBelowLimit = RoomPolicy.MaximumFailedCodeAttempts - 1;
-        FailedCodeAttemptHistory attempts = RecordAttempts(attemptsBelowLimit);
+        FailedCodeAttemptHistory attemptHistory = RecordAttempts(attemptsBelowLimit);
 
-        bool isLimitReached = attempts.IsLimitReached(_firstAttemptAt);
+        bool isLimitReached = attemptHistory.IsLimitReached(_firstAttemptAt);
 
         Assert.False(isLimitReached);
     }
@@ -24,9 +24,9 @@ public sealed class TestFailedCodeAttemptHistory
     [Fact]
     public void IsLimitReached_AttemptsAtLimit_ReturnsTrue()
     {
-        FailedCodeAttemptHistory attempts = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts);
+        FailedCodeAttemptHistory attemptHistory = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts);
 
-        bool isLimitReached = attempts.IsLimitReached(_firstAttemptAt);
+        bool isLimitReached = attemptHistory.IsLimitReached(_firstAttemptAt);
 
         Assert.True(isLimitReached);
     }
@@ -34,10 +34,10 @@ public sealed class TestFailedCodeAttemptHistory
     [Fact]
     public void IsLimitReached_WindowPassedSinceFirstAttempt_ReturnsFalse()
     {
-        FailedCodeAttemptHistory attempts = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts);
+        FailedCodeAttemptHistory attemptHistory = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts);
         DateTime firstAttemptExpiry = _firstAttemptAt + RoomPolicy.FailedCodeWindow;
 
-        bool isLimitReached = attempts.IsLimitReached(firstAttemptExpiry);
+        bool isLimitReached = attemptHistory.IsLimitReached(firstAttemptExpiry);
 
         Assert.False(isLimitReached);
     }
@@ -45,24 +45,24 @@ public sealed class TestFailedCodeAttemptHistory
     [Fact]
     public void GetRetryDelay_LimitReached_WaitsUntilFirstAttemptExpires()
     {
-        FailedCodeAttemptHistory attempts = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts);
+        FailedCodeAttemptHistory attemptHistory = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts);
         var elapsed = TimeSpan.FromSeconds(SecondsAfterAttempts);
         DateTime now = _firstAttemptAt + elapsed;
         TimeSpan expectedDelay = RoomPolicy.FailedCodeWindow - elapsed;
 
-        TimeSpan retryDelay = attempts.GetRetryDelay(now);
+        TimeSpan retryDelay = attemptHistory.GetRetryDelay(now);
 
         Assert.Equal(expectedDelay, retryDelay);
     }
 
     private static FailedCodeAttemptHistory RecordAttempts(int attemptCount)
     {
-        var attempts = new FailedCodeAttemptHistory();
+        var attemptHistory = new FailedCodeAttemptHistory();
         for (int attemptIndex = 0; attemptIndex < attemptCount; attemptIndex++)
         {
-            attempts.Record(_firstAttemptAt);
+            attemptHistory.Record(_firstAttemptAt);
         }
 
-        return attempts;
+        return attemptHistory;
     }
 }
