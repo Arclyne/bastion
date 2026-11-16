@@ -51,6 +51,14 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
                 return false;
             }
 
+            if (gameMode.PlayerCount != pairing.Players.Count)
+            {
+                _logger.Error(
+                    "The ranked match was not created because its game mode seats another number of players. "
+                    + $"PlayerCount={gameMode.PlayerCount}; AccountIds={accountIdsText}");
+                return false;
+            }
+
             var format = new MatchFormat(gameMode, MatchmakingPolicy.RankedClockMinutes);
             createdMatch = StartAndSaveMatch(pairing, format, startedAt);
             _logger.Info($"Ranked match created. MatchId={createdMatch.MatchId}; AccountIds={accountIdsText}");

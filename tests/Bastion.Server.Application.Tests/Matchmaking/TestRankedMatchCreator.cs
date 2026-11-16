@@ -7,6 +7,7 @@ using Bastion.Domain.Statistics;
 using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Matchmaking;
 using Bastion.Server.Application.Tests.Fakes;
+using Bastion.Server.Application.Tests.GameModes;
 using Xunit;
 
 namespace Bastion.Server.Application.Tests.Matchmaking;
@@ -90,6 +91,16 @@ public sealed class TestRankedMatchCreator
     public void TryCreateMatch_InactiveGameMode_ReturnsFalse()
     {
         _matchRepository.ActiveGameMode = null;
+
+        bool isCreated = _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out _);
+
+        Assert.False(isCreated);
+    }
+
+    [Fact]
+    public void TryCreateMatch_FourSeatGameMode_ReturnsFalse()
+    {
+        _matchRepository.ActiveGameMode = GameModeSampleFactory.CreateClassicWithFourSeats();
 
         bool isCreated = _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out _);
 
