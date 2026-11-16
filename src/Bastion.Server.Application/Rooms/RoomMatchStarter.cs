@@ -25,8 +25,9 @@ public sealed class RoomMatchStarter : IRoomMatchStarter
 
     public CreatedMatch StartMatch(int hostAccountId, DateTime now)
     {
-        CreatedMatch createdMatch =
-            _roomRegistry.StartMatch(hostAccountId, room => _matchCreator.CreateMatch(room, now));
+        CreatedMatch createdMatch = _roomRegistry.StartMatch(
+            hostAccountId,
+            room => _matchCreator.CreateMatch(room, now));
         _matchmakingNotifier.NotifyMatchFound(createdMatch);
         return createdMatch;
     }

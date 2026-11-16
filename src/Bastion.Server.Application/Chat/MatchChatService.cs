@@ -51,8 +51,8 @@ public sealed class MatchChatService : IMatchChatService
             throw new ChatMessageRejectedException(ChatRejection.TooFast);
         }
 
-        IEnumerable<int> otherParticipantAccountIds =
-            participantAccountIds.Where(accountId => accountId != author.AccountId);
+        IEnumerable<int> otherParticipantAccountIds = participantAccountIds.Where(
+            accountId => accountId != author.AccountId);
         var recipientAccountIds = new List<int>(otherParticipantAccountIds);
         var line = new ChatLine(author, screenedText, now);
         return _matchChatRelay.Post(submission.MatchId, line, recipientAccountIds);

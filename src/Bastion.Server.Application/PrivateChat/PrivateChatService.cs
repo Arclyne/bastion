@@ -37,8 +37,8 @@ public sealed class PrivateChatService : IPrivateChatService
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
         IReadOnlyList<Message> latestMessages = _unitOfWork.Messages.ListLatestPerPartner(player.AccountId);
-        IReadOnlyDictionary<int, int> unreadCountsByAuthorId =
-            _unitOfWork.Messages.CountUnreadByAuthor(player.AccountId);
+        IReadOnlyDictionary<int, int> unreadCountsByAuthorId = _unitOfWork.Messages.CountUnreadByAuthor(
+            player.AccountId);
         var friendAccountIds = new HashSet<int>(_unitOfWork.Friendships.ListFriendAccountIds(player.AccountId));
         IEnumerable<int> messagePartnerIds = latestMessages.Select(message => message.GetPartnerId(player.AccountId));
         var partnerIds = new List<int>(messagePartnerIds);

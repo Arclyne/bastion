@@ -40,8 +40,9 @@ public sealed class PrivateMatchCreator : IPrivateMatchCreator
         };
         IEnumerable<int> accountIdsInTurnOrder = membersInTurnOrder.Select(member => member.AccountId);
         var accountIds = new List<int>(accountIdsInTurnOrder);
-        IReadOnlyDictionary<int, short> eloRatingsByAccountId =
-            _matchRepository.FindEloRatingsByAccountId(format.GameMode.GameModeId, accountIds);
+        IReadOnlyDictionary<int, short> eloRatingsByAccountId = _matchRepository.FindEloRatingsByAccountId(
+            format.GameMode.GameModeId,
+            accountIds);
         IEnumerable<MatchEntrant> unratedEntrants = membersInTurnOrder
             .Select(member => new MatchEntrant(member.AccountId, EloRating: null));
         var entrants = new List<MatchEntrant>(unratedEntrants);
@@ -60,8 +61,8 @@ public sealed class PrivateMatchCreator : IPrivateMatchCreator
         var participants = new List<CreatedMatchParticipant>();
         foreach (Participation participation in match.Participations)
         {
-            RoomMemberSnapshot member =
-                membersInTurnOrder.First(candidate => candidate.AccountId == participation.AccountId);
+            RoomMemberSnapshot member = membersInTurnOrder.First(
+                candidate => candidate.AccountId == participation.AccountId);
             short eloRating = eloRatingsByAccountId.GetValueOrDefault(member.AccountId, ModeStatistic.DefaultEloRating);
             var player = new ConnectedPlayer(member.AccountId, member.Nickname);
             var participant = new CreatedMatchParticipant(player, eloRating, participation.TurnOrder);
