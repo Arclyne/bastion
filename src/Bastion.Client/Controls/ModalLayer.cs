@@ -29,9 +29,15 @@ public sealed class ModalLayer : Panel
             }
 
             _isOpen = value;
-            IsOpenChanged?.Invoke(this, EventArgs.Empty);
+            OnIsOpenChanged();
         }
     }
 
     public event EventHandler? IsOpenChanged;
+
+
+    private void OnIsOpenChanged()
+    {
+        IsOpenChanged?.Invoke(this, EventArgs.Empty);
+    }
 }

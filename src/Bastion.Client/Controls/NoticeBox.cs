@@ -1,3 +1,4 @@
+using System;
 using Bastion.Client.Screens;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
@@ -31,8 +32,8 @@ public sealed class NoticeBox : Panel
         HeightUnits = DimensionUnitType.RelativeToChildren;
 
         float textWidth = width - (PaddingX * HorizontalSideCount);
-        _title = CreateLabel(TextStyleCatalog.NoticeTitle, textWidth);
-        _message = CreateLabel(TextStyleCatalog.NoticeMessage, textWidth);
+        _title = TextStyleCatalog.NoticeTitle.CreateFixedWidthLabel(textWidth);
+        _message = TextStyleCatalog.NoticeMessage.CreateFixedWidthLabel(textWidth);
         var content = new StackPanel
         {
             X = PaddingX,
@@ -46,7 +47,9 @@ public sealed class NoticeBox : Panel
         _surface = ShapeFactory.CreateRounded(Palette.Card, Radius);
         _surface.StrokeWidth = BorderWidth;
         ShapeFactory.InsertBehindContent(Visual, _surface);
-        Tone = NoticeTone.None;
+        _tone = NoticeTone.None;
+        ShowTone(_tone);
+        ShowTitle(string.Empty);
     }
 
     public NoticeTone Tone
@@ -54,12 +57,13 @@ public sealed class NoticeBox : Panel
         get => _tone;
         set
         {
+            if (_tone == value)
+            {
+                return;
+            }
+
             _tone = value;
-            Color accent = PickAccent(value);
-            _surface.FillColor = PickFill(value);
-            _surface.StrokeColor = new Color(accent.R, accent.G, accent.B, BorderAlpha);
-            var titleVisual = (LabelVisual)_title.Visual;
-            titleVisual.Color = accent;
+            ShowTone(value);
         }
     }
 
@@ -69,41 +73,37 @@ public sealed class NoticeBox : Panel
         set
         {
             string title = value ?? string.Empty;
-            _title.SetTextNoTranslate(title);
-            _title.IsVisible = title.Length > 0;
+            if (string.Equals(title, Title, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            ShowTitle(title);
         }
     }
 
     public string? Message
     {
         get => _message.Text ?? string.Empty;
-        set => _message.SetTextNoTranslate(value ?? string.Empty);
-    }
-
-    private static Label CreateLabel(TextStyle style, float width)
-    {
-        var label = new Label
+        set
         {
-            Width = width,
-            WidthUnits = DimensionUnitType.Absolute,
-        };
-        style.ApplyTo(label);
-        return label;
-    }
+            string message = value ?? string.Empty;
+            if (string.Equals(message, Message, StringComparison.Ordinal))
+            {
+                return;
+            }
 
-    private static Color PickFill(NoticeTone tone)
-    {
-        switch (tone)
-        {
-            case NoticeTone.Error:
-                return Palette.ErrorSoft;
-            case NoticeTone.Warning:
-                return Palette.WarningSoft;
-            case NoticeTone.Success:
-                return Palette.SuccessSoft;
-            default:
-                return Palette.Card;
+            _message.SetTextNoTranslate(message);
         }
+    }
+
+    private void ShowTone(NoticeTone tone)
+    {
+        Color accent = PickAccent(tone);
+        _surface.FillColor = PickFill(tone);
+        _surface.StrokeColor = new Color(accent.R, accent.G, accent.B, BorderAlpha);
+        var titleVisual = (LabelVisual)_title.Visual;
+        titleVisual.Color = accent;
     }
 
     private static Color PickAccent(NoticeTone tone)
@@ -116,8 +116,33 @@ public sealed class NoticeBox : Panel
                 return Palette.Warning;
             case NoticeTone.Success:
                 return Palette.Success;
-            default:
+            case NoticeTone.None:
                 return Palette.Border;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(tone), tone, "Unsupported notice tone.");
         }
+    }
+
+    private static Color PickFill(NoticeTone tone)
+    {
+        switch (tone)
+        {
+            case NoticeTone.Error:
+                return Palette.ErrorSoft;
+            case NoticeTone.Warning:
+                return Palette.WarningSoft;
+            case NoticeTone.Success:
+                return Palette.SuccessSoft;
+            case NoticeTone.None:
+                return Palette.Card;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(tone), tone, "Unsupported notice tone.");
+        }
+    }
+
+    private void ShowTitle(string title)
+    {
+        _title.SetTextNoTranslate(title);
+        _title.IsVisible = title.Length > 0;
     }
 }
