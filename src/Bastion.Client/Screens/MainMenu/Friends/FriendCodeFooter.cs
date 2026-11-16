@@ -10,13 +10,13 @@ public sealed class FriendCodeFooter : StackPanel
     private const float CopyButtonWidth = 96;
     private const float CopyButtonHeight = 36;
 
-    private readonly FriendsPanelViewModel _viewModel;
+    private readonly FriendsPanelViewModel _friendsPanelViewModel;
 
     public FriendCodeFooter(FriendsPanelViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
 
-        _viewModel = viewModel;
+        _friendsPanelViewModel = viewModel;
         Orientation = Orientation.Horizontal;
         Spacing = FooterSpacing;
         Label codeLabel = CreateCodeLabel();
@@ -34,15 +34,17 @@ public sealed class FriendCodeFooter : StackPanel
 
     private Button CreateCopyButton()
     {
-        Button button = ViewFactory.CreateButton(string.Empty, CopyButtonWidth, CopyButtonHeight);
+        Button button = ViewFactory.CreateBoundButton(
+            nameof(FriendsPanelViewModel.CopyButtonKey),
+            CopyButtonWidth,
+            CopyButtonHeight);
         ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Secondary);
-        button.SetBinding(nameof(Button.Text), nameof(FriendsPanelViewModel.CopyButtonKey));
         button.Click += HandleCopyClick;
         return button;
     }
 
     private void HandleCopyClick(object? sender, EventArgs e)
     {
-        _viewModel.CopyOwnCode();
+        _friendsPanelViewModel.CopyOwnCode();
     }
 }

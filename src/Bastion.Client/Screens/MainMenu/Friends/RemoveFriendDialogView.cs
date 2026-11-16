@@ -1,7 +1,6 @@
 using System;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
-using Gum.DataTypes;
 using Gum.Forms.Controls;
 using log4net;
 
@@ -55,18 +54,10 @@ public sealed class RemoveFriendDialogView : DialogCard
 
     private StackPanel CreateButtons()
     {
-        Button cancel = ViewFactory.CreateButton(
-            nameof(Strings.FriendsCancel),
-            DialogMetrics.ButtonWidth,
-            DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(cancel, ButtonLookCatalog.Secondary);
+        Button cancel = CreateDialogButton(nameof(Strings.FriendsCancel), ButtonLookCatalog.Secondary);
         cancel.Click += HandleCancelClick;
 
-        Button remove = ViewFactory.CreateButton(
-            nameof(Strings.FriendsRemove),
-            DialogMetrics.ButtonWidth,
-            DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(remove, ButtonLookCatalog.Primary);
+        Button remove = CreateDialogButton(nameof(Strings.FriendsRemove), ButtonLookCatalog.Primary);
         remove.SetBinding(nameof(IsEnabled), nameof(FriendActionsViewModel.CanConfirm));
         remove.Click += HandleRemoveClick;
 
@@ -78,6 +69,13 @@ public sealed class RemoveFriendDialogView : DialogCard
         row.AddChild(cancel);
         row.AddChild(remove);
         return row;
+    }
+
+    private static Button CreateDialogButton(string textKey, ButtonLook look)
+    {
+        Button button = ViewFactory.CreateButton(textKey, DialogMetrics.ButtonWidth, DialogMetrics.ButtonHeight);
+        ButtonSkin.CreateAndAttach(button, look);
+        return button;
     }
 
     private void HandleCancelClick(object? sender, EventArgs e)

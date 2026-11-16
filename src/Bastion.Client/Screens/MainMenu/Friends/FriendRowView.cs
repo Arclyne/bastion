@@ -11,7 +11,6 @@ namespace Bastion.Client.Screens.MainMenu.Friends;
 public sealed class FriendRowView : Panel
 {
     private const float RowWidth = PanelMetrics.ContentWidth;
-    private const float RowHeight = 52;
     private const float DotSize = 10;
     private const float ContentSpacing = 12;
     private const float MoreButtonWidth = 64;
@@ -30,7 +29,7 @@ public sealed class FriendRowView : Panel
         BindingContext = row;
         Width = RowWidth;
         WidthUnits = DimensionUnitType.Absolute;
-        Height = RowHeight;
+        Height = PanelMetrics.PlayerRowHeight;
         HeightUnits = DimensionUnitType.Absolute;
 
         var content = new StackPanel

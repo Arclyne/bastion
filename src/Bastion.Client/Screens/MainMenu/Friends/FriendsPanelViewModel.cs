@@ -295,6 +295,18 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         _ = RunSafely(LoadFriends());
     }
 
+    private static async Task RunSafely(Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("A friends panel load ended because the connection was closed.", ex);
+        }
+    }
+
     private void HandleFriendRemoved(object? sender, FriendRemovedEventArgs e)
     {
         _allRows.RemoveAll(row => row.FriendCode == e.FriendCode);
@@ -353,7 +365,8 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
 
     private void HandleFriendPresenceChanged(object? sender, FriendPresenceChangedEventArgs e)
     {
-        UiThread.Run(_uiContext, () => UpdateFriendPresence(e));
+        Action updateFriendPresence = () => UpdateFriendPresence(e);
+        UiThread.Run(_uiContext, updateFriendPresence);
     }
 
     private void UpdateFriendPresence(FriendPresenceChangedEventArgs change)
@@ -371,7 +384,8 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
 
     private void HandleFriendRequestReceived(object? sender, FriendRequestReceivedEventArgs e)
     {
-        UiThread.Run(_uiContext, () => ReceiveFriendRequest(e.Request));
+        Action receiveFriendRequest = () => ReceiveFriendRequest(e.Request);
+        UiThread.Run(_uiContext, receiveFriendRequest);
     }
 
     private void ReceiveFriendRequest(PendingFriendRequest request)
@@ -389,18 +403,6 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
     {
         _ = RunSafely(LoadFriends());
         _ = RunSafely(Requests.LoadRequests());
-    }
-
-    private static async Task RunSafely(Task task)
-    {
-        try
-        {
-            await task;
-        }
-        catch (ObjectDisposedException ex)
-        {
-            _logger.Warn("A friends panel load ended after the panel was closed.", ex);
-        }
     }
 
     private void ShowListing(FriendListing listing)

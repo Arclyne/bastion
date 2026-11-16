@@ -166,7 +166,7 @@ public sealed class FriendRequestsViewModel : ViewModel
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (_receivedRequests.Any(row => row.FriendCode == request.Player.FriendCode))
+        if (_receivedRequests.Any(receivedRow => receivedRow.FriendCode == request.Player.FriendCode))
         {
             return;
         }
@@ -310,7 +310,7 @@ public sealed class FriendRequestsViewModel : ViewModel
         }
         catch (ObjectDisposedException ex)
         {
-            _logger.Warn("The friend request toast ended after the panel was closed.", ex);
+            _logger.Warn("The friend request toast ended because the connection was closed.", ex);
         }
     }
 
