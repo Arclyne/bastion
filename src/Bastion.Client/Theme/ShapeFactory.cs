@@ -1,4 +1,5 @@
 using System;
+using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
@@ -15,6 +16,7 @@ public static class ShapeFactory
     private const int RadiiPerDiameter = 2;
     private const int SidesPerAxis = 2;
     private const float HaloSpread = 4;
+    private const float RaisedBorderWidth = 1.5f;
 
     public static RectangleRuntime CreateRounded(Color fill, float radius)
     {
@@ -43,6 +45,34 @@ public static class ShapeFactory
         halo.Height = haloGrowth;
         halo.Visible = false;
         return halo;
+    }
+
+    public static RectangleRuntime CreateRaisedSurface(float radius, float shadowOffsetY, float shadowBlur)
+    {
+        RectangleRuntime surface = CreateRounded(Palette.Card, radius);
+        surface.StrokeColor = Palette.Border;
+        surface.StrokeWidth = RaisedBorderWidth;
+        surface.HasDropshadow = true;
+        surface.DropshadowColor = Palette.Shadow;
+        surface.DropshadowOffsetY = shadowOffsetY;
+        surface.DropshadowBlur = shadowBlur;
+        return surface;
+    }
+
+    public static Panel CreateAvatar(float size, Color ringColor, float ringWidth)
+    {
+        var avatar = new Panel
+        {
+            Width = size,
+            WidthUnits = DimensionUnitType.Absolute,
+            Height = size,
+            HeightUnits = DimensionUnitType.Absolute,
+        };
+        RectangleRuntime circle = CreateCircle(Palette.AvatarFill, size);
+        circle.StrokeColor = ringColor;
+        circle.StrokeWidth = ringWidth;
+        InsertBehindContent(avatar.Visual, circle);
+        return avatar;
     }
 
     public static void InsertBehindContent(GraphicalUiElement visual, params GraphicalUiElement[] layers)

@@ -67,13 +67,7 @@ public sealed class PickerSkin : InteractiveSkin
         list.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
         list.ItemsCollectionChanged += HandleListItemsChanged;
 
-        RectangleRuntime surface = ShapeFactory.CreateRounded(Palette.Card, ListRadius);
-        surface.StrokeColor = Palette.Border;
-        surface.StrokeWidth = BorderWidth;
-        surface.HasDropshadow = true;
-        surface.DropshadowColor = Palette.Shadow;
-        surface.DropshadowOffsetY = ListShadowOffsetY;
-        surface.DropshadowBlur = ListShadowBlur;
+        RectangleRuntime surface = ShapeFactory.CreateRaisedSurface(ListRadius, ListShadowOffsetY, ListShadowBlur);
 
         ShapeFactory.HideDefaultParts(list);
         ShapeFactory.InsertBehindContent(list.Visual, surface);

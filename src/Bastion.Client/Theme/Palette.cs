@@ -6,6 +6,15 @@ namespace Bastion.Client.Theme;
 
 public static class Palette
 {
+    private const byte FocusHaloAlpha = 0x29;
+    private const byte ErrorHaloAlpha = 0x1A;
+    private const byte ReachableSquareAlpha = 0xC8;
+
+    private static readonly Color _pawnBlue = new Color(0x2F, 0x6F, 0xB8);
+    private static readonly Color _pawnRed = new Color(0xC2, 0x3B, 0x2E);
+    private static readonly Color _pawnGreen = new Color(0x2E, 0x8B, 0x57);
+    private static readonly Color _pawnYellow = new Color(0xD9, 0xA4, 0x1C);
+
     public static Color Background { get; } = new Color(0xF6, 0xF1, 0xE6);
 
     public static Color Card { get; } = new Color(0xFF, 0xFD, 0xF8);
@@ -50,9 +59,9 @@ public static class Palette
 
     public static Color Disabled { get; } = new Color(0xF4, 0xEE, 0xE5);
 
-    public static Color FocusHalo { get; } = new Color(0x9C, 0x4F, 0x3E, 0x29);
+    public static Color FocusHalo { get; } = new Color(Accent, FocusHaloAlpha);
 
-    public static Color ErrorHalo { get; } = new Color(0xB3, 0x26, 0x1E, 0x1A);
+    public static Color ErrorHalo { get; } = new Color(Error, ErrorHaloAlpha);
 
     public static Color ErrorSoft { get; } = new Color(0xFD, 0xEC, 0xEA);
 
@@ -68,15 +77,7 @@ public static class Palette
 
     public static Color PlayerOne { get; } = new Color(0xD8, 0x5A, 0x30);
 
-    private static Color PawnBlue { get; } = new Color(0x2F, 0x6F, 0xB8);
-
-    private static Color PawnRed { get; } = new Color(0xC2, 0x3B, 0x2E);
-
-    private static Color PawnGreen { get; } = new Color(0x2E, 0x8B, 0x57);
-
-    private static Color PawnYellow { get; } = new Color(0xD9, 0xA4, 0x1C);
-
-    public static Color ReachableSquare { get; } = new Color(0xF0, 0xC4, 0x88, 0xC8);
+    public static Color ReachableSquare { get; } = new Color(AccentSoft, ReachableSquareAlpha);
 
     public static Color Wall { get; } = new Color(0x8B, 0x5A, 0x3C);
 
@@ -97,13 +98,13 @@ public static class Palette
         switch (symbol)
         {
             case PawnSymbol.Blue:
-                return PawnBlue;
+                return _pawnBlue;
             case PawnSymbol.Red:
-                return PawnRed;
+                return _pawnRed;
             case PawnSymbol.Green:
-                return PawnGreen;
+                return _pawnGreen;
             case PawnSymbol.Yellow:
-                return PawnYellow;
+                return _pawnYellow;
             default:
                 throw new ArgumentOutOfRangeException(nameof(symbol), symbol, "Unsupported pawn symbol.");
         }
