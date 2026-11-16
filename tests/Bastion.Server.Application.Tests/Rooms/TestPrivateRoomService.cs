@@ -200,6 +200,18 @@ public sealed class TestPrivateRoomService
     }
 
     [Fact]
+    public void CreateRoom_EveryCodeTaken_ThrowsRoomCodeUnavailableException()
+    {
+        AddPlayer(HostToken, _host);
+        QueueTakenCodesUpToLimit();
+        RequestedRoomSettings settings = CreateClassicSettings();
+
+        Action create = () => _privateRoomService.CreateRoom(HostToken, settings, _now);
+
+        Assert.Throws<RoomCodeUnavailableException>(create);
+    }
+
+    [Fact]
     public void JoinRoom_UnknownCode_RejectsRoomNotFound()
     {
         OpenHostRoom();
@@ -262,11 +274,7 @@ public sealed class TestPrivateRoomService
     {
         OpenHostRoom();
         AddPlayer(GuestToken, _guest);
-        Action joinWithWrongCode = () => _privateRoomService.JoinRoom(GuestToken, WrongCode, _now);
-        for (int attemptIndex = 0; attemptIndex < RoomPolicy.MaximumFailedCodeAttempts; attemptIndex++)
-        {
-            Record.Exception(joinWithWrongCode);
-        }
+        FailCodeAttemptsUpToLimit();
         Action join = () => _privateRoomService.JoinRoom(GuestToken, FirstCode, _now);
 
         Exception? exception = Record.Exception(join);
@@ -419,7 +427,7 @@ public sealed class TestPrivateRoomService
     }
 
     [Fact]
-    public void LeaveRoom_Host_FreesMembers()
+    public void LeaveRoom_Host_FreesGuest()
     {
         OpenHostRoomWithGuest();
 
@@ -437,6 +445,15 @@ public sealed class TestPrivateRoomService
         RoomSnapshot? room = _privateRoomService.FindOwnRoom(GuestToken, _now);
 
         Assert.Null(room);
+    }
+
+    private void QueueTakenCodesUpToLimit()
+    {
+        _roomRepository.TakenCodes.Add(FirstCode);
+        for (int drawIndex = 0; drawIndex < RoomKeeper.MaximumCodeDraws; drawIndex++)
+        {
+            _codeGenerator.Codes.Enqueue(FirstCode);
+        }
     }
 
     private void OpenHostRoomWithGuest()
@@ -474,6 +491,15 @@ public sealed class TestPrivateRoomService
     {
         AddPlayer(GuestToken, _guest);
         _privateRoomService.JoinRoom(GuestToken, FirstCode, _now);
+    }
+
+    private void FailCodeAttemptsUpToLimit()
+    {
+        Action joinWithWrongCode = () => _privateRoomService.JoinRoom(GuestToken, WrongCode, _now);
+        for (int attemptIndex = 0; attemptIndex < RoomPolicy.MaximumFailedCodeAttempts; attemptIndex++)
+        {
+            Record.Exception(joinWithWrongCode);
+        }
     }
 
     private static RequestedRoomSettings CreateFewWallsSettings()
