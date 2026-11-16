@@ -8,9 +8,14 @@ public interface IRoomRegistry
 {
     bool IsInRoom(int accountId);
 
-    string CreateUnusedCode();
+    bool TryCreateUnusedCode(
+        [NotNullWhen(true)]
+        out string? code);
 
-    bool TryOpen(WaitingRoom room, [NotNullWhen(true)] out RoomSnapshot? openedRoom);
+    bool TryOpen(
+        WaitingRoom room,
+        [NotNullWhen(true)]
+        out RoomSnapshot? openedRoom);
 
     RoomSnapshot Admit(string code, RoomMember member, DateTime now);
 

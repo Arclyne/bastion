@@ -110,14 +110,13 @@ public sealed class RoomKeeper : IRoomKeeper
     {
         for (int attempt = 0; attempt < MaximumCodeAttempts; attempt++)
         {
-            string code = _roomRegistry.CreateUnusedCode();
-            if (!_roomRepository.IsCodeTaken(code))
+            if (_roomRegistry.TryCreateUnusedCode(out string? code) && !_roomRepository.IsCodeTaken(code))
             {
                 return code;
             }
         }
 
-        throw new InvalidOperationException("No free room code was found.");
+        throw new RoomCodeUnavailableException();
     }
 
     private RoomSnapshot AdmitToOpenRoom(RoomMember member, string code, DateTime now)
