@@ -41,20 +41,14 @@ public sealed class FriendRequestRowView : Panel
 
     private static StackPanel CreateText()
     {
-        var text = new StackPanel
-        {
-            X = PanelMetrics.RowContentPaddingX,
-            Spacing = PanelMetrics.TextSpacing,
-        };
         Label nickname = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(FriendRequestRowViewModel.Nickname),
             TextStyleCatalog.IdentityName);
         Label detail = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(FriendRequestRowViewModel.DetailText),
             TextStyleCatalog.Hint);
-        text.AddChild(nickname);
-        text.AddChild(detail);
-        ViewFactory.CenterVertically(text);
+        StackPanel text = ViewFactory.CreateCenteredLines(nickname, detail);
+        text.X = PanelMetrics.RowContentPaddingX;
         return text;
     }
 

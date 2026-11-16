@@ -66,20 +66,13 @@ public sealed class FriendRowView : Panel
 
     private static StackPanel CreateText()
     {
-        var text = new StackPanel
-        {
-            Spacing = PanelMetrics.TextSpacing,
-        };
         Label nickname = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(FriendRowViewModel.Nickname),
             TextStyleCatalog.IdentityName);
         Label status = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(FriendRowViewModel.StatusText),
             TextStyleCatalog.Hint);
-        text.AddChild(nickname);
-        text.AddChild(status);
-        ViewFactory.CenterVertically(text);
-        return text;
+        return ViewFactory.CreateCenteredLines(nickname, status);
     }
 
     private Button CreateMoreButton()

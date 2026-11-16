@@ -71,13 +71,6 @@ public sealed class RemoveFriendDialogView : DialogCard
         return row;
     }
 
-    private static Button CreateDialogButton(string textKey, ButtonLook look)
-    {
-        Button button = ViewFactory.CreateButton(textKey, DialogMetrics.ButtonWidth, DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(button, look);
-        return button;
-    }
-
     private void HandleCancelClick(object? sender, EventArgs e)
     {
         _actions.CloseAll();
