@@ -28,7 +28,6 @@ public sealed class TestMatch
     private const byte FirstPlacement = 1;
     private const int ThirtySecondsInMilliseconds = 30000;
     private const int TenSecondsInMilliseconds = 10000;
-    private const short FirstMoveNumber = 1;
     private const short SecondMoveNumber = 2;
     private const string ClassicForwardSquare = "e2";
     private const string ClassicTwoAheadSquare = "e3";
@@ -58,10 +57,12 @@ public sealed class TestMatch
     public void StartRanked_TwoEntrants_CreatesOneParticipationEach()
     {
         MatchFormat format = CreateClassicFormat();
+        int[] expectedAccountIds = { FirstAccountId, SecondAccountId };
 
         var match = Match.StartRanked(format, _entrants, _startedAt);
 
-        Assert.Equal(_entrants.Length, match.Participations.Count);
+        IEnumerable<int> accountIds = match.Participations.Select(participation => participation.AccountId);
+        Assert.Equal(expectedAccountIds, accountIds);
     }
 
     [Fact]
@@ -148,9 +149,8 @@ public sealed class TestMatch
     [Fact]
     public void StartRanked_ClassicMode_GivesTheModeWalls()
     {
-        GameMode classicMode = GameModeSampleFactory.CreateClassic();
-        var format = new MatchFormat(classicMode, ClockMinutes);
-        byte expectedWalls = classicMode.WallsPerPlayer;
+        MatchFormat format = CreateClassicFormat();
+        byte expectedWalls = GameModeSampleFactory.ClassicWallsPerPlayer;
 
         var match = Match.StartRanked(format, _entrants, _startedAt);
 
@@ -380,7 +380,7 @@ public sealed class TestMatch
 
         short nextMoveNumber = match.GetNextMoveNumber();
 
-        Assert.Equal(FirstMoveNumber, nextMoveNumber);
+        Assert.Equal(Match.FirstMoveNumber, nextMoveNumber);
     }
 
     [Fact]
@@ -484,7 +484,7 @@ public sealed class TestMatch
     {
         Match match = StartClassicMatch();
         BoardCoordinates destination = BoardLayout.ParseSquare(ClassicSecondForwardSquare);
-        var pawnMove = new PawnMove(SecondAccountId, FirstMoveNumber, destination);
+        var pawnMove = new PawnMove(SecondAccountId, Match.FirstMoveNumber, destination);
 
         Action move = () => match.MovePawn(pawnMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
 
@@ -508,7 +508,7 @@ public sealed class TestMatch
     {
         Match match = StartClassicMatch();
         BoardCoordinates destination = BoardLayout.ParseSquare(ClassicTwoAheadSquare);
-        var pawnMove = new PawnMove(FirstAccountId, FirstMoveNumber, destination);
+        var pawnMove = new PawnMove(FirstAccountId, Match.FirstMoveNumber, destination);
 
         Action move = () => match.MovePawn(pawnMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
 
@@ -679,30 +679,11 @@ public sealed class TestMatch
     public void PlaceWall_RivalTurn_ThrowsInvalidOperationException()
     {
         Match match = StartClassicMatch();
-        var placement = new WallPlacement(SecondAccountId, FirstMoveNumber, _centerWall);
+        var placement = new WallPlacement(SecondAccountId, Match.FirstMoveNumber, _centerWall);
 
         Action place = () => match.PlaceWall(placement, GameModeSampleFactory.ClassicBoardSize, _startedAt);
 
         Assert.Throws<InvalidOperationException>(place);
-    }
-
-    private static MatchFormat CreateClassicFormatWithWalls(byte wallsPerPlayer)
-    {
-        MatchFormat classicFormat = CreateClassicFormat();
-        MatchFormat format = classicFormat with { WallsPerPlayer = wallsPerPlayer };
-        return format;
-    }
-
-    private static MatchFormat CreateClassicFormat()
-    {
-        GameMode classicMode = GameModeSampleFactory.CreateClassic();
-        return new MatchFormat(classicMode, ClockMinutes);
-    }
-
-    private static MatchFormat CreateQuickFormat()
-    {
-        GameMode quickMode = GameModeSampleFactory.CreateQuick();
-        return new MatchFormat(quickMode, ClockMinutes);
     }
 
     private static MatchEntrant[] CreatePrivateEntrants()
@@ -721,6 +702,12 @@ public sealed class TestMatch
     {
         MatchFormat format = CreateClassicFormat();
         return Match.StartRanked(format, _entrants, _startedAt);
+    }
+
+    private static MatchFormat CreateClassicFormat()
+    {
+        GameMode classicMode = GameModeSampleFactory.CreateClassic();
+        return new MatchFormat(classicMode, ClockMinutes);
     }
 
     private static Match StartFourPlayerMatchAfterFirstLeaver()
@@ -751,7 +738,7 @@ public sealed class TestMatch
     private static PawnMove CreateFirstPlayerForwardMove()
     {
         BoardCoordinates destination = BoardLayout.ParseSquare(ClassicForwardSquare);
-        return new PawnMove(FirstAccountId, FirstMoveNumber, destination);
+        return new PawnMove(FirstAccountId, Match.FirstMoveNumber, destination);
     }
 
     private static PawnMove CreateSecondPlayerForwardMove()
@@ -777,16 +764,17 @@ public sealed class TestMatch
         return match;
     }
 
+    private static MatchFormat CreateQuickFormat()
+    {
+        GameMode quickMode = GameModeSampleFactory.CreateQuick();
+        return new MatchFormat(quickMode, ClockMinutes);
+    }
+
     private static PawnMove CreateFirstPlayerGoalMove(Match match)
     {
         short moveNumber = match.GetNextMoveNumber();
         BoardCoordinates destination = BoardLayout.ParseSquare(QuickFirstPlayerGoalSquare);
         return new PawnMove(FirstAccountId, moveNumber, destination);
-    }
-
-    private static WallPlacement CreateFirstPlayerWallPlacement(Wall wall)
-    {
-        return new WallPlacement(FirstAccountId, FirstMoveNumber, wall);
     }
 
     private static void PlaceFirstPlayerWall(Match match, Wall wall)
@@ -795,9 +783,21 @@ public sealed class TestMatch
         match.PlaceWall(placement, GameModeSampleFactory.ClassicBoardSize, _startedAt);
     }
 
+    private static WallPlacement CreateFirstPlayerWallPlacement(Wall wall)
+    {
+        return new WallPlacement(FirstAccountId, Match.FirstMoveNumber, wall);
+    }
+
     private static Match StartClassicMatchWithWalls(byte wallsPerPlayer)
     {
         MatchFormat format = CreateClassicFormatWithWalls(wallsPerPlayer);
         return Match.StartRanked(format, _entrants, _startedAt);
+    }
+
+    private static MatchFormat CreateClassicFormatWithWalls(byte wallsPerPlayer)
+    {
+        MatchFormat classicFormat = CreateClassicFormat();
+        MatchFormat format = classicFormat with { WallsPerPlayer = wallsPerPlayer };
+        return format;
     }
 }
