@@ -31,7 +31,7 @@ public sealed class TestPrivateRoomService
     private const string LowercaseFirstCode = "k7mtq3";
     private const string WrongCode = "AAAAAA";
     private const byte FiveMinuteClock = 5;
-    private const byte TooManyWalls = 21;
+    private const byte TooManyWalls = RoomPolicy.MaximumWallsPerPlayer + 1;
     private const byte FewWalls = 4;
     private const int FirstSeatIndex = 0;
     private const int SecondSeatIndex = 1;
@@ -246,8 +246,7 @@ public sealed class TestPrivateRoomService
     [Fact]
     public void JoinRoom_FullRoom_RejectsRoomFull()
     {
-        OpenHostRoom();
-        JoinGuest();
+        OpenHostRoomWithGuest();
         AddPlayer(ThirdToken, _third);
         Action join = () => _privateRoomService.JoinRoom(ThirdToken, FirstCode, _now);
 
@@ -314,21 +313,19 @@ public sealed class TestPrivateRoomService
     [Fact]
     public void SetReady_Member_FillsTheRoomWithReadyPlayers()
     {
-        OpenHostRoom();
-        JoinGuest();
-        bool[] expectedReadiness = { true, true };
+        OpenHostRoomWithGuest();
+        bool[] expectedReadyStates = { true, true };
 
         RoomSnapshot room = _privateRoomService.SetReady(GuestToken, isReady: true, _now);
 
-        IEnumerable<bool> readiness = room.Members.Select(member => member.IsReady);
-        Assert.Equal(expectedReadiness, readiness);
+        IEnumerable<bool> readyStates = room.Members.Select(member => member.IsReady);
+        Assert.Equal(expectedReadyStates, readyStates);
     }
 
     [Fact]
     public void ChangeSettings_Member_RejectsNotHost()
     {
-        OpenHostRoom();
-        JoinGuest();
+        OpenHostRoomWithGuest();
         RequestedRoomSettings settings = CreateClassicSettings();
         Action change = () => _privateRoomService.ChangeSettings(GuestToken, settings, _now);
 
@@ -341,8 +338,7 @@ public sealed class TestPrivateRoomService
     [Fact]
     public void ChangeSettings_ReadyMember_ClearsReadyOfMember()
     {
-        OpenHostRoom();
-        JoinGuest();
+        OpenHostRoomWithGuest();
         _privateRoomService.SetReady(GuestToken, isReady: true, _now);
         RequestedRoomSettings settings = CreateFewWallsSettings();
 
@@ -390,8 +386,7 @@ public sealed class TestPrivateRoomService
     [Fact]
     public void LeaveRoom_Member_NotifiesRemainingMembers()
     {
-        OpenHostRoom();
-        JoinGuest();
+        OpenHostRoomWithGuest();
 
         _privateRoomService.LeaveRoom(GuestToken, _now);
 
@@ -413,8 +408,7 @@ public sealed class TestPrivateRoomService
     [Fact]
     public void LeaveRoom_Host_NotifiesMembersRoomClosed()
     {
-        OpenHostRoom();
-        JoinGuest();
+        OpenHostRoomWithGuest();
 
         _privateRoomService.LeaveRoom(HostToken, _now);
 
@@ -425,8 +419,7 @@ public sealed class TestPrivateRoomService
     [Fact]
     public void LeaveRoom_Host_FreesMembers()
     {
-        OpenHostRoom();
-        JoinGuest();
+        OpenHostRoomWithGuest();
 
         _privateRoomService.LeaveRoom(HostToken, _now);
 
@@ -442,6 +435,12 @@ public sealed class TestPrivateRoomService
         RoomSnapshot? room = _privateRoomService.FindOwnRoom(GuestToken, _now);
 
         Assert.Null(room);
+    }
+
+    private void OpenHostRoomWithGuest()
+    {
+        OpenHostRoom();
+        JoinGuest();
     }
 
     private RoomSnapshot OpenHostRoom()
