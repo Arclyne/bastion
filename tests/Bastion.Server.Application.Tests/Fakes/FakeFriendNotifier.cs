@@ -33,8 +33,8 @@ public sealed class FakeFriendNotifier : IFriendNotifier
         RequestRecipientAccountIds.Add(recipientAccountId);
     }
 
-    public void NotifyFriendshipStarted(int accountId, PlayerIdentity friend)
+    public void NotifyFriendshipStarted(int recipientAccountId, PlayerIdentity friend)
     {
-        FriendshipStartedAccountIds.Add(accountId);
+        FriendshipStartedAccountIds.Add(recipientAccountId);
     }
 }

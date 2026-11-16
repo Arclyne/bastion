@@ -10,7 +10,7 @@ public sealed class FakeMatchmakingNotifier : IMatchmakingNotifier
         SubscribedAccountIds = new HashSet<int>();
         CreatedMatches = new List<CreatedMatch>();
         PresenceRequests = new List<PresenceRequest>();
-        EndReasons = new Dictionary<int, SearchEndReason>();
+        EndReasonsByAccountId = new Dictionary<int, SearchEndReason>();
     }
 
     public HashSet<int> SubscribedAccountIds { get; }
@@ -19,7 +19,7 @@ public sealed class FakeMatchmakingNotifier : IMatchmakingNotifier
 
     public List<PresenceRequest> PresenceRequests { get; }
 
-    public Dictionary<int, SearchEndReason> EndReasons { get; }
+    public Dictionary<int, SearchEndReason> EndReasonsByAccountId { get; }
 
     public bool HasNotificationChannel(int accountId)
     {
@@ -38,6 +38,6 @@ public sealed class FakeMatchmakingNotifier : IMatchmakingNotifier
 
     public void NotifySearchEnded(int accountId, SearchEndReason reason)
     {
-        EndReasons[accountId] = reason;
+        EndReasonsByAccountId[accountId] = reason;
     }
 }

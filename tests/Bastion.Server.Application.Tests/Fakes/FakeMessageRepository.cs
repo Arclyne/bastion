@@ -49,8 +49,8 @@ public sealed class FakeMessageRepository : IMessageRepository
 
     public void MarkRead(MessageRoute route, DateTime readAt)
     {
-        IEnumerable<Message> authorMessages = Messages.Where(message => IsFrom(message, route));
-        foreach (Message message in authorMessages)
+        IEnumerable<Message> routeMessages = Messages.Where(message => IsFrom(message, route));
+        foreach (Message message in routeMessages)
         {
             message.MarkRead(readAt);
         }
