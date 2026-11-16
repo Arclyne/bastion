@@ -164,6 +164,18 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         ChannelCloser.CloseOrAbort(communicationObject);
     }
 
+    private bool TryStopKeepAlive()
+    {
+        ITimer? timer = Interlocked.Exchange(ref _keepAliveTimer, value: null);
+        if (timer is null)
+        {
+            return false;
+        }
+
+        timer.Dispose();
+        return true;
+    }
+
     private static Exception AbortAndTranslate(ISessionService channel, Exception cause)
     {
         var communicationObject = (ICommunicationObject)channel;
@@ -173,8 +185,18 @@ public sealed class NotificationClient : INotificationClient, IDisposable
 
     private void HandleChannelFaulted(object? sender, EventArgs e)
     {
-        _logger.Warn("The notification channel faulted.");
+        _logger.Error("The notification channel faulted.");
         OnDisconnected();
+    }
+
+    private void OnDisconnected()
+    {
+        if (!TryStopKeepAlive())
+        {
+            return;
+        }
+
+        Disconnected?.Invoke(this, EventArgs.Empty);
     }
 
     private void SendKeepAlive(object? state)
@@ -205,29 +227,7 @@ public sealed class NotificationClient : INotificationClient, IDisposable
 
     private void ReportConnectionLost(Exception cause)
     {
-        _logger.Warn("The keep-alive could not reach the server.", cause);
+        _logger.Error("The keep-alive could not reach the server.", cause);
         OnDisconnected();
-    }
-
-    private void OnDisconnected()
-    {
-        if (!TryStopKeepAlive())
-        {
-            return;
-        }
-
-        Disconnected?.Invoke(this, EventArgs.Empty);
-    }
-
-    private bool TryStopKeepAlive()
-    {
-        ITimer? timer = Interlocked.Exchange(ref _keepAliveTimer, value: null);
-        if (timer is null)
-        {
-            return false;
-        }
-
-        timer.Dispose();
-        return true;
     }
 }
