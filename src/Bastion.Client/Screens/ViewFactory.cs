@@ -109,6 +109,15 @@ public static class ViewFactory
         };
     }
 
+    public static Button CreateBoundButton(string textProperty, float width, float height)
+    {
+        ArgumentNullException.ThrowIfNull(textProperty);
+
+        Button button = CreateButton(string.Empty, width, height);
+        button.SetBinding(nameof(Button.Text), textProperty);
+        return button;
+    }
+
     public static Button CreateBoundUntranslatedButton(string textProperty, float width, float height)
     {
         ArgumentNullException.ThrowIfNull(textProperty);
