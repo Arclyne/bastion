@@ -16,10 +16,11 @@ public sealed class FakeMatchRepository : IMatchRepository
         ActiveGameMode = GameModeSampleFactory.CreateClassic();
         EloRatingsByAccountId = new Dictionary<int, short>();
         SavedMatches = new List<Match>();
+        UnfinishedParticipantAccountIdsByMatchId = new Dictionary<int, List<int>>();
         SavedMatchChatMessages = new List<Message>();
         MatchesById = new Dictionary<int, Match>();
-        SavedAbandonments = new List<Match>();
-        SavedMoves = new List<Match>();
+        MatchesSavedWithAbandonment = new List<Match>();
+        MatchesSavedWithMove = new List<Match>();
     }
 
     public HashSet<int> AccountIdsWithUnfinishedParticipation { get; }
@@ -34,8 +35,7 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public MatchRepositoryException? MatchSaveFailure { get; set; }
 
-    public Dictionary<int, List<int>> UnfinishedParticipantAccountIdsByMatchId { get; } =
-        new Dictionary<int, List<int>>();
+    public Dictionary<int, List<int>> UnfinishedParticipantAccountIdsByMatchId { get; }
 
     public List<Message> SavedMatchChatMessages { get; }
 
@@ -43,9 +43,9 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public Dictionary<int, Match> MatchesById { get; }
 
-    public List<Match> SavedAbandonments { get; }
+    public List<Match> MatchesSavedWithAbandonment { get; }
 
-    public List<Match> SavedMoves { get; }
+    public List<Match> MatchesSavedWithMove { get; }
 
     public bool HasUnfinishedParticipation(int accountId)
     {
@@ -108,7 +108,7 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public void SaveAbandonment(Match match)
     {
-        SavedAbandonments.Add(match);
+        MatchesSavedWithAbandonment.Add(match);
     }
 
     public GameMode? FindGameMode(byte gameModeId)
@@ -123,6 +123,6 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public void SaveMove(Match match)
     {
-        SavedMoves.Add(match);
+        MatchesSavedWithMove.Add(match);
     }
 }
