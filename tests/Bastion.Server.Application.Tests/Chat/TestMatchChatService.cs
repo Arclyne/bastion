@@ -78,6 +78,20 @@ public sealed class TestMatchChatService
         Assert.Equal(MessageText, notified.PostedLine.Line.Text);
     }
 
+    [Theory]
+    [InlineData("Good luck, have fun!")]
+    [InlineData("¡Suerte! ¿Quién mueve el peón, Ñandú?")]
+    public void SendMessage_EnglishOrSpanishText_DeliversSameText(string text)
+    {
+        AddParticipants();
+        var submission = new MatchChatSubmission(MatchId, text);
+
+        _matchChatService.SendMessage(AuthorToken, submission, _now);
+
+        NotifiedMatchChatMessage notified = _matchChatNotifier.NotifiedMessages.Single();
+        Assert.Equal(text, notified.PostedLine.Line.Text);
+    }
+
     [Fact]
     public void SendMessage_PlayerOutsideMatch_ThrowsChatChannelForbiddenException()
     {
