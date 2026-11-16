@@ -74,7 +74,7 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
 
     private List<FriendRequestSummary> ListSummaries(
         IQueryable<FriendRequest> requests,
-        Expression<Func<FriendRequest, int>> counterpartAccountId)
+        Expression<Func<FriendRequest, int>> counterpartAccountIdSelector)
     {
         IQueryable<Account> nonDeletedAccounts = _context.Accounts
             .Where(account => account.AccountStatus != AccountStatus.Deleted);
@@ -82,7 +82,7 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
             .AsNoTracking()
             .Join(
                 nonDeletedAccounts,
-                counterpartAccountId,
+                counterpartAccountIdSelector,
                 account => account.AccountId,
                 (request, counterpart) => new RequestWithCounterpart(request, counterpart));
         var loadedRequests = new List<RequestWithCounterpart>(requestsWithCounterpart);
