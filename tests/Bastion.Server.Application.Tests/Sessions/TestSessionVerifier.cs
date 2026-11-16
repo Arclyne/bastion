@@ -12,7 +12,7 @@ public sealed class TestSessionVerifier
 {
     private const string Nickname = "marta_muros";
     private const string Email = "marta@example.com";
-    private const string UnknownToken = "otro-token";
+    private const string UnknownToken = "other-token";
     private const int MinutesAfterIssue = 1;
 
     private static readonly DateTime _issuedAt = new DateTime(2026, 10, 15, 12, 0, 0, DateTimeKind.Utc);
