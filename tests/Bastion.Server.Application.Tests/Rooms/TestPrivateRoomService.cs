@@ -37,7 +37,7 @@ public sealed class TestPrivateRoomService
     private const int SecondSeatIndex = 1;
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
-    private static readonly int[] _hostOnly = { HostAccountId };
+    private static readonly int[] _hostOnlyAccountIds = { HostAccountId };
     private static readonly ConnectedPlayer _host = new ConnectedPlayer(HostAccountId, HostNickname);
     private static readonly ConnectedPlayer _guest = new ConnectedPlayer(GuestAccountId, GuestNickname);
     private static readonly ConnectedPlayer _third = new ConnectedPlayer(ThirdAccountId, ThirdNickname);
@@ -393,7 +393,7 @@ public sealed class TestPrivateRoomService
 
         NotifiedRoom lastUpdate = _roomNotifier.UpdatedRooms.Last();
         IEnumerable<int> accountIds = lastUpdate.Room.Members.Select(member => member.AccountId);
-        Assert.Equal(_hostOnly, accountIds);
+        Assert.Equal(_hostOnlyAccountIds, accountIds);
     }
 
     [Fact]
