@@ -6,21 +6,20 @@ namespace Bastion.Domain.Tests.Rooms;
 
 public sealed class TestRoom
 {
+    private const string ValidCode = "K7MTQ3";
     private const string InvalidCode = "K7MTO3";
+    private const int HostAccountId = 7;
     private const byte ChangedWalls = 4;
     private const int MatchId = 41;
 
     private static readonly DateTime _openedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _changedAt = _openedAt.AddMinutes(2);
-    private static readonly RoomOpening _opening = new RoomOpening(
-        RoomSampleFactory.Code,
-        RoomSampleFactory.HostAccountId,
-        _openedAt);
+    private static readonly RoomOpening _opening = new RoomOpening(ValidCode, HostAccountId, _openedAt);
 
     [Fact]
     public void Open_InvalidCode_ThrowsArgumentException()
     {
-        var opening = new RoomOpening(InvalidCode, RoomSampleFactory.HostAccountId, _openedAt);
+        var opening = new RoomOpening(InvalidCode, HostAccountId, _openedAt);
         RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
 
         Action open = () => Room.Open(opening, settings);

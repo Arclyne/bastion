@@ -15,16 +15,19 @@ public sealed class TestWaitingRoom
     private const string FourthNickname = "sofia_salto";
     private const int FirstSeatIndex = 0;
     private const int SecondSeatIndex = 1;
+    private const int SecondMemberPosition = 1;
     private const int RoomId = 3;
+    private const string RoomCode = "K7MTQ3";
+    private const int SeatedHostAccountId = 7;
     private const string HostNickname = "marta_muros";
 
     [Fact]
     public void Constructor_Host_SitsReadyInFirstSeat()
     {
         (int SeatIndex, bool IsReady) expectedSeat = (FirstSeatIndex, true);
-        var identity = new RoomIdentity(RoomId, RoomSampleFactory.Code);
+        var identity = new RoomIdentity(RoomId, RoomCode);
         RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
-        var host = new RoomMember(RoomSampleFactory.HostAccountId, HostNickname);
+        var host = new RoomMember(SeatedHostAccountId, HostNickname);
 
         _ = new WaitingRoom(identity, settings, host);
 
@@ -119,7 +122,7 @@ public sealed class TestWaitingRoom
 
         room.ChangeSettings(settings);
 
-        RoomMember guest = room.Members[SecondSeatIndex];
+        RoomMember guest = room.Members[SecondMemberPosition];
         Assert.False(guest.IsReady);
     }
 
@@ -143,7 +146,7 @@ public sealed class TestWaitingRoom
 
         room.ChangeSettings(settings);
 
-        RoomMember secondMember = room.Members[SecondSeatIndex];
+        RoomMember secondMember = room.Members[SecondMemberPosition];
         Assert.Equal(SecondSeatIndex, secondMember.SeatIndex);
     }
 
