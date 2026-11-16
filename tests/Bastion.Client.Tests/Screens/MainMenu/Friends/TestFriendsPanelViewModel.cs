@@ -6,7 +6,7 @@ using Bastion.Client.Screens.MainMenu.Friends;
 using Bastion.Client.Tests.Fakes;
 using Xunit;
 
-namespace Bastion.Client.Tests.Screens.MainMenu;
+namespace Bastion.Client.Tests.Screens.MainMenu.Friends;
 
 public sealed class TestFriendsPanelViewModel
 {
@@ -18,11 +18,28 @@ public sealed class TestFriendsPanelViewModel
 
     private readonly FakeNotificationClient _notifications = new FakeNotificationClient();
     private readonly FakeClipboard _clipboard = new FakeClipboard();
+    private readonly LoggedInSession _session;
+    private readonly SocialClientSet _clients;
+    private readonly LocalServiceSet _localServices;
+
+    public TestFriendsPanelViewModel()
+    {
+        _session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
+        var chatClient = new FakeChatClient();
+        var conversationClient = new FakeConversationClient();
+        var chatClients = new ChatClientSet(chatClient, conversationClient, _notifications);
+        var friendClient = new FakeFriendClient();
+        _clients = new SocialClientSet(friendClient, chatClients);
+        var languages = new FakeLanguageService();
+        var timeProvider = new ManualTimeProvider(_now);
+        _localServices = new LocalServiceSet(languages, _clipboard, timeProvider);
+    }
 
     [Fact]
     public void Constructor_Created_SubscribesToNotifications()
     {
-        using FriendsPanelViewModel viewModel = CreateViewModel();
+        using FriendsPanelViewModel viewModel = InlineUiContext.CreateViewModel(
+            () => new FriendsPanelViewModel(_session, _clients, _localServices));
 
         bool hasSubscribers = _notifications.HasAnySubscribers();
         Assert.True(hasSubscribers);
@@ -62,15 +79,7 @@ public sealed class TestFriendsPanelViewModel
 
     private FriendsPanelViewModel CreateViewModel()
     {
-        var session = new LoggedInSession(SessionToken, OwnNickname, PreferredLanguage);
-        var chatClient = new FakeChatClient();
-        var conversationClient = new FakeConversationClient();
-        var chatClients = new ChatClientSet(chatClient, conversationClient, _notifications);
-        var friendClient = new FakeFriendClient();
-        var clients = new SocialClientSet(friendClient, chatClients);
-        var languages = new FakeLanguageService();
-        var timeProvider = new ManualTimeProvider(_now);
-        var localServices = new LocalServiceSet(languages, _clipboard, timeProvider);
-        return InlineUiContext.CreateViewModel(() => new FriendsPanelViewModel(session, clients, localServices));
+        return InlineUiContext.CreateViewModel(
+            () => new FriendsPanelViewModel(_session, _clients, _localServices));
     }
 }
