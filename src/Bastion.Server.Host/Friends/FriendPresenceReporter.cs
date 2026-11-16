@@ -64,9 +64,7 @@ public sealed class FriendPresenceReporter : IFriendPresenceReporter
         }
         catch (DbException ex)
         {
-            _logger.Error(
-                $"The friend presence could not be reported. Operation={operationName}; AccountId={accountId}",
-                ex);
+            _logger.Error($"A database command failed. Operation={operationName}; AccountId={accountId}", ex);
         }
         catch (ObjectDisposedException ex)
         {
