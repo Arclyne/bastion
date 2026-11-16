@@ -177,8 +177,13 @@ public sealed class AddFriendViewModel : ViewModel
         row.ApplyOutcome(outcome);
         if (outcome == FriendRequestOutcome.FriendshipStarted)
         {
-            FriendshipStarted?.Invoke(this, EventArgs.Empty);
+            OnFriendshipStarted();
         }
+    }
+
+    private void OnFriendshipStarted()
+    {
+        FriendshipStarted?.Invoke(this, EventArgs.Empty);
     }
 
     private void ShowRejection(FoundPlayerRowViewModel row, FriendshipRejection rejection)

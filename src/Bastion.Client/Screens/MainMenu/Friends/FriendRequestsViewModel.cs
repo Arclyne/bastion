@@ -279,7 +279,7 @@ public sealed class FriendRequestsViewModel : ViewModel
         ToastText = FormatText(Strings.FriendsRequestToastFormat, row.Nickname);
         IsToastAccepted = false;
         IsToastVisible = true;
-        _ = HideToastLater(row, ToastSeconds);
+        _ = RunSafely(HideToastLater(row, ToastSeconds));
     }
 
     private async Task HideToastLater(FriendRequestRowViewModel row, int seconds)
@@ -298,6 +298,18 @@ public sealed class FriendRequestsViewModel : ViewModel
 
         _toastRow = null;
         IsToastVisible = false;
+    }
+
+    private static async Task RunSafely(Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The friend request toast ended after the panel was closed.", ex);
+        }
     }
 
     private async Task<bool> Respond(

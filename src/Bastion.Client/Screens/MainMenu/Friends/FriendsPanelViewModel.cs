@@ -211,7 +211,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         SelectedTab = tab;
         if (tab == FriendsTab.Chat)
         {
-            _ = Chat.Load();
+            _ = RunSafely(Chat.Load());
         }
     }
 
@@ -296,7 +296,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
 
     private void HandleFriendshipStarted(object? sender, EventArgs e)
     {
-        _ = LoadFriends();
+        _ = RunSafely(LoadFriends());
     }
 
     private void HandleFriendRemoved(object? sender, FriendRemovedEventArgs e)
@@ -387,8 +387,20 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
 
     private void ReloadFriendsAndRequests()
     {
-        _ = LoadFriends();
-        _ = Requests.LoadRequests();
+        _ = RunSafely(LoadFriends());
+        _ = RunSafely(Requests.LoadRequests());
+    }
+
+    private static async Task RunSafely(Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("A friends panel load ended after the panel was closed.", ex);
+        }
     }
 
     private void ShowListing(FriendListing listing)

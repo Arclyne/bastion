@@ -99,7 +99,7 @@ public sealed class FriendActionsViewModel : ViewModel
         IsMenuOpen = false;
         var friend = new PlayerTag(Nickname, _friendCode);
         var request = new MessageRequestedEventArgs(friend);
-        MessageRequested?.Invoke(this, request);
+        OnMessageRequested(request);
     }
 
     public void AskRemoval()
@@ -160,11 +160,21 @@ public sealed class FriendActionsViewModel : ViewModel
         }
     }
 
+    private void OnMessageRequested(MessageRequestedEventArgs e)
+    {
+        MessageRequested?.Invoke(this, e);
+    }
+
     private void CompleteRemoval(string friendCode)
     {
         IsDialogOpen = false;
         var removal = new FriendRemovedEventArgs(friendCode);
-        FriendRemoved?.Invoke(this, removal);
+        OnFriendRemoved(removal);
+    }
+
+    private void OnFriendRemoved(FriendRemovedEventArgs e)
+    {
+        FriendRemoved?.Invoke(this, e);
     }
 
     private void ReportFailure(Exception cause)
