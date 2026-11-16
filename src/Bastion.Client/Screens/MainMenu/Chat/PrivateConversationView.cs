@@ -27,7 +27,7 @@ public sealed class PrivateConversationView : StackPanel
         BindingContext = conversation;
         Width = ConversationPartFactory.ViewWidth;
         WidthUnits = DimensionUnitType.Absolute;
-        Spacing = ConversationPartFactory.SectionSpacing;
+        Spacing = PanelMetrics.SectionSpacing;
         _messages = CreateMessages();
         StackPanel header = CreateHeader();
         Label greeting = ConversationPartFactory.CreateNoticeLabel(

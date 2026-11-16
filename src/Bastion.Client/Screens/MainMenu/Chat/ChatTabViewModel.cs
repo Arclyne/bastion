@@ -224,7 +224,8 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
 
     private void HandlePrivateMessageReceived(object? sender, PrivateMessageReceivedEventArgs e)
     {
-        UiThread.Run(_uiContext, () => ReceivePrivateMessage(e.Sender, e.Message));
+        Action receivePrivateMessage = () => ReceivePrivateMessage(e.Sender, e.Message);
+        UiThread.Run(_uiContext, receivePrivateMessage);
     }
 
     private void ReceivePrivateMessage(PlayerTag sender, PrivateMessage message)
@@ -265,7 +266,7 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         }
         catch (ObjectDisposedException ex)
         {
-            _logger.Warn("A private conversation ended after the chat tab was closed.", ex);
+            _logger.Warn("A private conversation ended because the connection was closed.", ex);
         }
     }
 }

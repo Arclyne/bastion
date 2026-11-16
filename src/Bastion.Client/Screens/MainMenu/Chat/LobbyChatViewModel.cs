@@ -8,7 +8,6 @@ using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Chat;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.Sessions;
-using Bastion.Domain.Chat;
 using Gum.Mvvm;
 using log4net;
 
@@ -192,7 +191,8 @@ public sealed class LobbyChatViewModel : ModeratedChatViewModel, IDisposable
     private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)
     {
         var row = new ChatMessageRowViewModel(e.Message, TimeProvider);
-        UiThread.Run(_uiContext, () => ReceiveMessage(row));
+        Action receiveMessage = () => ReceiveMessage(row);
+        UiThread.Run(_uiContext, receiveMessage);
     }
 
     private void ReceiveMessage(ChatMessageRowViewModel row)
