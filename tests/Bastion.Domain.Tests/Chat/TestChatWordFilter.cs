@@ -5,7 +5,7 @@ namespace Bastion.Domain.Tests.Chat;
 
 public sealed class TestChatWordFilter
 {
-    private const string CleanText = "hola";
+    private const string CleanText = "hello";
 
     private static readonly string[] _bannedTerms = { "tonto", "estúpido", "mala palabra" };
     private static readonly string[] _blankTerms = { "  " };
@@ -24,7 +24,7 @@ public sealed class TestChatWordFilter
     }
 
     [Theory]
-    [InlineData("buena partida")]
+    [InlineData("good game")]
     [InlineData("qué tontería")]
     [InlineData("tontos")]
     [InlineData("mala jugada, palabra")]

@@ -8,8 +8,8 @@ public sealed class TestChatPolicy
     private const char FillerCharacter = 'a';
 
     [Theory]
-    [InlineData("hola")]
-    [InlineData("  hola  ")]
+    [InlineData("hello")]
+    [InlineData("  hello  ")]
     public void IsValidMessage_ValidMessage_ReturnsTrue(string text)
     {
         bool isValidMessage = ChatPolicy.IsValidMessage(text);
