@@ -12,6 +12,7 @@ public sealed class TestChatCooldown
     private const long OneTick = 1;
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 12, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime _cooldownEnd = _now.AddSeconds(ChatPolicy.MessageCooldownSeconds);
 
     private readonly ChatCooldown _cooldown = new ChatCooldown();
 
@@ -27,8 +28,7 @@ public sealed class TestChatCooldown
     public void TryStartCooldown_JustBeforeCooldownEnds_ReturnsFalse()
     {
         _cooldown.TryStartCooldown(AccountId, _now);
-        DateTime cooldownEnd = _now.AddSeconds(ChatPolicy.MessageCooldownSeconds);
-        DateTime justBeforeCooldownEnd = cooldownEnd.AddTicks(-OneTick);
+        DateTime justBeforeCooldownEnd = _cooldownEnd.AddTicks(-OneTick);
 
         bool isCooldownStarted = _cooldown.TryStartCooldown(AccountId, justBeforeCooldownEnd);
 
@@ -39,9 +39,8 @@ public sealed class TestChatCooldown
     public void TryStartCooldown_AtCooldownEnd_ReturnsTrue()
     {
         _cooldown.TryStartCooldown(AccountId, _now);
-        DateTime cooldownEnd = _now.AddSeconds(ChatPolicy.MessageCooldownSeconds);
 
-        bool isCooldownStarted = _cooldown.TryStartCooldown(AccountId, cooldownEnd);
+        bool isCooldownStarted = _cooldown.TryStartCooldown(AccountId, _cooldownEnd);
 
         Assert.True(isCooldownStarted);
     }

@@ -12,6 +12,7 @@ public sealed class TestChatMute
     private const int LatestEndDays = 5;
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 12, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime _earlierEnd = _now.AddDays(EarlierEndDays);
 
     [Fact]
     public void FromSanctionsInEffect_NoSanctions_ReturnsNone()
@@ -26,9 +27,8 @@ public sealed class TestChatMute
     [Fact]
     public void FromSanctionsInEffect_TwoTemporarySanctions_EndsWithTheLatest()
     {
-        DateTime earlierEnd = _now.AddDays(EarlierEndDays);
         DateTime latestEnd = _now.AddDays(LatestEndDays);
-        var earlierSanction = new Sanction(AccountId, SanctionScope.Chat, earlierEnd);
+        var earlierSanction = new Sanction(AccountId, SanctionScope.Chat, _earlierEnd);
         var latestSanction = new Sanction(AccountId, SanctionScope.Chat, latestEnd);
         Sanction[] sanctions = { earlierSanction, latestSanction };
 
@@ -40,8 +40,7 @@ public sealed class TestChatMute
     [Fact]
     public void FromSanctionsInEffect_TemporaryAndPermanent_ReturnsPermanent()
     {
-        DateTime temporaryEnd = _now.AddDays(EarlierEndDays);
-        var temporarySanction = new Sanction(AccountId, SanctionScope.Chat, temporaryEnd);
+        var temporarySanction = new Sanction(AccountId, SanctionScope.Chat, _earlierEnd);
         var permanentSanction = new Sanction(AccountId, SanctionScope.Chat, endsAt: null);
         Sanction[] sanctions = { temporarySanction, permanentSanction };
         var expectedMute = new ChatMute(IsMuted: true, EndsAt: null);

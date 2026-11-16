@@ -19,17 +19,17 @@ public sealed class TestLobbyChatService
     private const string OtherNickname = "luis_quo";
     private const string OtherToken = "luis-token";
     private const string UnknownToken = "unknown-token";
-    private const string BannedTerm = "tonto";
+    private const string BannedTerm = "fool";
     private const int ListenerCount = 7;
-    private const string CleanText = "hola";
-    private const string PaddedText = "  hola  ";
+    private const string CleanText = "hello";
+    private const string PaddedText = "  hello  ";
     private const string BlankText = "   ";
     private const long FirstMessageId = 1;
-    private const string ShoutedBannedText = "eres un TONTO";
-    private const string RepeatedText = "otra vez";
-    private const string ApologyText = "perdón";
-    private const string FirstText = "primero";
-    private const string SecondText = "segundo";
+    private const string ShoutedBannedText = "you are a FOOL";
+    private const string RepeatedText = "again";
+    private const string ApologyText = "sorry";
+    private const string FirstText = "first";
+    private const string SecondText = "second";
     private const char FillerCharacter = 'a';
     private const int SanctionDays = 1;
     private const int SecondsWithinCooldown = 1;
@@ -38,6 +38,7 @@ public sealed class TestLobbyChatService
     private const string ManyPlayersNicknamePrefix = "player_";
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 12, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime _muteEnd = _now.AddDays(SanctionDays);
     private static readonly DateTime _withinCooldown = _now.AddSeconds(SecondsWithinCooldown);
     private static readonly ConnectedPlayer _player = new ConnectedPlayer(AccountId, Nickname);
     private static readonly ConnectedPlayer _otherPlayer = new ConnectedPlayer(OtherAccountId, OtherNickname);
@@ -126,8 +127,7 @@ public sealed class TestLobbyChatService
     public void SendMessage_TemporaryChatSanction_RejectsMuted()
     {
         _sessionVerifier.Add(Token, _player);
-        DateTime muteEnd = _now.AddDays(SanctionDays);
-        AddSanction(SanctionScope.Chat, muteEnd);
+        AddSanction(SanctionScope.Chat, _muteEnd);
         Action send = () => _lobbyChatService.SendMessage(Token, CleanText, _now);
 
         Exception? exception = Record.Exception(send);
@@ -140,14 +140,13 @@ public sealed class TestLobbyChatService
     public void SendMessage_TemporaryChatSanction_ReportsMuteEnd()
     {
         _sessionVerifier.Add(Token, _player);
-        DateTime muteEnd = _now.AddDays(SanctionDays);
-        AddSanction(SanctionScope.Chat, muteEnd);
+        AddSanction(SanctionScope.Chat, _muteEnd);
         Action send = () => _lobbyChatService.SendMessage(Token, CleanText, _now);
 
         Exception? exception = Record.Exception(send);
 
         var rejection = exception as ChatMessageRejectedException;
-        Assert.Equal(muteEnd, rejection?.MutedUntil);
+        Assert.Equal(_muteEnd, rejection?.MutedUntil);
     }
 
     [Fact]
@@ -338,18 +337,6 @@ public sealed class TestLobbyChatService
         _unitOfWork.SanctionRepository.AddSanction(sanction);
     }
 
-    private void SendMessagesFromManyPlayers(int count)
-    {
-        for (int playerIndex = 0; playerIndex < count; playerIndex++)
-        {
-            string token = $"{ManyPlayersTokenPrefix}{playerIndex}";
-            string nickname = $"{ManyPlayersNicknamePrefix}{playerIndex}";
-            var player = new ConnectedPlayer(playerIndex, nickname);
-            _sessionVerifier.Add(token, player);
-            _lobbyChatService.SendMessage(token, CleanText, _now);
-        }
-    }
-
     private void AddPlayerWithBannedTerm()
     {
         _sessionVerifier.Add(Token, _player);
@@ -366,5 +353,17 @@ public sealed class TestLobbyChatService
     {
         _sessionVerifier.Add(Token, _player);
         _sessionVerifier.Add(OtherToken, _otherPlayer);
+    }
+
+    private void SendMessagesFromManyPlayers(int count)
+    {
+        for (int playerIndex = 0; playerIndex < count; playerIndex++)
+        {
+            string token = $"{ManyPlayersTokenPrefix}{playerIndex}";
+            string nickname = $"{ManyPlayersNicknamePrefix}{playerIndex}";
+            var player = new ConnectedPlayer(playerIndex, nickname);
+            _sessionVerifier.Add(token, player);
+            _lobbyChatService.SendMessage(token, CleanText, _now);
+        }
     }
 }
