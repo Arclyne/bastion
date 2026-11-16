@@ -12,7 +12,7 @@ public sealed class TestServiceFailureTranslator
     private const string FailureMessage = "The service could not be reached.";
 
     [Fact]
-    public void ToClientException_EndpointNotFound_ReturnsServerUnreachable()
+    public void ToClientException_EndpointNotFound_ReturnsServerUnreachableException()
     {
         var failure = new EndpointNotFoundException(FailureMessage);
 
@@ -22,7 +22,7 @@ public sealed class TestServiceFailureTranslator
     }
 
     [Fact]
-    public void ToClientException_InvalidSessionFault_ReturnsInvalidSession()
+    public void ToClientException_InvalidSessionFault_ReturnsInvalidSessionException()
     {
         var fault = new InvalidSessionFault();
         var failure = new FaultException<InvalidSessionFault>(fault);
@@ -33,7 +33,7 @@ public sealed class TestServiceFailureTranslator
     }
 
     [Fact]
-    public void ToClientException_UntypedFault_ReturnsServerError()
+    public void ToClientException_UntypedFault_ReturnsServerErrorException()
     {
         var failure = new FaultException();
 
@@ -43,7 +43,7 @@ public sealed class TestServiceFailureTranslator
     }
 
     [Fact]
-    public void ToClientException_Timeout_ReturnsConnectionLost()
+    public void ToClientException_Timeout_ReturnsConnectionLostException()
     {
         var failure = new TimeoutException();
 
