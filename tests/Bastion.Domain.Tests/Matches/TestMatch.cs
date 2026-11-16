@@ -38,7 +38,7 @@ public sealed class TestMatch
     private const string CenterGrooveSquare = "e4";
     private const string FirstRowCenterGroove = "e1";
     private const byte SingleWallPerPlayer = 1;
-    private const byte ClassicWallsAfterOne = 9;
+    private const byte ClassicWallsAfterOne = GameModeSampleFactory.ClassicWallsPerPlayer - 1;
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _endedAt = new DateTime(2026, 11, 5, 18, 7, 0, DateTimeKind.Utc);
@@ -78,8 +78,7 @@ public sealed class TestMatch
     [Fact]
     public void StartPrivate_WallsChosenForRoom_GivesThoseWallsToEveryPlayer()
     {
-        MatchFormat classicFormat = CreateClassicFormat();
-        MatchFormat format = classicFormat with { WallsPerPlayer = RoomWallsPerPlayer };
+        MatchFormat format = CreateClassicFormatWithWalls(RoomWallsPerPlayer);
         MatchEntrant[] entrants = CreatePrivateEntrants();
         byte[] expectedWalls = { RoomWallsPerPlayer, RoomWallsPerPlayer };
 
@@ -127,8 +126,7 @@ public sealed class TestMatch
     [Fact]
     public void StartRanked_QuickBoard_PlacesSecondPlayerOnD7()
     {
-        GameMode quickMode = GameModeSampleFactory.CreateQuick();
-        var format = new MatchFormat(quickMode, ClockMinutes);
+        MatchFormat format = CreateQuickFormat();
 
         var match = Match.StartRanked(format, _entrants, _startedAt);
 
@@ -300,20 +298,30 @@ public sealed class TestMatch
     public void Abandon_FourPlayersFirstLeaves_GivesLeaverLastPlace()
     {
         Match match = StartFourPlayerMatch();
-        (ParticipationResult? Result, MatchEndReason? EndReason, byte? Placement) expectedOutcome =
-            (ParticipationResult.Lost, MatchEndReason.Abandonment, LastOfFourPlacement);
 
         match.Abandon(FirstAccountId, _endedAt);
 
         Participation leaver = match.GetParticipation(FirstAccountId);
-        Assert.Equal(expectedOutcome, (leaver.Result, leaver.EndReason, leaver.Placement));
+        Assert.Equal(LastOfFourPlacement, leaver.Placement);
+    }
+
+    [Fact]
+    public void Abandon_FourPlayersFirstLeaves_RecordsLeaverLossByAbandonment()
+    {
+        Match match = StartFourPlayerMatch();
+        (ParticipationResult? Result, MatchEndReason? EndReason) expectedOutcome =
+            (ParticipationResult.Lost, MatchEndReason.Abandonment);
+
+        match.Abandon(FirstAccountId, _endedAt);
+
+        Participation leaver = match.GetParticipation(FirstAccountId);
+        Assert.Equal(expectedOutcome, (leaver.Result, leaver.EndReason));
     }
 
     [Fact]
     public void Abandon_FourPlayersSecondLeaver_GivesThirdPlace()
     {
-        Match match = StartFourPlayerMatch();
-        match.Abandon(FirstAccountId, _endedAt);
+        Match match = StartFourPlayerMatchAfterFirstLeaver();
 
         match.Abandon(ThirdAccountId, _endedAt);
 
@@ -344,16 +352,25 @@ public sealed class TestMatch
     [Fact]
     public void Abandon_FourPlayersThreeLeave_LastPlayerWinsFirstPlace()
     {
-        Match match = StartFourPlayerMatch();
-        match.Abandon(FirstAccountId, _endedAt);
+        Match match = StartFourPlayerMatchAfterFirstLeaver();
         match.Abandon(SecondAccountId, _endedAt);
-        (ParticipationResult? Result, byte? Placement, MatchStatus Status) expectedOutcome =
-            (ParticipationResult.Won, FirstPlacement, MatchStatus.Finished);
+        (ParticipationResult? Result, byte? Placement) expectedOutcome = (ParticipationResult.Won, FirstPlacement);
 
         match.Abandon(ThirdAccountId, _endedAt);
 
         Participation winner = match.GetParticipation(FourthAccountId);
-        Assert.Equal(expectedOutcome, (winner.Result, winner.Placement, match.Status));
+        Assert.Equal(expectedOutcome, (winner.Result, winner.Placement));
+    }
+
+    [Fact]
+    public void Abandon_FourPlayersThreeLeave_FinishesMatch()
+    {
+        Match match = StartFourPlayerMatchAfterFirstLeaver();
+        match.Abandon(SecondAccountId, _endedAt);
+
+        match.Abandon(ThirdAccountId, _endedAt);
+
+        Assert.Equal(MatchStatus.Finished, match.Status);
     }
 
     [Fact]
@@ -413,8 +430,7 @@ public sealed class TestMatch
     public void MovePawn_SecondPlayerMoves_GivesTurnBackToFirstPlayer()
     {
         Match match = StartClassicMatch();
-        PawnMove forwardMove = CreateFirstPlayerForwardMove();
-        match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+        MoveFirstPlayerForward(match);
         PawnMove secondMove = CreateSecondPlayerForwardMove();
         DateTime playedAt = _startedAt.AddMilliseconds(TenSecondsInMilliseconds);
 
@@ -453,8 +469,7 @@ public sealed class TestMatch
     public void MovePawn_SecondMove_CountsTimeFromPreviousMove()
     {
         Match match = StartClassicMatch();
-        PawnMove forwardMove = CreateFirstPlayerForwardMove();
-        match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
+        MoveFirstPlayerForward(match);
         PawnMove secondMove = CreateSecondPlayerForwardMove();
         DateTime playedAt = _startedAt.AddMilliseconds(TenSecondsInMilliseconds);
 
@@ -671,10 +686,23 @@ public sealed class TestMatch
         Assert.Throws<InvalidOperationException>(place);
     }
 
+    private static MatchFormat CreateClassicFormatWithWalls(byte wallsPerPlayer)
+    {
+        MatchFormat classicFormat = CreateClassicFormat();
+        MatchFormat format = classicFormat with { WallsPerPlayer = wallsPerPlayer };
+        return format;
+    }
+
     private static MatchFormat CreateClassicFormat()
     {
         GameMode classicMode = GameModeSampleFactory.CreateClassic();
         return new MatchFormat(classicMode, ClockMinutes);
+    }
+
+    private static MatchFormat CreateQuickFormat()
+    {
+        GameMode quickMode = GameModeSampleFactory.CreateQuick();
+        return new MatchFormat(quickMode, ClockMinutes);
     }
 
     private static MatchEntrant[] CreatePrivateEntrants()
@@ -695,6 +723,13 @@ public sealed class TestMatch
         return Match.StartRanked(format, _entrants, _startedAt);
     }
 
+    private static Match StartFourPlayerMatchAfterFirstLeaver()
+    {
+        Match match = StartFourPlayerMatch();
+        match.Abandon(FirstAccountId, _endedAt);
+        return match;
+    }
+
     private static Match StartFourPlayerMatch()
     {
         GameMode fourPlayerMode = GameModeSampleFactory.CreateFourPlayers();
@@ -705,6 +740,12 @@ public sealed class TestMatch
         MatchEntrant fourth = CreateUnrankedEntrant(FourthAccountId);
         MatchEntrant[] entrants = { first, second, third, fourth };
         return Match.StartPrivate(format, entrants, _startedAt);
+    }
+
+    private static void MoveFirstPlayerForward(Match match)
+    {
+        PawnMove forwardMove = CreateFirstPlayerForwardMove();
+        match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
     }
 
     private static PawnMove CreateFirstPlayerForwardMove()
@@ -721,8 +762,7 @@ public sealed class TestMatch
 
     private static Match PlayQuickMatchBeforeFirstPlayerGoal()
     {
-        GameMode quickMode = GameModeSampleFactory.CreateQuick();
-        var format = new MatchFormat(quickMode, ClockMinutes);
+        MatchFormat format = CreateQuickFormat();
         var match = Match.StartRanked(format, _entrants, _startedAt);
         for (int moveIndex = 0; moveIndex < _quickMovesBeforeFirstPlayerGoal.Length; moveIndex++)
         {
@@ -757,8 +797,7 @@ public sealed class TestMatch
 
     private static Match StartClassicMatchWithWalls(byte wallsPerPlayer)
     {
-        MatchFormat classicFormat = CreateClassicFormat();
-        MatchFormat format = classicFormat with { WallsPerPlayer = wallsPerPlayer };
+        MatchFormat format = CreateClassicFormatWithWalls(wallsPerPlayer);
         return Match.StartRanked(format, _entrants, _startedAt);
     }
 }

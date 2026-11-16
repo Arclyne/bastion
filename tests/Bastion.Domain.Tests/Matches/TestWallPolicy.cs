@@ -32,6 +32,9 @@ public sealed class TestWallPolicy
     private static readonly BoardCoordinates _secondColumnGroove = new BoardCoordinates(SecondIndex, FirstIndex);
 
     private static readonly Wall _centerHorizontal = new Wall(_centerGroove, WallOrientation.Horizontal);
+    private static readonly WallRejection _grooveTakenRejection = new WallRejection(
+        WallRejectionReason.GrooveTaken,
+        BlockedTurnOrder: null);
 
     [Fact]
     public void FindRejection_FreeGroove_ReturnsNull()
@@ -59,11 +62,10 @@ public sealed class TestWallPolicy
     public void FindRejection_SameWallPlaced_RejectsGrooveTaken()
     {
         Board board = CreateBoard(_firstStart, _centerHorizontal);
-        var expectedRejection = new WallRejection(WallRejectionReason.GrooveTaken, BlockedTurnOrder: null);
 
         WallRejection? rejection = WallPolicy.FindRejection(board, _centerHorizontal);
 
-        Assert.Equal(expectedRejection, rejection);
+        Assert.Equal(_grooveTakenRejection, rejection);
     }
 
     [Fact]
@@ -71,11 +73,10 @@ public sealed class TestWallPolicy
     {
         Board board = CreateBoard(_firstStart, _centerHorizontal);
         var crossingWall = new Wall(_centerGroove, WallOrientation.Vertical);
-        var expectedRejection = new WallRejection(WallRejectionReason.GrooveTaken, BlockedTurnOrder: null);
 
         WallRejection? rejection = WallPolicy.FindRejection(board, crossingWall);
 
-        Assert.Equal(expectedRejection, rejection);
+        Assert.Equal(_grooveTakenRejection, rejection);
     }
 
     [Fact]
@@ -83,11 +84,10 @@ public sealed class TestWallPolicy
     {
         Board board = CreateBoard(_firstStart, _centerHorizontal);
         var overlappingWall = new Wall(_rightOfCenterGroove, WallOrientation.Horizontal);
-        var expectedRejection = new WallRejection(WallRejectionReason.GrooveTaken, BlockedTurnOrder: null);
 
         WallRejection? rejection = WallPolicy.FindRejection(board, overlappingWall);
 
-        Assert.Equal(expectedRejection, rejection);
+        Assert.Equal(_grooveTakenRejection, rejection);
     }
 
     [Fact]
@@ -107,11 +107,10 @@ public sealed class TestWallPolicy
         var placedWall = new Wall(_lowColumnGroove, WallOrientation.Vertical);
         Board board = CreateBoard(_firstStart, placedWall);
         var overlappingWall = new Wall(_highColumnGroove, WallOrientation.Vertical);
-        var expectedRejection = new WallRejection(WallRejectionReason.GrooveTaken, BlockedTurnOrder: null);
 
         WallRejection? rejection = WallPolicy.FindRejection(board, overlappingWall);
 
-        Assert.Equal(expectedRejection, rejection);
+        Assert.Equal(_grooveTakenRejection, rejection);
     }
 
     [Fact]

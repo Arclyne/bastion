@@ -21,6 +21,8 @@ public sealed class TestBoardLayout
     private const string RowZeroSquare = "e0";
     private const int ClassicLastRowIndex = 8;
 
+    private static readonly BoardCoordinates _firstSquare = new BoardCoordinates(FirstColumnIndex, FirstRowIndex);
+
     [Fact]
     public void GetStartingCoordinates_FirstTurnOrderOnClassicBoard_ReturnsCenterOfFirstRow()
     {
@@ -130,9 +132,7 @@ public sealed class TestBoardLayout
     [Fact]
     public void IsGoal_SecondTurnOrderOnFirstRow_ReturnsTrue()
     {
-        var coordinates = new BoardCoordinates(FirstColumnIndex, FirstRowIndex);
-
-        bool isGoal = BoardLayout.IsGoal(GameModeSampleFactory.ClassicBoardSize, Match.SecondTurnOrder, coordinates);
+        bool isGoal = BoardLayout.IsGoal(GameModeSampleFactory.ClassicBoardSize, Match.SecondTurnOrder, _firstSquare);
 
         Assert.True(isGoal);
     }
@@ -140,9 +140,7 @@ public sealed class TestBoardLayout
     [Fact]
     public void IsGoal_FirstTurnOrderOnFirstRow_ReturnsFalse()
     {
-        var coordinates = new BoardCoordinates(FirstColumnIndex, FirstRowIndex);
-
-        bool isGoal = BoardLayout.IsGoal(GameModeSampleFactory.ClassicBoardSize, Match.FirstTurnOrder, coordinates);
+        bool isGoal = BoardLayout.IsGoal(GameModeSampleFactory.ClassicBoardSize, Match.FirstTurnOrder, _firstSquare);
 
         Assert.False(isGoal);
     }
