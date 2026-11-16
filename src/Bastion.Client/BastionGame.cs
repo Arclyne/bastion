@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking;
 using Bastion.Client.Platform;
@@ -13,12 +14,12 @@ using Gum.Forms.Controls;
 using Gum.Forms.Input;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using log4net;
 
 namespace Bastion.Client;
 
 public sealed class BastionGame : Game
 {
-    private const string ContentRootDirectory = "Content";
     private const int InitialWindowWidth = 1280;
     private const int InitialWindowHeight = 720;
     private const int MinimumWindowWidth = 1024;
@@ -26,6 +27,8 @@ public sealed class BastionGame : Game
     private const float ReferenceUiHeight = 768f;
     private const float MinimumUiScale = 0.8f;
     private const float MaximumUiScale = 1.5f;
+
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(BastionGame));
 
     private readonly GraphicsDeviceManager _graphics;
     private readonly ServerConnection _serverConnection;
@@ -40,7 +43,7 @@ public sealed class BastionGame : Game
             PreferredBackBufferHeight = InitialWindowHeight,
         };
         _serverConnection = new ServerConnection(TimeProvider.System);
-        Content.RootDirectory = ContentRootDirectory;
+        Content.RootDirectory = "Content";
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
     }
@@ -101,6 +104,7 @@ public sealed class BastionGame : Game
             _screenNavigator?.Dispose();
             _boardScene?.Dispose();
             _serverConnection.Dispose();
+            _graphics.Dispose();
         }
 
         base.Dispose(disposing);
@@ -172,7 +176,7 @@ public sealed class BastionGame : Game
 
         if (GumService.Default.Keyboard.KeyPushed(Keys.Enter))
         {
-            _ = wallPlacement.Confirm();
+            _ = RunSafely(wallPlacement.Confirm());
         }
 
         if (GumService.Default.Keyboard.KeyPushed(Keys.Escape))
@@ -218,7 +222,19 @@ public sealed class BastionGame : Game
             return;
         }
 
-        _ = shownMatch.Play.SelectSquare(square);
+        _ = RunSafely(shownMatch.Play.SelectSquare(square));
+    }
+
+    private static async Task RunSafely(Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("A board action ended after the game was closed.", ex);
+        }
     }
 
     private static bool IsOverGumControl(ICursor cursor)
