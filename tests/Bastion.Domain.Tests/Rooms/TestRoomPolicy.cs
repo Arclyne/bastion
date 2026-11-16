@@ -10,7 +10,7 @@ public sealed class TestRoomPolicy
     private const string CodeWithDigitOne = "K7MT13";
     private const string ShortCode = "K7MTQ";
     private const string LowercaseCode = "k7mtq3";
-    private const byte TooManyWalls = 21;
+    private const byte TooManyWalls = RoomPolicy.MaximumWallsPerPlayer + 1;
     private const byte NoWalls = 0;
     private const byte FourMinutes = 4;
     private const byte TenMinutes = 10;
