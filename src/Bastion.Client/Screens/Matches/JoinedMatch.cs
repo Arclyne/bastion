@@ -21,6 +21,21 @@ public sealed record JoinedMatch
 
     public MatchFoundEventArgs FoundMatch { get; }
 
+    public bool IsJoinedMatch(int matchId)
+    {
+        return matchId == FoundMatch.MatchId;
+    }
+
+    public byte GetBoardSize()
+    {
+        return FoundMatch.Format.BoardSize;
+    }
+
+    public byte GetOwnTurnOrder()
+    {
+        return FindOwnParticipant().TurnOrder;
+    }
+
     public FoundMatchParticipant FindOwnParticipant()
     {
         return FoundMatch.Participants.First(IsOwnParticipant);

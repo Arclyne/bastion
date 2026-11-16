@@ -136,9 +136,9 @@ public static class BoardSceneLayout
             return string.Create(CultureInfo.InvariantCulture, $"{FourPlayerGoalRowPrefix}{FirstRowNumber}");
         }
 
-        char goalColumn = startingCoordinates.ColumnIndex == FirstIndex
-            ? (char)(FirstColumnName + lastIndex)
-            : FirstColumnName;
+        int lastColumnCode = FirstColumnName + lastIndex;
+        char lastColumnName = (char)lastColumnCode;
+        char goalColumn = startingCoordinates.ColumnIndex == FirstIndex ? lastColumnName : FirstColumnName;
         return string.Create(CultureInfo.InvariantCulture, $"{FourPlayerGoalColumnPrefix}{goalColumn}");
     }
 }

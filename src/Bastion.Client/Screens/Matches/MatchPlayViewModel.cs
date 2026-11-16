@@ -29,8 +29,10 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     private readonly Dictionary<string, byte> _turnOrdersByNickname;
     private readonly Dictionary<byte, string> _nicknamesByTurnOrder;
     private readonly Dictionary<byte, byte> _remainingWallsByTurnOrder;
-    private readonly List<Wall> _walls = new List<Wall>();
-    private List<BoardCoordinates> _reachableSquares = new List<BoardCoordinates>();
+    private readonly byte _boardSize;
+    private readonly byte _ownTurnOrder;
+    private readonly List<Wall> _walls;
+    private List<BoardCoordinates> _reachableSquares;
     private ITimer? _moveNotificationTimer;
 
     public MatchPlayViewModel(JoinedMatch joinedMatch, IMatchClient matches, TimeProvider timeProvider)
@@ -48,8 +50,10 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         _turnOrdersByNickname = new Dictionary<string, byte>(participants.Count, StringComparer.Ordinal);
         _nicknamesByTurnOrder = new Dictionary<byte, string>(participants.Count);
         _remainingWallsByTurnOrder = new Dictionary<byte, byte>(participants.Count);
-        BoardSize = joinedMatch.FoundMatch.Format.BoardSize;
-        OwnTurnOrder = joinedMatch.FindOwnParticipant().TurnOrder;
+        _walls = new List<Wall>();
+        _reachableSquares = new List<BoardCoordinates>();
+        _boardSize = joinedMatch.GetBoardSize();
+        _ownTurnOrder = joinedMatch.GetOwnTurnOrder();
         CurrentTurnOrder = Match.FirstTurnOrder;
         NextMoveNumber = Match.FirstMoveNumber;
         NoticeText = string.Empty;
@@ -58,10 +62,6 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         _matches.WallPlaced += HandleWallPlaced;
         _matches.MatchAbandoned += HandleMatchAbandoned;
     }
-
-    public byte BoardSize { get; }
-
-    public byte OwnTurnOrder { get; }
 
     public byte CurrentTurnOrder { get; private set; }
 
@@ -137,17 +137,12 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
     public Board BuildBoard()
     {
-        return new Board(BoardSize, _pawnsByTurnOrder, _walls);
+        return new Board(_boardSize, _pawnsByTurnOrder, _walls);
     }
 
     public byte GetRemainingWalls(byte turnOrder)
     {
         return _remainingWallsByTurnOrder.GetValueOrDefault(turnOrder);
-    }
-
-    public string FindNickname(byte turnOrder)
-    {
-        return _nicknamesByTurnOrder.GetValueOrDefault(turnOrder, string.Empty);
     }
 
     public string DescribeWallRejection(WallRejectionReason reason, byte? blockedTurnOrder)
@@ -156,14 +151,9 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         return WallRejectionText.Describe(reason, blockedNickname);
     }
 
-    public bool IsOwnTurn()
-    {
-        return CurrentTurnOrder == OwnTurnOrder;
-    }
-
     public bool IsWallTurn()
     {
-        byte ownRemainingWalls = GetRemainingWalls(OwnTurnOrder);
+        byte ownRemainingWalls = GetRemainingWalls(_ownTurnOrder);
         return !IsMatchOver && IsOwnTurn() && ownRemainingWalls > 0;
     }
 
@@ -210,7 +200,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     {
         foreach (FoundMatchParticipant participant in participants)
         {
-            BoardCoordinates start = BoardLayout.GetStartingCoordinates(BoardSize, participant.TurnOrder);
+            BoardCoordinates start = BoardLayout.GetStartingCoordinates(_boardSize, participant.TurnOrder);
             _pawnsByTurnOrder[participant.TurnOrder] = start;
             _turnOrdersByNickname[participant.Nickname] = participant.TurnOrder;
             _nicknamesByTurnOrder[participant.TurnOrder] = participant.Nickname;
@@ -220,7 +210,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
     private void HandlePawnMoved(object? sender, PawnMovedEventArgs e)
     {
-        if (e.MatchId != _joinedMatch.FoundMatch.MatchId)
+        if (!_joinedMatch.IsJoinedMatch(e.MatchId))
         {
             return;
         }
@@ -290,7 +280,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
     private void HandleWallPlaced(object? sender, WallPlacedEventArgs e)
     {
-        if (e.MatchId != _joinedMatch.FoundMatch.MatchId)
+        if (!_joinedMatch.IsJoinedMatch(e.MatchId))
         {
             return;
         }
@@ -320,7 +310,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
     private void HandleMatchAbandoned(object? sender, MatchAbandonedEventArgs e)
     {
-        if (e.MatchId != _joinedMatch.FoundMatch.MatchId)
+        if (!_joinedMatch.IsJoinedMatch(e.MatchId))
         {
             return;
         }
@@ -352,17 +342,22 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
     private void SelectOwnPawn(BoardCoordinates square)
     {
-        BoardCoordinates ownPawn = _pawnsByTurnOrder[OwnTurnOrder];
+        BoardCoordinates ownPawn = _pawnsByTurnOrder[_ownTurnOrder];
         if (!IsOwnTurn() || square != ownPawn)
         {
             return;
         }
 
         Board board = BuildBoard();
-        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, OwnTurnOrder);
+        IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, _ownTurnOrder);
         _reachableSquares = new List<BoardCoordinates>(reachableSquares);
         SelectedPawn = ownPawn;
         OnStateChanged();
+    }
+
+    private bool IsOwnTurn()
+    {
+        return CurrentTurnOrder == _ownTurnOrder;
     }
 
     private async Task SendMove(BoardCoordinates destination)
@@ -398,7 +393,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         catch (IllegalWallException ex)
         {
             _logger.Warn($"The server turned down a wall. Rejection={ex.Rejection}", ex);
-            ShowWallRejection(ex);
+            ShowWallRejection(ex.Rejection, ex.BlockedTurnOrder);
         }
         catch (MatchNotJoinedException ex)
         {
@@ -441,10 +436,10 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         OnStateChanged();
     }
 
-    private void ShowWallRejection(IllegalWallException rejection)
+    private void ShowWallRejection(WallPlacementRejection rejection, byte? blockedTurnOrder)
     {
-        WallRejectionReason reason = MatchWallTranslator.ToRejectionReason(rejection.Rejection);
-        NoticeText = DescribeWallRejection(reason, rejection.BlockedTurnOrder);
+        WallRejectionReason reason = MatchWallTranslator.ToRejectionReason(rejection);
+        NoticeText = DescribeWallRejection(reason, blockedTurnOrder);
     }
 
     private void ReportMoveFailure(Exception cause)
@@ -487,6 +482,11 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
         _logger.Warn($"The server did not send the own move back in time. NextMoveNumber={NextMoveNumber}");
         StopWaitingForMoveNotification();
+    }
+
+    private string FindNickname(byte turnOrder)
+    {
+        return _nicknamesByTurnOrder.GetValueOrDefault(turnOrder, string.Empty);
     }
 
     private void PlaceInJoinedMatch(ChosenWall wall)

@@ -109,7 +109,7 @@ public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
 
     private void HandleMatchChatMessageReceived(object? sender, MatchChatMessageReceivedEventArgs e)
     {
-        if (e.MatchId != _joinedMatch.FoundMatch.MatchId)
+        if (!_joinedMatch.IsJoinedMatch(e.MatchId))
         {
             return;
         }

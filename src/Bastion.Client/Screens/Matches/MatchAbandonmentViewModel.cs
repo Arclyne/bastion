@@ -116,7 +116,7 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
 
     private void HandleMatchAbandoned(object? sender, MatchAbandonedEventArgs e)
     {
-        if (e.MatchId != _joinedMatch.FoundMatch.MatchId)
+        if (!_joinedMatch.IsJoinedMatch(e.MatchId))
         {
             return;
         }
