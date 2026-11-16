@@ -150,8 +150,7 @@ public sealed class MatchView : ScreenView
             nameof(MatchAbandonmentViewModel.StatusText),
             nameof(MatchAbandonmentViewModel.HasStatus),
             TextStyleCatalog.FieldError);
-        status.Width = AbandonButtonWidth;
-        status.WidthUnits = DimensionUnitType.Absolute;
+        ViewFactory.SetFixedWidth(status, AbandonButtonWidth);
         status.BindingContext = _abandonmentViewModel;
         status.Anchor(Gum.Wireframe.Anchor.BottomLeft);
         status.X = ScreenMetrics.MarginX;
@@ -165,8 +164,7 @@ public sealed class MatchView : ScreenView
             nameof(MatchAbandonmentViewModel.PlayerLeftText),
             nameof(MatchAbandonmentViewModel.HasPlayerLeft),
             TextStyleCatalog.IdentityName);
-        notice.Width = PlayerLeftNoticeWidth;
-        notice.WidthUnits = DimensionUnitType.Absolute;
+        ViewFactory.SetFixedWidth(notice, PlayerLeftNoticeWidth);
         notice.BindingContext = _abandonmentViewModel;
         notice.Anchor(Gum.Wireframe.Anchor.Top);
         notice.Y = ScreenMetrics.MarginY;

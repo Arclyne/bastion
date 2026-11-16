@@ -73,8 +73,7 @@ public sealed class MatchChatPanel : Panel
             nameof(MatchChatViewModel.StatusText),
             nameof(MatchChatViewModel.HasStatus),
             TextStyleCatalog.FieldError);
-        status.Width = ContentWidth;
-        status.WidthUnits = DimensionUnitType.Absolute;
+        ViewFactory.SetFixedWidth(status, ContentWidth);
         return status;
     }
 
