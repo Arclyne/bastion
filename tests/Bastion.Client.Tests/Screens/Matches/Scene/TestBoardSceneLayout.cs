@@ -57,7 +57,7 @@ public sealed class TestBoardSceneLayout
     {
         Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(Match.FirstTurnOrder);
 
-        bool isOnFirstRowSide = cameraPosition.Z > 0f;
+        bool isOnFirstRowSide = cameraPosition.Z > BoardSceneLayout.BoardCenter;
         Assert.True(isOnFirstRowSide);
     }
 
@@ -66,7 +66,7 @@ public sealed class TestBoardSceneLayout
     {
         Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(Match.SecondTurnOrder);
 
-        bool isOnLastRowSide = cameraPosition.Z < 0f;
+        bool isOnLastRowSide = cameraPosition.Z < BoardSceneLayout.BoardCenter;
         Assert.True(isOnLastRowSide);
     }
 
@@ -75,7 +75,7 @@ public sealed class TestBoardSceneLayout
     {
         Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(Match.ThirdTurnOrder);
 
-        bool isOnFirstColumnSide = cameraPosition.X < 0f;
+        bool isOnFirstColumnSide = cameraPosition.X < BoardSceneLayout.BoardCenter;
         Assert.True(isOnFirstColumnSide);
     }
 
@@ -84,7 +84,7 @@ public sealed class TestBoardSceneLayout
     {
         Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(Match.FourthTurnOrder);
 
-        bool isOnLastColumnSide = cameraPosition.X > 0f;
+        bool isOnLastColumnSide = cameraPosition.X > BoardSceneLayout.BoardCenter;
         Assert.True(isOnLastColumnSide);
     }
 
