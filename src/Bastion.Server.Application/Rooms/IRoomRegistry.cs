@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Bastion.Domain.Rooms;
 
 namespace Bastion.Server.Application.Rooms;
@@ -9,7 +10,7 @@ public interface IRoomRegistry
 
     string CreateUnusedCode();
 
-    RoomSnapshot? TryOpen(WaitingRoom room);
+    bool TryOpen(WaitingRoom room, [NotNullWhen(true)] out RoomSnapshot? openedRoom);
 
     RoomSnapshot Admit(string code, RoomMember member, DateTime now);
 

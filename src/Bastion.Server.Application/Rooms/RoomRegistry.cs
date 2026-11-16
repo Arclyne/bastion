@@ -1,22 +1,26 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Bastion.Domain.Rooms;
 
 namespace Bastion.Server.Application.Rooms;
 
 public sealed class RoomRegistry : IRoomRegistry
 {
-    private readonly object _roomsLock = new object();
-    private readonly Dictionary<string, WaitingRoom> _roomsByCode = new Dictionary<string, WaitingRoom>();
-    private readonly Dictionary<int, WaitingRoom> _roomsByAccountId = new Dictionary<int, WaitingRoom>();
-    private readonly Dictionary<int, FailedCodeAttemptHistory> _failedAttemptsByAccountId =
-        new Dictionary<int, FailedCodeAttemptHistory>();
+    private readonly object _roomsLock;
+    private readonly Dictionary<string, WaitingRoom> _roomsByCode;
+    private readonly Dictionary<int, WaitingRoom> _roomsByAccountId;
+    private readonly Dictionary<int, FailedCodeAttemptHistory> _attemptHistoriesByAccountId;
     private readonly IRoomCodeGenerator _codeGenerator;
 
     public RoomRegistry(IRoomCodeGenerator codeGenerator)
     {
         ArgumentNullException.ThrowIfNull(codeGenerator);
 
+        _roomsLock = new object();
+        _roomsByCode = new Dictionary<string, WaitingRoom>();
+        _roomsByAccountId = new Dictionary<int, WaitingRoom>();
+        _attemptHistoriesByAccountId = new Dictionary<int, FailedCodeAttemptHistory>();
         _codeGenerator = codeGenerator;
     }
 
@@ -42,7 +46,7 @@ public sealed class RoomRegistry : IRoomRegistry
         }
     }
 
-    public RoomSnapshot? TryOpen(WaitingRoom room)
+    public bool TryOpen(WaitingRoom room, [NotNullWhen(true)] out RoomSnapshot? openedRoom)
     {
         ArgumentNullException.ThrowIfNull(room);
 
@@ -50,12 +54,14 @@ public sealed class RoomRegistry : IRoomRegistry
         {
             if (_roomsByAccountId.ContainsKey(room.HostAccountId) || _roomsByCode.ContainsKey(room.Identity.Code))
             {
-                return null;
+                openedRoom = null;
+                return false;
             }
 
             _roomsByCode.Add(room.Identity.Code, room);
             _roomsByAccountId.Add(room.HostAccountId, room);
-            return RoomSnapshot.Capture(room);
+            openedRoom = RoomSnapshot.Capture(room);
+            return true;
         }
     }
 
@@ -66,7 +72,7 @@ public sealed class RoomRegistry : IRoomRegistry
 
         lock (_roomsLock)
         {
-            WaitingRoom room = FindRoomToJoin(code, member.AccountId, now);
+            WaitingRoom room = ClaimRoomToJoin(code, member.AccountId, now);
             room.Admit(member);
             _roomsByAccountId.Add(member.AccountId, room);
             return RoomSnapshot.Capture(room);
@@ -164,26 +170,26 @@ public sealed class RoomRegistry : IRoomRegistry
         }
     }
 
-    private WaitingRoom FindRoomToJoin(string code, int accountId, DateTime now)
+    private WaitingRoom ClaimRoomToJoin(string code, int accountId, DateTime now)
     {
         if (_roomsByAccountId.ContainsKey(accountId))
         {
             throw new RoomRejectedException(RoomRejection.InRoom);
         }
 
-        FailedCodeAttemptHistory failedAttempts = GetFailedAttempts(accountId);
-        if (failedAttempts.IsLimitReached(now))
+        FailedCodeAttemptHistory attemptHistory = GetAttemptHistory(accountId);
+        if (attemptHistory.IsLimitReached(now))
         {
-            throw new RoomRejectedException(RoomRejection.TooManyAttempts, failedAttempts.GetRetryDelay(now));
+            throw new RoomRejectedException(RoomRejection.TooManyAttempts, attemptHistory.GetRetryDelay(now));
         }
 
         if (!_roomsByCode.TryGetValue(code, out WaitingRoom? room))
         {
-            failedAttempts.Record(now);
+            attemptHistory.Record(now);
             throw new OpenRoomNotFoundException();
         }
 
-        ForgetEmptyHistory(accountId, failedAttempts);
+        ForgetEmptyHistory(accountId, attemptHistory);
         if (room.HasKicked(accountId))
         {
             throw new RoomRejectedException(RoomRejection.Kicked);
@@ -197,22 +203,22 @@ public sealed class RoomRegistry : IRoomRegistry
         return room;
     }
 
-    private FailedCodeAttemptHistory GetFailedAttempts(int accountId)
+    private FailedCodeAttemptHistory GetAttemptHistory(int accountId)
     {
-        if (!_failedAttemptsByAccountId.TryGetValue(accountId, out FailedCodeAttemptHistory? failedAttempts))
+        if (!_attemptHistoriesByAccountId.TryGetValue(accountId, out FailedCodeAttemptHistory? attemptHistory))
         {
-            failedAttempts = new FailedCodeAttemptHistory();
-            _failedAttemptsByAccountId.Add(accountId, failedAttempts);
+            attemptHistory = new FailedCodeAttemptHistory();
+            _attemptHistoriesByAccountId.Add(accountId, attemptHistory);
         }
 
-        return failedAttempts;
+        return attemptHistory;
     }
 
-    private void ForgetEmptyHistory(int accountId, FailedCodeAttemptHistory failedAttempts)
+    private void ForgetEmptyHistory(int accountId, FailedCodeAttemptHistory attemptHistory)
     {
-        if (!failedAttempts.HasAttempts())
+        if (!attemptHistory.HasAttempts())
         {
-            _failedAttemptsByAccountId.Remove(accountId);
+            _attemptHistoriesByAccountId.Remove(accountId);
         }
     }
 

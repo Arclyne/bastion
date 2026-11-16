@@ -84,7 +84,7 @@ public sealed class TestMatchSearchService
         var identity = new RoomIdentity(RoomId, RoomCode);
         var host = new RoomMember(AccountId, Nickname);
         var room = new WaitingRoom(identity, settings, host);
-        _roomRegistry.TryOpen(room);
+        _roomRegistry.TryOpen(room, out _);
         Action start = () => _matchSearchService.StartSearch(Token, _now);
 
         Exception? exception = Record.Exception(start);
