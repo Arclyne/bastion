@@ -11,6 +11,10 @@ public interface IMatchmakingQueue
 
     bool IsSearching(int accountId);
 
+    DateTime? FindSearchStart(int accountId);
+
+    bool IsAwaitingPresence(int accountId);
+
     void ConfirmPresence(int accountId, DateTime now);
 
     QueueReview Review(DateTime now);
