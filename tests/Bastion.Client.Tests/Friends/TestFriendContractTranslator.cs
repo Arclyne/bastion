@@ -49,7 +49,7 @@ public sealed class TestFriendContractTranslator
         var listing = FriendContractTranslator.ToFriendListing(list);
 
         ListedFriend friend = listing.Friends[0];
-        Assert.Equal(string.Empty, friend.Friend.FriendCode);
+        Assert.Empty(friend.Friend.FriendCode);
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public sealed class TestFriendContractTranslator
         var selfEntry = new PlayerSearchEntry
         {
             Nickname = FriendNickname,
-            FriendCode = FriendCode,
+            FriendCode = OwnFriendCode,
             Relationship = PlayerRelationship.Self,
         };
         PlayerSearchEntry[] entries = { selfEntry };
