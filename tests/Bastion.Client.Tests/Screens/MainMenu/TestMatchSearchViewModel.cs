@@ -22,13 +22,13 @@ public sealed class TestMatchSearchViewModel : IDisposable
     private const byte OwnTurnOrder = 1;
     private const byte RivalTurnOrder = 2;
     private const string PreferredLanguage = "es-MX";
-    private const string RejectionMessage = "The server has no callback channel for this session.";
+    private const string NotificationsUnavailableMessage = "The server has no callback channel for this session.";
     private const string UnfinishedMatchMessage = "The player already takes part in an unfinished match.";
     private const string ExpectedElapsedText = "00:18";
     private const int ElapsedSeconds = 18;
     private const int PresenceWindowSeconds = 60;
     private const int CountdownElapsedSeconds = 5;
-    private const int ExpectedSecondsLeft = 55;
+    private const int ExpectedSecondsLeft = PresenceWindowSeconds - CountdownElapsedSeconds;
     private const int OneMatchFound = 1;
     private const int OneConfirmation = 1;
     private const int OneCancellation = 1;
@@ -71,7 +71,7 @@ public sealed class TestMatchSearchViewModel : IDisposable
     [Fact]
     public async Task StartSearch_NotificationsUnavailable_ShowsNotificationsStatus()
     {
-        var cause = new InvalidOperationException(RejectionMessage);
+        var cause = new InvalidOperationException(NotificationsUnavailableMessage);
         _matchmakingClient.StartSearchFailure = new SearchRejectedException(SearchRejection.NotificationsUnavailable, cause);
 
         await _viewModel.StartSearch();
