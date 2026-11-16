@@ -20,7 +20,7 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
     private readonly JoinedMatch _joinedMatch;
     private readonly IMatchClient _matches;
     private readonly SynchronizationContext? _uiContext;
-    private readonly List<string> _leftNicknames = new List<string>();
+    private readonly List<string> _leftNicknames;
 
     public MatchAbandonmentViewModel(JoinedMatch joinedMatch, IMatchClient matches)
     {
@@ -30,6 +30,7 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
         _joinedMatch = joinedMatch;
         _matches = matches;
         _uiContext = SynchronizationContext.Current;
+        _leftNicknames = new List<string>();
         StatusText = string.Empty;
         RivalAbandonedText = string.Empty;
         PlayerLeftText = string.Empty;
