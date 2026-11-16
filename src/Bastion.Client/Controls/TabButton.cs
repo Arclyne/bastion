@@ -9,7 +9,8 @@ namespace Bastion.Client.Controls;
 public sealed class TabButton : StackPanel
 {
     private const float MarkerHeight = 3;
-    private const float MarkerRadius = 1.5f;
+    private const float MarkerRadius = MarkerHeight / RadiiPerHeight;
+    private const int RadiiPerHeight = 2;
 
     public TabButton(Button button, string selectedProperty, float spacing)
     {
