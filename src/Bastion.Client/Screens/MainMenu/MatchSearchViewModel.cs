@@ -62,10 +62,10 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
     [DependsOn(nameof(Stage))]
     public bool IsSearching => Stage == MatchSearchStage.Searching;
 
-    public bool IsBusy
+    private bool IsBusy
     {
         get => Get<bool>();
-        private set => Set(value);
+        set => Set(value);
     }
 
     [DependsOn(nameof(Stage))]
@@ -202,9 +202,9 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         Interlocked.Exchange(ref _clockTimer, value: null)?.Dispose();
     }
 
-    private void OnMatchFound(MatchFoundEventArgs foundMatch)
+    private void OnMatchFound(MatchFoundEventArgs e)
     {
-        MatchFound?.Invoke(this, foundMatch);
+        MatchFound?.Invoke(this, e);
     }
 
     private void HandlePresenceRequested(object? sender, PresenceRequestedEventArgs e)
