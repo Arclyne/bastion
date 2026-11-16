@@ -165,7 +165,7 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
     public void Close()
     {
         IsOpen = false;
-        Closed?.Invoke(this, EventArgs.Empty);
+        OnClosed();
     }
 
     public void ApplyPresence(ConversationPresence? presence)
@@ -179,7 +179,7 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         ArgumentNullException.ThrowIfNull(message);
 
         AddMessage(message, isPending: false);
-        _ = MarkRead();
+        _ = RunSafely(MarkRead());
     }
 
     public async Task Load()
@@ -247,7 +247,7 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
             row.Confirm(sentAt);
             PrivateMessage sentMessage = draftMessage with { SentAt = sentAt };
             var update = new ConversationUpdatedEventArgs(partner, sentMessage);
-            MessageSent?.Invoke(this, update);
+            OnMessageSent(update);
         }
         catch (ChatMessageRejectedException ex)
         {
@@ -282,6 +282,11 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         Messages.Clear();
         _lastDay = null;
         IsEmpty = true;
+    }
+
+    private void OnClosed()
+    {
+        Closed?.Invoke(this, EventArgs.Empty);
     }
 
     private PrivateMessageRowViewModel AddMessage(PrivateMessage message, bool isPending)
@@ -337,6 +342,18 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         _logger.Error("The private conversation could not be marked as read.", cause);
     }
 
+    private static async Task RunSafely(Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("Marking the conversation read ended after it was closed.", ex);
+        }
+    }
+
     private void ShowTranscript(ConversationTranscript transcript)
     {
         ClearMessages();
@@ -365,6 +382,11 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
     {
         _logger.Error("The private conversation could not be loaded.", cause);
         HasLoadFailed = true;
+    }
+
+    private void OnMessageSent(ConversationUpdatedEventArgs e)
+    {
+        MessageSent?.Invoke(this, e);
     }
 
     private void ShowRejection(PrivateMessageRowViewModel row, ChatRejection rejection, DateTime? mutedUntil)

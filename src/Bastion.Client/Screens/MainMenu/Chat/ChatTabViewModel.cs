@@ -148,7 +148,8 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         ConversationRowViewModel? row = FindRow(partner.FriendCode);
         row?.UpdateUnread(0);
         UpdateUnreadTotal();
-        _ = PrivateConversation.Open(partner, _friends.FindPresence(partner.FriendCode));
+        ConversationPresence? presence = _friends.FindPresence(partner.FriendCode);
+        _ = RunSafely(PrivateConversation.Open(partner, presence));
     }
 
     public void RefreshPresence(string friendCode)
@@ -265,5 +266,18 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
     {
         _logger.Error("The private conversations could not be loaded.", cause);
         HasConversationsLoadFailed = true;
+    }
+
+
+    private static async Task RunSafely(Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("A private conversation ended after the chat tab was closed.", ex);
+        }
     }
 }
