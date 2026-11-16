@@ -17,11 +17,11 @@ public sealed class TestLockoutPolicy
     [InlineData(7, 0)]
     [InlineData(9, 60)]
     [InlineData(12, 60)]
-    public void GetLockDuration_ConsecutiveFailures_ReturnsEscalatingMinutes(int failures, int expectedMinutes)
+    public void GetLockDuration_ConsecutiveFailures_ReturnsEscalatingMinutes(int failureCount, int expectedMinutes)
     {
         var expectedDuration = TimeSpan.FromMinutes(expectedMinutes);
 
-        TimeSpan duration = LockoutPolicy.GetLockDuration(failures);
+        TimeSpan duration = LockoutPolicy.GetLockDuration(failureCount);
 
         Assert.Equal(expectedDuration, duration);
     }
