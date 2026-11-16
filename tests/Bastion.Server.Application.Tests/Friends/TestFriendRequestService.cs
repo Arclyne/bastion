@@ -126,8 +126,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void SearchPlayers_ReceivedRequest_ReturnsRequestReceived()
     {
-        AddPlayers();
-        AddReceivedRequest(_yesterday);
+        AddPlayersWithReceivedRequest(_yesterday);
 
         IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherNicknamePrefix, _now);
 
@@ -138,8 +137,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void SearchPlayers_ExpiredRequest_ReturnsNone()
     {
-        AddPlayers();
-        AddReceivedRequest(_expiredAt);
+        AddPlayersWithReceivedRequest(_expiredAt);
 
         IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, OtherNicknamePrefix, _now);
 
@@ -278,8 +276,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void SendFriendRequest_CrossRequest_ReturnsFriendshipStarted()
     {
-        AddPlayers();
-        AddReceivedRequest(_yesterday);
+        AddPlayersWithReceivedRequest(_yesterday);
 
         FriendRequestOutcome outcome = _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
@@ -289,8 +286,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void SendFriendRequest_CrossRequest_StoresFriendship()
     {
-        AddPlayers();
-        AddReceivedRequest(_yesterday);
+        AddPlayersWithReceivedRequest(_yesterday);
 
         _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
@@ -300,8 +296,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void SendFriendRequest_CrossRequest_RemovesRequest()
     {
-        AddPlayers();
-        AddReceivedRequest(_yesterday);
+        AddPlayersWithReceivedRequest(_yesterday);
 
         _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
@@ -335,8 +330,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void SendFriendRequest_CrossRequest_NotifiesRequester()
     {
-        AddPlayers();
-        AddReceivedRequest(_yesterday);
+        AddPlayersWithReceivedRequest(_yesterday);
         int[] expectedRecipients = { OtherAccountId };
 
         _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
@@ -347,8 +341,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void ListFriendRequests_ReceivedRequest_ListsReceived()
     {
-        AddPlayers();
-        AddReceivedRequest(_yesterday);
+        AddPlayersWithReceivedRequest(_yesterday);
 
         FriendRequestBoard board = _friendRequestService.ListFriendRequests(Token, _now);
 
@@ -371,8 +364,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void ListFriendRequests_ExpiredRequest_IsLeftOut()
     {
-        AddPlayers();
-        AddReceivedRequest(_expiredAt);
+        AddPlayersWithReceivedRequest(_expiredAt);
 
         FriendRequestBoard board = _friendRequestService.ListFriendRequests(Token, _now);
 
@@ -407,8 +399,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void AcceptFriendRequest_ExpiredRequest_RejectsRequestNotFound()
     {
-        AddPlayers();
-        AddReceivedRequest(_expiredAt);
+        AddPlayersWithReceivedRequest(_expiredAt);
         Action accept = () => _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now);
 
         Exception? exception = Record.Exception(accept);
@@ -420,8 +411,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void AcceptFriendRequest_CallerAtLimit_KeepsRequest()
     {
-        AddPlayers();
-        AddReceivedRequest(_yesterday);
+        AddPlayersWithReceivedRequest(_yesterday);
         AddFriendsUpToLimit(AccountId);
         Action accept = () => _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now);
 
@@ -434,8 +424,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void AcceptFriendRequest_PendingRequest_StoresFriendship()
     {
-        AddPlayers();
-        AddReceivedRequest(_yesterday);
+        AddPlayersWithReceivedRequest(_yesterday);
 
         _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now);
 
@@ -445,8 +434,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void AcceptFriendRequest_PendingRequest_RemovesRequest()
     {
-        AddPlayers();
-        AddReceivedRequest(_yesterday);
+        AddPlayersWithReceivedRequest(_yesterday);
 
         _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now);
 
@@ -457,8 +445,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void AcceptFriendRequest_PendingRequest_NotifiesRequester()
     {
-        AddPlayers();
-        AddReceivedRequest(_yesterday);
+        AddPlayersWithReceivedRequest(_yesterday);
         int[] expectedRecipients = { OtherAccountId };
 
         _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now);
@@ -469,8 +456,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void RejectFriendRequest_PendingRequest_RemovesRequest()
     {
-        AddPlayers();
-        AddReceivedRequest(_yesterday);
+        AddPlayersWithReceivedRequest(_yesterday);
 
         _friendRequestService.RejectFriendRequest(Token, OtherFriendCode, _now);
 
@@ -481,8 +467,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void RejectFriendRequest_PendingRequest_SendsNoNotification()
     {
-        AddPlayers();
-        AddReceivedRequest(_yesterday);
+        AddPlayersWithReceivedRequest(_yesterday);
 
         _friendRequestService.RejectFriendRequest(Token, OtherFriendCode, _now);
 
@@ -492,8 +477,7 @@ public sealed class TestFriendRequestService
     [Fact]
     public void CancelFriendRequest_ReceivedRequest_RejectsRequestNotFound()
     {
-        AddPlayers();
-        AddReceivedRequest(_yesterday);
+        AddPlayersWithReceivedRequest(_yesterday);
         Action cancel = () => _friendRequestService.CancelFriendRequest(Token, OtherFriendCode, _now);
 
         Exception? exception = Record.Exception(cancel);
@@ -512,6 +496,12 @@ public sealed class TestFriendRequestService
 
         FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
         Assert.Null(request);
+    }
+
+    private void AddPlayersWithReceivedRequest(DateTime requestedAt)
+    {
+        AddPlayers();
+        AddReceivedRequest(requestedAt);
     }
 
     private void AddPlayers()
@@ -541,10 +531,10 @@ public sealed class TestFriendRequestService
 
     private void AddFriendsUpToLimit(int accountId)
     {
-        for (int index = 0; index < FriendshipPolicy.MaximumFriends; index++)
+        for (int fillerIndex = 0; fillerIndex < FriendshipPolicy.MaximumFriends; fillerIndex++)
         {
-            int friendAccountId = FirstFillerAccountId + index;
-            string friendNickname = $"{FillerNicknamePrefix}{index}";
+            int friendAccountId = FirstFillerAccountId + fillerIndex;
+            string friendNickname = $"{FillerNicknamePrefix}{fillerIndex}";
             var friend = new PlayerIdentity(friendAccountId, friendNickname, UnusedFriendCode);
             var summary = new FriendSummary(friend, lastSeenAt: null);
             _unitOfWork.FriendshipRepository.AddFriendSummary(accountId, summary);
