@@ -112,7 +112,8 @@ public sealed class TestVersusViewModel
             JoinedMatchSampleFactory.ThirdRivalNickname,
         };
 
-        using var viewModel = new VersusViewModel(joinedMatch, _timeProvider);
+        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(
+            () => new VersusViewModel(joinedMatch, _timeProvider));
 
         IEnumerable<string> nicknames = viewModel.Rivals.Select(rival => rival.Nickname);
         Assert.Equal(expectedNicknames, nicknames);
@@ -186,7 +187,7 @@ public sealed class TestVersusViewModel
     }
 
     [Fact]
-    public void Dispose_Counting_NeverRaisesCountdownFinished()
+    public void CountdownTick_AfterDispose_NeverRaisesCountdownFinished()
     {
         VersusViewModel viewModel = CreateViewModelListeningForFinish();
         viewModel.Dispose();
@@ -194,19 +195,6 @@ public sealed class TestVersusViewModel
         AdvanceSeconds(VersusViewModel.CountdownSeconds);
 
         Assert.Equal(NoCountdownFinished, _countdownFinishedCount);
-    }
-
-    private VersusViewModel CreateViewModelListeningForFinish()
-    {
-        VersusViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
-        viewModel.CountdownFinished += HandleCountdownFinished;
-        return viewModel;
-    }
-
-    private VersusViewModel CreateViewModel(byte ownTurnOrder)
-    {
-        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
-        return InlineUiContext.CreateViewModel(() => new VersusViewModel(joinedMatch, _timeProvider));
     }
 
     private static string FormatCountdown(int secondsLeft)
@@ -220,6 +208,19 @@ public sealed class TestVersusViewModel
         {
             _timeProvider.Advance(_countdownTick);
         }
+    }
+
+    private VersusViewModel CreateViewModelListeningForFinish()
+    {
+        VersusViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        viewModel.CountdownFinished += HandleCountdownFinished;
+        return viewModel;
+    }
+
+    private VersusViewModel CreateViewModel(byte ownTurnOrder)
+    {
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
+        return InlineUiContext.CreateViewModel(() => new VersusViewModel(joinedMatch, _timeProvider));
     }
 
     private void HandleCountdownFinished(object? sender, EventArgs e)
