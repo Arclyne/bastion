@@ -181,7 +181,8 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
 
     private void HandleMatchFound(object? sender, MatchFoundEventArgs e)
     {
-        UiThread.Run(_uiContext, () => EndSearchWithMatch(e));
+        Action endSearchWithMatch = () => EndSearchWithMatch(e);
+        UiThread.Run(_uiContext, endSearchWithMatch);
     }
 
     private void EndSearchWithMatch(MatchFoundEventArgs foundMatch)
@@ -209,7 +210,8 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
 
     private void HandlePresenceRequested(object? sender, PresenceRequestedEventArgs e)
     {
-        UiThread.Run(_uiContext, () => ShowPresenceCheck(e.ResponseWindow));
+        Action showPresenceCheck = () => ShowPresenceCheck(e.ResponseWindow);
+        UiThread.Run(_uiContext, showPresenceCheck);
     }
 
     private void ShowPresenceCheck(TimeSpan responseWindow)
@@ -238,7 +240,8 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
 
     private void HandleSearchEnded(object? sender, SearchEndedEventArgs e)
     {
-        UiThread.Run(_uiContext, () => FinishSearch(e.Reason));
+        Action finishSearch = () => FinishSearch(e.Reason);
+        UiThread.Run(_uiContext, finishSearch);
     }
 
     private void FinishSearch(SearchEndReason reason)
@@ -274,7 +277,8 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
 
     private void HandleDisconnected(object? sender, EventArgs e)
     {
-        UiThread.Run(_uiContext, () => EndActiveSearch(nameof(Strings.MatchSearchConnectionLost)));
+        Action endActiveSearch = () => EndActiveSearch(nameof(Strings.MatchSearchConnectionLost));
+        UiThread.Run(_uiContext, endActiveSearch);
     }
 
     private async Task<string?> SendRequest(Action<string> request, string operationName)

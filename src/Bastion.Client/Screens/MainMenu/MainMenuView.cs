@@ -15,9 +15,10 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
 {
     private const float SettingsWidth = 116;
     private const float HowToPlayWidth = 140;
-    private const float SettingsOffsetY = 9;
+    private const float SettingsOffsetY = (ChipHeight - ScreenMetrics.MenuPillHeight) / VerticalSideCount;
     private const float ChipHeight = 62;
-    private const float ChipRadius = 31;
+    private const float ChipRadius = ChipHeight / RadiiPerHeight;
+    private const int RadiiPerHeight = 2;
     private const float ChipPaddingLeft = 8;
     private const float ChipPaddingRight = 20;
     private const float ChipSpacing = 12;
@@ -33,6 +34,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
     private const float MenuCardPaddingBottom = 30;
     private const float MenuCardContentWidth = MenuCardWidth - (MenuCardPaddingX * HorizontalSideCount);
     private const int HorizontalSideCount = 2;
+    private const int VerticalSideCount = 2;
     private const float MenuCardSpacing = 20;
     private const float BrandSpacing = 3;
     private const float HeroHeight = 78;
@@ -41,9 +43,10 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
     private const float HeroPaddingX = 14;
     private const float HeroTextX = 78;
     private const float HeroTextSpacing = 3;
-    private const float PrivateButtonWidth = 193;
+    private const float PrivateButtonWidth = (MenuCardContentWidth - PrivateButtonSpacing) / PrivateButtonsPerRow;
     private const float PrivateButtonHeight = 52;
     private const float PrivateButtonSpacing = 14;
+    private const int PrivateButtonsPerRow = 2;
     private const float PillSpacing = 10;
     private const float FriendsPillWidth = 112;
     private const float ChatPillWidth = 92;
@@ -51,6 +54,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
     private const float ChatPillRightOffset = FriendsPillRightOffset + FriendsPillWidth + PillSpacing;
     private const float PillRowY = ScreenMetrics.MarginY + SettingsOffsetY;
     private const float FriendsPanelGapY = 12;
+    private const float FriendsPanelY = PillRowY + ScreenMetrics.MenuPillHeight + FriendsPanelGapY;
     private const float BadgeOverlap = 8;
     private const float SearchPanelMarginY = 88;
 
@@ -209,7 +213,8 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
             BindingContext = bindingContext,
         };
         badge.Anchor(Gum.Wireframe.Anchor.TopRight);
-        badge.X = -pillRightOffset + BadgeOverlap;
+        float badgeX = -pillRightOffset + BadgeOverlap;
+        badge.X = badgeX;
         badge.Y = PillRowY - BadgeOverlap;
         badge.SetBinding(nameof(IsVisible), binding.VisibilityProperty);
         return badge;
@@ -378,7 +383,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         var panel = new FriendsPanel(friendsPanelViewModel);
         panel.Anchor(Gum.Wireframe.Anchor.TopRight);
         panel.X = -ScreenMetrics.MarginX;
-        panel.Y = PillRowY + ScreenMetrics.MenuPillHeight + FriendsPanelGapY;
+        panel.Y = FriendsPanelY;
         return panel;
     }
 

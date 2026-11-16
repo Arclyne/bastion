@@ -26,11 +26,7 @@ public sealed class MainMenuViewModel : ViewModel
         Nickname = session.Nickname;
     }
 
-    public string Nickname
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
+    public string Nickname { get; }
 
     public async Task ConnectNotifications()
     {
