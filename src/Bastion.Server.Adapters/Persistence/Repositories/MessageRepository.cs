@@ -10,7 +10,7 @@ namespace Bastion.Server.Adapters.Persistence.Repositories;
 
 public sealed class MessageRepository : IMessageRepository
 {
-    private static readonly Expression<Func<Message, DateTime?>> _readAt = message => message.ReadAt;
+    private static readonly Expression<Func<Message, DateTime?>> _readAtSelector = message => message.ReadAt;
 
     private readonly BastionDbContext _context;
 
@@ -72,7 +72,7 @@ public sealed class MessageRepository : IMessageRepository
 
         IQueryable<Message> unreadMessages = SelectMessagesFrom(route.AuthorId, route.RecipientId)
             .Where(message => !message.ReadAt.HasValue);
-        unreadMessages.ExecuteUpdate(setters => setters.SetProperty(_readAt, readAt));
+        unreadMessages.ExecuteUpdate(setters => setters.SetProperty(_readAtSelector, readAt));
     }
 
     private IQueryable<Message> SelectMessagesFrom(int authorId, int recipientId)
