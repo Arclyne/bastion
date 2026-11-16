@@ -26,6 +26,16 @@ public sealed class TestMessage
         Assert.Equal(MessageChannel.Friends, message.Channel);
     }
 
+    [Theory]
+    [InlineData("See you in the next match.")]
+    [InlineData("¿Jugamos otra? ¡Qué peón, Ñandú!")]
+    public void CreatePrivate_EnglishOrSpanishText_KeepsText(string text)
+    {
+        var message = Message.CreatePrivate(_route, text, _sentAt);
+
+        Assert.Equal(text, message.Text);
+    }
+
     [Fact]
     public void CreatePrivate_SameAuthorAndRecipient_ThrowsArgumentException()
     {

@@ -10,6 +10,7 @@ public sealed class TestChatPolicy
     [Theory]
     [InlineData("hello")]
     [InlineData("  hello  ")]
+    [InlineData("¿Otra partida? ¡Qué peón, Ñandú!")]
     public void IsValidMessage_ValidMessage_ReturnsTrue(string text)
     {
         bool isValidMessage = ChatPolicy.IsValidMessage(text);
