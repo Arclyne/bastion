@@ -181,8 +181,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
             Groove = groove,
             Orientation = orientation,
         };
-        Action placeInJoinedMatch = () => PlaceInJoinedMatch(chosenWall);
-        bool isSent = await TrySendToServer(placeInJoinedMatch);
+        Action placeWall = () => PlaceInJoinedMatch(chosenWall);
+        bool isSent = await TrySendToServer(placeWall);
         if (isSent)
         {
             WaitForMoveNotification(chosenWall.MoveNumber);
@@ -382,6 +382,11 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         }
     }
 
+    private void MoveInJoinedMatch(ChosenPawnMove move)
+    {
+        _matches.MovePawn(_joinedMatch.Session.Token, move);
+    }
+
     private async Task<bool> TrySendToServer(Action sendToServer)
     {
         IsSending = true;
@@ -392,7 +397,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         }
         catch (NotYourTurnException ex)
         {
-            _logger.Warn($"The server says another player has the turn. NextMoveNumber={ex.NextMoveNumber}", ex);
+            _logger.Warn($"The server says it is not this player's move. NextMoveNumber={ex.NextMoveNumber}", ex);
             SyncServerTurn(ex.CurrentTurnOrder, ex.NextMoveNumber);
         }
         catch (IllegalMoveException ex)
@@ -407,7 +412,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         }
         catch (MatchNotJoinedException ex)
         {
-            _logger.Warn("The match was already over when the move was sent.", ex);
+            _logger.Warn("The server says the player is not in that match.", ex);
             EndMatch(winnerNickname: null);
         }
         catch (InvalidSessionException ex)
@@ -449,11 +454,6 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     {
         _logger.Error("The move could not be sent.", cause);
         NoticeText = Strings.MatchMoveFailed;
-    }
-
-    private void MoveInJoinedMatch(ChosenPawnMove move)
-    {
-        _matches.MovePawn(_joinedMatch.Session.Token, move);
     }
 
     private void WaitForMoveNotification(short sentMoveNumber)
