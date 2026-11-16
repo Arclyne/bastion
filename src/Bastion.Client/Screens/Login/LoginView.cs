@@ -282,8 +282,7 @@ public sealed class LoginView : ScreenView
     private static Label CreateTwoFactorHint()
     {
         Label hint = ViewFactory.CreateLabel(nameof(Strings.LoginTwoFactorHint), TextStyleCatalog.Hint);
-        hint.Width = ContentWidth;
-        hint.WidthUnits = DimensionUnitType.Absolute;
+        ViewFactory.SetFixedWidth(hint, ContentWidth);
         return hint;
     }
 
