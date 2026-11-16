@@ -108,6 +108,7 @@ public sealed class LanguageService : ILanguageService
 
     private void ApplyLanguage(SupportedLanguage language)
     {
+        int languageIndex = FindLanguageIndex(language);
         var culture = new CultureInfo(language.CultureName);
         CultureInfo.CurrentCulture = culture;
         CultureInfo.CurrentUICulture = culture;
@@ -116,11 +117,11 @@ public sealed class LanguageService : ILanguageService
         Strings.Culture = culture;
 
         CurrentLanguage = language;
-        _textDatabase.CurrentLanguage = IndexOf(language);
-        LanguageChanged?.Invoke(this, EventArgs.Empty);
+        _textDatabase.CurrentLanguage = languageIndex;
+        OnLanguageChanged();
     }
 
-    private int IndexOf(SupportedLanguage language)
+    private int FindLanguageIndex(SupportedLanguage language)
     {
         for (int languageIndex = 0; languageIndex < Languages.Count; languageIndex++)
         {
@@ -131,5 +132,11 @@ public sealed class LanguageService : ILanguageService
         }
 
         throw new ArgumentException("The language is not supported.", nameof(language));
+    }
+
+
+    private void OnLanguageChanged()
+    {
+        LanguageChanged?.Invoke(this, EventArgs.Empty);
     }
 }

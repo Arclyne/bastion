@@ -6,13 +6,13 @@ namespace Bastion.Client.Localization;
 
 public static class LanguageCatalog
 {
-    public static SupportedLanguage Spanish { get; } = new SupportedLanguage("es-MX", Strings.LanguageNameSpanish);
+    private static readonly SupportedLanguage _spanish = new SupportedLanguage("es-MX", Strings.LanguageNameSpanish);
 
     public static SupportedLanguage English { get; } = new SupportedLanguage("en-US", Strings.LanguageNameEnglish);
 
     public static SupportedLanguage Default { get; } = English;
 
-    public static IReadOnlyList<SupportedLanguage> Languages { get; } = new[] { Spanish, English };
+    public static IReadOnlyList<SupportedLanguage> Languages { get; } = new[] { _spanish, English };
 
     public static SupportedLanguage? FindByCultureName(string? cultureName)
     {

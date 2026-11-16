@@ -72,6 +72,6 @@ public sealed class LanguagePreferenceStore : ILanguagePreferenceStore
 
     private void LogSaveFailure(string cultureName, Exception cause)
     {
-        _logger.Warn($"The chosen language could not be saved. Path={_filePath}; Language={cultureName}", cause);
+        _logger.Error($"The chosen language could not be saved. Path={_filePath}; Language={cultureName}", cause);
     }
 }
