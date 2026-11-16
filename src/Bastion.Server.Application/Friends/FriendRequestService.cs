@@ -188,7 +188,8 @@ public sealed class FriendRequestService : IFriendRequestService
             throw new FriendshipRejectedException(FriendshipRejection.FriendLimitReached);
         }
 
-        if (_unitOfWork.Friendships.ListFriendAccountIds(otherAccountId).Count >= FriendshipPolicy.MaximumFriends)
+        int otherFriendCount = _unitOfWork.Friendships.ListFriendAccountIds(otherAccountId).Count;
+        if (otherFriendCount >= FriendshipPolicy.MaximumFriends)
         {
             throw new FriendshipRejectedException(FriendshipRejection.RecipientFriendLimitReached);
         }
