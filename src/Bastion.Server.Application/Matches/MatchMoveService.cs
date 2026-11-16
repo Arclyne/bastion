@@ -32,16 +32,16 @@ public sealed class MatchMoveService : IMatchMoveService
     }
 
     /// <inheritdoc/>
-    public void MovePawn(string sessionToken, ChosenPawnMove move, DateTime now)
+    public void MovePawn(string sessionToken, ChosenPawnMove chosenMove, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
-        ArgumentNullException.ThrowIfNull(move);
+        ArgumentNullException.ThrowIfNull(chosenMove);
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        Match match = FindPlayedMatch(player, move.MatchId);
-        EnsureTurn(match, player, move.MoveNumber);
-        BoardCoordinates destination = ReadDestination(player, move);
-        var pawnMove = new PawnMove(player.AccountId, move.MoveNumber, destination);
+        Match match = FindPlayedMatch(player, chosenMove.MatchId);
+        EnsureTurn(match, player, chosenMove.MoveNumber);
+        BoardCoordinates destination = ReadDestination(player, chosenMove);
+        var pawnMove = new PawnMove(player.AccountId, chosenMove.MoveNumber, destination);
         byte boardSize = FindBoardSize(match);
         EnsureReachable(match, pawnMove, boardSize);
         Participation mover = match.GetParticipation(player.AccountId);
@@ -49,7 +49,7 @@ public sealed class MatchMoveService : IMatchMoveService
         match.MovePawn(pawnMove, boardSize, now);
         _matchRepository.SaveMove(match);
         _logger.Info(
-            $"A pawn moved. AccountId={player.AccountId}; MatchId={match.MatchId}; MoveNumber={move.MoveNumber}");
+            $"A pawn moved. AccountId={player.AccountId}; MatchId={match.MatchId}; MoveNumber={chosenMove.MoveNumber}");
         NotifyPawnMoved(match, player, fromSquare);
     }
 
@@ -106,13 +106,13 @@ public sealed class MatchMoveService : IMatchMoveService
         throw new NotYourTurnException(match.CurrentTurnOrder, nextMoveNumber);
     }
 
-    private static BoardCoordinates ReadDestination(ConnectedPlayer player, ChosenPawnMove move)
+    private static BoardCoordinates ReadDestination(ConnectedPlayer player, ChosenPawnMove chosenMove)
     {
-        if (!BoardLayout.TryParseSquare(move.DestinationSquare, out BoardCoordinates destination))
+        if (!BoardLayout.TryParseSquare(chosenMove.DestinationSquare, out BoardCoordinates destination))
         {
             _logger.Warn(
                 $"A move arrived with a square outside board notation. AccountId={player.AccountId}; "
-                + $"MatchId={move.MatchId}; Square={move.DestinationSquare}");
+                + $"MatchId={chosenMove.MatchId}; Square={chosenMove.DestinationSquare}");
             throw new IllegalMoveException();
         }
 
@@ -140,7 +140,7 @@ public sealed class MatchMoveService : IMatchMoveService
 
         string destinationSquare = BoardLayout.ToSquare(pawnMove.Destination);
         _logger.Warn(
-            $"The server rejected a pawn move. AccountId={pawnMove.AccountId}; MatchId={match.MatchId}; "
+            $"The server rejected a pawn chosenMove. AccountId={pawnMove.AccountId}; MatchId={match.MatchId}; "
             + $"MoveNumber={pawnMove.MoveNumber}; Square={destinationSquare}");
         throw new IllegalMoveException();
     }

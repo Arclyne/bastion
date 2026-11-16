@@ -14,10 +14,10 @@ public interface IMatchMoveService
     /// notifies every player of the match. With two players, a pawn that reaches its goal row ends the match.
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
-    /// <param name="move">The match, the move number the player expects and the destination square.</param>
+    /// <param name="chosenMove">The match, the move number the player expects and the destination square.</param>
     /// <param name="now">The current UTC time, which closes the player's turn and dates the move.</param>
     /// <exception cref="ArgumentNullException">
-    /// <paramref name="sessionToken"/> or <paramref name="move"/> is null.
+    /// <paramref name="sessionToken"/> or <paramref name="chosenMove"/> is null.
     /// </exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="MatchNotJoinedException">
@@ -28,7 +28,7 @@ public interface IMatchMoveService
     /// </exception>
     /// <exception cref="IllegalMoveException">The pawn cannot reach the destination square.</exception>
     /// <exception cref="MatchRepositoryException">The match could not be read or saved.</exception>
-    void MovePawn(string sessionToken, ChosenPawnMove move, DateTime now);
+    void MovePawn(string sessionToken, ChosenPawnMove chosenMove, DateTime now);
 
     /// <summary>
     /// Places one wall of the player of the session in the chosen groove, records the move, spends the wall, passes
