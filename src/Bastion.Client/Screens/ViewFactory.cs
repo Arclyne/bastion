@@ -13,6 +13,9 @@ namespace Bastion.Client.Screens;
 
 public static class ViewFactory
 {
+    private const float RetryButtonWidth = 140;
+    private const float RetryButtonHeight = 40;
+    private const float LoadFailureSpacing = 10;
     private const float VersionMarginY = 16;
 
     public static Label CreateLabel(string textKey, TextStyle style)
@@ -71,6 +74,17 @@ public static class ViewFactory
         return label;
     }
 
+    public static Label CreateToggledLabel(string textKey, string visibilityProperty, TextStyle style)
+    {
+        ArgumentNullException.ThrowIfNull(textKey);
+        ArgumentNullException.ThrowIfNull(visibilityProperty);
+        ArgumentNullException.ThrowIfNull(style);
+
+        Label label = CreateLabel(textKey, style);
+        label.SetBinding(nameof(Label.IsVisible), visibilityProperty);
+        return label;
+    }
+
     public static Label CreateUntranslatedLabel(string text, TextStyle style)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -93,6 +107,52 @@ public static class ViewFactory
             Height = height,
             HeightUnits = DimensionUnitType.Absolute,
         };
+    }
+
+    public static Button CreateBoundUntranslatedButton(string textProperty, float width, float height)
+    {
+        ArgumentNullException.ThrowIfNull(textProperty);
+
+        Button button = CreateButton(string.Empty, width, height);
+        var buttonVisual = (ButtonVisual)button.Visual;
+        buttonVisual.TextInstance.LocalizeText = false;
+        button.SetBinding(nameof(Button.Text), textProperty);
+        return button;
+    }
+
+    public static StackPanel CreateLoadFailure(string messageKey, string retryKey, EventHandler handleRetryClick)
+    {
+        ArgumentNullException.ThrowIfNull(messageKey);
+        ArgumentNullException.ThrowIfNull(retryKey);
+        ArgumentNullException.ThrowIfNull(handleRetryClick);
+
+        Button retry = CreateButton(retryKey, RetryButtonWidth, RetryButtonHeight);
+        ButtonSkin.CreateAndAttach(retry, ButtonLookCatalog.Secondary);
+        retry.Click += handleRetryClick;
+
+        var failure = new StackPanel
+        {
+            Spacing = LoadFailureSpacing,
+        };
+        Label message = CreateLabel(messageKey, TextStyleCatalog.FieldError);
+        failure.AddChild(message);
+        failure.AddChild(retry);
+        return failure;
+    }
+
+    public static Panel CreateToggledContainer(FrameworkElement content, string visibilityProperty)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(visibilityProperty);
+
+        var container = new Panel
+        {
+            WidthUnits = DimensionUnitType.RelativeToChildren,
+            HeightUnits = DimensionUnitType.RelativeToChildren,
+        };
+        container.AddChild(content);
+        container.SetBinding(nameof(Panel.IsVisible), visibilityProperty);
+        return container;
     }
 
     public static void CenterVertically(FrameworkElement element)

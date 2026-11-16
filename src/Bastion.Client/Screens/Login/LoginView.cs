@@ -151,20 +151,15 @@ public sealed class LoginView : ScreenView
         input.SetBinding(nameof(TextField.HasError), nameof(LoginViewModel.HasIdentifierError));
         BindEnabledToIdle(input);
 
-        Label missingWarning = CreateWarning(
+        Label missingWarning = ViewFactory.CreateToggledLabel(
             nameof(Strings.LoginIdentifierRequired),
-            nameof(LoginViewModel.IsIdentifierMissing));
-        Label malformedWarning = CreateWarning(
+            nameof(LoginViewModel.IsIdentifierMissing),
+            TextStyleCatalog.FieldError);
+        Label malformedWarning = ViewFactory.CreateToggledLabel(
             nameof(Strings.LoginIdentifierMalformed),
-            nameof(LoginViewModel.IsIdentifierMalformed));
+            nameof(LoginViewModel.IsIdentifierMalformed),
+            TextStyleCatalog.FieldError);
         return CreateFieldGroup(nameof(Strings.LoginIdentifierLabel), input, missingWarning, malformedWarning);
-    }
-
-    private static Label CreateWarning(string textKey, string visibilityPath)
-    {
-        Label warning = ViewFactory.CreateLabel(textKey, TextStyleCatalog.FieldError);
-        warning.SetBinding(nameof(IsVisible), visibilityPath);
-        return warning;
     }
 
     private static StackPanel CreateFieldGroup(string captionKey, FrameworkElement input, params Label[] warnings)
@@ -187,7 +182,10 @@ public sealed class LoginView : ScreenView
     private static StackPanel CreatePasswordField()
     {
         StackPanel inputs = CreatePasswordInputs();
-        Label warning = CreateWarning(nameof(Strings.LoginPasswordRequired), nameof(LoginViewModel.IsPasswordMissing));
+        Label warning = ViewFactory.CreateToggledLabel(
+            nameof(Strings.LoginPasswordRequired),
+            nameof(LoginViewModel.IsPasswordMissing),
+            TextStyleCatalog.FieldError);
         return CreateFieldGroup(nameof(Strings.LoginPasswordLabel), inputs, warning);
     }
 
