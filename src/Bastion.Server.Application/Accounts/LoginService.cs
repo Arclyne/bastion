@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Auditing;
 using Bastion.Domain.Sessions;
@@ -51,7 +50,7 @@ public sealed class LoginService : ILoginService
 
         if (!_passwordHasher.IsPasswordCorrect(password, account.PasswordHash, account.PasswordSalt))
         {
-            RejectPassword(account, attempt);
+            throw RejectPassword(account, attempt);
         }
 
         account.RecordSuccessfulLogin();
@@ -64,17 +63,16 @@ public sealed class LoginService : ILoginService
         return new AccountRestrictedException(AccountRestriction.Locked, remainingLockMinutes);
     }
 
-    [DoesNotReturn]
-    private void RejectPassword(Account account, AccessAttempt attempt)
+    private Exception RejectPassword(Account account, AccessAttempt attempt)
     {
         account.RecordFailedLogin(attempt.OccurredAt);
         RecordAccessLog(AccessLogResult.WrongPassword, attempt, account.AccountId);
         if (account.IsLockedAt(attempt.OccurredAt))
         {
-            throw CreateLockRestriction(account, attempt.OccurredAt);
+            return CreateLockRestriction(account, attempt.OccurredAt);
         }
 
-        throw new InvalidCredentialsException();
+        return new InvalidCredentialsException();
     }
 
     private LoggedInPlayer AdmitByAccountStatus(Account account, AccessAttempt attempt)
