@@ -37,10 +37,10 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
         _matches.MatchAbandoned += HandleMatchAbandoned;
     }
 
-    public bool IsAbandoning
+    private bool IsAbandoning
     {
         get => Get<bool>();
-        private set => Set(value);
+        set => Set(value);
     }
 
     [DependsOn(nameof(IsAbandoning))]

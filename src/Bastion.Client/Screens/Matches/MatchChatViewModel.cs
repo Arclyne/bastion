@@ -16,7 +16,6 @@ namespace Bastion.Client.Screens.Matches;
 
 public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
 {
-    private const int OldestMessageIndex = 0;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchChatViewModel));
 
@@ -58,7 +57,7 @@ public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
 
         DateTime createdAt = GetUtcNow();
         var row = ChatMessageRowViewModel.CreatePending(trimmedText, createdAt, TimeProvider);
-        AddMessage(row);
+        AddRecentMessage(Messages, row);
         Draft = string.Empty;
         IsSending = true;
         try
@@ -112,16 +111,7 @@ public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
         }
 
         var row = new ChatMessageRowViewModel(e.Message, TimeProvider);
-        UiThread.Run(_uiContext, () => AddMessage(row));
-    }
-
-    private void AddMessage(ChatMessageRowViewModel row)
-    {
-        Messages.Add(row);
-        if (Messages.Count > ChatPolicy.MaximumRecentMessages)
-        {
-            Messages.RemoveAt(OldestMessageIndex);
-        }
+        UiThread.Run(_uiContext, () => AddRecentMessage(Messages, row));
     }
 
     private DateTime SendToJoinedMatch(string text)

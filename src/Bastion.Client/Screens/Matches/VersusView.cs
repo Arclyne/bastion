@@ -47,9 +47,10 @@ public sealed class VersusView : ScreenView
         content.AddChild(playersRow);
         content.AddChild(countdown);
 
+        float cardWidth = contentWidth + (CardPaddingX * HorizontalSideCount);
         var card = new Panel
         {
-            Width = contentWidth + (CardPaddingX * HorizontalSideCount),
+            Width = cardWidth,
             WidthUnits = DimensionUnitType.Absolute,
             Height = CardPaddingBottom,
             HeightUnits = DimensionUnitType.RelativeToChildren,

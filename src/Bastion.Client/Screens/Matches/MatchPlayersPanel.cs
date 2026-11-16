@@ -20,6 +20,7 @@ public sealed class MatchPlayersPanel : Panel
     private const float PawnSize = 18;
     private const float NameWidth = 150;
     private const int HorizontalSideCount = 2;
+    private const float RowWidth = PanelWidth - (PaddingX * HorizontalSideCount);
 
     public MatchPlayersPanel(MatchViewModel viewModel)
     {
@@ -79,7 +80,7 @@ public sealed class MatchPlayersPanel : Panel
 
         var row = new Panel
         {
-            Width = PanelWidth - (PaddingX * HorizontalSideCount),
+            Width = RowWidth,
             WidthUnits = DimensionUnitType.Absolute,
             Height = RowHeight,
             HeightUnits = DimensionUnitType.Absolute,
