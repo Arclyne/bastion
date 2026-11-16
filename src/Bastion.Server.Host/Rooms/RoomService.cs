@@ -171,9 +171,7 @@ public sealed class RoomService : IRoomService
         }
         catch (DbException ex)
         {
-            _logger.Error(
-                $"The database could not be reached during a one-way room request. Operation={operationName}",
-                ex);
+            _logger.Error($"A database command failed during a one-way room request. Operation={operationName}", ex);
         }
     }
 
@@ -204,6 +202,11 @@ public sealed class RoomService : IRoomService
         {
             throw RoomTranslator.ToFault(ex);
         }
+        catch (RoomCodeUnavailableException ex)
+        {
+            _logger.Error($"No free room code was found during a room request. Operation={operationName}", ex);
+            throw new FaultException(ServerFailureReason);
+        }
         catch (RoomRepositoryException ex)
         {
             _logger.Error($"The room repository failed during a room request. Operation={operationName}", ex);
@@ -216,7 +219,7 @@ public sealed class RoomService : IRoomService
         }
         catch (DbException ex)
         {
-            _logger.Error($"The database could not be reached during a room request. Operation={operationName}", ex);
+            _logger.Error($"A database command failed during a room request. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
     }
