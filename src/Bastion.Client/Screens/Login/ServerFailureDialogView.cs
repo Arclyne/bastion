@@ -59,13 +59,7 @@ public sealed class ServerFailureDialogView : DialogCard
 
     private static Button CreateButton(string textKey, float width, ButtonLook look)
     {
-        var button = new Button
-        {
-            Text = textKey,
-            Width = width,
-            Height = DialogMetrics.ButtonHeight,
-            HeightUnits = DimensionUnitType.Absolute,
-        };
+        Button button = ViewFactory.CreateButton(textKey, width, DialogMetrics.ButtonHeight);
         ButtonSkin.CreateAndAttach(button, look);
         return button;
     }

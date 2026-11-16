@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Bastion.Client.Localization;
+using System.Threading.Tasks;
 using Bastion.Client.Networking;
 using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Networking.Notifications;
@@ -10,15 +10,16 @@ using Bastion.Client.Screens.MainMenu;
 using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Screens.MainMenu.Friends;
 using Bastion.Client.Screens.Matches;
+using log4net;
 
 namespace Bastion.Client.Screens;
 
 public sealed class ScreenNavigator : INavigator, IDisposable
 {
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(ScreenNavigator));
+
     private readonly ServerConnection _connection;
-    private readonly ILanguageService _languages;
     private readonly LocalServiceSet _localServices;
-    private readonly TimeProvider _timeProvider;
     private readonly IScreenHost _screenHost;
     private readonly List<IDisposable> _screenViewModels = new List<IDisposable>();
     private ScreenView? _currentScreen;
@@ -33,9 +34,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         ArgumentNullException.ThrowIfNull(screenHost);
 
         _connection = connection;
-        _languages = localServices.Languages;
         _localServices = localServices;
-        _timeProvider = localServices.TimeProvider;
         _screenHost = screenHost;
     }
 
@@ -43,8 +42,8 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 
     public void ShowLogin()
     {
-        var loginViewModel = new LoginViewModel(_languages, _connection.Accounts, this);
-        var loginView = new LoginView(loginViewModel, _languages);
+        var loginViewModel = new LoginViewModel(_localServices.Languages, _connection.Accounts, this);
+        var loginView = new LoginView(loginViewModel, _localServices.Languages);
         ShowScreen(loginView);
     }
 
@@ -53,7 +52,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         ArgumentNullException.ThrowIfNull(session);
 
         MainMenuViewModel mainMenuViewModel = OpenMainMenu(session);
-        _ = mainMenuViewModel.ConnectNotifications();
+        _ = RunSafely(mainMenuViewModel.ConnectNotifications());
     }
 
     public void ReceiveEscapeKey()
@@ -97,14 +96,15 @@ public sealed class ScreenNavigator : INavigator, IDisposable
         var chatClients = new ChatClientSet(_connection.Chat, _connection.Conversations, _connection.Notifications);
         var clients = new SocialClientSet(_connection.Friends, chatClients, _connection.Notifications);
         var friendsPanel = new FriendsPanelViewModel(session, clients, _localServices);
-        var matchSearchViewModel = new MatchSearchViewModel(session, _connection.Matchmaking, _timeProvider);
+        var matchSearchViewModel =
+            new MatchSearchViewModel(session, _connection.Matchmaking, _localServices.TimeProvider);
         matchSearchViewModel.MatchFound += HandleMatchFound;
         var mainMenuView = new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel);
         ShowScreen(mainMenuView, friendsPanel, matchSearchViewModel);
         _loggedInSession = session;
-        _ = friendsPanel.LoadFriends();
-        _ = friendsPanel.Requests.LoadRequests();
-        _ = friendsPanel.Chat.LoadConversations();
+        _ = RunSafely(friendsPanel.LoadFriends());
+        _ = RunSafely(friendsPanel.Requests.LoadRequests());
+        _ = RunSafely(friendsPanel.Chat.LoadConversations());
         return mainMenuViewModel;
     }
 
@@ -121,11 +121,11 @@ public sealed class ScreenNavigator : INavigator, IDisposable
 
     private void ShowVersus(JoinedMatch joinedMatch)
     {
-        var matchChatViewModel = new MatchChatViewModel(joinedMatch, _connection.Chat, _timeProvider);
+        var matchChatViewModel = new MatchChatViewModel(joinedMatch, _connection.Chat, _localServices.TimeProvider);
         var matchAbandonmentViewModel = new MatchAbandonmentViewModel(joinedMatch, _connection.Matches);
         matchAbandonmentViewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
-        var matchPlayViewModel = new MatchPlayViewModel(joinedMatch, _connection.Matches, _timeProvider);
-        var versusViewModel = new VersusViewModel(joinedMatch, _timeProvider);
+        var matchPlayViewModel = new MatchPlayViewModel(joinedMatch, _connection.Matches, _localServices.TimeProvider);
+        var versusViewModel = new VersusViewModel(joinedMatch, _localServices.TimeProvider);
         versusViewModel.CountdownFinished += HandleCountdownFinished;
         var versusView = new VersusView(versusViewModel);
         ShowScreen(versusView, versusViewModel, matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel);
@@ -168,5 +168,18 @@ public sealed class ScreenNavigator : INavigator, IDisposable
             joinedMatchViewModels.Play,
             matchViewModel);
         ShownMatch = matchViewModel;
+    }
+
+
+    private static async Task RunSafely(Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("A screen task ended after the screen was closed.", ex);
+        }
     }
 }

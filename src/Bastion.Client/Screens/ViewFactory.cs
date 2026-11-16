@@ -14,7 +14,6 @@ namespace Bastion.Client.Screens;
 public static class ViewFactory
 {
     private const float VersionMarginY = 16;
-    private const int VersionFieldCount = 3;
 
     public static Label CreateLabel(string textKey, TextStyle style)
     {
@@ -34,7 +33,7 @@ public static class ViewFactory
         ArgumentNullException.ThrowIfNull(viewModelProperty);
         ArgumentNullException.ThrowIfNull(style);
 
-        Label label = CreateFixedWidthLabel(style, width);
+        Label label = style.CreateFixedWidthLabel(width);
         label.SetBinding(nameof(Label.Text), viewModelProperty);
         return label;
     }
@@ -44,7 +43,7 @@ public static class ViewFactory
         ArgumentNullException.ThrowIfNull(viewModelProperty);
         ArgumentNullException.ThrowIfNull(style);
 
-        Label label = CreateFixedWidthLabel(style, width);
+        Label label = style.CreateFixedWidthLabel(width);
         DisableTranslation(label);
         label.SetBinding(nameof(Label.Text), viewModelProperty);
         return label;
@@ -152,7 +151,7 @@ public static class ViewFactory
 
     public static Label CreateVersionLabel()
     {
-        string version = typeof(ViewFactory).Assembly.GetName().Version?.ToString(VersionFieldCount) ?? string.Empty;
+        string version = typeof(ViewFactory).Assembly.GetName().Version?.ToString(fieldCount: 3) ?? string.Empty;
         string text = string.Format(CultureInfo.CurrentCulture, Strings.AppVersionFormat, version);
 
         Label label = CreateLabel(string.Empty, TextStyleCatalog.Version);
@@ -160,17 +159,6 @@ public static class ViewFactory
         label.Anchor(Gum.Wireframe.Anchor.BottomRight);
         label.X = -ScreenMetrics.MarginX;
         label.Y = -VersionMarginY;
-        return label;
-    }
-
-    private static Label CreateFixedWidthLabel(TextStyle style, float width)
-    {
-        var label = new Label
-        {
-            Width = width,
-            WidthUnits = DimensionUnitType.Absolute,
-        };
-        style.ApplyTo(label);
         return label;
     }
 
