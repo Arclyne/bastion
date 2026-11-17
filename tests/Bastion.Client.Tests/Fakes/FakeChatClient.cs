@@ -16,6 +16,8 @@ public sealed class FakeChatClient : IChatClient
 
     public int? LastSentMatchId { get; private set; }
 
+    public string? LastSentText { get; private set; }
+
     public event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
 
     public DateTime SendLobbyChatMessage(string sessionToken, string text)
@@ -32,6 +34,7 @@ public sealed class FakeChatClient : IChatClient
 
         MatchChatSendCount++;
         LastSentMatchId = matchId;
+        LastSentText = text;
         return _confirmedSentAt;
     }
 
