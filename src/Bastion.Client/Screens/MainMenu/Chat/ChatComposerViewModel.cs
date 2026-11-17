@@ -109,18 +109,17 @@ public abstract class ChatComposerViewModel : ViewModel
         return ChatTimeText.GetLocalToday(TimeProvider);
     }
 
-    protected bool TryTakeValidDraft(out string trimmedText)
+    protected string TakeValidDraft()
     {
         string text = Draft;
         if (!ChatPolicy.IsValidMessage(text))
         {
             StatusText = ChatRejectionText.DescribeInvalidMessage();
-            trimmedText = string.Empty;
-            return false;
+            return string.Empty;
         }
 
-        trimmedText = text.Trim();
-        return true;
+        string trimmedText = text.Trim();
+        return trimmedText;
     }
 
     private void UpdateCounter()
