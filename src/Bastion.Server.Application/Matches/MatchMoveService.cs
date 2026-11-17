@@ -80,7 +80,8 @@ public sealed class MatchMoveService : IMatchMoveService
         if (match is null || !match.IsPlayedBy(player.AccountId))
         {
             _logger.Warn(
-                $"A player tried to move in a match they do not play. AccountId={player.AccountId}; MatchId={matchId}");
+                "A player without an active participation tried to move in the match. "
+                + $"AccountId={player.AccountId}; MatchId={matchId}");
             throw new MatchNotJoinedException();
         }
 
@@ -140,7 +141,7 @@ public sealed class MatchMoveService : IMatchMoveService
 
         string destinationSquare = BoardLayout.ToSquare(pawnMove.Destination);
         _logger.Warn(
-            $"The server rejected a pawn chosenMove. AccountId={pawnMove.AccountId}; MatchId={match.MatchId}; "
+            $"The server rejected a pawn move. AccountId={pawnMove.AccountId}; MatchId={match.MatchId}; "
             + $"MoveNumber={pawnMove.MoveNumber}; Square={destinationSquare}");
         throw new IllegalMoveException();
     }
