@@ -36,7 +36,8 @@ public sealed class RoomKeeper : IRoomKeeper
         var identity = new RoomIdentity(roomId, code);
         var hostMember = new RoomMember(host.AccountId, host.Nickname);
         var room = new WaitingRoom(identity, settings, hostMember);
-        if (!_roomRegistry.TryOpen(room, out RoomSnapshot? openedRoom))
+        var openedRoom = RoomSnapshot.Capture(room);
+        if (!_roomRegistry.TryOpen(room))
         {
             _roomRepository.CloseRoom(roomId, now);
             throw new RoomRejectedException(RoomRejection.InRoom);
@@ -112,7 +113,8 @@ public sealed class RoomKeeper : IRoomKeeper
     {
         for (int draw = 0; draw < MaximumCodeDraws; draw++)
         {
-            if (_roomRegistry.TryCreateUnusedCode(out string? code) && !_roomRepository.IsCodeTaken(code))
+            string code = _roomRegistry.CreateUnusedCode();
+            if (code.Length > 0 && !_roomRepository.IsCodeTaken(code))
             {
                 return code;
             }
