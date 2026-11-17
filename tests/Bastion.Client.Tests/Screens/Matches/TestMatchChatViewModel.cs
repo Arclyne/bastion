@@ -53,6 +53,18 @@ public sealed class TestMatchChatViewModel : IDisposable
         Assert.Equal(JoinedMatchSampleFactory.MatchId, _chatClient.LastSentMatchId);
     }
 
+    [Theory]
+    [InlineData("Good luck, have fun!")]
+    [InlineData("¡Suerte! ¿Quién mueve el peón, Ñandú?")]
+    public async Task SendMessage_EnglishOrSpanishDraft_SendsSameText(string text)
+    {
+        _viewModel.Draft = text;
+
+        await _viewModel.SendMessage();
+
+        Assert.Equal(text, _chatClient.LastSentText);
+    }
+
     [Fact]
     public async Task SendMessage_ValidDraft_ConfirmsOwnRow()
     {
