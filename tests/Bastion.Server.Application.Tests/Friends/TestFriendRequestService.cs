@@ -74,6 +74,21 @@ public sealed class TestFriendRequestService
         Assert.Equal(OtherNickname, first.Player.Nickname);
     }
 
+    [Theory]
+    [InlineData("rival_one", "riv")]
+    [InlineData("peón_ñandú", "peó")]
+    public void SearchPlayers_EnglishOrSpanishNickname_ReturnsSameNickname(string nickname, string nicknamePrefix)
+    {
+        _sessionVerifier.Add(Token, _caller);
+        var player = new PlayerIdentity(OtherAccountId, nickname, OtherFriendCode);
+        _unitOfWork.AccountRepository.AddPlayerIdentity(player);
+
+        IReadOnlyList<PlayerSearchResult> results = _friendRequestService.SearchPlayers(Token, nicknamePrefix, _now);
+
+        PlayerSearchResult first = results[0];
+        Assert.Equal(nickname, first.Player.Nickname);
+    }
+
     [Fact]
     public void SearchPlayers_HyphenatedFriendCode_ReturnsCodeOwner()
     {

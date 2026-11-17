@@ -81,7 +81,7 @@ public sealed class TestFriendPresenceService
     [Fact]
     public void ReportDisconnected_StoredAccount_RecordsLastSeen()
     {
-        Account account = AddAccount();
+        Account account = AddAccount(Nickname);
 
         _friendPresenceService.ReportDisconnected(UnsavedAccountId, _now);
 
@@ -91,7 +91,7 @@ public sealed class TestFriendPresenceService
     [Fact]
     public void ReportDisconnected_StoredAccount_SavesOnce()
     {
-        AddAccount();
+        AddAccount(Nickname);
 
         _friendPresenceService.ReportDisconnected(UnsavedAccountId, _now);
 
@@ -101,7 +101,7 @@ public sealed class TestFriendPresenceService
     [Fact]
     public void ReportDisconnected_AnyFriend_SendsDisconnectedPresence()
     {
-        AddAccount();
+        AddAccount(Nickname);
         AddFriend(UnsavedAccountId, FriendAccountId);
 
         _friendPresenceService.ReportDisconnected(UnsavedAccountId, _now);
@@ -113,13 +113,27 @@ public sealed class TestFriendPresenceService
     [Fact]
     public void ReportDisconnected_AnyFriend_SendsLastSeen()
     {
-        AddAccount();
+        AddAccount(Nickname);
         AddFriend(UnsavedAccountId, FriendAccountId);
 
         _friendPresenceService.ReportDisconnected(UnsavedAccountId, _now);
 
         FriendPresenceChange change = _friendNotifier.PresenceChanges[0];
         Assert.Equal(_now, change.LastSeenAt);
+    }
+
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void ReportDisconnected_EnglishOrSpanishNickname_NotifiesSameNickname(string nickname)
+    {
+        AddAccount(nickname);
+        AddFriend(UnsavedAccountId, FriendAccountId);
+
+        _friendPresenceService.ReportDisconnected(UnsavedAccountId, _now);
+
+        FriendPresenceChange change = _friendNotifier.PresenceChanges[0];
+        Assert.Equal(nickname, change.Friend.Nickname);
     }
 
     private void AddFriend(int accountId, int friendAccountId)
@@ -129,9 +143,9 @@ public sealed class TestFriendPresenceService
         _unitOfWork.FriendshipRepository.AddFriendSummary(accountId, summary);
     }
 
-    private Account AddAccount()
+    private Account AddAccount(string nickname)
     {
-        var account = new Account(Nickname, Email);
+        var account = new Account(nickname, Email);
         _unitOfWork.AccountRepository.AddAccount(account);
         return account;
     }
