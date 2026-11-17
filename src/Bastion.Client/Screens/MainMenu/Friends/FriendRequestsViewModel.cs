@@ -332,12 +332,12 @@ public sealed class FriendRequestsViewModel : ViewModel
         }
         catch (FriendshipRejectedException ex)
         {
-            _logger.Warn($"The server turned down the friend request response. Rejection={ex.Rejection}", ex);
+            _logger.Warn($"The server turned down the friend request action. Rejection={ex.Rejection}", ex);
             ShowRejection(row, ex.Rejection);
         }
         catch (InvalidSessionException ex)
         {
-            _logger.Warn("The friend request response was turned down because the session is no longer valid.", ex);
+            _logger.Warn("The friend request action was turned down because the session is no longer valid.", ex);
             StatusText = Strings.FriendsRespondFailed;
         }
         catch (ServerUnreachableException ex)
@@ -358,13 +358,6 @@ public sealed class FriendRequestsViewModel : ViewModel
         }
     }
 
-    private void RemoveRow(FriendRequestRowViewModel row)
-    {
-        _receivedRequests.Remove(row);
-        _sentRequests.Remove(row);
-        UpdateSummary();
-    }
-
     private void OnFriendshipStarted()
     {
         FriendshipStarted?.Invoke(this, EventArgs.Empty);
@@ -380,9 +373,16 @@ public sealed class FriendRequestsViewModel : ViewModel
         StatusText = FriendRejectionText.Describe(rejection);
     }
 
+    private void RemoveRow(FriendRequestRowViewModel row)
+    {
+        _receivedRequests.Remove(row);
+        _sentRequests.Remove(row);
+        UpdateSummary();
+    }
+
     private void ReportResponseFailure(Exception cause)
     {
-        _logger.Error("The friend request response could not be sent.", cause);
+        _logger.Error("The friend request action could not be sent.", cause);
         StatusText = Strings.FriendsRespondFailed;
     }
 }

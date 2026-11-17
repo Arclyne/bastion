@@ -164,6 +164,14 @@ public static class ViewFactory
         element.Y = 0;
     }
 
+    public static void SetFixedWidth(FrameworkElement element, float width)
+    {
+        ArgumentNullException.ThrowIfNull(element);
+
+        element.Width = width;
+        element.WidthUnits = DimensionUnitType.Absolute;
+    }
+
     public static void CenterHorizontally(FrameworkElement element)
     {
         ArgumentNullException.ThrowIfNull(element);
@@ -214,8 +222,7 @@ public static class ViewFactory
         string version = typeof(ViewFactory).Assembly.GetName().Version?.ToString(fieldCount: 3) ?? string.Empty;
         string text = string.Format(CultureInfo.CurrentCulture, Strings.AppVersionFormat, version);
 
-        Label label = CreateLabel(string.Empty, TextStyleCatalog.Version);
-        label.SetTextNoTranslate(text);
+        Label label = CreateUntranslatedLabel(text, TextStyleCatalog.Version);
         label.Anchor(Gum.Wireframe.Anchor.BottomRight);
         label.X = -ScreenMetrics.MarginX;
         label.Y = -VersionMarginY;

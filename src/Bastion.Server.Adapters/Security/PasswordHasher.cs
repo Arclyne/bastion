@@ -10,7 +10,7 @@ public sealed class PasswordHasher : IPasswordHasher
     public const int HashLength = 64;
     public const int SaltLength = 32;
 
-    private const int Iterations = 210_000;
+    private const int Pbkdf2IterationCount = 210_000;
 
     private static readonly byte[] _saltWhenNoPasswordStored = RandomNumberGenerator.GetBytes(SaltLength);
     private static readonly byte[] _hashWhenNoPasswordStored = RandomNumberGenerator.GetBytes(HashLength);
@@ -46,7 +46,7 @@ public sealed class PasswordHasher : IPasswordHasher
         return Rfc2898DeriveBytes.Pbkdf2(
             encodedPassword,
             salt,
-            Iterations,
+            Pbkdf2IterationCount,
             HashAlgorithmName.SHA512,
             HashLength);
     }

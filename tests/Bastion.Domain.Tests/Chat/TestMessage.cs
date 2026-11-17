@@ -9,20 +9,19 @@ public sealed class TestMessage
     private const int AuthorId = 3;
     private const int RecipientId = 4;
     private const int MatchId = 16;
-    private const string PrivateText = "hola";
+    private const string PrivateText = "hello";
     private const string MatchChatText = "good luck";
     private const int FirstReadMinutes = 1;
     private const int SecondReadMinutes = 5;
 
     private static readonly DateTime _sentAt = new DateTime(2026, 11, 5, 12, 0, 0, DateTimeKind.Utc);
     private static readonly MatchChatSubmission _matchChatSubmission = new MatchChatSubmission(MatchId, MatchChatText);
+    private static readonly MessageRoute _route = new MessageRoute(AuthorId, RecipientId);
 
     [Fact]
     public void CreatePrivate_DifferentPlayers_UsesFriendsChannel()
     {
-        var route = new MessageRoute(AuthorId, RecipientId);
-
-        var message = Message.CreatePrivate(route, PrivateText, _sentAt);
+        var message = Message.CreatePrivate(_route, PrivateText, _sentAt);
 
         Assert.Equal(MessageChannel.Friends, message.Channel);
     }
@@ -98,7 +97,6 @@ public sealed class TestMessage
 
     private static Message CreateMessage()
     {
-        var route = new MessageRoute(AuthorId, RecipientId);
-        return Message.CreatePrivate(route, PrivateText, _sentAt);
+        return Message.CreatePrivate(_route, PrivateText, _sentAt);
     }
 }

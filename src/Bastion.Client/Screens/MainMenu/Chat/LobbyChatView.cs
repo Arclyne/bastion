@@ -13,7 +13,6 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public sealed class LobbyChatView : StackPanel
 {
-    private const float SectionSpacing = 10;
     private const float ScrollHeight = 300;
     private const float RowSpacing = 12;
     private const float UnreadButtonWidth = 200;
@@ -33,7 +32,7 @@ public sealed class LobbyChatView : StackPanel
         BindingContext = chat;
         Width = ConversationPartFactory.ViewWidth;
         WidthUnits = DimensionUnitType.Absolute;
-        Spacing = SectionSpacing;
+        Spacing = ConversationPartFactory.SectionSpacing;
         _messages = CreateMessages();
         StackPanel header = CreateHeader();
         Label systemNotice = ConversationPartFactory.CreateWrappedLabel(
@@ -45,17 +44,7 @@ public sealed class LobbyChatView : StackPanel
             nameof(LobbyChatViewModel.MuteText),
             nameof(LobbyChatViewModel.IsMuted),
             TextStyleCatalog.FieldError);
-        Label statusNotice = ConversationPartFactory.CreateNoticeLabel(
-            nameof(LobbyChatViewModel.StatusText),
-            nameof(LobbyChatViewModel.HasStatus),
-            TextStyleCatalog.FieldError);
-        Label counterNotice = ConversationPartFactory.CreateNoticeLabel(
-            nameof(LobbyChatViewModel.CounterText),
-            nameof(LobbyChatViewModel.IsCounterVisible),
-            TextStyleCatalog.Hint);
-        StackPanel inputRow = ConversationPartFactory.CreateInputRow(
-            HandleSendClick,
-            ConversationPartFactory.ViewWidth);
+        StackPanel composer = ConversationPartFactory.CreateComposer(HandleSendClick);
 
         AddChild(header);
         AddChild(systemNotice);
@@ -63,9 +52,7 @@ public sealed class LobbyChatView : StackPanel
         AddChild(_messages);
         AddChild(unreadButton);
         AddChild(muteNotice);
-        AddChild(statusNotice);
-        AddChild(counterNotice);
-        AddChild(inputRow);
+        AddChild(composer);
 
         _chat.Messages.CollectionChanged += HandleMessagesChanged;
         _chat.PropertyChanged += HandleChatPropertyChanged;
@@ -94,8 +81,8 @@ public sealed class LobbyChatView : StackPanel
 
     private StackPanel CreateHeader()
     {
-        Label title = ViewFactory.CreateLabel(nameof(Strings.ChatGlobalChannel), TextStyleCatalog.IdentityName);
-        Label detail = ViewFactory.CreateBoundUntranslatedLabel(nameof(LobbyChatViewModel.ChannelDetail), TextStyleCatalog.Hint);
+        Label title = ConversationPartFactory.CreateGlobalChannelTitle();
+        Label detail = ConversationPartFactory.CreateGlobalChannelDetail();
         return ConversationPartFactory.CreateHeader(HandleBackClick, title, detail);
     }
 

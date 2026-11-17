@@ -115,10 +115,10 @@ public sealed class LoginViewModel : ViewModel
         private set => Set(value);
     }
 
-    public bool IsBusy
+    private bool IsBusy
     {
         get => Get<bool>();
-        private set => Set(value);
+        set => Set(value);
     }
 
     [DependsOn(nameof(IsBusy))]
@@ -180,7 +180,7 @@ public sealed class LoginViewModel : ViewModel
         }
 
         MarkInvalidFields();
-        if (IsIdentifierMissing || IsIdentifierMalformed || IsPasswordMissing)
+        if (HasIdentifierError || IsPasswordMissing)
         {
             return;
         }

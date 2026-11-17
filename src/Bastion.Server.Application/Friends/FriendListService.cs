@@ -48,14 +48,14 @@ public sealed class FriendListService : IFriendListService
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
         string normalizedCode = FriendCodePolicy.Normalize(friendCode);
-        FriendSummary? friend = _unitOfWork.Friendships.ListFriends(player.AccountId)
+        FriendSummary? friendSummary = _unitOfWork.Friendships.ListFriends(player.AccountId)
             .FirstOrDefault(summary => summary.Friend.FriendCode == normalizedCode);
-        if (friend is null)
+        if (friendSummary is null)
         {
             throw new FriendshipRejectedException(FriendshipRejection.NotFriends);
         }
 
-        bool isRemoved = _unitOfWork.Friendships.Remove(player.AccountId, friend.Friend.AccountId);
+        bool isRemoved = _unitOfWork.Friendships.Remove(player.AccountId, friendSummary.Friend.AccountId);
         if (!isRemoved)
         {
             throw new FriendshipRejectedException(FriendshipRejection.NotFriends);

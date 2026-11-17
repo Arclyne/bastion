@@ -14,9 +14,9 @@ using log4net;
 
 namespace Bastion.Client.Screens;
 
-public sealed class ScreenNavigator : INavigator, IDisposable
+public sealed class Navigator : INavigator, IDisposable
 {
-    private static readonly ILog _logger = LogManager.GetLogger(typeof(ScreenNavigator));
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(Navigator));
 
     private readonly ServerConnection _connection;
     private readonly LocalServiceSet _localServices;
@@ -27,7 +27,7 @@ public sealed class ScreenNavigator : INavigator, IDisposable
     private JoinedMatch? _joinedMatch;
     private JoinedMatchViewModelSet? _joinedMatchViewModels;
 
-    public ScreenNavigator(ServerConnection connection, LocalServiceSet localServices, IScreenHost screenHost)
+    public Navigator(ServerConnection connection, LocalServiceSet localServices, IScreenHost screenHost)
     {
         ArgumentNullException.ThrowIfNull(connection);
         ArgumentNullException.ThrowIfNull(localServices);
@@ -174,7 +174,6 @@ public sealed class ScreenNavigator : INavigator, IDisposable
             matchViewModel);
         ShownMatch = matchViewModel;
     }
-
 
     private static async Task RunSafely(Task task)
     {

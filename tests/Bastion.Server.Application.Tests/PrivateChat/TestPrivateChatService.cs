@@ -28,20 +28,20 @@ public sealed class TestPrivateChatService
     private const string StrangerNickname = "clara_path";
     private const string StrangerFriendCode = "CP8T9H";
     private const string UnknownFriendCode = "ZZ9ZZ9";
-    private const string BannedTerm = "tonto";
-    private const string CleanText = "hola";
-    private const string PaddedText = "  hola  ";
-    private const string BannedText = "eres un tonto";
-    private const string RepeatedText = "otra vez";
-    private const string FirstText = "primero";
-    private const string SecondText = "segundo";
-    private const string StrangerText = "¿me pasas la sala?";
-    private const string OldText = "viejo";
-    private const string NewText = "nuevo";
-    private const string LastText = "último";
-    private const string FirstUnreadText = "uno";
-    private const string SecondUnreadText = "dos";
-    private const string OwnText = "mío";
+    private const string BannedTerm = "fool";
+    private const string CleanText = "hello";
+    private const string PaddedText = "  hello  ";
+    private const string BannedText = "you are a fool";
+    private const string RepeatedText = "again";
+    private const string FirstText = "first";
+    private const string SecondText = "second";
+    private const string StrangerText = "can you share the room code?";
+    private const string OldText = "old";
+    private const string NewText = "new";
+    private const string LastText = "last";
+    private const string FirstUnreadText = "one";
+    private const string SecondUnreadText = "two";
+    private const string OwnText = "mine";
     private const int OneSave = 1;
     private const int TwoUnread = 2;
     private const int SecondsWithinCooldown = 1;
@@ -245,8 +245,8 @@ public sealed class TestPrivateChatService
     public void OpenConversation_Friend_ReturnsMessagesInOrder()
     {
         AddPlayers();
-        AddMessage(FriendAccountId, AccountId, FirstText);
-        AddMessage(AccountId, FriendAccountId, SecondText);
+        AddMessage(_friendToCaller, FirstText);
+        AddMessage(_callerToFriend, SecondText);
         string[] expectedTexts = { FirstText, SecondText };
 
         PrivateConversation conversation = _privateChatService.OpenConversation(Token, FriendFriendCode, _now);
@@ -259,7 +259,7 @@ public sealed class TestPrivateChatService
     public void OpenConversation_OwnMessage_MarksItAsOwn()
     {
         AddPlayers();
-        AddMessage(AccountId, FriendAccountId, CleanText);
+        AddMessage(_callerToFriend, CleanText);
 
         PrivateConversation conversation = _privateChatService.OpenConversation(Token, FriendFriendCode, _now);
 
@@ -271,7 +271,7 @@ public sealed class TestPrivateChatService
     public void OpenConversation_UnreadMessage_MarksItRead()
     {
         AddPlayers();
-        Message received = AddMessage(FriendAccountId, AccountId, CleanText);
+        Message received = AddMessage(_friendToCaller, CleanText);
 
         _privateChatService.OpenConversation(Token, FriendFriendCode, _now);
 
@@ -282,7 +282,7 @@ public sealed class TestPrivateChatService
     public void OpenConversation_OwnUnreadMessage_StaysUnread()
     {
         AddPlayers();
-        Message sent = AddMessage(AccountId, FriendAccountId, CleanText);
+        Message sent = AddMessage(_callerToFriend, CleanText);
 
         _privateChatService.OpenConversation(Token, FriendFriendCode, _now);
 
@@ -300,10 +300,10 @@ public sealed class TestPrivateChatService
     }
 
     [Fact]
-    public void OpenConversation_FormerFriendWithHistory_ReturnsReadOnly()
+    public void OpenConversation_NonFriendWithHistory_ReturnsReadOnly()
     {
         AddPlayers();
-        AddMessage(StrangerAccountId, AccountId, StrangerText);
+        AddMessage(_strangerToCaller, StrangerText);
 
         PrivateConversation conversation = _privateChatService.OpenConversation(Token, StrangerFriendCode, _now);
 
@@ -377,10 +377,10 @@ public sealed class TestPrivateChatService
     }
 
     [Fact]
-    public void ListConversations_FormerFriend_IsNotFriend()
+    public void ListConversations_NonFriendWithHistory_IsNotFriend()
     {
         AddPlayers();
-        AddMessage(StrangerAccountId, AccountId, CleanText);
+        AddMessage(_strangerToCaller, CleanText);
 
         IReadOnlyList<ConversationSummary> conversations = _privateChatService.ListConversations(Token, _now);
 
@@ -392,7 +392,7 @@ public sealed class TestPrivateChatService
     public void MarkConversationRead_UnreadMessage_MarksItRead()
     {
         AddPlayers();
-        Message received = AddMessage(FriendAccountId, AccountId, CleanText);
+        Message received = AddMessage(_friendToCaller, CleanText);
 
         _privateChatService.MarkConversationRead(Token, FriendFriendCode, _now);
 
@@ -420,9 +420,8 @@ public sealed class TestPrivateChatService
         _unitOfWork.SanctionRepository.AddSanction(sanction);
     }
 
-    private Message AddMessage(int authorId, int recipientId, string text)
+    private Message AddMessage(MessageRoute route, string text)
     {
-        var route = new MessageRoute(authorId, recipientId);
         return AddMessage(route, text, _oneMinuteAgo);
     }
 

@@ -6,7 +6,7 @@ namespace Bastion.Client.Tests.Screens.Matches;
 
 public static class WallPlacedSampleFactory
 {
-    public const byte WallsLeftAfterOne = 9;
+    public const byte WallsLeftAfterFirstWall = 9;
 
     public static WallPlacedEventArgs CreateFirstWall(string placerNickname, string groove)
     {
@@ -16,7 +16,7 @@ public static class WallPlacedSampleFactory
             PlacerNickname = placerNickname,
             Groove = groove,
             Orientation = PlacedWallOrientation.Horizontal,
-            RemainingWalls = WallsLeftAfterOne,
+            RemainingWalls = WallsLeftAfterFirstWall,
             NextTurnOrder = Match.SecondTurnOrder,
             NextMoveNumber = PawnMovedSampleFactory.SecondMoveNumber,
             RemainingClockMilliseconds = null,

@@ -14,10 +14,9 @@ using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
-public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
+public sealed class LobbyChatViewModel : ModeratedChatViewModel, IDisposable
 {
     private const int SingleMessage = 1;
-    private const int OldestMessageIndex = 0;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(LobbyChatViewModel));
 
@@ -34,13 +33,12 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
         _chat = context.Clients.Lobby;
         _notifications = context.Clients.Notifications;
         _uiContext = SynchronizationContext.Current;
-        _notifications.ChatMessageReceived += HandleChatMessageReceived;
         Messages = new ObservableCollection<ChatMessageRowViewModel>();
         ChannelDetail = string.Empty;
-        MuteText = string.Empty;
         UnreadText = string.Empty;
         IsReadingLatest = true;
         IsEmpty = true;
+        _notifications.ChatMessageReceived += HandleChatMessageReceived;
     }
 
     public ObservableCollection<ChatMessageRowViewModel> Messages { get; }
@@ -69,20 +67,8 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
         private set => Set(value);
     }
 
-    public bool IsMuted
-    {
-        get => Get<bool>();
-        private set => Set(value);
-    }
-
     [DependsOn(nameof(IsMuted))]
     public override bool CanWrite => !IsMuted;
-
-    public string MuteText
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
 
     [DependsOn(nameof(IsSending))]
     [DependsOn(nameof(IsMuted))]
@@ -167,7 +153,7 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
         IsSending = true;
         try
         {
-            DateTime sentAt = await Task.Run(() => _chat.SendMessage(_session.Token, trimmedText));
+            DateTime sentAt = await Task.Run(() => _chat.SendLobbyChatMessage(_session.Token, trimmedText));
             row.Confirm(sentAt);
         }
         catch (ChatMessageRejectedException ex)
@@ -225,12 +211,7 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
 
     private void AddMessage(ChatMessageRowViewModel row)
     {
-        Messages.Add(row);
-        if (Messages.Count > ChatPolicy.MaximumRecentMessages)
-        {
-            Messages.RemoveAt(OldestMessageIndex);
-        }
-
+        AddRecentMessage(Messages, row);
         IsEmpty = false;
     }
 
@@ -246,12 +227,6 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
         IsEmpty = Messages.Count == 0;
         ChannelDetail = FormatText(Strings.ChatConnectedCountFormat, transcript.ConnectedPlayerCount);
         ShowMute(transcript.Mute);
-    }
-
-    private void ShowMute(ChatMute mute)
-    {
-        IsMuted = mute.IsMuted;
-        MuteText = ChatRejectionText.DescribeMute(mute, TimeProvider);
     }
 
     private void ReportLoadFailure(Exception cause)

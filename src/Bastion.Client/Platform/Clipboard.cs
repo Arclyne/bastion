@@ -4,11 +4,11 @@ using Gum.Forms.Controls;
 
 namespace Bastion.Client.Platform;
 
-public sealed class GumClipboard : IClipboard
+public sealed class Clipboard : IClipboard
 {
     private readonly IGumClipboard? _clipboard;
 
-    public GumClipboard(IGumClipboard? clipboard)
+    public Clipboard(IGumClipboard? clipboard)
     {
         _clipboard = clipboard;
     }

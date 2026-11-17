@@ -6,9 +6,9 @@ namespace Bastion.Server.Application.Chat;
 
 public sealed class LobbyChatRoom : ILobbyChatRoom
 {
-    private readonly object _roomLock = new object();
-    private readonly Queue<PostedChatLine> _recentLines = new Queue<PostedChatLine>();
-    private readonly ChatCooldown _cooldown = new ChatCooldown();
+    private readonly object _roomLock;
+    private readonly Queue<PostedChatLine> _recentLines;
+    private readonly ChatCooldown _cooldown;
     private readonly IChatBroadcaster _broadcaster;
     private long _lastMessageId;
 
@@ -16,6 +16,9 @@ public sealed class LobbyChatRoom : ILobbyChatRoom
     {
         ArgumentNullException.ThrowIfNull(broadcaster);
 
+        _roomLock = new object();
+        _recentLines = new Queue<PostedChatLine>();
+        _cooldown = new ChatCooldown();
         _broadcaster = broadcaster;
     }
 

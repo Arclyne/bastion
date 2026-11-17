@@ -35,8 +35,7 @@ public sealed class RoomKeeper : IRoomKeeper
         var identity = new RoomIdentity(roomId, code);
         var hostMember = new RoomMember(host.AccountId, host.Nickname);
         var room = new WaitingRoom(identity, settings, hostMember);
-        RoomSnapshot? openedRoom = _roomRegistry.TryOpen(room);
-        if (openedRoom is null)
+        if (!_roomRegistry.TryOpen(room, out RoomSnapshot? openedRoom))
         {
             _roomRepository.CloseRoom(roomId, now);
             throw new RoomRejectedException(RoomRejection.InRoom);
@@ -136,6 +135,11 @@ public sealed class RoomKeeper : IRoomKeeper
 
     private RoomRejection GetMissingRoomRejection(string code)
     {
-        return _roomRepository.IsRoomInMatch(code) ? RoomRejection.MatchStarted : RoomRejection.RoomNotFound;
+        if (_roomRepository.IsRoomInMatch(code))
+        {
+            return RoomRejection.MatchStarted;
+        }
+
+        return RoomRejection.RoomNotFound;
     }
 }

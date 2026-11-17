@@ -80,14 +80,14 @@ public sealed class ChatChannelListView : StackPanel
 
     private static StackPanel CreateGlobalText()
     {
-        Label detail = ViewFactory.CreateBoundUntranslatedLabel(nameof(LobbyChatViewModel.ChannelDetail), TextStyleCatalog.Hint);
+        Label detail = ConversationPartFactory.CreateGlobalChannelDetail();
 
         var text = new StackPanel
         {
             Spacing = PanelMetrics.TextSpacing,
             X = RowPaddingX,
         };
-        Label title = ViewFactory.CreateLabel(nameof(Strings.ChatGlobalChannel), TextStyleCatalog.IdentityName);
+        Label title = ConversationPartFactory.CreateGlobalChannelTitle();
         text.AddChild(title);
         text.AddChild(detail);
         ViewFactory.CenterVertically(text);

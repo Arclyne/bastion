@@ -303,7 +303,12 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         var wall = new Wall(groove, orientation);
         _walls.Add(wall);
         _remainingWallsByTurnOrder[placerTurnOrder] = wallPlacement.RemainingWalls;
-        TakeServerTurn(wallPlacement.NextTurnOrder, wallPlacement.NextMoveNumber);
+        SyncServerTurn(wallPlacement.NextTurnOrder, wallPlacement.NextMoveNumber);
+    }
+
+    private void SyncServerTurn(byte turnOrder, short nextMoveNumber)
+    {
+        TakeServerTurn(turnOrder, nextMoveNumber);
         ClearSelection();
         OnStateChanged();
     }
@@ -427,13 +432,6 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         }
 
         return false;
-    }
-
-    private void SyncServerTurn(byte turnOrder, short nextMoveNumber)
-    {
-        TakeServerTurn(turnOrder, nextMoveNumber);
-        ClearSelection();
-        OnStateChanged();
     }
 
     private void ShowWallRejection(WallPlacementRejection rejection, byte? blockedTurnOrder)

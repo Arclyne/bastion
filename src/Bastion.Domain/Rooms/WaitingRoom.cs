@@ -8,8 +8,8 @@ public sealed class WaitingRoom
 {
     private const int FirstSeatIndex = 0;
 
-    private readonly List<RoomMember> _members = new List<RoomMember>();
-    private readonly HashSet<int> _kickedAccountIds = new HashSet<int>();
+    private readonly List<RoomMember> _members;
+    private readonly HashSet<int> _kickedAccountIds;
 
     public WaitingRoom(RoomIdentity identity, RoomSettings settings, RoomMember host)
     {
@@ -17,6 +17,8 @@ public sealed class WaitingRoom
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(host);
 
+        _members = new List<RoomMember>();
+        _kickedAccountIds = new HashSet<int>();
         Identity = identity;
         Settings = settings;
         HostAccountId = host.AccountId;

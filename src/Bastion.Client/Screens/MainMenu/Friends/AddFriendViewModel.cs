@@ -35,13 +35,21 @@ public sealed class AddFriendViewModel : ViewModel
     public string SearchText
     {
         get => Get<string>();
-        set => Set(value);
+        set
+        {
+            if (value is null)
+            {
+                return;
+            }
+
+            Set(value);
+        }
     }
 
-    public bool IsSearching
+    private bool IsSearching
     {
         get => Get<bool>();
-        private set => Set(value);
+        set => Set(value);
     }
 
     [DependsOn(nameof(IsSearching))]

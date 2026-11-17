@@ -498,6 +498,18 @@ public sealed class TestFriendRequestService
         Assert.Null(request);
     }
 
+    private void AddFriendship()
+    {
+        var friendship = new Friendship(AccountId, OtherAccountId, _now);
+        _unitOfWork.FriendshipRepository.Add(friendship);
+    }
+
+    private void AddSentRequest(DateTime requestedAt)
+    {
+        var request = new FriendRequest(AccountId, OtherAccountId, requestedAt);
+        _unitOfWork.FriendRequestRepository.Add(request);
+    }
+
     private void AddPlayersWithReceivedRequest(DateTime requestedAt)
     {
         AddPlayers();
@@ -509,18 +521,6 @@ public sealed class TestFriendRequestService
         _sessionVerifier.Add(Token, _caller);
         _unitOfWork.AccountRepository.AddPlayerIdentity(_caller);
         _unitOfWork.AccountRepository.AddPlayerIdentity(_otherPlayer);
-    }
-
-    private void AddFriendship()
-    {
-        var friendship = new Friendship(AccountId, OtherAccountId, _now);
-        _unitOfWork.FriendshipRepository.Add(friendship);
-    }
-
-    private void AddSentRequest(DateTime requestedAt)
-    {
-        var request = new FriendRequest(AccountId, OtherAccountId, requestedAt);
-        _unitOfWork.FriendRequestRepository.Add(request);
     }
 
     private void AddReceivedRequest(DateTime requestedAt)

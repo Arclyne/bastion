@@ -174,6 +174,15 @@ public sealed class TestRoomMatchService
         Assert.True(isGuestInRoom);
     }
 
+    private int FillRoom()
+    {
+        int roomId = OpenRoom();
+        AddPlayer(GuestToken, _guest);
+        _privateRoomService.JoinRoom(GuestToken, Code, _now);
+        _privateRoomService.SetReady(GuestToken, isReady: true, _now);
+        return roomId;
+    }
+
     private int OpenRoom()
     {
         AddPlayer(HostToken, _host);
@@ -187,14 +196,5 @@ public sealed class TestRoomMatchService
     {
         _sessionVerifier.Add(sessionToken, player);
         _matchmakingNotifier.SubscribedAccountIds.Add(player.AccountId);
-    }
-
-    private int FillRoom()
-    {
-        int roomId = OpenRoom();
-        AddPlayer(GuestToken, _guest);
-        _privateRoomService.JoinRoom(GuestToken, Code, _now);
-        _privateRoomService.SetReady(GuestToken, isReady: true, _now);
-        return roomId;
     }
 }

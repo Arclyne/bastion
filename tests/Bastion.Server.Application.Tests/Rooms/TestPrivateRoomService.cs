@@ -37,6 +37,7 @@ public sealed class TestPrivateRoomService
     private const int SecondSeatIndex = 1;
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
+    private static readonly int[] _hostOnly = { HostAccountId };
     private static readonly ConnectedPlayer _host = new ConnectedPlayer(HostAccountId, HostNickname);
     private static readonly ConnectedPlayer _guest = new ConnectedPlayer(GuestAccountId, GuestNickname);
     private static readonly ConnectedPlayer _third = new ConnectedPlayer(ThirdAccountId, ThirdNickname);
@@ -262,7 +263,7 @@ public sealed class TestPrivateRoomService
         OpenHostRoom();
         AddPlayer(GuestToken, _guest);
         Action joinWithWrongCode = () => _privateRoomService.JoinRoom(GuestToken, WrongCode, _now);
-        for (int attempt = 0; attempt < RoomPolicy.MaximumFailedCodeAttempts; attempt++)
+        for (int attemptIndex = 0; attemptIndex < RoomPolicy.MaximumFailedCodeAttempts; attemptIndex++)
         {
             Record.Exception(joinWithWrongCode);
         }
@@ -391,7 +392,8 @@ public sealed class TestPrivateRoomService
         _privateRoomService.LeaveRoom(GuestToken, _now);
 
         NotifiedRoom lastUpdate = _roomNotifier.UpdatedRooms.Last();
-        Assert.Single(lastUpdate.Room.Members);
+        IEnumerable<int> accountIds = lastUpdate.Room.Members.Select(member => member.AccountId);
+        Assert.Equal(_hostOnly, accountIds);
     }
 
     [Fact]

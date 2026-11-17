@@ -13,7 +13,7 @@ using log4net;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
-public sealed class PrivateConversationViewModel : ChatComposerViewModel
+public sealed class PrivateConversationViewModel : ModeratedChatViewModel
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(PrivateConversationViewModel));
 
@@ -34,7 +34,6 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         PresenceText = string.Empty;
         GreetingText = string.Empty;
         OfflineText = string.Empty;
-        MuteText = string.Empty;
         IsFriend = true;
     }
 
@@ -58,10 +57,10 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         set => Set(value);
     }
 
-    public bool IsFriend
+    private bool IsFriend
     {
         get => Get<bool>();
-        private set => Set(value);
+        set => Set(value);
     }
 
     public bool IsLoading
@@ -76,10 +75,10 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         private set => Set(value);
     }
 
-    public bool IsEmpty
+    private bool IsEmpty
     {
         get => Get<bool>();
-        private set => Set(value);
+        set => Set(value);
     }
 
     [DependsOn(nameof(IsEmpty))]
@@ -106,18 +105,6 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
     [DependsOn(nameof(IsFriend))]
     [DependsOn(nameof(IsLoading))]
     public bool IsNotFriendsNoticeVisible => !IsFriend && !IsLoading;
-
-    public bool IsMuted
-    {
-        get => Get<bool>();
-        private set => Set(value);
-    }
-
-    public string MuteText
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
 
     [DependsOn(nameof(IsFriend))]
     [DependsOn(nameof(IsMuted))]
@@ -194,11 +181,13 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         }
         catch (ChatMessageRejectedException ex)
         {
-            ReportLoadRejection(ex);
+            _logger.Warn($"The server turned down the private conversation. Rejection={ex.Rejection}", ex);
+            ShowLoadFailure();
         }
         catch (InvalidSessionException ex)
         {
-            ReportLoadRejection(ex);
+            _logger.Warn("The private conversation could not be loaded because the session is no longer valid.", ex);
+            ShowLoadFailure();
         }
         catch (ServerUnreachableException ex)
         {
@@ -242,8 +231,8 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
                 () => _conversations.SendMessage(_session.Token, partner.FriendCode, trimmedText));
             row.Confirm(sentAt);
             PrivateMessage sentMessage = draftMessage with { SentAt = sentAt };
-            var update = new PrivateMessageSentEventArgs(partner, sentMessage);
-            OnMessageSent(update);
+            var messageSent = new PrivateMessageSentEventArgs(partner, sentMessage);
+            OnMessageSent(messageSent);
         }
         catch (ChatMessageRejectedException ex)
         {
@@ -309,11 +298,15 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         }
         catch (ChatMessageRejectedException ex)
         {
-            ReportMarkReadRejection(ex);
+            _logger.Warn(
+                $"The server turned down marking the private conversation as read. Rejection={ex.Rejection}",
+                ex);
         }
         catch (InvalidSessionException ex)
         {
-            ReportMarkReadRejection(ex);
+            _logger.Warn(
+                "The private conversation could not be marked as read because the session is no longer valid.",
+                ex);
         }
         catch (ServerUnreachableException ex)
         {
@@ -327,11 +320,6 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         {
             ReportMarkReadFailure(ex);
         }
-    }
-
-    private void ReportMarkReadRejection(Exception cause)
-    {
-        _logger.Warn("The server turned down marking the private conversation as read.", cause);
     }
 
     private void ReportMarkReadFailure(Exception cause)
@@ -368,15 +356,8 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         ShowMute(transcript.Mute);
     }
 
-    private void ShowMute(ChatMute mute)
+    private void ShowLoadFailure()
     {
-        IsMuted = mute.IsMuted;
-        MuteText = ChatRejectionText.DescribeMute(mute, TimeProvider);
-    }
-
-    private void ReportLoadRejection(Exception cause)
-    {
-        _logger.Warn("The server turned down the private conversation.", cause);
         HasLoadFailed = true;
     }
 

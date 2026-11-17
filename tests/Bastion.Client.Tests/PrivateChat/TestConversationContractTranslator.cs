@@ -12,7 +12,7 @@ public sealed class TestConversationContractTranslator
 {
     private const string PartnerNickname = "marta_muros";
     private const string PartnerFriendCode = "MA3R7T";
-    private const string MessageText = "hola";
+    private const string MessageText = "hello";
     private const int UnreadCount = 2;
 
     private static readonly DateTime _sentAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);

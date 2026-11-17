@@ -47,9 +47,10 @@ public sealed class VersusView : ScreenView
         content.AddChild(playersRow);
         content.AddChild(countdown);
 
+        float cardWidth = contentWidth + (CardPaddingX * HorizontalSideCount);
         var card = new Panel
         {
-            Width = contentWidth + (CardPaddingX * HorizontalSideCount),
+            Width = cardWidth,
             WidthUnits = DimensionUnitType.Absolute,
             Height = CardPaddingBottom,
             HeightUnits = DimensionUnitType.RelativeToChildren,
@@ -63,8 +64,7 @@ public sealed class VersusView : ScreenView
     private static StackPanel CreatePlayersRow(VersusViewModel viewModel)
     {
         Label versus = ViewFactory.CreateLabel(nameof(Strings.VersusLabel), TextStyleCatalog.MenuTitle);
-        versus.Width = VersusWidth;
-        versus.WidthUnits = DimensionUnitType.Absolute;
+        ViewFactory.SetFixedWidth(versus, VersusWidth);
         ViewFactory.CenterVertically(versus);
 
         var row = new StackPanel

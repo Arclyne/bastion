@@ -109,6 +109,13 @@ public sealed class TestAccount
         Assert.Equal(_now, account.LastSeenAt);
     }
 
+    private static Account CreateLockedAccount()
+    {
+        Account account = CreateActiveAccount();
+        RecordFailures(account, FailuresThatLock);
+        return account;
+    }
+
     private static Account CreateActiveAccount()
     {
         var account = new Account(Nickname, Email);
@@ -122,12 +129,5 @@ public sealed class TestAccount
         {
             account.RecordFailedLogin(_now);
         }
-    }
-
-    private static Account CreateLockedAccount()
-    {
-        Account account = CreateActiveAccount();
-        RecordFailures(account, FailuresThatLock);
-        return account;
     }
 }

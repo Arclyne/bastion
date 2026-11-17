@@ -17,7 +17,7 @@ public sealed class FriendActionsViewModel : ViewModel
 
     private readonly LoggedInSession _session;
     private readonly IFriendClient _friends;
-    private string _friendCode = string.Empty;
+    private string _friendCode;
 
     public FriendActionsViewModel(LoggedInSession session, IFriendClient friends)
     {
@@ -26,6 +26,7 @@ public sealed class FriendActionsViewModel : ViewModel
 
         _session = session;
         _friends = friends;
+        _friendCode = string.Empty;
         Nickname = string.Empty;
         DialogTitle = string.Empty;
         DialogMessage = string.Empty;

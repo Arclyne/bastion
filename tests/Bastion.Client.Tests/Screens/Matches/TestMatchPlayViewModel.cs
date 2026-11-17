@@ -88,8 +88,7 @@ public sealed class TestMatchPlayViewModel : IDisposable
     [Fact]
     public async Task SelectSquare_SelectedPawnAgain_ClearsReachableSquares()
     {
-        MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
-        await viewModel.SelectSquare(_firstStart);
+        MatchPlayViewModel viewModel = await CreateViewModelWithSelectedPawn();
 
         await viewModel.SelectSquare(_firstStart);
 
@@ -258,7 +257,7 @@ public sealed class TestMatchPlayViewModel : IDisposable
         _matchClient.RaiseWallPlaced(rivalWall);
 
         byte rivalWallsLeft = viewModel.GetRemainingWalls(Match.FirstTurnOrder);
-        Assert.Equal(WallPlacedSampleFactory.WallsLeftAfterOne, rivalWallsLeft);
+        Assert.Equal(WallPlacedSampleFactory.WallsLeftAfterFirstWall, rivalWallsLeft);
     }
 
     [Fact]

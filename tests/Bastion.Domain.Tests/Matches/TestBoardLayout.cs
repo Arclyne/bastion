@@ -17,6 +17,10 @@ public sealed class TestBoardLayout
     private const int ClassicLastColumnIndex = 8;
     private const string ThirdPlayerSquare = "a5";
     private const string FirstPlayerSquare = "e1";
+
+    private static readonly BoardCoordinates _classicFirstRowCenter = new BoardCoordinates(
+        ClassicCenterColumnIndex,
+        FirstRowIndex);
     private const string SecondPlayerSquare = "e9";
     private const string RowZeroSquare = "e0";
     private const int ClassicLastRowIndex = 8;
@@ -26,13 +30,11 @@ public sealed class TestBoardLayout
     [Fact]
     public void GetStartingCoordinates_FirstTurnOrderOnClassicBoard_ReturnsCenterOfFirstRow()
     {
-        var expectedCoordinates = new BoardCoordinates(ClassicCenterColumnIndex, FirstRowIndex);
-
         BoardCoordinates coordinates = BoardLayout.GetStartingCoordinates(
             GameModeSampleFactory.ClassicBoardSize,
             Match.FirstTurnOrder);
 
-        Assert.Equal(expectedCoordinates, coordinates);
+        Assert.Equal(_classicFirstRowCenter, coordinates);
     }
 
     [Fact]
@@ -82,9 +84,7 @@ public sealed class TestBoardLayout
     [Fact]
     public void ToSquare_CenterOfFirstRowOnClassicBoard_ReturnsE1()
     {
-        var coordinates = new BoardCoordinates(ClassicCenterColumnIndex, FirstRowIndex);
-
-        string square = BoardLayout.ToSquare(coordinates);
+        string square = BoardLayout.ToSquare(_classicFirstRowCenter);
 
         Assert.Equal(FirstPlayerSquare, square);
     }

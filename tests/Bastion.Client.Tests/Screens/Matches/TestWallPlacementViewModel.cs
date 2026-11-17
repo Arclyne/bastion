@@ -111,7 +111,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     }
 
     [Fact]
-    public async Task Confirm_PendingWall_SendsWall()
+    public async Task Confirm_PendingWall_SendsPendingWall()
     {
         WallPlacementViewModel viewModel = CreateViewModelWithChosenGroove();
 

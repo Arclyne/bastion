@@ -27,6 +27,7 @@ public sealed class TestPawnMovePolicy
     private static readonly BoardCoordinates _lastRow = new BoardCoordinates(CenterIndex, LastIndex);
     private static readonly BoardCoordinates _leftOfLastRow = new BoardCoordinates(LeftIndex, LastIndex);
     private static readonly BoardCoordinates _leftOfBeforeLastRow = new BoardCoordinates(LeftIndex, BeforeLastIndex);
+    private static readonly Wall _wallBehindRival = new Wall(_aheadOfCenter, WallOrientation.Horizontal);
 
     [Fact]
     public void ListReachableSquares_PawnInOpenBoard_ReturnsFourNeighbors()
@@ -109,8 +110,7 @@ public sealed class TestPawnMovePolicy
     [Fact]
     public void ListReachableSquares_WallBehindRival_ExcludesStraightJump()
     {
-        var wallBehindRival = new Wall(_aheadOfCenter, WallOrientation.Horizontal);
-        Board board = CreateBoard(_center, _aheadOfCenter, wallBehindRival);
+        Board board = CreateBoard(_center, _aheadOfCenter, _wallBehindRival);
 
         IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 
@@ -120,8 +120,7 @@ public sealed class TestPawnMovePolicy
     [Fact]
     public void ListReachableSquares_WallBehindRival_IncludesDiagonalJump()
     {
-        var wallBehindRival = new Wall(_aheadOfCenter, WallOrientation.Horizontal);
-        Board board = CreateBoard(_center, _aheadOfCenter, wallBehindRival);
+        Board board = CreateBoard(_center, _aheadOfCenter, _wallBehindRival);
 
         IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, Match.FirstTurnOrder);
 

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Bastion.Server.Host.Rooms;
 
+/// <inheritdoc/>
 public sealed class RoomCleanupService : IHostedService
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(RoomCleanupService));
@@ -30,6 +31,7 @@ public sealed class RoomCleanupService : IHostedService
         _timeProvider = timeProvider;
     }
 
+    /// <inheritdoc/>
     public Task StartAsync(CancellationToken cancellationToken)
     {
         CloseRoomsLeftOpen();
@@ -37,6 +39,7 @@ public sealed class RoomCleanupService : IHostedService
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc/>
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _channelRegistry.PlayerDisconnected -= HandlePlayerDisconnected;

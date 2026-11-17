@@ -25,12 +25,16 @@ public sealed class MatchRepository : IMatchRepository
 
     public bool HasUnfinishedParticipation(int accountId)
     {
-        return _newContextRunner.Run(context => HasUnfinishedParticipationInContext(context, accountId));
+        Func<BastionDbContext, bool> hasUnfinishedParticipation = context => HasUnfinishedParticipationInContext(
+            context,
+            accountId);
+        return _newContextRunner.Run(hasUnfinishedParticipation);
     }
 
     public GameMode? FindActiveGameMode(GameModeCode code)
     {
-        return _newContextRunner.Run(context => LoadActiveGameMode(context, code));
+        Func<BastionDbContext, GameMode?> findActiveGameMode = context => LoadActiveGameMode(context, code);
+        return _newContextRunner.Run(findActiveGameMode);
     }
 
     public IReadOnlyDictionary<int, short> FindEloRatingsByAccountId(
@@ -39,50 +43,63 @@ public sealed class MatchRepository : IMatchRepository
     {
         ArgumentNullException.ThrowIfNull(accountIds);
 
-        return _newContextRunner.Run(context => LoadEloRatingsByAccountId(context, gameModeId, accountIds));
+        Func<BastionDbContext, Dictionary<int, short>> findEloRatings = context => LoadEloRatingsByAccountId(
+            context,
+            gameModeId,
+            accountIds);
+        return _newContextRunner.Run(findEloRatings);
     }
 
     public int SaveMatch(Match match)
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        return _newContextRunner.Run(context => AddMatch(context, match));
+        Func<BastionDbContext, int> saveMatch = context => AddMatch(context, match);
+        return _newContextRunner.Run(saveMatch);
     }
 
     public IReadOnlyList<int> FindAccountIdsWithUnfinishedParticipation(int matchId)
     {
-        return _newContextRunner.Run(context => LoadAccountIdsWithUnfinishedParticipation(context, matchId));
+        Func<BastionDbContext, List<int>> findAccountIds = context => LoadAccountIdsWithUnfinishedParticipation(
+            context,
+            matchId);
+        return _newContextRunner.Run(findAccountIds);
     }
 
     public long SaveMatchChatMessage(Message message)
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        return _newContextRunner.Run(context => AddMatchChatMessage(context, message));
+        Func<BastionDbContext, long> saveMatchChatMessage = context => AddMatchChatMessage(context, message);
+        return _newContextRunner.Run(saveMatchChatMessage);
     }
 
     public Match? FindMatch(int matchId)
     {
-        return _newContextRunner.Run(context => LoadMatch(context, matchId));
+        Func<BastionDbContext, Match?> findMatch = context => LoadMatch(context, matchId);
+        return _newContextRunner.Run(findMatch);
     }
 
     public void SaveAbandonment(Match match)
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        _newContextRunner.Run(context => UpdateMatchAndRoom(context, match));
+        Func<BastionDbContext, int> saveAbandonment = context => UpdateMatchAndRoom(context, match);
+        _newContextRunner.Run(saveAbandonment);
     }
 
     public GameMode? FindGameMode(byte gameModeId)
     {
-        return _newContextRunner.Run(context => LoadGameMode(context, gameModeId));
+        Func<BastionDbContext, GameMode?> findGameMode = context => LoadGameMode(context, gameModeId);
+        return _newContextRunner.Run(findGameMode);
     }
 
     public void SaveMove(Match match)
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        _newContextRunner.Run(context => UpdateMatchWithNewestMove(context, match));
+        Func<BastionDbContext, int> saveMove = context => UpdateMatchWithNewestMove(context, match);
+        _newContextRunner.Run(saveMove);
     }
 
     private static bool HasUnfinishedParticipationInContext(BastionDbContext context, int accountId)

@@ -7,7 +7,7 @@ namespace Bastion.Server.Application.Chat;
 
 public sealed class MatchChatRelay : IMatchChatRelay
 {
-    private readonly ChatCooldown _cooldown = new ChatCooldown();
+    private readonly ChatCooldown _cooldown;
     private readonly IMatchRepository _matchRepository;
     private readonly IMatchChatNotifier _matchChatNotifier;
 
@@ -16,6 +16,7 @@ public sealed class MatchChatRelay : IMatchChatRelay
         ArgumentNullException.ThrowIfNull(matchRepository);
         ArgumentNullException.ThrowIfNull(matchChatNotifier);
 
+        _cooldown = new ChatCooldown();
         _matchRepository = matchRepository;
         _matchChatNotifier = matchChatNotifier;
     }

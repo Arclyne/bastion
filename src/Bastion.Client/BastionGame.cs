@@ -13,8 +13,8 @@ using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Forms.Input;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
 using log4net;
+using Microsoft.Xna.Framework;
 
 namespace Bastion.Client;
 
@@ -32,7 +32,7 @@ public sealed class BastionGame : Game
 
     private readonly GraphicsDeviceManager _graphics;
     private readonly ServerConnection _serverConnection;
-    private ScreenNavigator? _screenNavigator;
+    private Navigator? _screenNavigator;
     private BoardScene? _boardScene;
 
     public BastionGame()
@@ -56,10 +56,10 @@ public sealed class BastionGame : Game
         var languagePreferenceStore = new LanguagePreferenceStore();
         var languages = new LanguageService(languagePreferenceStore, GumService.Default.LocalizationService);
         languages.LoadInitialLanguage();
-        var clipboard = new GumClipboard(GumService.Default.Clipboard);
+        var clipboard = new Clipboard(GumService.Default.Clipboard);
         var localServices = new LocalServiceSet(languages, clipboard, TimeProvider.System);
-        var screenHost = new GumScreenHost(GumService.Default.Root, GumService.Default.ModalRoot);
-        _screenNavigator = new ScreenNavigator(_serverConnection, localServices, screenHost);
+        var screenHost = new ScreenHost(GumService.Default.Root, GumService.Default.ModalRoot);
+        _screenNavigator = new Navigator(_serverConnection, localServices, screenHost);
         _screenNavigator.ShowLogin();
         Window.ClientSizeChanged += HandleClientSizeChanged;
         ApplyUiScale();
@@ -185,6 +185,18 @@ public sealed class BastionGame : Game
         }
     }
 
+    private static async Task RunSafely(Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("A board action ended after the game was closed.", ex);
+        }
+    }
+
     private static void ForwardWallCursor(BoardScene boardScene, MatchViewModel shownMatch, ICursor cursor)
     {
         WallPlacementViewModel wallPlacement = shownMatch.WallPlacement;
@@ -208,6 +220,12 @@ public sealed class BastionGame : Game
         }
     }
 
+    private static bool IsOverGumControl(ICursor cursor)
+    {
+        object? controlOver = cursor.VisualOver?.FormsControlAsObject;
+        return controlOver is FrameworkElement && controlOver is not ScreenView;
+    }
+
     private static void ForwardBoardClick(BoardScene boardScene, MatchViewModel shownMatch, ICursor cursor)
     {
         if (!cursor.PrimaryClick || IsOverGumControl(cursor))
@@ -223,24 +241,6 @@ public sealed class BastionGame : Game
         }
 
         _ = RunSafely(shownMatch.Play.SelectSquare(square));
-    }
-
-    private static async Task RunSafely(Task task)
-    {
-        try
-        {
-            await task;
-        }
-        catch (ObjectDisposedException ex)
-        {
-            _logger.Warn("A board action ended after the game was closed.", ex);
-        }
-    }
-
-    private static bool IsOverGumControl(ICursor cursor)
-    {
-        object? controlOver = cursor.VisualOver?.FormsControlAsObject;
-        return controlOver is FrameworkElement && controlOver is not ScreenView;
     }
 
     private void DrawShownMatchBoard()

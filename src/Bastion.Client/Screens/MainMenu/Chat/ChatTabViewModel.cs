@@ -42,14 +42,14 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         _timeProvider = context.TimeProvider;
         _uiContext = SynchronizationContext.Current;
         LobbyChat = new LobbyChatViewModel(context);
-        LobbyChat.PropertyChanged += HandleLobbyPropertyChanged;
         PrivateConversation = new PrivateConversationViewModel(context);
-        PrivateConversation.MessageSent += HandlePrivateMessageSent;
-        PrivateConversation.Closed += HandlePrivateClosed;
-        _notifications.PrivateMessageReceived += HandlePrivateMessageReceived;
         Conversations = new ObservableCollection<ConversationRowViewModel>();
         UnreadText = string.Empty;
         Pane = ChatPane.List;
+        LobbyChat.PropertyChanged += HandleLobbyPropertyChanged;
+        PrivateConversation.MessageSent += HandlePrivateMessageSent;
+        PrivateConversation.Closed += HandlePrivateClosed;
+        _notifications.PrivateMessageReceived += HandlePrivateMessageReceived;
     }
 
     public LobbyChatViewModel LobbyChat { get; }
@@ -256,7 +256,6 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         _logger.Error("The private conversations could not be loaded.", cause);
         HasConversationsLoadFailed = true;
     }
-
 
     private static async Task RunSafely(Task task)
     {

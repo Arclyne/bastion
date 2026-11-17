@@ -16,22 +16,14 @@ public sealed class FoundPlayerRowViewModel : ViewModel
         Relationship = player.Relationship;
     }
 
-    public string Nickname
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
+    public string Nickname { get; }
 
-    public string FriendCode
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
+    public string FriendCode { get; }
 
-    public FriendRelationship Relationship
+    private FriendRelationship Relationship
     {
         get => Get<FriendRelationship>();
-        private set => Set(value);
+        set => Set(value);
     }
 
     public bool IsSending

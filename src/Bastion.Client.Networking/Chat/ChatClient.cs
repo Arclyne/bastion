@@ -26,7 +26,7 @@ public sealed class ChatClient : IChatClient
         remove => _notificationClient.MatchChatMessageReceived -= value;
     }
 
-    public DateTime SendMessage(string sessionToken, string text)
+    public DateTime SendLobbyChatMessage(string sessionToken, string text)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(text);

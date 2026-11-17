@@ -145,7 +145,12 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         _keepAliveTimer = _timeProvider.CreateTimer(SendKeepAlive, state: null, _keepAliveInterval, _keepAliveInterval);
     }
 
-    public void Disconnect()
+    public void Dispose()
+    {
+        Disconnect();
+    }
+
+    private void Disconnect()
     {
         TryStopKeepAlive();
         if (_sessionChannel is null)
@@ -157,11 +162,6 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         communicationObject.Faulted -= HandleChannelFaulted;
         _sessionChannel = null;
         ChannelCloser.CloseOrAbort(communicationObject);
-    }
-
-    public void Dispose()
-    {
-        Disconnect();
     }
 
     private static Exception AbortAndTranslate(ISessionService channel, Exception cause)
@@ -199,7 +199,7 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         }
         catch (ObjectDisposedException ex)
         {
-            ReportConnectionLost(ex);
+            _logger.Warn("The keep-alive stopped because the notification channel was closed.", ex);
         }
     }
 

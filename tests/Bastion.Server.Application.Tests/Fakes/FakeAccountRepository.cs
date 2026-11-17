@@ -66,15 +66,15 @@ public sealed class FakeAccountRepository : IAccountRepository
         return new List<PlayerIdentity>(matchingIdentities);
     }
 
-    private static bool HasNicknamePrefix(PlayerIdentity playerIdentity, string nicknamePrefix)
-    {
-        return playerIdentity.Nickname.StartsWith(nicknamePrefix, StringComparison.OrdinalIgnoreCase);
-    }
-
     public IReadOnlyList<PlayerIdentity> ListPlayerIdentities(IReadOnlyCollection<int> accountIds)
     {
         IEnumerable<PlayerIdentity> listedIdentities = _playerIdentities
             .Where(playerIdentity => accountIds.Contains(playerIdentity.AccountId));
         return new List<PlayerIdentity>(listedIdentities);
+    }
+
+    private static bool HasNicknamePrefix(PlayerIdentity playerIdentity, string nicknamePrefix)
+    {
+        return playerIdentity.Nickname.StartsWith(nicknamePrefix, StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -26,6 +26,19 @@ public static class GameModeSampleFactory
         };
     }
 
+    public static GameMode CreateClassicWithFourSeats()
+    {
+        return new GameMode
+        {
+            GameModeId = ClassicGameModeId,
+            Code = GameModeCode.Classic,
+            BoardSize = BoardSize,
+            PlayerCount = FourPlayers,
+            WallsPerPlayer = ClassicWallsPerPlayer,
+            IsActive = true,
+        };
+    }
+
     public static GameMode CreateFourPlayers()
     {
         return new GameMode

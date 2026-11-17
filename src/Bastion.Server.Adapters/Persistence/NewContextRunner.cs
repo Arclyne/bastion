@@ -24,7 +24,8 @@ public sealed class NewContextRunner<TFailure>
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        return _failureTranslator.Run(() => RunInNewContext(operation));
+        Func<TResult> runInNewContext = () => RunInNewContext(operation);
+        return _failureTranslator.Run(runInNewContext);
     }
 
     private TResult RunInNewContext<TResult>(Func<BastionDbContext, TResult> operation)

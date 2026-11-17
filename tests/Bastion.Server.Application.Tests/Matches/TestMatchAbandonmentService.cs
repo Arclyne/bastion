@@ -96,7 +96,7 @@ public sealed class TestMatchAbandonmentService
 
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Match savedMatch = _matchRepository.SavedAbandonments.Single();
+        Match savedMatch = _matchRepository.MatchesSavedWithAbandonment.Single();
         Assert.Equal(MatchStatus.Finished, savedMatch.Status);
     }
 
@@ -107,7 +107,7 @@ public sealed class TestMatchAbandonmentService
 
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Match savedMatch = _matchRepository.SavedAbandonments.Single();
+        Match savedMatch = _matchRepository.MatchesSavedWithAbandonment.Single();
         Participation abandoning = savedMatch.GetParticipation(AbandoningAccountId);
         Assert.Equal(ParticipationResult.Lost, abandoning.Result);
     }

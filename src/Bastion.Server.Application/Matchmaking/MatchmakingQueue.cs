@@ -36,6 +36,33 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
         }
     }
 
+    public DateTime? FindSearchStart(int accountId)
+    {
+        lock (_searchesLock)
+        {
+            if (!_searches.TryGetValue(accountId, out MatchSearch? search))
+            {
+                return null;
+            }
+
+            return search.StartedAt;
+        }
+    }
+
+    public bool IsAwaitingPresence(int accountId)
+    {
+        lock (_searchesLock)
+        {
+            if (!_searches.TryGetValue(accountId, out MatchSearch? search))
+            {
+                return false;
+            }
+
+            bool isAwaitingPresence = !search.IsSearching();
+            return isAwaitingPresence;
+        }
+    }
+
     public void ConfirmPresence(int accountId, DateTime now)
     {
         lock (_searchesLock)

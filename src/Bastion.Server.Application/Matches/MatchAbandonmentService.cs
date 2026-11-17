@@ -50,7 +50,7 @@ public sealed class MatchAbandonmentService : IMatchAbandonmentService
         _logger.Info(
             $"A player left the match. AccountId={player.AccountId}; MatchId={matchId}; IsMatchOver={isMatchOver}");
         IEnumerable<int> remainingAccountIds = match.Participations
-            .Where(participation => participation.AccountId != player.AccountId && !participation.EndReason.HasValue)
+            .Where(participation => participation.AccountId != player.AccountId && participation.EndReason is null)
             .Select(participation => participation.AccountId);
         var recipientAccountIds = new List<int>(remainingAccountIds);
         var notice = new AbandonmentNotice(player.Nickname, isMatchOver);

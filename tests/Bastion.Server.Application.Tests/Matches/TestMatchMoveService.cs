@@ -67,7 +67,7 @@ public sealed class TestMatchMoveService
 
         _matchMoveService.MovePawn(FirstToken, move, _now);
 
-        Match savedMatch = _matchRepository.SavedMoves.Single();
+        Match savedMatch = _matchRepository.MatchesSavedWithMove.Single();
         Assert.Single(savedMatch.Moves);
     }
 
@@ -175,7 +175,7 @@ public sealed class TestMatchMoveService
 
         Record.Exception(movePawn);
 
-        Assert.Empty(_matchRepository.SavedMoves);
+        Assert.Empty(_matchRepository.MatchesSavedWithMove);
     }
 
     [Fact]
@@ -219,7 +219,7 @@ public sealed class TestMatchMoveService
 
         _matchMoveService.PlaceWall(FirstToken, wall, _now);
 
-        Match savedMatch = _matchRepository.SavedMoves.Single();
+        Match savedMatch = _matchRepository.MatchesSavedWithMove.Single();
         Move savedMove = savedMatch.Moves.Single();
         Assert.Equal(MoveType.Wall, savedMove.MoveType);
     }
@@ -347,7 +347,7 @@ public sealed class TestMatchMoveService
 
         Record.Exception(placeWall);
 
-        Assert.Single(_matchRepository.SavedMoves);
+        Assert.Single(_matchRepository.MatchesSavedWithMove);
     }
 
     private void AddFirstPlayerWithClassicMatch()
@@ -379,6 +379,12 @@ public sealed class TestMatchMoveService
         return new ChosenPawnMove(MatchId, moveNumber, destinationSquare);
     }
 
+    private void PlaceFirstPlayerCenterWall()
+    {
+        ChosenWall centerWall = CreateWall(Match.FirstMoveNumber, CenterGroove);
+        _matchMoveService.PlaceWall(FirstToken, centerWall, _now);
+    }
+
     private static ChosenWall CreateWall(short moveNumber, string groove)
     {
         return new ChosenWall
@@ -388,11 +394,5 @@ public sealed class TestMatchMoveService
             Groove = groove,
             Orientation = WallOrientation.Horizontal,
         };
-    }
-
-    private void PlaceFirstPlayerCenterWall()
-    {
-        ChosenWall centerWall = CreateWall(Match.FirstMoveNumber, CenterGroove);
-        _matchMoveService.PlaceWall(FirstToken, centerWall, _now);
     }
 }

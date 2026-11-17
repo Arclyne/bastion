@@ -21,6 +21,7 @@ public sealed class TestMatchSearchService
     private const int RepeatedStartMinutes = 10;
     private const int RoomId = 1;
     private const string RoomCode = "K7MTQ3";
+    private const byte PrivateRoomClockMinutes = 10;
 
     private static readonly DateTime _now = new DateTime(2026, 11, 4, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _presenceCheckAt = _now.Add(MatchmakingPolicy.PresenceCheckInterval);
@@ -80,11 +81,11 @@ public sealed class TestMatchSearchService
     {
         AddPlayer();
         GameMode classicMode = GameModeSampleFactory.CreateClassic();
-        var settings = new RoomSettings(classicMode, classicMode.WallsPerPlayer, MatchmakingPolicy.RankedClockMinutes);
+        var settings = new RoomSettings(classicMode, classicMode.WallsPerPlayer, PrivateRoomClockMinutes);
         var identity = new RoomIdentity(RoomId, RoomCode);
         var host = new RoomMember(AccountId, Nickname);
         var room = new WaitingRoom(identity, settings, host);
-        _roomRegistry.TryOpen(room);
+        _roomRegistry.TryOpen(room, out _);
         Action start = () => _matchSearchService.StartSearch(Token, _now);
 
         Exception? exception = Record.Exception(start);
@@ -112,8 +113,8 @@ public sealed class TestMatchSearchService
 
         _matchSearchService.StartSearch(Token, repeatedStartAt);
 
-        QueueReview review = _matchmakingQueue.Review(_presenceCheckAt);
-        Assert.Single(review.PresenceRequests);
+        DateTime? searchStart = _matchmakingQueue.FindSearchStart(AccountId);
+        Assert.Equal(_now, searchStart);
     }
 
     [Fact]
@@ -142,12 +143,11 @@ public sealed class TestMatchSearchService
     {
         AddSearchingPlayer();
         _matchmakingQueue.Review(_presenceCheckAt);
-        DateTime responseDeadline = _presenceCheckAt.Add(MatchmakingPolicy.PresenceResponseWindow);
 
         _matchSearchService.ConfirmPresence(Token, _presenceCheckAt);
 
-        QueueReview review = _matchmakingQueue.Review(responseDeadline);
-        Assert.Empty(review.ExpiredSearches);
+        bool isAwaitingPresence = _matchmakingQueue.IsAwaitingPresence(AccountId);
+        Assert.False(isAwaitingPresence);
     }
 
     private void AddSearchingPlayer()

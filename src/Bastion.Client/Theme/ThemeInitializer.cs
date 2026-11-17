@@ -13,7 +13,7 @@ public static class ThemeInitializer
     private const string FontsDirectory = "Fonts";
     private const int SingleFaceIndex = 0;
 
-    private static readonly Dictionary<string, string> _fontFiles = new Dictionary<string, string>
+    private static readonly Dictionary<string, string> _fontFileNamesByFamily = new Dictionary<string, string>
     {
         [FontCatalog.SemiBold] = "Nunito-SemiBold.woff",
         [FontCatalog.Bold] = "Nunito-Bold.woff",
@@ -26,7 +26,7 @@ public static class ThemeInitializer
         ArgumentNullException.ThrowIfNull(game);
 
         string fontsPath = Path.Combine(AppContext.BaseDirectory, game.Content.RootDirectory, FontsDirectory);
-        foreach (KeyValuePair<string, string> fontFile in _fontFiles)
+        foreach (KeyValuePair<string, string> fontFile in _fontFileNamesByFamily)
         {
             byte[] fontData = File.ReadAllBytes(Path.Combine(fontsPath, fontFile.Value));
             KernSmithFontCreator.RegisterFont(fontFile.Key, fontData, style: null, SingleFaceIndex);

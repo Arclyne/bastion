@@ -13,12 +13,12 @@ public static class BoardSceneLayout
     private const string FourPlayerGoalColumnPrefix = "Meta4J_Columna";
     private const char FirstColumnName = 'A';
     private const int FirstRowNumber = 1;
-    private const int FirstIndex = 0;
     private const float BoardHalves = 2f;
     public const float SurfaceHeight = 0f;
     public const float BoardCenter = 0f;
     private const float CameraHeight = 16f;
     private const float CameraDistance = 12.5f;
+    private const float OppositeCameraDistance = -CameraDistance;
     private const float GrooveOffset = 0.5f;
     private const float WallLength = 1.8f;
     private const float WallThickness = 0.14f;
@@ -74,9 +74,9 @@ public static class BoardSceneLayout
             case Match.FirstTurnOrder:
                 return new Vector3(BoardCenter, CameraHeight, CameraDistance);
             case Match.SecondTurnOrder:
-                return new Vector3(BoardCenter, CameraHeight, -CameraDistance);
+                return new Vector3(BoardCenter, CameraHeight, OppositeCameraDistance);
             case Match.ThirdTurnOrder:
-                return new Vector3(-CameraDistance, CameraHeight, BoardCenter);
+                return new Vector3(OppositeCameraDistance, CameraHeight, BoardCenter);
             case Match.FourthTurnOrder:
                 return new Vector3(CameraDistance, CameraHeight, BoardCenter);
             default:
@@ -126,7 +126,7 @@ public static class BoardSceneLayout
     private static string GetFourPlayerGoalMeshName(byte boardSize, BoardCoordinates startingCoordinates)
     {
         int lastIndex = BoardLayout.GetLastIndex(boardSize);
-        if (startingCoordinates.RowIndex == FirstIndex)
+        if (startingCoordinates.RowIndex == BoardLayout.FirstIndex)
         {
             return string.Create(CultureInfo.InvariantCulture, $"{FourPlayerGoalRowPrefix}{boardSize}");
         }
@@ -138,7 +138,7 @@ public static class BoardSceneLayout
 
         int lastColumnCode = FirstColumnName + lastIndex;
         char lastColumnName = (char)lastColumnCode;
-        char goalColumn = startingCoordinates.ColumnIndex == FirstIndex ? lastColumnName : FirstColumnName;
+        char goalColumn = startingCoordinates.ColumnIndex == BoardLayout.FirstIndex ? lastColumnName : FirstColumnName;
         return string.Create(CultureInfo.InvariantCulture, $"{FourPlayerGoalColumnPrefix}{goalColumn}");
     }
 }

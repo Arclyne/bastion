@@ -20,14 +20,14 @@ public sealed class FriendRowView : Panel
     private readonly FriendRowViewModel _row;
     private readonly FriendActionsViewModel _actions;
 
-    public FriendRowView(FriendRowViewModel viewModel, FriendActionsViewModel actions)
+    public FriendRowView(FriendRowViewModel row, FriendActionsViewModel actions)
     {
-        ArgumentNullException.ThrowIfNull(viewModel);
+        ArgumentNullException.ThrowIfNull(row);
         ArgumentNullException.ThrowIfNull(actions);
 
-        _row = viewModel;
+        _row = row;
         _actions = actions;
-        BindingContext = viewModel;
+        BindingContext = row;
         Width = RowWidth;
         WidthUnits = DimensionUnitType.Absolute;
         Height = RowHeight;
@@ -38,7 +38,7 @@ public sealed class FriendRowView : Panel
             Orientation = Orientation.Horizontal,
             Spacing = ContentSpacing,
         };
-        Panel presenceDot = CreatePresenceDot(viewModel.IsConnected);
+        Panel presenceDot = CreatePresenceDot(row.IsConnected);
         StackPanel text = CreateText();
         content.AddChild(presenceDot);
         content.AddChild(text);

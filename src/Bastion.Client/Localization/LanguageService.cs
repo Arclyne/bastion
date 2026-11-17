@@ -134,7 +134,6 @@ public sealed class LanguageService : ILanguageService
         throw new ArgumentException("The language is not supported.", nameof(language));
     }
 
-
     private void OnLanguageChanged()
     {
         LanguageChanged?.Invoke(this, EventArgs.Empty);

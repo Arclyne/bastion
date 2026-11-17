@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Bastion.Server.Host.Matchmaking;
 
+/// <inheritdoc/>
 public sealed class MatchmakingBackgroundService : BackgroundService
 {
     private const int ReviewIntervalSeconds = 1;

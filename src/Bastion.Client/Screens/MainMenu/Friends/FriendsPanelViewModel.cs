@@ -42,18 +42,10 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         _clipboard = localServices.Clipboard;
         _uiContext = SynchronizationContext.Current;
         _allRows = new List<FriendRowViewModel>();
+        _formattedFriendCode = string.Empty;
         AddFriend = new AddFriendViewModel(session, clients.Friends);
-        AddFriend.FriendshipStarted += HandleFriendshipStarted;
         Actions = new FriendActionsViewModel(session, clients.Friends);
-        Actions.FriendRemoved += HandleFriendRemoved;
         Requests = new FriendRequestsViewModel(session, clients.Friends, localServices.TimeProvider);
-        Requests.FriendshipStarted += HandleFriendshipStarted;
-        Actions.MessageRequested += HandleMessageRequested;
-        var chatContext = new ChatContext(session, clients.Chat, localServices.TimeProvider);
-        Chat = new ChatTabViewModel(chatContext, this);
-        _notifications.FriendPresenceChanged += HandleFriendPresenceChanged;
-        _notifications.FriendRequestReceived += HandleFriendRequestReceived;
-        _notifications.FriendshipStarted += HandleRemoteFriendshipStarted;
         ConnectedFriends = new ObservableCollection<FriendRowViewModel>();
         OfflineFriends = new ObservableCollection<FriendRowViewModel>();
         SelectedTab = FriendsTab.Friends;
@@ -62,8 +54,16 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         ConnectedGroupTitle = string.Empty;
         OfflineGroupTitle = string.Empty;
         OwnFriendCodeText = string.Empty;
-        _formattedFriendCode = string.Empty;
         NoMatchText = string.Empty;
+        var chatContext = new ChatContext(session, clients.Chat, localServices.TimeProvider);
+        Chat = new ChatTabViewModel(chatContext, this);
+        AddFriend.FriendshipStarted += HandleFriendshipStarted;
+        Actions.FriendRemoved += HandleFriendRemoved;
+        Requests.FriendshipStarted += HandleFriendshipStarted;
+        Actions.MessageRequested += HandleMessageRequested;
+        _notifications.FriendPresenceChanged += HandleFriendPresenceChanged;
+        _notifications.FriendRequestReceived += HandleFriendRequestReceived;
+        _notifications.FriendshipStarted += HandleRemoteFriendshipStarted;
     }
 
     public AddFriendViewModel AddFriend { get; }
@@ -117,7 +117,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         get => Get<string>();
         set
         {
-            if (!Set(value))
+            if (value is null || !Set(value))
             {
                 return;
             }
