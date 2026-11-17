@@ -1,5 +1,5 @@
-using System.Linq;
 using System;
+using System.Linq;
 using Bastion.Domain.Common;
 using Bastion.Domain.Sessions;
 using Bastion.Server.Application.Sessions;

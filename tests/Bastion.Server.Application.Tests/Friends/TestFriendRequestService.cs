@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using Bastion.Domain.Common;
 using Bastion.Domain.Friends;
 using Bastion.Server.Application.Accounts;

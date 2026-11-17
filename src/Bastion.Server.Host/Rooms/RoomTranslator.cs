@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using Bastion.Contracts.Notifications;
 using Bastion.Contracts.Rooms;
 using Bastion.Domain.Common;

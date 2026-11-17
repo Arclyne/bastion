@@ -1,5 +1,5 @@
-using System.Data.Common;
 using System;
+using System.Data.Common;
 using Bastion.Contracts.Rooms;
 using Bastion.Domain.Common;
 using Bastion.Server.Application.Matches;
