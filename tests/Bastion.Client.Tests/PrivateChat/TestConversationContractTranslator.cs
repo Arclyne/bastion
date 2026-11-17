@@ -95,13 +95,7 @@ public sealed class TestConversationContractTranslator
     [Fact]
     public void ToSender_Notification_MapsFriendCode()
     {
-        var notification = new PrivateMessageNotification
-        {
-            SenderNickname = PartnerNickname,
-            SenderFriendCode = PartnerFriendCode,
-            Text = MessageText,
-            OccurredAt = _sentAt,
-        };
+        PrivateMessageNotification notification = CreateNotification(PartnerNickname, MessageText);
 
         PlayerTag sender = ConversationContractTranslator.ToSender(notification);
 
@@ -113,13 +107,7 @@ public sealed class TestConversationContractTranslator
     [InlineData("peón_ñandú")]
     public void ToSender_EnglishOrSpanishNickname_KeepsNickname(string nickname)
     {
-        var notification = new PrivateMessageNotification
-        {
-            SenderNickname = nickname,
-            SenderFriendCode = PartnerFriendCode,
-            Text = MessageText,
-            OccurredAt = _sentAt,
-        };
+        PrivateMessageNotification notification = CreateNotification(nickname, MessageText);
 
         PlayerTag sender = ConversationContractTranslator.ToSender(notification);
 
@@ -131,13 +119,7 @@ public sealed class TestConversationContractTranslator
     [InlineData("¿Jugamos otra? ¡Qué peón, Ñandú!")]
     public void ToPrivateMessage_EnglishOrSpanishText_KeepsText(string text)
     {
-        var notification = new PrivateMessageNotification
-        {
-            SenderNickname = PartnerNickname,
-            SenderFriendCode = PartnerFriendCode,
-            Text = text,
-            OccurredAt = _sentAt,
-        };
+        PrivateMessageNotification notification = CreateNotification(PartnerNickname, text);
 
         var message = ConversationContractTranslator.ToPrivateMessage(notification);
 
@@ -153,6 +135,17 @@ public sealed class TestConversationContractTranslator
             IsFriend = true,
             LastMessage = lastMessage,
             UnreadCount = UnreadCount,
+        };
+    }
+
+    private static PrivateMessageNotification CreateNotification(string senderNickname, string text)
+    {
+        return new PrivateMessageNotification
+        {
+            SenderNickname = senderNickname,
+            SenderFriendCode = PartnerFriendCode,
+            Text = text,
+            OccurredAt = _sentAt,
         };
     }
 }

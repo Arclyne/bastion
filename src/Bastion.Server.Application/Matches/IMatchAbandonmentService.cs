@@ -17,7 +17,9 @@ public interface IMatchAbandonmentService
     /// <param name="now">The current UTC time, which becomes the end of the match if it ends.</param>
     /// <exception cref="ArgumentNullException"><paramref name="sessionToken"/> is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
-    /// <exception cref="MatchNotJoinedException">The player is not playing that match.</exception>
+    /// <exception cref="MatchNotJoinedException">
+    /// The player is not playing that match, or the match is over.
+    /// </exception>
     /// <exception cref="MatchRepositoryException">The match could not be read or saved.</exception>
     void AbandonMatch(string sessionToken, int matchId, DateTime now);
 }

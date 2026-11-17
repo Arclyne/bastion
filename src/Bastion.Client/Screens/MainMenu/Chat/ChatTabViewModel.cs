@@ -161,7 +161,8 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
             return;
         }
 
-        PrivateConversation.ApplyPresence(_friends.FindPresence(friendCode));
+        ConversationPresence? presence = _friends.FindPresence(friendCode);
+        PrivateConversation.ApplyPresence(presence);
     }
 
     public void Dispose()

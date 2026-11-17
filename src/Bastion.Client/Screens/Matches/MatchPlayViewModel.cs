@@ -483,7 +483,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
             return;
         }
 
-        _logger.Warn($"The server did not send the own move back in time. NextMoveNumber={NextMoveNumber}");
+        _logger.Warn($"The own move did not come back from the server in time. NextMoveNumber={NextMoveNumber}");
         StopWaitingForMoveNotification();
     }
 

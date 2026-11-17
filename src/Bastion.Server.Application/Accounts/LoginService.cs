@@ -38,7 +38,7 @@ public sealed class LoginService : ILoginService
         if (account is null || !account.HasPassword())
         {
             _passwordHasher.SimulatePasswordCheck(password);
-            RecordAccessLog(AccessLogResult.AccountNotFound, attempt, accountId: null);
+            RecordAccessLog(AccessLogResult.AccountNotFound, attempt, account?.AccountId);
             throw new InvalidCredentialsException();
         }
 

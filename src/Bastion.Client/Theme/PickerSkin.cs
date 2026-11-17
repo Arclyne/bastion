@@ -52,13 +52,13 @@ public sealed class PickerSkin : InteractiveSkin
         return skin;
     }
 
-    public override void ShowState(InteractionFlags flags)
+    public override void ShowState(InteractionStates flags)
     {
-        bool isActive = flags.HasFlag(InteractionFlags.Hovered) || flags.HasFlag(InteractionFlags.Pressed);
+        bool isActive = flags.HasFlag(InteractionStates.Hovered) || flags.HasFlag(InteractionStates.Pressed);
 
-        _surface.FillColor = flags.HasFlag(InteractionFlags.Disabled) ? Palette.Disabled : Palette.Card;
+        _surface.FillColor = flags.HasFlag(InteractionStates.Disabled) ? Palette.Disabled : Palette.Card;
         _surface.StrokeColor = isActive ? Palette.BorderHover : Palette.Border;
-        _halo.Visible = flags.HasFlag(InteractionFlags.Focused);
+        _halo.Visible = flags.HasFlag(InteractionStates.Focused);
     }
 
     private static void StyleList(ListBox list)

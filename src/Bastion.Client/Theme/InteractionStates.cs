@@ -3,7 +3,7 @@ using System;
 namespace Bastion.Client.Theme;
 
 [Flags]
-public enum InteractionFlags
+public enum InteractionStates
 {
     None = 0,
     Hovered = 1,

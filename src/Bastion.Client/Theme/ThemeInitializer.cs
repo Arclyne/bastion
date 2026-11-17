@@ -28,7 +28,8 @@ public static class ThemeInitializer
         string fontsPath = Path.Combine(AppContext.BaseDirectory, game.Content.RootDirectory, FontsDirectory);
         foreach (KeyValuePair<string, string> fontFile in _fontFileNamesByFamily)
         {
-            byte[] fontData = File.ReadAllBytes(Path.Combine(fontsPath, fontFile.Value));
+            string fontPath = Path.Combine(fontsPath, fontFile.Value);
+            byte[] fontData = File.ReadAllBytes(fontPath);
             KernSmithFontCreator.RegisterFont(fontFile.Key, fontData, style: null, SingleFaceIndex);
         }
 

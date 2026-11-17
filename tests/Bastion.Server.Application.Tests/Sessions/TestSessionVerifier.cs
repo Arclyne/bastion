@@ -26,12 +26,12 @@ public sealed class TestSessionVerifier
     public TestSessionVerifier()
     {
         _verifier = new SessionVerifier(_unitOfWork, _tokenGenerator);
-        AddSession();
     }
 
     [Fact]
     public void Verify_UnknownToken_ThrowsInvalidSessionException()
     {
+        AddSession(Nickname);
         Action verify = () => _verifier.Verify(UnknownToken, _beforeExpiry);
 
         Assert.Throws<InvalidSessionException>(verify);
@@ -40,6 +40,7 @@ public sealed class TestSessionVerifier
     [Fact]
     public void Verify_ExpiredSession_ThrowsInvalidSessionException()
     {
+        AddSession(Nickname);
         DateTime atExpiry = _issuedAt.AddHours(Session.MaximumLifetimeHours);
 
         Action verify = () => _verifier.Verify(FakeSessionTokenGenerator.Token, atExpiry);
@@ -50,22 +51,50 @@ public sealed class TestSessionVerifier
     [Fact]
     public void Verify_ActiveSession_ReturnsNickname()
     {
+        AddSession(Nickname);
+
         ConnectedPlayer player = _verifier.Verify(FakeSessionTokenGenerator.Token, _beforeExpiry);
 
         Assert.Equal(Nickname, player.Nickname);
     }
 
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void Verify_EnglishOrSpanishNickname_ReturnsSameNickname(string nickname)
+    {
+        AddSession(nickname);
+
+        ConnectedPlayer player = _verifier.Verify(FakeSessionTokenGenerator.Token, _beforeExpiry);
+
+        Assert.Equal(nickname, player.Nickname);
+    }
+
     [Fact]
     public void VerifyIdentity_ActiveSession_ReturnsNickname()
     {
+        AddSession(Nickname);
+
         PlayerIdentity identity = _verifier.VerifyIdentity(FakeSessionTokenGenerator.Token, _beforeExpiry);
 
         Assert.Equal(Nickname, identity.Nickname);
     }
 
-    private void AddSession()
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void VerifyIdentity_EnglishOrSpanishNickname_ReturnsSameNickname(string nickname)
     {
-        var account = new Account(Nickname, Email);
+        AddSession(nickname);
+
+        PlayerIdentity identity = _verifier.VerifyIdentity(FakeSessionTokenGenerator.Token, _beforeExpiry);
+
+        Assert.Equal(nickname, identity.Nickname);
+    }
+
+    private void AddSession(string nickname)
+    {
+        var account = new Account(nickname, Email);
         _unitOfWork.AccountRepository.AddAccount(account);
         byte[] tokenHash = _tokenGenerator.Hash(FakeSessionTokenGenerator.Token);
         var ticket = new SessionTicket(tokenHash, _issuedAt);

@@ -22,7 +22,7 @@ public interface IAccountService
     /// With <see cref="AccountRestrictedFault"/>: the account is locked, pending, suspended or banned; the detail says
     /// which, and for how many minutes it stays locked.
     /// </exception>
-    /// <exception cref="FaultException">The server could not record the login or reach the database.</exception>
+    /// <exception cref="FaultException">The server could not record the login or read the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidCredentialsFault))]
     [FaultContract(typeof(AccountRestrictedFault))]

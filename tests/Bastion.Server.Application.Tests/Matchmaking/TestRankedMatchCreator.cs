@@ -32,10 +32,7 @@ public sealed class TestRankedMatchCreator
     public TestRankedMatchCreator()
     {
         _rankedMatchCreator = new RankedMatchCreator(_matchRepository, _turnOrderShuffler);
-        var firstSearch = new MatchSearch(FirstAccountId, FirstNickname, _startedAt);
-        var secondSearch = new MatchSearch(SecondAccountId, SecondNickname, _startedAt);
-        MatchSearch[] players = { firstSearch, secondSearch };
-        _pairing = new MatchPairing(players);
+        _pairing = CreatePairing(FirstNickname);
     }
 
     [Fact]
@@ -65,6 +62,19 @@ public sealed class TestRankedMatchCreator
 
         CreatedMatchParticipant firstPlayer = FindParticipant(createdMatch, Match.FirstTurnOrder);
         Assert.Equal(SecondNickname, firstPlayer.Player.Nickname);
+    }
+
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void TryCreateMatch_EnglishOrSpanishNickname_KeepsSameNickname(string nickname)
+    {
+        MatchPairing pairing = CreatePairing(nickname);
+
+        _rankedMatchCreator.TryCreateMatch(pairing, _startedAt, out CreatedMatch? createdMatch);
+
+        CreatedMatchParticipant firstPlayer = FindParticipant(createdMatch, Match.FirstTurnOrder);
+        Assert.Equal(nickname, firstPlayer.Player.Nickname);
     }
 
     [Fact]
@@ -116,6 +126,14 @@ public sealed class TestRankedMatchCreator
         bool isCreated = _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out _);
 
         Assert.False(isCreated);
+    }
+
+    private static MatchPairing CreatePairing(string firstNickname)
+    {
+        var firstSearch = new MatchSearch(FirstAccountId, firstNickname, _startedAt);
+        var secondSearch = new MatchSearch(SecondAccountId, SecondNickname, _startedAt);
+        MatchSearch[] players = { firstSearch, secondSearch };
+        return new MatchPairing(players);
     }
 
     private static CreatedMatchParticipant FindParticipant(CreatedMatch? createdMatch, byte turnOrder)

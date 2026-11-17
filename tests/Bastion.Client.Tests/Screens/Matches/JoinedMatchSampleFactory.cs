@@ -25,8 +25,13 @@ public static class JoinedMatchSampleFactory
 
     public static JoinedMatch CreateWithOwnTurnOrder(byte ownTurnOrder)
     {
+        return CreateWithRival(ownTurnOrder, RivalNickname);
+    }
+
+    public static JoinedMatch CreateWithRival(byte ownTurnOrder, string rivalNickname)
+    {
         byte rivalTurnOrder = ownTurnOrder == Match.FirstTurnOrder ? Match.SecondTurnOrder : Match.FirstTurnOrder;
-        var rival = new FoundMatchParticipant(RivalNickname, RivalEloRating, rivalTurnOrder);
+        var rival = new FoundMatchParticipant(rivalNickname, RivalEloRating, rivalTurnOrder);
         var own = new FoundMatchParticipant(OwnNickname, OwnEloRating, ownTurnOrder);
         FoundMatchParticipant[] participants = { rival, own };
         var format = new FoundMatchFormat(BoardSize, WallsPerPlayer, ClockMinutes);

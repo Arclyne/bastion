@@ -46,6 +46,20 @@ public sealed class TestVersusViewModel
         Assert.Equal(JoinedMatchSampleFactory.RivalNickname, rival.Nickname);
     }
 
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void Constructor_EnglishOrSpanishRivalNickname_ShowsSameNickname(string nickname)
+    {
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithRival(Match.FirstTurnOrder, nickname);
+        Func<VersusViewModel> createViewModel = () => new VersusViewModel(joinedMatch, _timeProvider);
+
+        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(createViewModel);
+
+        VersusPlayer rival = viewModel.Rivals.Single();
+        Assert.Equal(nickname, rival.Nickname);
+    }
+
     [Fact]
     public void Constructor_RankedRival_ShowsRivalElo()
     {

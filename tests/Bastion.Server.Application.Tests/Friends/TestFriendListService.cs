@@ -123,6 +123,20 @@ public sealed class TestFriendListService
         Assert.Equal(FriendNickname, first.Summary.Friend.Nickname);
     }
 
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void ListFriends_EnglishOrSpanishNickname_ReturnsSameNickname(string nickname)
+    {
+        AddCaller();
+        AddFriend(FriendAccountId, nickname);
+
+        FriendRoster roster = _friendListService.ListFriends(Token, _now);
+
+        FriendStatus friend = roster.Friends[0];
+        Assert.Equal(nickname, friend.Summary.Friend.Nickname);
+    }
+
     [Fact]
     public void RemoveFriend_InvalidSession_ThrowsInvalidSessionException()
     {

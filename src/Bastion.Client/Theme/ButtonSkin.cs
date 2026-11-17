@@ -44,10 +44,10 @@ public sealed class ButtonSkin : InteractiveSkin
         return skin;
     }
 
-    public override void ShowState(InteractionFlags flags)
+    public override void ShowState(InteractionStates flags)
     {
-        bool isDisabled = flags.HasFlag(InteractionFlags.Disabled);
-        bool isHovered = flags.HasFlag(InteractionFlags.Hovered);
+        bool isDisabled = flags.HasFlag(InteractionStates.Disabled);
+        bool isHovered = flags.HasFlag(InteractionStates.Hovered);
         float sink = IsSinking(flags) ? _look.ShadowOffsetY : 0;
 
         _surface.FillColor = PickFill(flags);
@@ -58,7 +58,7 @@ public sealed class ButtonSkin : InteractiveSkin
         _text.Y = sink;
         _text.Color = isDisabled ? Palette.Muted : _look.Text.Color;
         _halo.Y = sink;
-        _halo.Visible = flags.HasFlag(InteractionFlags.Focused) && !isDisabled;
+        _halo.Visible = flags.HasFlag(InteractionStates.Focused) && !isDisabled;
     }
 
     private static TextRuntime FindText(ButtonBase button)
@@ -74,24 +74,24 @@ public sealed class ButtonSkin : InteractiveSkin
         }
     }
 
-    private bool IsSinking(InteractionFlags flags)
+    private bool IsSinking(InteractionStates flags)
     {
-        return _look.ShouldSinkWhenPressed && flags.HasFlag(InteractionFlags.Pressed);
+        return _look.ShouldSinkWhenPressed && flags.HasFlag(InteractionStates.Pressed);
     }
 
-    private Color PickFill(InteractionFlags flags)
+    private Color PickFill(InteractionStates flags)
     {
-        if (flags.HasFlag(InteractionFlags.Disabled))
+        if (flags.HasFlag(InteractionStates.Disabled))
         {
             return Palette.Disabled;
         }
 
-        if (flags.HasFlag(InteractionFlags.Checked))
+        if (flags.HasFlag(InteractionStates.Checked))
         {
             return _look.SelectedFill;
         }
 
-        if (flags.HasFlag(InteractionFlags.Hovered))
+        if (flags.HasFlag(InteractionStates.Hovered))
         {
             return _look.HoverFill;
         }

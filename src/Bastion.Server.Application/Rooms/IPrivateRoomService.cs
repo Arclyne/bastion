@@ -36,7 +36,9 @@ public interface IPrivateRoomService
     /// <exception cref="ArgumentNullException">An argument is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="RoomRejectedException">The player cannot join; the rejection says why.</exception>
-    /// <exception cref="RoomRepositoryException">The match of a room that is gone could not be read.</exception>
+    /// <exception cref="RoomRepositoryException">
+    /// Whether a room with that code started a match could not be checked.
+    /// </exception>
     /// <exception cref="MatchRepositoryException">The unfinished matches of the player could not be read.</exception>
     RoomSnapshot JoinRoom(string sessionToken, string code, DateTime now);
 

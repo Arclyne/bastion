@@ -23,7 +23,7 @@ public interface IChatService
     /// With <see cref="ChatMessageRejectedFault"/>: the text is invalid or has a banned term, the author is muted,
     /// or the author writes too fast.
     /// </exception>
-    /// <exception cref="FaultException">The server could not reach the database.</exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     [FaultContract(typeof(ChatMessageRejectedFault))]
@@ -39,7 +39,7 @@ public interface IChatService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="InvalidSessionFault"/>: the session is not open.
     /// </exception>
-    /// <exception cref="FaultException">The server could not reach the database.</exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     LobbyChatLog OpenLobbyChat(string? sessionToken);

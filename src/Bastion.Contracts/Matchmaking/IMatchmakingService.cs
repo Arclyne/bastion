@@ -22,7 +22,7 @@ public interface IMatchmakingService
     /// in a room.
     /// </exception>
     /// <exception cref="FaultException">
-    /// The server could not reach the database to check the session or the unfinished matches of the player.
+    /// The server could not read the session or the unfinished matches of the player.
     /// </exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]

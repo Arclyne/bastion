@@ -21,7 +21,7 @@ public sealed class MatchChatRelay : IMatchChatRelay
         _matchChatNotifier = matchChatNotifier;
     }
 
-    public IReadOnlyList<int> ListParticipantAccountIds(int matchId)
+    public IReadOnlyList<int> ListActiveParticipantAccountIds(int matchId)
     {
         return _matchRepository.FindAccountIdsWithUnfinishedParticipation(matchId);
     }

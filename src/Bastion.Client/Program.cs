@@ -22,7 +22,8 @@ public static class Program
 
     private static void ConfigureLogging()
     {
-        var configurationFile = new FileInfo(Path.Combine(AppContext.BaseDirectory, LogConfigurationFileName));
+        string configurationPath = Path.Combine(AppContext.BaseDirectory, LogConfigurationFileName);
+        var configurationFile = new FileInfo(configurationPath);
         XmlConfigurator.Configure(LogManager.GetRepository(typeof(Program).Assembly), configurationFile);
     }
 

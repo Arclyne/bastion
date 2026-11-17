@@ -38,14 +38,16 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
     {
         IQueryable<FriendRequest> receivedRequests = _context.FriendRequests
             .Where(request => request.RecipientId == accountId);
-        return ListSummaries(receivedRequests, request => request.RequesterId);
+        Expression<Func<FriendRequest, int>> requesterIdSelector = request => request.RequesterId;
+        return ListSummaries(receivedRequests, requesterIdSelector);
     }
 
     public IReadOnlyList<FriendRequestSummary> ListSent(int accountId)
     {
         IQueryable<FriendRequest> sentRequests = _context.FriendRequests
             .Where(request => request.RequesterId == accountId);
-        return ListSummaries(sentRequests, request => request.RecipientId);
+        Expression<Func<FriendRequest, int>> recipientIdSelector = request => request.RecipientId;
+        return ListSummaries(sentRequests, recipientIdSelector);
     }
 
     public void Add(FriendRequest request)

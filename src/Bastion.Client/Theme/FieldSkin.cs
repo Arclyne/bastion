@@ -16,7 +16,7 @@ public sealed class FieldSkin : InteractiveSkin
 
     private readonly RectangleRuntime _halo;
     private readonly RectangleRuntime _surface;
-    private InteractionFlags _flags;
+    private InteractionStates _flags;
     private bool _hasError;
 
     private FieldSkin(TextBoxBase field)
@@ -55,12 +55,12 @@ public sealed class FieldSkin : InteractiveSkin
         return skin;
     }
 
-    public override void ShowState(InteractionFlags flags)
+    public override void ShowState(InteractionStates flags)
     {
         _flags = flags;
-        bool isFocused = flags.HasFlag(InteractionFlags.Focused);
+        bool isFocused = flags.HasFlag(InteractionStates.Focused);
 
-        _surface.FillColor = flags.HasFlag(InteractionFlags.Disabled) ? Palette.Disabled : Palette.White;
+        _surface.FillColor = flags.HasFlag(InteractionStates.Disabled) ? Palette.Disabled : Palette.White;
         _surface.StrokeColor = PickBorder(flags);
         _halo.FillColor = _hasError ? Palette.ErrorHalo : Palette.FocusHalo;
         _halo.Visible = _hasError || isFocused;
@@ -79,19 +79,19 @@ public sealed class FieldSkin : InteractiveSkin
         visual.CaretColor = Palette.Accent;
     }
 
-    private Color PickBorder(InteractionFlags flags)
+    private Color PickBorder(InteractionStates flags)
     {
         if (_hasError)
         {
             return Palette.Error;
         }
 
-        if (flags.HasFlag(InteractionFlags.Focused))
+        if (flags.HasFlag(InteractionStates.Focused))
         {
             return Palette.Accent;
         }
 
-        if (flags.HasFlag(InteractionFlags.Hovered))
+        if (flags.HasFlag(InteractionStates.Hovered))
         {
             return Palette.BorderHover;
         }

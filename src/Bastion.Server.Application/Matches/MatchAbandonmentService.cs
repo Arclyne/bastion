@@ -40,7 +40,8 @@ public sealed class MatchAbandonmentService : IMatchAbandonmentService
         if (match is null || !match.CanBeAbandonedBy(player.AccountId))
         {
             _logger.Warn(
-                $"A player tried to leave a match they do not play. AccountId={player.AccountId}; MatchId={matchId}");
+                "A player without an active participation tried to leave the match. "
+                + $"AccountId={player.AccountId}; MatchId={matchId}");
             throw new MatchNotJoinedException();
         }
 

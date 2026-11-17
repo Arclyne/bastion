@@ -23,7 +23,7 @@ public interface IMatchChatService
     /// </exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="ChatChannelForbiddenException">
-    /// The author does not take part in the unfinished match.
+    /// The author has no unfinished participation in the match.
     /// </exception>
     /// <exception cref="ChatMessageRejectedException">
     /// The text is invalid or has a banned term, the author is muted, or the author writes too fast.

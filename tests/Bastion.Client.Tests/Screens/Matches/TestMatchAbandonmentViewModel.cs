@@ -159,6 +159,18 @@ public sealed class TestMatchAbandonmentViewModel : IDisposable
         Assert.Equal(expectedLeftNicknames, _viewModel.LeftNicknames);
     }
 
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void MatchAbandoned_EnglishOrSpanishNickname_RemembersSameNickname(string nickname)
+    {
+        string[] expectedLeftNicknames = { nickname };
+
+        _matchClient.RaiseMatchAbandoned(JoinedMatchSampleFactory.MatchId, nickname, isMatchOver: false);
+
+        Assert.Equal(expectedLeftNicknames, _viewModel.LeftNicknames);
+    }
+
     [Fact]
     public void RequestReturnToMenu_RivalAbandoned_RequestsReturnToMenu()
     {

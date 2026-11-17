@@ -37,8 +37,9 @@ public sealed class MatchChatService : IMatchChatService
         ArgumentNullException.ThrowIfNull(submission);
 
         ConnectedPlayer author = _sessionVerifier.Verify(sessionToken, now);
-        IReadOnlyList<int> participantAccountIds = _matchChatRelay.ListParticipantAccountIds(submission.MatchId);
-        if (!participantAccountIds.Contains(author.AccountId))
+        IReadOnlyList<int> activeParticipantAccountIds = _matchChatRelay.ListActiveParticipantAccountIds(
+            submission.MatchId);
+        if (!activeParticipantAccountIds.Contains(author.AccountId))
         {
             _logger.Warn(
                 "A player without an unfinished participation wrote in a match chat. "
@@ -52,7 +53,7 @@ public sealed class MatchChatService : IMatchChatService
             throw new ChatMessageRejectedException(ChatRejection.TooFast);
         }
 
-        IEnumerable<int> otherParticipantAccountIds = participantAccountIds.Where(
+        IEnumerable<int> otherParticipantAccountIds = activeParticipantAccountIds.Where(
             accountId => accountId != author.AccountId);
         var recipientAccountIds = new List<int>(otherParticipantAccountIds);
         var line = new ChatLine(author, screenedText, now);

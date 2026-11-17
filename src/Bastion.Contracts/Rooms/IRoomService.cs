@@ -43,7 +43,7 @@ public interface IRoomService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="RoomRejectedFault"/>: the player cannot join; the detail says why.
     /// </exception>
-    /// <exception cref="FaultException">The server could not reach the database.</exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     [FaultContract(typeof(RoomRejectedFault))]
@@ -61,7 +61,7 @@ public interface IRoomService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="RoomRejectedFault"/>: the player is not in a room.
     /// </exception>
-    /// <exception cref="FaultException">The server could not reach the database.</exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     [FaultContract(typeof(RoomRejectedFault))]
@@ -97,7 +97,7 @@ public interface IRoomService
     /// With <see cref="RoomRejectedFault"/>: the match cannot start; the detail says why.
     /// </exception>
     /// <exception cref="FaultException">
-    /// The server could not reach the database or save the match; the room stays open.
+    /// The server could not read the database or save the match; the room stays open.
     /// </exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
@@ -119,7 +119,7 @@ public interface IRoomService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="InvalidSessionFault"/>: the session is not open.
     /// </exception>
-    /// <exception cref="FaultException">The server could not reach the database.</exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     RoomState? FindOwnRoom(string? sessionToken);
