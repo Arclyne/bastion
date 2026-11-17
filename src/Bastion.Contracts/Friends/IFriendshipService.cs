@@ -20,7 +20,7 @@ public interface IFriendshipService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="InvalidSessionFault"/>: the session is not open.
     /// </exception>
-    /// <exception cref="FaultException">The server could not reach the database.</exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     FriendList ListFriends(string? sessionToken);
@@ -35,7 +35,7 @@ public interface IFriendshipService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="InvalidSessionFault"/>: the session is not open.
     /// </exception>
-    /// <exception cref="FaultException">The server could not reach the database.</exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     PlayerSearchEntry[]? SearchPlayers(string? sessionToken, string? text);
@@ -68,7 +68,7 @@ public interface IFriendshipService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="InvalidSessionFault"/>: the session is not open.
     /// </exception>
-    /// <exception cref="FaultException">The server could not reach the database.</exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     FriendRequestList ListFriendRequests(string? sessionToken);
