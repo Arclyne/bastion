@@ -26,7 +26,7 @@ public sealed class TestMatchmakingDispatcher
     public TestMatchmakingDispatcher()
     {
         var turnOrderShuffler = new FakeTurnOrderShuffler();
-        var rankedMatchCreator = new RankedMatchCreator(_matchRepository, turnOrderShuffler);
+        var rankedMatchCreator = new RankedMatchCreator(_matchRepository, turnOrderShuffler, _matchmakingNotifier);
         _matchmakingDispatcher = new MatchmakingDispatcher(_matchmakingQueue, _matchmakingNotifier, rankedMatchCreator);
         var firstSearch = new MatchSearch(FirstAccountId, FirstNickname, _startedAt);
         _matchmakingQueue.TryAdd(firstSearch);

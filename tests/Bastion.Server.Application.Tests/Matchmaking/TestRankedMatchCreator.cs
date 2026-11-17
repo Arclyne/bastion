@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Bastion.Domain.Matches;
 using Bastion.Domain.Matchmaking;
@@ -26,106 +25,111 @@ public sealed class TestRankedMatchCreator
 
     private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
     private readonly FakeTurnOrderShuffler _turnOrderShuffler = new FakeTurnOrderShuffler();
+    private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
     private readonly RankedMatchCreator _rankedMatchCreator;
     private readonly MatchPairing _pairing;
 
     public TestRankedMatchCreator()
     {
-        _rankedMatchCreator = new RankedMatchCreator(_matchRepository, _turnOrderShuffler);
+        _rankedMatchCreator = new RankedMatchCreator(_matchRepository, _turnOrderShuffler, _matchmakingNotifier);
         _pairing = CreatePairing(FirstNickname);
     }
 
     [Fact]
-    public void TryCreateMatch_ActiveGameMode_SavesOneMatch()
+    public void CreateMatch_ActiveGameMode_SavesOneMatch()
     {
-        _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out _);
+        _rankedMatchCreator.CreateMatch(_pairing, _startedAt);
 
         Assert.Single(_matchRepository.SavedMatches);
     }
 
     [Fact]
-    public void TryCreateMatch_ActiveGameMode_ReturnsSavedMatchId()
+    public void CreateMatch_ActiveGameMode_NotifiesSavedMatchId()
     {
         _matchRepository.NextMatchId = GeneratedMatchId;
 
-        _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out CreatedMatch? createdMatch);
+        _rankedMatchCreator.CreateMatch(_pairing, _startedAt);
 
-        Assert.Equal(GeneratedMatchId, createdMatch?.MatchId);
+        CreatedMatch createdMatch = _matchmakingNotifier.CreatedMatches.Single();
+        Assert.Equal(GeneratedMatchId, createdMatch.MatchId);
     }
 
     [Fact]
-    public void TryCreateMatch_ShuffleReversesPlayers_GivesFirstTurnToSecondPlayer()
+    public void CreateMatch_ShuffleReversesPlayers_GivesFirstTurnToSecondPlayer()
     {
         _turnOrderShuffler.ShouldReverseOrder = true;
 
-        _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out CreatedMatch? createdMatch);
+        _rankedMatchCreator.CreateMatch(_pairing, _startedAt);
 
-        CreatedMatchParticipant firstPlayer = FindParticipant(createdMatch, Match.FirstTurnOrder);
+        CreatedMatchParticipant firstPlayer = FindParticipant(Match.FirstTurnOrder);
         Assert.Equal(SecondNickname, firstPlayer.Player.Nickname);
     }
 
     [Theory]
     [InlineData("rival_one")]
     [InlineData("peón_ñandú")]
-    public void TryCreateMatch_EnglishOrSpanishNickname_KeepsSameNickname(string nickname)
+    public void CreateMatch_EnglishOrSpanishNickname_KeepsSameNickname(string nickname)
     {
         MatchPairing pairing = CreatePairing(nickname);
 
-        _rankedMatchCreator.TryCreateMatch(pairing, _startedAt, out CreatedMatch? createdMatch);
+        _rankedMatchCreator.CreateMatch(pairing, _startedAt);
 
-        CreatedMatchParticipant firstPlayer = FindParticipant(createdMatch, Match.FirstTurnOrder);
+        CreatedMatchParticipant firstPlayer = FindParticipant(Match.FirstTurnOrder);
         Assert.Equal(nickname, firstPlayer.Player.Nickname);
     }
 
     [Fact]
-    public void TryCreateMatch_PlayerWithStatistic_KeepsTheirElo()
+    public void CreateMatch_PlayerWithStatistic_KeepsTheirElo()
     {
         _matchRepository.EloRatingsByAccountId[FirstAccountId] = FirstEloRating;
 
-        _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out CreatedMatch? createdMatch);
+        _rankedMatchCreator.CreateMatch(_pairing, _startedAt);
 
-        CreatedMatchParticipant firstPlayer = FindParticipant(createdMatch, Match.FirstTurnOrder);
+        CreatedMatchParticipant firstPlayer = FindParticipant(Match.FirstTurnOrder);
         Assert.Equal(FirstEloRating, firstPlayer.EloRating);
     }
 
     [Fact]
-    public void TryCreateMatch_PlayerWithoutStatistic_StartsAtDefaultElo()
+    public void CreateMatch_PlayerWithoutStatistic_StartsAtDefaultElo()
     {
-        _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out CreatedMatch? createdMatch);
+        _rankedMatchCreator.CreateMatch(_pairing, _startedAt);
 
-        CreatedMatchParticipant secondPlayer = FindParticipant(createdMatch, Match.SecondTurnOrder);
+        CreatedMatchParticipant secondPlayer = FindParticipant(Match.SecondTurnOrder);
         Assert.Equal(ModeStatistic.DefaultEloRating, secondPlayer.EloRating);
     }
 
     [Fact]
-    public void TryCreateMatch_InactiveGameMode_ReturnsFalse()
+    public void CreateMatch_InactiveGameMode_NotifiesMatchCreationFailed()
     {
         _matchRepository.ActiveGameMode = null;
 
-        bool isCreated = _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out _);
+        _rankedMatchCreator.CreateMatch(_pairing, _startedAt);
 
-        Assert.False(isCreated);
+        SearchEndReason reason = _matchmakingNotifier.EndReasonsByAccountId[FirstAccountId];
+        Assert.Equal(SearchEndReason.MatchCreationFailed, reason);
     }
 
     [Fact]
-    public void TryCreateMatch_FourSeatGameMode_ReturnsFalse()
+    public void CreateMatch_FourSeatGameMode_NotifiesMatchCreationFailed()
     {
         _matchRepository.ActiveGameMode = GameModeSampleFactory.CreateClassicWithFourSeats();
 
-        bool isCreated = _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out _);
+        _rankedMatchCreator.CreateMatch(_pairing, _startedAt);
 
-        Assert.False(isCreated);
+        SearchEndReason reason = _matchmakingNotifier.EndReasonsByAccountId[FirstAccountId];
+        Assert.Equal(SearchEndReason.MatchCreationFailed, reason);
     }
 
     [Fact]
-    public void TryCreateMatch_RepositoryFails_ReturnsFalse()
+    public void CreateMatch_RepositoryFails_NotifiesMatchCreationFailed()
     {
         var cause = new InvalidOperationException(RepositoryFailureMessage);
         _matchRepository.MatchSaveFailure = new MatchRepositoryException(cause);
 
-        bool isCreated = _rankedMatchCreator.TryCreateMatch(_pairing, _startedAt, out _);
+        _rankedMatchCreator.CreateMatch(_pairing, _startedAt);
 
-        Assert.False(isCreated);
+        SearchEndReason reason = _matchmakingNotifier.EndReasonsByAccountId[FirstAccountId];
+        Assert.Equal(SearchEndReason.MatchCreationFailed, reason);
     }
 
     private static MatchPairing CreatePairing(string firstNickname)
@@ -136,10 +140,9 @@ public sealed class TestRankedMatchCreator
         return new MatchPairing(players);
     }
 
-    private static CreatedMatchParticipant FindParticipant(CreatedMatch? createdMatch, byte turnOrder)
+    private CreatedMatchParticipant FindParticipant(byte turnOrder)
     {
-        IReadOnlyList<CreatedMatchParticipant> participants =
-            createdMatch?.Participants ?? Array.Empty<CreatedMatchParticipant>();
-        return participants.First(participant => participant.TurnOrder == turnOrder);
+        CreatedMatch createdMatch = _matchmakingNotifier.CreatedMatches.Single();
+        return createdMatch.Participants.First(participant => participant.TurnOrder == turnOrder);
     }
 }
