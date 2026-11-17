@@ -1,7 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using Bastion.Domain.Accounts;
+using Bastion.Domain.Common;
 using Bastion.Server.Application.Accounts;
 
 namespace Bastion.Server.Application.Tests.Fakes;
@@ -27,7 +28,7 @@ public sealed class FakeAccountRepository : IAccountRepository
         _playerIdentities.Add(playerIdentity);
     }
 
-    public Account? FindByLoginIdentifier(string loginIdentifier)
+    public Lookup<Account> FindByLoginIdentifier(string loginIdentifier)
     {
         foreach (Account account in _accounts)
         {
@@ -35,26 +36,29 @@ public sealed class FakeAccountRepository : IAccountRepository
             bool isEmail = string.Equals(account.Email, loginIdentifier, StringComparison.OrdinalIgnoreCase);
             if (isNickname || isEmail)
             {
-                return account;
+                return Lookup.Found(account);
             }
         }
 
-        return null;
+        return Lookup.Missing<Account>("Search=LoginIdentifier");
     }
 
-    public Account? FindById(int accountId)
+    public Lookup<Account> FindById(int accountId)
     {
-        return _accounts.Find(account => account.AccountId == accountId);
+        Account? account = _accounts.Find(candidate => candidate.AccountId == accountId);
+        return Lookup.FromNullable(account, $"AccountId={accountId}");
     }
 
-    public PlayerIdentity? FindPlayerIdentity(int accountId)
+    public Lookup<PlayerIdentity> FindPlayerIdentity(int accountId)
     {
-        return _playerIdentities.Find(playerIdentity => playerIdentity.AccountId == accountId);
+        PlayerIdentity? identity = _playerIdentities.Find(playerIdentity => playerIdentity.AccountId == accountId);
+        return Lookup.FromNullable(identity, $"AccountId={accountId}");
     }
 
-    public PlayerIdentity? FindPlayerIdentityByFriendCode(string friendCode)
+    public Lookup<PlayerIdentity> FindPlayerIdentityByFriendCode(string friendCode)
     {
-        return _playerIdentities.Find(playerIdentity => playerIdentity.FriendCode == friendCode);
+        PlayerIdentity? identity = _playerIdentities.Find(playerIdentity => playerIdentity.FriendCode == friendCode);
+        return Lookup.FromNullable(identity, $"FriendCode={friendCode}");
     }
 
     public IReadOnlyList<PlayerIdentity> SearchPlayerIdentities(string nicknamePrefix, int limit)

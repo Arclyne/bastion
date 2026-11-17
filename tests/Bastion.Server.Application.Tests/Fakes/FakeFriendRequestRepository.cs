@@ -1,6 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.Friends;
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
@@ -16,9 +17,10 @@ public sealed class FakeFriendRequestRepository : IFriendRequestRepository
         _requests = new List<FriendRequest>();
     }
 
-    public FriendRequest? FindBetween(int firstAccountId, int secondAccountId)
+    public Lookup<FriendRequest> FindBetween(int firstAccountId, int secondAccountId)
     {
-        return _requests.Find(request => IsBetween(request, firstAccountId, secondAccountId));
+        FriendRequest? request = _requests.Find(candidate => IsBetween(candidate, firstAccountId, secondAccountId));
+        return Lookup.FromNullable(request, $"FirstAccountId={firstAccountId}; SecondAccountId={secondAccountId}");
     }
 
     public IReadOnlyList<FriendRequest> ListInvolving(int accountId)
