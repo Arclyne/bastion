@@ -23,7 +23,9 @@ public interface IRoomService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="RoomRejectedFault"/>: the room cannot open; the detail says why.
     /// </exception>
-    /// <exception cref="FaultException">The server could not read or write the database.</exception>
+    /// <exception cref="FaultException">
+    /// The server could not read or write the database, or found no free room code.
+    /// </exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
     [FaultContract(typeof(RoomRejectedFault))]

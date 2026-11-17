@@ -347,7 +347,8 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         HasConnectedFriends = ConnectedFriends.Count > 0;
         HasOfflineFriends = OfflineFriends.Count > 0;
         bool hasNoMatch = _allRows.Count > 0 && ConnectedFriends.Count + OfflineFriends.Count == 0;
-        NoMatchText = hasNoMatch ? FormatText(Strings.FriendsNoMatchFormat, FilterText.Trim()) : string.Empty;
+        string filter = FilterText.Trim();
+        NoMatchText = hasNoMatch ? FormatText(Strings.FriendsNoMatchFormat, filter) : string.Empty;
     }
 
     private bool IsMatchingFilter(FriendRowViewModel row)

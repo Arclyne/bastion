@@ -71,14 +71,4 @@ public class MatchSearch
         _presenceRequestedAt = null;
         _lastConfirmedAt = now;
     }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is MatchSearch other && other.AccountId == AccountId;
-    }
-
-    public override int GetHashCode()
-    {
-        return AccountId.GetHashCode();
-    }
 }

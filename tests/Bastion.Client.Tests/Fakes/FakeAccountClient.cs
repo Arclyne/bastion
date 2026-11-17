@@ -9,9 +9,12 @@ public sealed class FakeAccountClient : IAccountClient
 
     public int LogInCount { get; private set; }
 
+    public LoginCredentials? LastCredentials { get; private set; }
+
     public LoggedInSession LogIn(LoginCredentials credentials)
     {
         LogInCount++;
+        LastCredentials = credentials;
         return new LoggedInSession(SessionToken, Nickname, string.Empty);
     }
 }

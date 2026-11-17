@@ -94,8 +94,8 @@ public sealed class ConversationClient : IConversationClient
 
     private void Call(Action<IConversationService> operation)
     {
-        Func<IConversationService, bool> operationAsFunction = service => CompleteOperation(operation, service);
-        Call(operationAsFunction);
+        Func<IConversationService, bool> completeOperation = service => CompleteOperation(operation, service);
+        Call(completeOperation);
     }
 
     private static bool CompleteOperation(Action<IConversationService> operation, IConversationService service)

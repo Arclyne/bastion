@@ -20,21 +20,10 @@ public sealed class RivalAbandonedDialogView : DialogCard
             nameof(MatchAbandonmentViewModel.RivalAbandonedText),
             TextStyleCatalog.DialogMessage,
             DialogMetrics.ContentWidth);
-        Button menuButton = CreateMenuButton();
+        Button menuButton = CreateWideButton(nameof(Strings.MatchBackToMenuButton), HandleMenuClick);
         Content.AddChild(title);
         Content.AddChild(message);
         Content.AddChild(menuButton);
-    }
-
-    private Button CreateMenuButton()
-    {
-        Button menuButton = ViewFactory.CreateButton(
-            nameof(Strings.MatchBackToMenuButton),
-            DialogMetrics.ContentWidth,
-            DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(menuButton, ButtonLookCatalog.Primary);
-        menuButton.Click += HandleMenuClick;
-        return menuButton;
     }
 
     private void HandleMenuClick(object? sender, EventArgs e)

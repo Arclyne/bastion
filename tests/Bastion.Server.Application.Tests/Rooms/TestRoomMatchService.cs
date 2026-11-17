@@ -151,7 +151,7 @@ public sealed class TestRoomMatchService
     }
 
     [Fact]
-    public void StartMatch_ReadyRoom_FreesMembersFromRoom()
+    public void StartMatch_ReadyRoom_FreesGuestFromRoom()
     {
         FillRoom();
 

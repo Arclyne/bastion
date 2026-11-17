@@ -54,14 +54,8 @@ public sealed class ConversationRowView : Panel
         var previewVisual = (LabelVisual)preview.Visual;
         previewVisual.MaxNumberOfLines = PreviewLines;
 
-        var text = new StackPanel
-        {
-            Spacing = PanelMetrics.TextSpacing,
-            X = PaddingX,
-        };
-        text.AddChild(nickname);
-        text.AddChild(preview);
-        ViewFactory.CenterVertically(text);
+        StackPanel text = ViewFactory.CreateCenteredLines(nickname, preview);
+        text.X = PaddingX;
         return text;
     }
 

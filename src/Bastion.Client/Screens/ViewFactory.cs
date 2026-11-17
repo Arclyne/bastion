@@ -164,6 +164,21 @@ public static class ViewFactory
         return container;
     }
 
+    public static StackPanel CreateCenteredLines(Label first, Label second)
+    {
+        ArgumentNullException.ThrowIfNull(first);
+        ArgumentNullException.ThrowIfNull(second);
+
+        var lines = new StackPanel
+        {
+            Spacing = PanelMetrics.TextSpacing,
+        };
+        lines.AddChild(first);
+        lines.AddChild(second);
+        CenterVertically(lines);
+        return lines;
+    }
+
     public static void CenterVertically(FrameworkElement element)
     {
         ArgumentNullException.ThrowIfNull(element);

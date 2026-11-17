@@ -9,5 +9,5 @@ public interface IFriendNotifier
 
     void NotifyFriendRequestReceived(int recipientAccountId, FriendRequestSummary request);
 
-    void NotifyFriendshipStarted(int accountId, PlayerIdentity friend);
+    void NotifyFriendshipStarted(int recipientAccountId, PlayerIdentity friend);
 }

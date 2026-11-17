@@ -105,11 +105,9 @@ public sealed class PrivateConversationView : StackPanel
 
     private StackPanel CreateLoadFailure()
     {
-        StackPanel failure = ViewFactory.CreateLoadFailure(
-            nameof(Strings.ChatLoadFailed),
-            nameof(Strings.ChatRetry),
-            HandleRetryClick);
-        failure.SetBinding(nameof(IsVisible), nameof(PrivateConversationViewModel.HasLoadFailed));
+        StackPanel failure = ConversationPartFactory.CreateLoadFailure(
+            HandleRetryClick,
+            nameof(PrivateConversationViewModel.HasLoadFailed));
         return failure;
     }
 

@@ -23,21 +23,10 @@ public sealed class PresenceDialogView : DialogCard
             nameof(MatchSearchViewModel.PresenceMessage),
             TextStyleCatalog.DialogMessage,
             DialogMetrics.ContentWidth);
-        Button confirmButton = CreateConfirmButton();
+        Button confirmButton = CreateWideButton(nameof(Strings.MatchSearchPresenceConfirmButton), HandleConfirmClick);
         Content.AddChild(title);
         Content.AddChild(message);
         Content.AddChild(confirmButton);
-    }
-
-    private Button CreateConfirmButton()
-    {
-        Button confirmButton = ViewFactory.CreateButton(
-            nameof(Strings.MatchSearchPresenceConfirmButton),
-            DialogMetrics.ContentWidth,
-            DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(confirmButton, ButtonLookCatalog.Primary);
-        confirmButton.Click += HandleConfirmClick;
-        return confirmButton;
     }
 
     private async void HandleConfirmClick(object? sender, EventArgs e)

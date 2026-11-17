@@ -201,8 +201,8 @@ public sealed class FriendshipService : IFriendshipService
 
     private void TranslateFriendshipFailures(string operationName, Action operation)
     {
-        Func<bool> operationAsFunction = () => CompleteOperation(operation);
-        TranslateFriendshipFailures(operationName, operationAsFunction);
+        Func<bool> completeOperation = () => CompleteOperation(operation);
+        TranslateFriendshipFailures(operationName, completeOperation);
     }
 
     private static bool CompleteOperation(Action operation)

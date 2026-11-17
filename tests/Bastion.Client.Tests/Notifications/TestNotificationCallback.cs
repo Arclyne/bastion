@@ -142,6 +142,24 @@ public sealed class TestNotificationCallback
         Assert.Equal(FirstNickname, _chatMessage?.Message.Author.Nickname);
     }
 
+    [Theory]
+    [InlineData("Good game, well played!")]
+    [InlineData("¿Otra partida? ¡Qué peón, Ñandú!")]
+    public void ReceiveNotification_EnglishOrSpanishChatText_RaisesSameText(string text)
+    {
+        _notificationCallback.ChatMessageReceived += HandleChatMessageReceived;
+        var notification = new ChatMessageNotification
+        {
+            SenderNickname = FirstNickname,
+            Text = text,
+            OccurredAt = _sentAt,
+        };
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(text, _chatMessage?.Message.Text);
+    }
+
     [Fact]
     public void ReceiveNotification_MatchChatMessage_RaisesMatchId()
     {

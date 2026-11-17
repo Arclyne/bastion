@@ -185,12 +185,12 @@ public sealed class NotificationChannelRegistry
         NotifyPlayer(recipientAccountId, notification);
     }
 
-    public void NotifyFriendshipStarted(int accountId, PlayerIdentity friend)
+    public void NotifyFriendshipStarted(int recipientAccountId, PlayerIdentity friend)
     {
         ArgumentNullException.ThrowIfNull(friend);
 
         var notification = FriendshipTranslator.ToFriendshipStartedNotification(friend, GetUtcNow());
-        NotifyPlayer(accountId, notification);
+        NotifyPlayer(recipientAccountId, notification);
     }
 
     public void NotifyPrivateMessage(PrivateMessageDelivery delivery)

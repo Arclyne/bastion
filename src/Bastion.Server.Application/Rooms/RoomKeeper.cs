@@ -6,7 +6,7 @@ namespace Bastion.Server.Application.Rooms;
 
 public sealed class RoomKeeper : IRoomKeeper
 {
-    private const int MaximumCodeAttempts = 10;
+    public const int MaximumCodeDraws = 10;
 
     private readonly IRoomRegistry _roomRegistry;
     private readonly IRoomRepository _roomRepository;
@@ -108,7 +108,7 @@ public sealed class RoomKeeper : IRoomKeeper
 
     private string CreateFreeCode()
     {
-        for (int attempt = 0; attempt < MaximumCodeAttempts; attempt++)
+        for (int attempt = 0; attempt < MaximumCodeDraws; attempt++)
         {
             if (_roomRegistry.TryCreateUnusedCode(out string? code) && !_roomRepository.IsCodeTaken(code))
             {

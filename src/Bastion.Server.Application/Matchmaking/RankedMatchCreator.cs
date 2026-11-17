@@ -47,7 +47,8 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
             if (gameMode is null)
             {
                 _logger.Error(
-                    $"The ranked match was not created because its game mode is inactive. AccountIds={accountIdsText}");
+                    "The ranked match was not created because no active game mode has its code. "
+                    + $"AccountIds={accountIdsText}");
                 return false;
             }
 

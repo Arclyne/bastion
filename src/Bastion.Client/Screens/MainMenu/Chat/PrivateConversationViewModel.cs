@@ -356,15 +356,15 @@ public sealed class PrivateConversationViewModel : ModeratedChatViewModel
         ShowMute(transcript.Mute);
     }
 
-    private void ShowLoadFailure()
-    {
-        HasLoadFailed = true;
-    }
-
     private void ReportLoadFailure(Exception cause)
     {
         _logger.Error("The private conversation could not be loaded.", cause);
         ShowLoadFailure();
+    }
+
+    private void ShowLoadFailure()
+    {
+        HasLoadFailed = true;
     }
 
     private void OnMessageSent(PrivateMessageSentEventArgs e)

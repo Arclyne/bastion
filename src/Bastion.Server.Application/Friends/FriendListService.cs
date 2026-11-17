@@ -35,7 +35,7 @@ public sealed class FriendListService : IFriendListService
         IReadOnlyList<FriendSummary> friendSummaries = _unitOfWork.Friendships.ListFriends(player.AccountId);
         IEnumerable<FriendStatus> orderedFriends = friendSummaries
             .Select(ToFriendStatus)
-            .OrderBy(friend => friend.Summary.Friend.Nickname, StringComparer.OrdinalIgnoreCase);
+            .OrderBy(status => status.Summary.Friend.Nickname, StringComparer.OrdinalIgnoreCase);
         var friends = new List<FriendStatus>(orderedFriends);
         return new FriendRoster(player.FriendCode, friends, now);
     }

@@ -41,7 +41,8 @@ public sealed class MatchChatService : IMatchChatService
         if (!participantAccountIds.Contains(author.AccountId))
         {
             _logger.Warn(
-                $"A non-participant wrote in a match chat. AccountId={author.AccountId}; MatchId={submission.MatchId}");
+                "A player without an unfinished participation wrote in a match chat. "
+                + $"AccountId={author.AccountId}; MatchId={submission.MatchId}");
             throw new ChatChannelForbiddenException();
         }
 

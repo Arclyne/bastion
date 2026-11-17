@@ -88,7 +88,7 @@ public sealed class TestPrivateChatService
     }
 
     [Fact]
-    public void SendPrivateMessage_Friend_StoresTrimmedText()
+    public void SendPrivateMessage_PaddedText_StoresTrimmedText()
     {
         AddPlayers();
         PrivateMessageDraft draft = CreateDraftToFriend(PaddedText);
@@ -304,7 +304,7 @@ public sealed class TestPrivateChatService
     }
 
     [Fact]
-    public void OpenConversation_Friend_CanWrite()
+    public void OpenConversation_Friend_MarksPartnerAsFriend()
     {
         AddPlayers();
 
@@ -314,7 +314,7 @@ public sealed class TestPrivateChatService
     }
 
     [Fact]
-    public void OpenConversation_NonFriendWithHistory_ReturnsReadOnly()
+    public void OpenConversation_NonFriendWithHistory_MarksPartnerAsNotFriend()
     {
         AddPlayers();
         AddMessage(_strangerToCaller, StrangerText);

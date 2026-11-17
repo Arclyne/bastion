@@ -9,7 +9,8 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public abstract class ChatComposerViewModel : ViewModel
 {
-    private const int CounterVisibleFromLength = 180;
+    private const int CounterWarningMargin = 20;
+    private const int CounterVisibleFromLength = ChatPolicy.MaximumMessageLength - CounterWarningMargin;
     private const int OldestMessageIndex = 0;
 
     protected ChatComposerViewModel(TimeProvider timeProvider)
@@ -54,7 +55,7 @@ public abstract class ChatComposerViewModel : ViewModel
     public string StatusText
     {
         get => Get<string>();
-        protected set => Set(value);
+        private set => Set(value);
     }
 
     [DependsOn(nameof(StatusText))]

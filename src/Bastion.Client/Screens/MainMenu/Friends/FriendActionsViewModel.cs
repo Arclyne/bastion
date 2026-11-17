@@ -99,8 +99,8 @@ public sealed class FriendActionsViewModel : ViewModel
     {
         IsMenuOpen = false;
         var friend = new PlayerTag(Nickname, _friendCode);
-        var request = new MessageRequestedEventArgs(friend);
-        OnMessageRequested(request);
+        var messageRequest = new MessageRequestedEventArgs(friend);
+        OnMessageRequested(messageRequest);
     }
 
     public void AskRemoval()
@@ -145,15 +145,15 @@ public sealed class FriendActionsViewModel : ViewModel
         }
         catch (ServerUnreachableException ex)
         {
-            ReportFailure(ex);
+            ReportRemovalFailure(ex);
         }
         catch (ConnectionLostException ex)
         {
-            ReportFailure(ex);
+            ReportRemovalFailure(ex);
         }
         catch (ServerErrorException ex)
         {
-            ReportFailure(ex);
+            ReportRemovalFailure(ex);
         }
         finally
         {
@@ -178,7 +178,7 @@ public sealed class FriendActionsViewModel : ViewModel
         FriendRemoved?.Invoke(this, e);
     }
 
-    private void ReportFailure(Exception cause)
+    private void ReportRemovalFailure(Exception cause)
     {
         _logger.Error("The friend could not be removed.", cause);
         ErrorText = Strings.FriendsRemoveFailed;

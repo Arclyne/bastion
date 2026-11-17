@@ -16,7 +16,16 @@ public sealed class FakeLanguageService : ILanguageService
 
     public SupportedLanguage CurrentLanguage { get; private set; }
 
-    public event EventHandler? LanguageChanged;
+    public event EventHandler? LanguageChanged
+    {
+        add
+        {
+        }
+
+        remove
+        {
+        }
+    }
 
     public void LoadInitialLanguage()
     {
@@ -25,6 +34,5 @@ public sealed class FakeLanguageService : ILanguageService
     public void ChangeLanguage(SupportedLanguage language)
     {
         CurrentLanguage = language;
-        LanguageChanged?.Invoke(this, EventArgs.Empty);
     }
 }

@@ -30,7 +30,7 @@ public sealed class LoginView : ScreenView
     private const float PrimaryButtonHeight = 52;
     private const float SecondaryButtonHeight = 48;
     private const float ExitButtonWidth = 96;
-    private const float ExitButtonHeight = 42;
+    private const float ExitButtonHeight = ScreenMetrics.MenuPillHeight;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(LoginView));
 

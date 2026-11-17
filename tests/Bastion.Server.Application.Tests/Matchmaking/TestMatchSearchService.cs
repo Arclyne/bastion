@@ -124,7 +124,7 @@ public sealed class TestMatchSearchService
 
         _matchSearchService.CancelSearch(Token, _now);
 
-        SearchEndReason reason = _matchmakingNotifier.EndReasons[AccountId];
+        SearchEndReason reason = _matchmakingNotifier.EndReasonsByAccountId[AccountId];
         Assert.Equal(SearchEndReason.Cancelled, reason);
     }
 
@@ -135,7 +135,7 @@ public sealed class TestMatchSearchService
 
         _matchSearchService.CancelSearch(Token, _now);
 
-        Assert.Empty(_matchmakingNotifier.EndReasons);
+        Assert.Empty(_matchmakingNotifier.EndReasonsByAccountId);
     }
 
     [Fact]

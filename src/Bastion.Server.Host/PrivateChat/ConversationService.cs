@@ -143,8 +143,8 @@ public sealed class ConversationService : IConversationService
 
     private void TranslateConversationFailures(string operationName, Action operation)
     {
-        Func<bool> operationAsFunction = () => CompleteOperation(operation);
-        TranslateConversationFailures(operationName, operationAsFunction);
+        Func<bool> completeOperation = () => CompleteOperation(operation);
+        TranslateConversationFailures(operationName, completeOperation);
     }
 
     private static bool CompleteOperation(Action operation)

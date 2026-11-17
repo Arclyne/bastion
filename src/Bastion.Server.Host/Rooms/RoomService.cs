@@ -226,8 +226,8 @@ public sealed class RoomService : IRoomService
 
     private void TranslateRoomFailures(string operationName, Action operation)
     {
-        Func<bool> operationAsFunction = () => CompleteOperation(operation);
-        TranslateRoomFailures(operationName, operationAsFunction);
+        Func<bool> completeOperation = () => CompleteOperation(operation);
+        TranslateRoomFailures(operationName, completeOperation);
     }
 
     private static bool CompleteOperation(Action operation)

@@ -143,6 +143,19 @@ public sealed class TestMatchChatViewModel : IDisposable
         Assert.Equal(RivalMessageText, rivalRow.Text);
     }
 
+    [Theory]
+    [InlineData("Good luck, have fun!")]
+    [InlineData("¡Suerte! ¿Quién mueve el peón, Ñandú?")]
+    public void MatchChatMessageReceived_EnglishOrSpanishText_ShowsSameText(string text)
+    {
+        ChatMessage rivalMessage = CreateRivalMessage(text);
+
+        _chatClient.RaiseMatchChatMessageReceived(JoinedMatchSampleFactory.MatchId, rivalMessage);
+
+        ChatMessageRowViewModel rivalRow = _viewModel.Messages[0];
+        Assert.Equal(text, rivalRow.Text);
+    }
+
     [Fact]
     public void MatchChatMessageReceived_OtherMatch_IgnoresMessage()
     {
@@ -175,12 +188,6 @@ public sealed class TestMatchChatViewModel : IDisposable
         Assert.False(hasSubscribers);
     }
 
-    private static ChatMessage CreateRivalMessage(string text)
-    {
-        var rival = new ChatAuthor(JoinedMatchSampleFactory.RivalNickname, isOwn: false);
-        return new ChatMessage(rival, text, _rivalSentAt);
-    }
-
     private void ReceiveMessagesUpToMaximum()
     {
         for (int messageNumber = FirstMessageNumber; messageNumber <= ChatPolicy.MaximumRecentMessages; messageNumber++)
@@ -189,5 +196,11 @@ public sealed class TestMatchChatViewModel : IDisposable
             ChatMessage rivalMessage = CreateRivalMessage(text);
             _chatClient.RaiseMatchChatMessageReceived(JoinedMatchSampleFactory.MatchId, rivalMessage);
         }
+    }
+
+    private static ChatMessage CreateRivalMessage(string text)
+    {
+        var rival = new ChatAuthor(JoinedMatchSampleFactory.RivalNickname, isOwn: false);
+        return new ChatMessage(rival, text, _rivalSentAt);
     }
 }

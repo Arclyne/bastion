@@ -10,7 +10,7 @@ namespace Bastion.Client.Screens.MainMenu.Friends;
 
 public sealed class FriendsPanel : Panel
 {
-    private const float PanelWidth = PanelMetrics.ContentWidth + (PaddingX * HorizontalSideCount);
+    private const float PanelWidth = ContentWidth + (PaddingX * HorizontalSideCount);
     private const float PanelHeight = 652;
     private const float PaddingX = 20;
     private const float PaddingTop = 18;

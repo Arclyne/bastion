@@ -16,6 +16,7 @@ public sealed class TestStrings
     private const string NeutralCultureName = "";
     private const string SpanishCultureName = "es-MX";
 
+    private static readonly CultureInfo _neutralCulture = CultureInfo.GetCultureInfo(NeutralCultureName);
     private static readonly CultureInfo _spanishCulture = CultureInfo.GetCultureInfo(SpanishCultureName);
     private static readonly string[] _neutralOnlyKeys =
     {
@@ -34,7 +35,6 @@ public sealed class TestStrings
         IEnumerable<string> translatableKeys = neutralTextsByKey.Keys
             .Except(_neutralOnlyKeys)
             .Order(StringComparer.Ordinal);
-        var expectedKeys = new List<string>(translatableKeys);
 
         ResourceSet? spanishSet = Strings.ResourceManager.GetResourceSet(
             _spanishCulture,
@@ -43,8 +43,7 @@ public sealed class TestStrings
 
         Dictionary<string, string> spanishTextsByKey = ReadTexts(spanishSet);
         IEnumerable<string> sortedSpanishKeys = spanishTextsByKey.Keys.Order(StringComparer.Ordinal);
-        var spanishKeys = new List<string>(sortedSpanishKeys);
-        Assert.Equal(expectedKeys, spanishKeys);
+        Assert.Equal(translatableKeys, sortedSpanishKeys);
     }
 
     [Theory]
@@ -61,8 +60,8 @@ public sealed class TestStrings
 
         Dictionary<string, string> textsByKey = ReadTexts(resourceSet);
         IEnumerable<string> brokenKeys = textsByKey
-            .Where(text => HasBrokenCharacters(text.Value))
-            .Select(text => text.Key);
+            .Where(entry => HasBrokenCharacters(entry.Value))
+            .Select(entry => entry.Key);
         Assert.Empty(brokenKeys);
     }
 
@@ -78,15 +77,15 @@ public sealed class TestStrings
 
         Dictionary<string, string> spanishTextsByKey = ReadTexts(spanishSet);
         IEnumerable<string> keysWithOtherPlaceholders = spanishTextsByKey
-            .Where(spanishText => HasOtherPlaceholders(spanishText, neutralTextsByKey))
-            .Select(spanishText => spanishText.Key);
+            .Where(spanishEntry => HasOtherPlaceholders(spanishEntry, neutralTextsByKey))
+            .Select(spanishEntry => spanishEntry.Key);
         Assert.Empty(keysWithOtherPlaceholders);
     }
 
     private static Dictionary<string, string> ReadNeutralTexts()
     {
         ResourceSet? neutralSet = Strings.ResourceManager.GetResourceSet(
-            CultureInfo.InvariantCulture,
+            _neutralCulture,
             createIfNotExists: true,
             tryParents: false);
         return ReadTexts(neutralSet);
@@ -119,12 +118,12 @@ public sealed class TestStrings
     }
 
     private static bool HasOtherPlaceholders(
-        KeyValuePair<string, string> spanishText,
+        KeyValuePair<string, string> spanishEntry,
         Dictionary<string, string> neutralTextsByKey)
     {
-        string neutralText = neutralTextsByKey.GetValueOrDefault(spanishText.Key, string.Empty);
+        string neutralText = neutralTextsByKey.GetValueOrDefault(spanishEntry.Key, string.Empty);
         List<string> neutralPlaceholders = ListPlaceholders(neutralText);
-        List<string> spanishPlaceholders = ListPlaceholders(spanishText.Value);
+        List<string> spanishPlaceholders = ListPlaceholders(spanishEntry.Value);
         bool hasSamePlaceholders = neutralPlaceholders.SequenceEqual(spanishPlaceholders);
         return !hasSamePlaceholders;
     }

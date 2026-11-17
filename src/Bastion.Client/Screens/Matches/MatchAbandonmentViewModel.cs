@@ -161,7 +161,7 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
         }
         catch (MatchNotJoinedException ex)
         {
-            _logger.Warn("The match was already closed when the player left it.", ex);
+            _logger.Warn("The server says the player is not in that match.", ex);
         }
         catch (InvalidSessionException ex)
         {

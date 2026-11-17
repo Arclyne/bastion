@@ -19,8 +19,8 @@ public interface IPrivateRoomService
     /// <exception cref="ArgumentNullException">An argument is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     /// <exception cref="RoomRejectedException">The player cannot open a room; the rejection says why.</exception>
-    /// <exception cref="InvalidOperationException">No free room code was found.</exception>
-    /// <exception cref="RoomRepositoryException">The room could not be saved.</exception>
+    /// <exception cref="RoomCodeUnavailableException">No free room code was found.</exception>
+    /// <exception cref="RoomRepositoryException">The room could not be created.</exception>
     /// <exception cref="MatchRepositoryException">
     /// The unfinished matches of the player or the game mode could not be read.
     /// </exception>

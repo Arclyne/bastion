@@ -63,6 +63,25 @@ public sealed class TestFriendContractTranslator
         Assert.Equal(_listedAt, listing.ListedAt);
     }
 
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void ToFriendListing_EnglishOrSpanishNickname_KeepsNickname(string nickname)
+    {
+        var entry = new FriendListEntry
+        {
+            Nickname = nickname,
+            FriendCode = FriendCode,
+            Presence = PresenceState.Connected,
+        };
+        FriendList list = CreateList(entry);
+
+        var listing = FriendContractTranslator.ToFriendListing(list);
+
+        ListedFriend friend = listing.Friends[0];
+        Assert.Equal(nickname, friend.Friend.Nickname);
+    }
+
     [Fact]
     public void ToFoundPlayers_SelfEntry_MapsOwnAccount()
     {

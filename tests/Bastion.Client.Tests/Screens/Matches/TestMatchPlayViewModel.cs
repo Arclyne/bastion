@@ -46,12 +46,6 @@ public sealed class TestMatchPlayViewModel : IDisposable
     private static readonly BoardCoordinates _twoSquaresForward = new BoardCoordinates(
         CenterColumnIndex,
         ThirdRowIndex);
-    private static readonly BoardCoordinates[] _firstStartReachableSquares =
-    {
-        _forward,
-        _rightOfFirstStart,
-        _leftOfFirstStart,
-    };
     private static readonly Wall _centerWall = new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal);
     private static readonly DateTimeOffset _startedAt = new DateTimeOffset(2026, 11, 15, 18, 0, 0, TimeSpan.Zero);
     private static readonly TimeSpan _moveNotificationWait = TimeSpan.FromSeconds(
@@ -70,10 +64,11 @@ public sealed class TestMatchPlayViewModel : IDisposable
     public async Task SelectSquare_OwnPawnOnOwnTurn_ListsReachableSquares()
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        BoardCoordinates[] expectedSquares = { _forward, _rightOfFirstStart, _leftOfFirstStart };
 
         await viewModel.SelectSquare(_firstStart);
 
-        Assert.Equal(_firstStartReachableSquares, viewModel.ReachableSquares);
+        Assert.Equal(expectedSquares, viewModel.ReachableSquares);
     }
 
     [Fact]
@@ -132,10 +127,7 @@ public sealed class TestMatchPlayViewModel : IDisposable
     {
         MatchPlayViewModel viewModel = await CreateViewModelWithSelectedPawn();
         var cause = new InvalidOperationException();
-        var notYourTurn = new NotYourTurnException(
-            Match.SecondTurnOrder,
-            ServerNextMoveNumber,
-            cause);
+        var notYourTurn = new NotYourTurnException(Match.SecondTurnOrder, ServerNextMoveNumber, cause);
         _matchClient.MoveFailure = notYourTurn;
 
         await viewModel.SelectSquare(_forward);

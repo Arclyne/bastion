@@ -60,6 +60,8 @@ public sealed class TestLoginViewModel
     [InlineData(WellFormedNickname)]
     [InlineData(WellFormedEmail)]
     [InlineData(PaddedNickname)]
+    [InlineData("peón_ñandú")]
+    [InlineData("josé.peña@correo.mx")]
     public async Task LogIn_WellFormedIdentifier_ContactsServer(string identifier)
     {
         _viewModel.Identifier = identifier;
@@ -67,6 +69,18 @@ public sealed class TestLoginViewModel
         await _viewModel.LogIn();
 
         Assert.Equal(OneLogIn, _accounts.LogInCount);
+    }
+
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public async Task LogIn_EnglishOrSpanishIdentifier_SendsSameIdentifier(string identifier)
+    {
+        _viewModel.Identifier = identifier;
+
+        await _viewModel.LogIn();
+
+        Assert.Equal(identifier, _accounts.LastCredentials?.Identifier);
     }
 
     [Fact]
