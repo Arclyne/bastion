@@ -56,8 +56,13 @@ public sealed class TestPrivateChatService
     private static readonly DateTime _twoMinutesAgo = _now.AddMinutes(-TwoMinutes);
     private static readonly PlayerIdentity _caller = new PlayerIdentity(AccountId, Nickname, FriendCode);
     private static readonly PlayerIdentity _friend = new PlayerIdentity(FriendAccountId, FriendNickname, FriendFriendCode);
-    private static readonly PlayerIdentity _stranger =
-        new PlayerIdentity(StrangerAccountId, StrangerNickname, StrangerFriendCode);
+    private static readonly MessageRoute _friendToCaller = new MessageRoute(FriendAccountId, AccountId);
+    private static readonly MessageRoute _callerToFriend = new MessageRoute(AccountId, FriendAccountId);
+    private static readonly MessageRoute _strangerToCaller = new MessageRoute(StrangerAccountId, AccountId);
+    private static readonly PlayerIdentity _stranger = new PlayerIdentity(
+        StrangerAccountId,
+        StrangerNickname,
+        StrangerFriendCode);
 
     private readonly FakeUnitOfWork _unitOfWork = new FakeUnitOfWork();
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
@@ -333,8 +338,8 @@ public sealed class TestPrivateChatService
     {
         AddPlayers();
         DateTime olderSentAt = _now.AddDays(-OlderMessageDays);
-        AddMessage(StrangerAccountId, AccountId, OldText, olderSentAt);
-        AddMessage(FriendAccountId, AccountId, NewText, _oneMinuteAgo);
+        AddMessage(_strangerToCaller, OldText, olderSentAt);
+        AddMessage(_friendToCaller, NewText, _oneMinuteAgo);
         int[] expectedPartnerIds = { FriendAccountId, StrangerAccountId };
 
         IReadOnlyList<ConversationSummary> conversations = _privateChatService.ListConversations(Token, _now);
@@ -347,8 +352,8 @@ public sealed class TestPrivateChatService
     public void ListConversations_SeveralMessages_ShowsTheLatest()
     {
         AddPlayers();
-        AddMessage(FriendAccountId, AccountId, FirstText, _twoMinutesAgo);
-        AddMessage(AccountId, FriendAccountId, LastText, _oneMinuteAgo);
+        AddMessage(_friendToCaller, FirstText, _twoMinutesAgo);
+        AddMessage(_callerToFriend, LastText, _oneMinuteAgo);
 
         IReadOnlyList<ConversationSummary> conversations = _privateChatService.ListConversations(Token, _now);
 
@@ -361,9 +366,9 @@ public sealed class TestPrivateChatService
     {
         AddPlayers();
         DateTime threeMinutesAgo = _now.AddMinutes(-ThreeMinutes);
-        AddMessage(FriendAccountId, AccountId, FirstUnreadText, threeMinutesAgo);
-        AddMessage(FriendAccountId, AccountId, SecondUnreadText, _twoMinutesAgo);
-        AddMessage(AccountId, FriendAccountId, OwnText, _oneMinuteAgo);
+        AddMessage(_friendToCaller, FirstUnreadText, threeMinutesAgo);
+        AddMessage(_friendToCaller, SecondUnreadText, _twoMinutesAgo);
+        AddMessage(_callerToFriend, OwnText, _oneMinuteAgo);
 
         IReadOnlyList<ConversationSummary> conversations = _privateChatService.ListConversations(Token, _now);
 
@@ -417,13 +422,13 @@ public sealed class TestPrivateChatService
 
     private Message AddMessage(int authorId, int recipientId, string text)
     {
-        return AddMessage(authorId, recipientId, text, _oneMinuteAgo);
+        var route = new MessageRoute(authorId, recipientId);
+        return AddMessage(route, text, _oneMinuteAgo);
     }
 
-    private Message AddMessage(int authorId, int recipientId, string text, DateTime sentAt)
+    private Message AddMessage(MessageRoute route, string text, DateTime sentAt)
     {
-        var participants = new MessageParticipants(authorId, recipientId);
-        var message = Message.CreatePrivate(participants, text, sentAt);
+        var message = Message.CreatePrivate(route, text, sentAt);
         _unitOfWork.MessageRepository.Add(message);
         return message;
     }

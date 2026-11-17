@@ -28,8 +28,8 @@ public sealed class TestMatchChatService
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 20, 0, 0, DateTimeKind.Utc);
     private static readonly ConnectedPlayer _author = new ConnectedPlayer(AuthorAccountId, AuthorNickname);
+    private static readonly MatchChatSubmission _submission = new MatchChatSubmission(MatchId, MessageText);
 
-    private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
     private readonly FakeUnitOfWork _unitOfWork = new FakeUnitOfWork();
     private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
     private readonly FakeMatchChatNotifier _matchChatNotifier = new FakeMatchChatNotifier();
@@ -37,19 +37,19 @@ public sealed class TestMatchChatService
 
     public TestMatchChatService()
     {
+        var sessionVerifier = new FakeSessionVerifier();
         var moderator = new ChatModerator(_unitOfWork);
         var matchChatRelay = new MatchChatRelay(_matchRepository, _matchChatNotifier);
-        _matchChatService = new MatchChatService(_sessionVerifier, moderator, matchChatRelay);
-        _sessionVerifier.Add(AuthorToken, _author);
+        _matchChatService = new MatchChatService(sessionVerifier, moderator, matchChatRelay);
+        sessionVerifier.Add(AuthorToken, _author);
     }
 
     [Fact]
     public void SendMessage_Participant_SavesOneMessage()
     {
         AddParticipants();
-        var submission = new MatchChatSubmission(MatchId, MessageText);
 
-        _matchChatService.SendMessage(AuthorToken, submission, _now);
+        _matchChatService.SendMessage(AuthorToken, _submission, _now);
 
         Assert.Single(_matchRepository.SavedMatchChatMessages);
     }
@@ -58,10 +58,9 @@ public sealed class TestMatchChatService
     public void SendMessage_Participant_NotifiesOnlyTheOtherParticipant()
     {
         AddParticipants();
-        var submission = new MatchChatSubmission(MatchId, MessageText);
         int[] expectedRecipients = { RivalAccountId };
 
-        _matchChatService.SendMessage(AuthorToken, submission, _now);
+        _matchChatService.SendMessage(AuthorToken, _submission, _now);
 
         NotifiedMatchChatMessage notified = _matchChatNotifier.NotifiedMessages.Single();
         Assert.Equal(expectedRecipients, notified.RecipientAccountIds);
@@ -90,14 +89,16 @@ public sealed class TestMatchChatService
     }
 
     [Fact]
-    public void SendMessage_BlankText_ThrowsChatMessageRejectedException()
+    public void SendMessage_EmptyText_RejectsInvalidMessage()
     {
         AddParticipants();
         var submission = new MatchChatSubmission(MatchId, string.Empty);
-
         Action send = () => _matchChatService.SendMessage(AuthorToken, submission, _now);
 
-        Assert.Throws<ChatMessageRejectedException>(send);
+        Exception? exception = Record.Exception(send);
+
+        var rejection = exception as ChatMessageRejectedException;
+        Assert.Equal(ChatRejection.InvalidMessage, rejection?.Rejection);
     }
 
     [Fact]
@@ -120,8 +121,7 @@ public sealed class TestMatchChatService
         DateTime muteEnd = _now.AddDays(SanctionDays);
         var sanction = new Sanction(AuthorAccountId, SanctionScope.Chat, muteEnd);
         _unitOfWork.SanctionRepository.AddSanction(sanction);
-        var submission = new MatchChatSubmission(MatchId, MessageText);
-        Action send = () => _matchChatService.SendMessage(AuthorToken, submission, _now);
+        Action send = () => _matchChatService.SendMessage(AuthorToken, _submission, _now);
 
         Record.Exception(send);
 
@@ -132,9 +132,8 @@ public sealed class TestMatchChatService
     public void SendMessage_SecondMessageWithinCooldown_NotifiesOnce()
     {
         AddParticipants();
-        var submission = new MatchChatSubmission(MatchId, MessageText);
-        _matchChatService.SendMessage(AuthorToken, submission, _now);
-        Action sendAgain = () => _matchChatService.SendMessage(AuthorToken, submission, _now);
+        _matchChatService.SendMessage(AuthorToken, _submission, _now);
+        Action sendAgain = () => _matchChatService.SendMessage(AuthorToken, _submission, _now);
 
         Record.Exception(sendAgain);
 
@@ -147,8 +146,7 @@ public sealed class TestMatchChatService
         AddParticipants();
         var cause = new InvalidOperationException(RepositoryFailureMessage);
         _matchRepository.MatchChatMessageSaveFailure = new MatchRepositoryException(cause);
-        var submission = new MatchChatSubmission(MatchId, MessageText);
-        Action send = () => _matchChatService.SendMessage(AuthorToken, submission, _now);
+        Action send = () => _matchChatService.SendMessage(AuthorToken, _submission, _now);
 
         Record.Exception(send);
 

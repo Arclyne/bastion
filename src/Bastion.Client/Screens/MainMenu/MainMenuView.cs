@@ -22,7 +22,6 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
     private const float ChipPaddingLeft = 8;
     private const float ChipPaddingRight = 20;
     private const float ChipSpacing = 12;
-    private const float ChipBorderWidth = 1.5f;
     private const float ChipShadowOffsetY = 8;
     private const float ChipShadowBlur = 22;
     private const float AvatarSize = 46;
@@ -119,7 +118,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
             Orientation = Orientation.Horizontal,
             Spacing = ChipSpacing,
         };
-        Panel avatar = CreateAvatar();
+        Panel avatar = ShapeFactory.CreateAvatar(AvatarSize, Palette.PlayerOne, AvatarRingWidth);
         StackPanel identityText = CreateIdentityText();
         content.AddChild(avatar);
         content.AddChild(identityText);
@@ -137,31 +136,9 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         };
         chip.AddChild(content);
 
-        RectangleRuntime surface = ShapeFactory.CreateRounded(Palette.Card, ChipRadius);
-        surface.StrokeColor = Palette.Border;
-        surface.StrokeWidth = ChipBorderWidth;
-        surface.HasDropshadow = true;
-        surface.DropshadowColor = Palette.Shadow;
-        surface.DropshadowOffsetY = ChipShadowOffsetY;
-        surface.DropshadowBlur = ChipShadowBlur;
+        RectangleRuntime surface = ShapeFactory.CreateRaisedSurface(ChipRadius, ChipShadowOffsetY, ChipShadowBlur);
         ShapeFactory.InsertBehindContent(chip.Visual, surface);
         return chip;
-    }
-
-    private static Panel CreateAvatar()
-    {
-        var avatar = new Panel
-        {
-            Width = AvatarSize,
-            WidthUnits = DimensionUnitType.Absolute,
-            Height = AvatarSize,
-            HeightUnits = DimensionUnitType.Absolute,
-        };
-        RectangleRuntime circle = ShapeFactory.CreateCircle(Palette.AvatarFill, AvatarSize);
-        circle.StrokeColor = Palette.PlayerOne;
-        circle.StrokeWidth = AvatarRingWidth;
-        ShapeFactory.InsertBehindContent(avatar.Visual, circle);
-        return avatar;
     }
 
     private static StackPanel CreateIdentityText()
@@ -171,14 +148,14 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
             TextStyleCatalog.IdentityName);
         Label mode = ViewFactory.CreateLabel(nameof(Strings.MainMenuClassicMode), TextStyleCatalog.IdentityDetail);
 
-        var text = new StackPanel
+        var textColumn = new StackPanel
         {
             Spacing = IdentitySpacing,
         };
-        text.AddChild(nickname);
-        text.AddChild(mode);
-        ViewFactory.CenterVertically(text);
-        return text;
+        textColumn.AddChild(nickname);
+        textColumn.AddChild(mode);
+        ViewFactory.CenterVertically(textColumn);
+        return textColumn;
     }
 
     private static Button CreateSettingsButton()
@@ -322,17 +299,17 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         icon.HeightUnits = DimensionUnitType.Absolute;
         button.AddChild(icon);
 
-        var text = new StackPanel
+        var textColumn = new StackPanel
         {
             X = HeroTextX,
             Spacing = HeroTextSpacing,
         };
         Label title = ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatch), TextStyleCatalog.HeroTitle);
         Label detail = ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatchDetail), TextStyleCatalog.HeroDetail);
-        text.AddChild(title);
-        text.AddChild(detail);
-        ViewFactory.CenterVertically(text);
-        button.AddChild(text);
+        textColumn.AddChild(title);
+        textColumn.AddChild(detail);
+        ViewFactory.CenterVertically(textColumn);
+        button.AddChild(textColumn);
         return button;
     }
 

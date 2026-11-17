@@ -9,9 +9,10 @@ public static class WallMesh
 {
     public const float HalfSide = 0.5f;
     private const int FirstVertex = 0;
-    private const int TriangleCount = 12;
+    private const int VerticesPerTriangle = 3;
 
     private static readonly VertexPositionNormalTexture[] _vertices = CreateUnitBox();
+    private static readonly int _triangleCount = _vertices.Length / VerticesPerTriangle;
 
     public static void Draw(GraphicsDevice graphicsDevice, BasicEffect effect)
     {
@@ -21,7 +22,7 @@ public static class WallMesh
         foreach (EffectPass pass in effect.CurrentTechnique.Passes)
         {
             pass.Apply();
-            graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, FirstVertex, TriangleCount);
+            graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, FirstVertex, _triangleCount);
         }
     }
 

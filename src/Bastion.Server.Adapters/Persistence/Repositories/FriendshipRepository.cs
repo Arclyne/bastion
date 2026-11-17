@@ -50,11 +50,9 @@ public sealed class FriendshipRepository : IFriendshipRepository
     {
         int smallerAccountId = Math.Min(firstAccountId, secondAccountId);
         int largerAccountId = Math.Max(firstAccountId, secondAccountId);
-        DeletedRowCount deleted = _context.Database
-            .SqlQuery<DeletedRowCount>(
-                $"EXEC dbo.usp_Friendship_Delete @AccountAId = {smallerAccountId}, @AccountBId = {largerAccountId}")
-            .AsEnumerable()
-            .Single();
+        FormattableString command =
+            $"EXEC dbo.usp_Friendship_Delete @AccountAId = {smallerAccountId}, @AccountBId = {largerAccountId}";
+        DeletedRowCount deleted = DeleteProcedure.Run(_context.Database, command);
         return deleted.DeletedRows > 0;
     }
 

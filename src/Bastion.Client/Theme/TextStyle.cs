@@ -1,4 +1,5 @@
 using System;
+using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
@@ -8,18 +9,17 @@ namespace Bastion.Client.Theme;
 
 public sealed record TextStyle
 {
+    private readonly string _fontFamily;
+    private readonly int _fontSize;
+
     public TextStyle(string fontFamily, int fontSize, Color color)
     {
         ArgumentNullException.ThrowIfNull(fontFamily);
 
-        FontFamily = fontFamily;
-        FontSize = fontSize;
+        _fontFamily = fontFamily;
+        _fontSize = fontSize;
         Color = color;
     }
-
-    public string FontFamily { get; }
-
-    public int FontSize { get; }
 
     public Color Color { get; }
 
@@ -27,8 +27,8 @@ public sealed record TextStyle
     {
         ArgumentNullException.ThrowIfNull(text);
 
-        text.Font = FontFamily;
-        text.FontSize = FontSize;
+        text.Font = _fontFamily;
+        text.FontSize = _fontSize;
         text.Color = Color;
     }
 
@@ -38,5 +38,16 @@ public sealed record TextStyle
 
         var labelVisual = (LabelVisual)label.Visual;
         ApplyTo(labelVisual);
+    }
+
+    public Label CreateFixedWidthLabel(float width)
+    {
+        var label = new Label
+        {
+            Width = width,
+            WidthUnits = DimensionUnitType.Absolute,
+        };
+        ApplyTo(label);
+        return label;
     }
 }

@@ -15,15 +15,19 @@ public sealed class TestWaitingRoom
     private const string FourthNickname = "sofia_salto";
     private const int FirstSeatIndex = 0;
     private const int SecondSeatIndex = 1;
+    private const int RoomId = 3;
+    private const string HostNickname = "marta_muros";
 
     [Fact]
     public void Constructor_Host_SitsReadyInFirstSeat()
     {
         (int SeatIndex, bool IsReady) expectedSeat = (FirstSeatIndex, true);
+        var identity = new RoomIdentity(RoomId, RoomSampleFactory.Code);
+        RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
+        var host = new RoomMember(RoomSampleFactory.HostAccountId, HostNickname);
 
-        WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
+        var room = new WaitingRoom(identity, settings, host);
 
-        RoomMember host = room.Members.Single();
         Assert.Equal(expectedSeat, (host.SeatIndex, host.IsReady));
     }
 
@@ -54,9 +58,7 @@ public sealed class TestWaitingRoom
     [Fact]
     public void Admit_AfterMemberLeft_TakesFreedSeat()
     {
-        WaitingRoom room = RoomSampleFactory.CreateFourPlayerRoom();
-        AdmitGuest(room);
-        AdmitThird(room);
+        WaitingRoom room = CreateFourPlayerRoomWithThreeMembers();
         room.Remove(GuestAccountId);
         var fourth = new RoomMember(FourthAccountId, FourthNickname);
 
@@ -68,9 +70,7 @@ public sealed class TestWaitingRoom
     [Fact]
     public void IsReadyToStart_AllSeatsTakenAndReady_ReturnsTrue()
     {
-        WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
-        AdmitGuest(room);
-        room.SetReady(GuestAccountId, isReady: true);
+        WaitingRoom room = CreateTwoPlayerRoomWithReadyGuest();
 
         bool isReadyToStart = room.IsReadyToStart();
 
@@ -114,9 +114,7 @@ public sealed class TestWaitingRoom
     [Fact]
     public void ChangeSettings_ReadyGuest_ClearsGuestReady()
     {
-        WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
-        AdmitGuest(room);
-        room.SetReady(GuestAccountId, isReady: true);
+        WaitingRoom room = CreateTwoPlayerRoomWithReadyGuest();
         RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
 
         room.ChangeSettings(settings);
@@ -128,9 +126,7 @@ public sealed class TestWaitingRoom
     [Fact]
     public void ChangeSettings_FewerSeatsThanMembers_ThrowsInvalidOperationException()
     {
-        WaitingRoom room = RoomSampleFactory.CreateFourPlayerRoom();
-        AdmitGuest(room);
-        AdmitThird(room);
+        WaitingRoom room = CreateFourPlayerRoomWithThreeMembers();
         RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
 
         Action changeSettings = () => room.ChangeSettings(settings);
@@ -141,9 +137,7 @@ public sealed class TestWaitingRoom
     [Fact]
     public void ChangeSettings_FourToTwoSeats_SeatsMembersTogether()
     {
-        WaitingRoom room = RoomSampleFactory.CreateFourPlayerRoom();
-        AdmitGuest(room);
-        AdmitThird(room);
+        WaitingRoom room = CreateFourPlayerRoomWithThreeMembers();
         room.Remove(GuestAccountId);
         RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
 
@@ -161,6 +155,22 @@ public sealed class TestWaitingRoom
         Action removeHost = () => room.Remove(RoomSampleFactory.HostAccountId);
 
         Assert.Throws<InvalidOperationException>(removeHost);
+    }
+
+    private static WaitingRoom CreateFourPlayerRoomWithThreeMembers()
+    {
+        WaitingRoom room = RoomSampleFactory.CreateFourPlayerRoom();
+        AdmitGuest(room);
+        AdmitThird(room);
+        return room;
+    }
+
+    private static WaitingRoom CreateTwoPlayerRoomWithReadyGuest()
+    {
+        WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
+        AdmitGuest(room);
+        room.SetReady(GuestAccountId, isReady: true);
+        return room;
     }
 
     private static void AdmitGuest(WaitingRoom room)

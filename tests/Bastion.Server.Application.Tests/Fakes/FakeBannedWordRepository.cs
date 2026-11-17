@@ -5,7 +5,12 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeBannedWordRepository : IBannedWordRepository
 {
-    public List<string> ChatTerms { get; } = new List<string>();
+    public FakeBannedWordRepository()
+    {
+        ChatTerms = new List<string>();
+    }
+
+    public List<string> ChatTerms { get; }
 
     public IReadOnlyList<string> ListChatTerms()
     {

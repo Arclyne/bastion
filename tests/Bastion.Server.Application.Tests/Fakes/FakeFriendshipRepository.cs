@@ -9,12 +9,18 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeFriendshipRepository : IFriendshipRepository
 {
+    public FakeFriendshipRepository()
+    {
+        AddedFriendships = new List<Friendship>();
+        RemovedFriendAccountIds = new List<int>();
+    }
+
     private readonly Dictionary<int, List<FriendSummary>> _friendsByAccountId =
         new Dictionary<int, List<FriendSummary>>();
 
-    public List<Friendship> AddedFriendships { get; } = new List<Friendship>();
+    public List<Friendship> AddedFriendships { get; }
 
-    public List<int> RemovedFriendAccountIds { get; } = new List<int>();
+    public List<int> RemovedFriendAccountIds { get; }
 
     public void AddFriendSummary(int accountId, FriendSummary friend)
     {

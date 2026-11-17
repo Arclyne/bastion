@@ -1,6 +1,6 @@
 using System;
 using Bastion.Client.Localization;
-using Bastion.Client.Networking.Notifications;
+using Bastion.Client.Networking.Matchmaking;
 using Bastion.Domain.Matches;
 using Gum.Mvvm;
 

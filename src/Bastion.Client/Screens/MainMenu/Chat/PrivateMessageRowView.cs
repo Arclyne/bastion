@@ -2,6 +2,7 @@ using System;
 using Bastion.Client.Theme;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
@@ -12,7 +13,6 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public sealed class PrivateMessageRowView : StackPanel
 {
-    private const float RowWidth = 340;
     private const float RowSpacing = 3;
     private const float BubbleTextMaxWidth = 246;
     private const float BubblePaddingX = 12;
@@ -22,43 +22,41 @@ public sealed class PrivateMessageRowView : StackPanel
     private const int HorizontalSideCount = 2;
     private const int VerticalSideCount = 2;
 
-    public PrivateMessageRowView(PrivateMessageRowViewModel row)
+    public PrivateMessageRowView(PrivateMessageRowViewModel row, float rowWidth)
     {
         ArgumentNullException.ThrowIfNull(row);
 
         BindingContext = row;
-        Width = RowWidth;
+        Width = rowWidth;
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = RowSpacing;
         if (row.HasDayLabel())
         {
-            Panel day = CreateDayLabel(row.DayLabel);
+            Panel day = CreateDayLabel(row.DayLabel, rowWidth);
             AddChild(day);
         }
 
         Panel bubble = CreateBubble(row);
-        Panel alignedBubble = CreateAligned(bubble, row.IsOwn);
+        Panel alignedBubble = CreateAligned(bubble, row.IsOwn, rowWidth);
         StackPanel meta = CreateMeta();
-        Panel alignedMeta = CreateAligned(meta, row.IsOwn);
+        Panel alignedMeta = CreateAligned(meta, row.IsOwn, rowWidth);
         AddChild(alignedBubble);
         AddChild(alignedMeta);
     }
 
-    public static GraphicalUiElement CreateVisual(object? item)
+    public static VisualTemplate CreateTemplate(float rowWidth)
     {
-        PrivateMessageRowViewModel row = ViewFactory.RequireRow<PrivateMessageRowViewModel>(item);
-        var rowView = new PrivateMessageRowView(row);
-        return rowView.Visual;
+        return new VisualTemplate(item => CreateVisual(item, rowWidth));
     }
 
-    private static Panel CreateDayLabel(string dayLabel)
+    private static Panel CreateDayLabel(string dayLabel, float rowWidth)
     {
         Label day = ViewFactory.CreateUntranslatedLabel(dayLabel, TextStyleCatalog.SectionLabel);
         ViewFactory.CenterHorizontally(day);
 
         var holder = new Panel
         {
-            Width = RowWidth,
+            Width = rowWidth,
             WidthUnits = DimensionUnitType.Absolute,
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
@@ -88,7 +86,7 @@ public sealed class PrivateMessageRowView : StackPanel
         return bubble;
     }
 
-    private static Panel CreateAligned(FrameworkElement content, bool shouldAlignRight)
+    private static Panel CreateAligned(FrameworkElement content, bool shouldAlignRight, float rowWidth)
     {
         if (shouldAlignRight)
         {
@@ -99,7 +97,7 @@ public sealed class PrivateMessageRowView : StackPanel
 
         var holder = new Panel
         {
-            Width = RowWidth,
+            Width = rowWidth,
             WidthUnits = DimensionUnitType.Absolute,
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
@@ -110,14 +108,14 @@ public sealed class PrivateMessageRowView : StackPanel
     private static StackPanel CreateMeta()
     {
         Label time = ViewFactory.CreateBoundUntranslatedLabel(nameof(PrivateMessageRowViewModel.TimeText), TextStyleCatalog.Hint);
-        Label pending = ViewFactory.CreateBoundUntranslatedLabel(
+        Label pending = ViewFactory.CreateBoundNotice(
             nameof(PrivateMessageRowViewModel.StateText),
+            nameof(PrivateMessageRowViewModel.IsPending),
             TextStyleCatalog.Hint);
-        pending.SetBinding(nameof(IsVisible), nameof(PrivateMessageRowViewModel.IsPending));
-        Label failed = ViewFactory.CreateBoundUntranslatedLabel(
+        Label failed = ViewFactory.CreateBoundNotice(
             nameof(PrivateMessageRowViewModel.StateText),
+            nameof(PrivateMessageRowViewModel.HasFailed),
             TextStyleCatalog.FieldError);
-        failed.SetBinding(nameof(IsVisible), nameof(PrivateMessageRowViewModel.HasFailed));
 
         var meta = new StackPanel
         {
@@ -128,5 +126,12 @@ public sealed class PrivateMessageRowView : StackPanel
         meta.AddChild(pending);
         meta.AddChild(failed);
         return meta;
+    }
+
+    private static GraphicalUiElement CreateVisual(object? item, float rowWidth)
+    {
+        PrivateMessageRowViewModel row = ViewFactory.RequireRow<PrivateMessageRowViewModel>(item);
+        var rowView = new PrivateMessageRowView(row, rowWidth);
+        return rowView.Visual;
     }
 }

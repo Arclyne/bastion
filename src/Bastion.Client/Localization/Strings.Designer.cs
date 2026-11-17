@@ -492,6 +492,15 @@ namespace Bastion.Client.Localization {
         /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
+        internal static string FriendsCancel {
+            get {
+                return ResourceManager.GetString("FriendsCancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
         internal static string FriendsCancelRequest {
             get {
                 return ResourceManager.GetString("FriendsCancelRequest", resourceCulture);

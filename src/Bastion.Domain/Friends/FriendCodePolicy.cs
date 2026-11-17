@@ -30,7 +30,8 @@ public static class FriendCodePolicy
         {
             if (character != Separator && !char.IsWhiteSpace(character))
             {
-                builder.Append(char.ToUpper(character, CultureInfo.InvariantCulture));
+                char upperCharacter = char.ToUpper(character, CultureInfo.InvariantCulture);
+                builder.Append(upperCharacter);
             }
         }
 

@@ -163,7 +163,7 @@ public sealed class MatchRepository : IMatchRepository
 
     private static int SaveMatchAndRoom(BastionDbContext context, Match match)
     {
-        if (match.MatchType == MatchType.Private && match.Status == MatchStatus.Finished)
+        if (match.MatchType == MatchType.Private && match.IsFinished())
         {
             FinishRoomOfMatch(context, match);
         }
@@ -177,7 +177,13 @@ public sealed class MatchRepository : IMatchRepository
             .Where(candidate => candidate.MatchId == match.MatchId)
             .Where(candidate => candidate.Status == RoomStatus.InMatch);
         Room? room = roomsInMatch.FirstOrDefault();
-        room?.FinishMatch(match.EndedAt.GetValueOrDefault(match.StartedAt));
+        if (room is null)
+        {
+            return;
+        }
+
+        DateTime endedAt = match.EndedAt ?? throw new InvalidOperationException("A finished match has no end time.");
+        room.FinishMatch(endedAt);
     }
 
     private static GameMode? LoadGameMode(BastionDbContext context, byte gameModeId)

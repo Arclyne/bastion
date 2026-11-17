@@ -77,8 +77,9 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
     {
         IEnumerable<int> accountIdsInTurnOrder = playersInTurnOrder.Select(player => player.AccountId);
         var accountIds = new List<int>(accountIdsInTurnOrder);
-        IReadOnlyDictionary<int, short> eloRatingsByAccountId =
-            _matchRepository.FindEloRatingsByAccountId(gameModeId, accountIds);
+        IReadOnlyDictionary<int, short> eloRatingsByAccountId = _matchRepository.FindEloRatingsByAccountId(
+            gameModeId,
+            accountIds);
 
         var entrants = new List<MatchEntrant>();
         foreach (int accountId in accountIds)
@@ -98,8 +99,10 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         {
             MatchSearch search = players.First(player => player.AccountId == participation.AccountId);
             var connectedPlayer = new ConnectedPlayer(search.AccountId, search.Nickname);
-            var participant =
-                new CreatedMatchParticipant(connectedPlayer, participation.InitialElo, participation.TurnOrder);
+            var participant = new CreatedMatchParticipant(
+                connectedPlayer,
+                participation.InitialElo,
+                participation.TurnOrder);
             participants.Add(participant);
         }
 

@@ -99,8 +99,11 @@ public sealed class FriendRequestService : IFriendRequestService
         ArgumentNullException.ThrowIfNull(sessionToken);
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        IReadOnlyList<FriendRequestSummary> receivedRequests = ListUnexpired(_unitOfWork.FriendRequests.ListReceived(player.AccountId), now);
-        IReadOnlyList<FriendRequestSummary> sentRequests = ListUnexpired(_unitOfWork.FriendRequests.ListSent(player.AccountId), now);
+        IReadOnlyList<FriendRequestSummary> allReceivedRequests = _unitOfWork.FriendRequests.ListReceived(
+            player.AccountId);
+        IReadOnlyList<FriendRequestSummary> receivedRequests = ListUnexpired(allReceivedRequests, now);
+        IReadOnlyList<FriendRequestSummary> allSentRequests = _unitOfWork.FriendRequests.ListSent(player.AccountId);
+        IReadOnlyList<FriendRequestSummary> sentRequests = ListUnexpired(allSentRequests, now);
         return new FriendRequestBoard(receivedRequests, sentRequests, now);
     }
 

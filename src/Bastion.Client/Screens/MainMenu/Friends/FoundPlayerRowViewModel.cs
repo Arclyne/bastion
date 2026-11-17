@@ -37,7 +37,7 @@ public sealed class FoundPlayerRowViewModel : ViewModel
     public bool IsSending
     {
         get => Get<bool>();
-        set => Set(value);
+        internal set => Set(value);
     }
 
     [DependsOn(nameof(Relationship))]

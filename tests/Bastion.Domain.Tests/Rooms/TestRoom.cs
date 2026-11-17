@@ -27,9 +27,24 @@ public sealed class TestRoom
     [Fact]
     public void Open_ValidCode_StartsOpen()
     {
-        Room room = OpenRoom();
+        var opening = new RoomOpening(RoomSampleFactory.Code, RoomSampleFactory.HostAccountId, _openedAt);
+        RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
+
+        var room = Room.Open(opening, settings);
 
         Assert.Equal(RoomStatus.Open, room.Status);
+    }
+
+    [Fact]
+    public void ChangeSettings_OpenRoom_ChangesWalls()
+    {
+        Room room = OpenRoom();
+        RoomSettings twoPlayerSettings = RoomSampleFactory.CreateTwoPlayerSettings();
+        RoomSettings settings = twoPlayerSettings with { WallsPerPlayer = ChangedWalls };
+
+        room.ChangeSettings(settings, _changedAt);
+
+        Assert.Equal(ChangedWalls, room.WallsPerPlayer);
     }
 
     [Fact]
@@ -38,11 +53,10 @@ public sealed class TestRoom
         Room room = OpenRoom();
         RoomSettings twoPlayerSettings = RoomSampleFactory.CreateTwoPlayerSettings();
         RoomSettings settings = twoPlayerSettings with { WallsPerPlayer = ChangedWalls };
-        (byte WallsPerPlayer, DateTime LastActivityAt) expectedActivity = (ChangedWalls, _changedAt);
 
         room.ChangeSettings(settings, _changedAt);
 
-        Assert.Equal(expectedActivity, (room.WallsPerPlayer, room.LastActivityAt));
+        Assert.Equal(_changedAt, room.LastActivityAt);
     }
 
     [Fact]

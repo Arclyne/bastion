@@ -37,8 +37,9 @@ public sealed class PrivateChatService : IPrivateChatService
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
         IReadOnlyList<Message> latestMessages = _unitOfWork.Messages.ListLatestPerPartner(player.AccountId);
-        IReadOnlyDictionary<int, int> unreadByAuthor = _unitOfWork.Messages.CountUnreadByAuthor(player.AccountId);
-        var friendIds = new HashSet<int>(_unitOfWork.Friendships.ListFriendAccountIds(player.AccountId));
+        IReadOnlyDictionary<int, int> unreadCountsByAuthorId = _unitOfWork.Messages.CountUnreadByAuthor(
+            player.AccountId);
+        var friendAccountIds = new HashSet<int>(_unitOfWork.Friendships.ListFriendAccountIds(player.AccountId));
         IEnumerable<int> messagePartnerIds = latestMessages.Select(message => message.GetPartnerId(player.AccountId));
         var partnerIds = new List<int>(messagePartnerIds);
         IReadOnlyList<PlayerIdentity> partnerIdentities = _unitOfWork.Accounts.ListPlayerIdentities(partnerIds);
@@ -57,9 +58,9 @@ public sealed class PrivateChatService : IPrivateChatService
                 continue;
             }
 
-            var conversationPartner = new ConversationPartner(partner, friendIds.Contains(partnerId));
-            var lastMessage = new PrivateMessageEntry(message, message.IsSentBy(player.AccountId));
-            int unreadCount = unreadByAuthor.GetValueOrDefault(partnerId);
+            var conversationPartner = new ConversationPartner(partner, friendAccountIds.Contains(partnerId));
+            PrivateMessageEntry lastMessage = ToMessageEntry(message, player.AccountId);
+            int unreadCount = unreadCountsByAuthorId.GetValueOrDefault(partnerId);
             var summary = new ConversationSummary(conversationPartner, lastMessage, unreadCount);
             summaries.Add(summary);
         }
@@ -89,7 +90,7 @@ public sealed class PrivateChatService : IPrivateChatService
 
         MarkPartnerMessagesRead(partner.AccountId, player.AccountId, now);
         IEnumerable<PrivateMessageEntry> messageEntries = messages
-            .Select(message => new PrivateMessageEntry(message, message.IsSentBy(player.AccountId)));
+            .Select(message => ToMessageEntry(message, player.AccountId));
         var entries = new List<PrivateMessageEntry>(messageEntries);
         var conversationPartner = new ConversationPartner(partner, isFriend);
         ChatMute mute = _chatModerator.FindMute(player.AccountId, now);
@@ -115,8 +116,8 @@ public sealed class PrivateChatService : IPrivateChatService
             throw new ChatMessageRejectedException(ChatRejection.TooFast);
         }
 
-        var participants = new MessageParticipants(author.AccountId, partner.AccountId);
-        var message = Message.CreatePrivate(participants, screenedText, now);
+        var route = new MessageRoute(author.AccountId, partner.AccountId);
+        var message = Message.CreatePrivate(route, screenedText, now);
         _unitOfWork.Messages.Add(message);
         _unitOfWork.SaveChanges();
         var delivery = new PrivateMessageDelivery(author, message);
@@ -133,6 +134,12 @@ public sealed class PrivateChatService : IPrivateChatService
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
         PlayerIdentity partner = FindPartner(player.AccountId, friendCode);
         MarkPartnerMessagesRead(partner.AccountId, player.AccountId, now);
+    }
+
+    private static PrivateMessageEntry ToMessageEntry(Message message, int readerAccountId)
+    {
+        bool isOwn = message.IsSentBy(readerAccountId);
+        return new PrivateMessageEntry(message, isOwn);
     }
 
     private PlayerIdentity FindPartner(int accountId, string friendCode)
@@ -154,7 +161,7 @@ public sealed class PrivateChatService : IPrivateChatService
 
     private void MarkPartnerMessagesRead(int partnerAccountId, int readerAccountId, DateTime now)
     {
-        var participants = new MessageParticipants(partnerAccountId, readerAccountId);
-        _unitOfWork.Messages.MarkRead(participants, now);
+        var route = new MessageRoute(partnerAccountId, readerAccountId);
+        _unitOfWork.Messages.MarkRead(route, now);
     }
 }

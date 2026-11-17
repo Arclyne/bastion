@@ -89,8 +89,9 @@ public sealed class TestWallPlacementViewModel : IDisposable
     public void ChooseGroove_GrooveTaken_ShowsGrooveTaken()
     {
         WallPlacementViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
-        WallPlacedEventArgs rivalWall =
-            WallPlacedSampleFactory.CreateFirstWall(JoinedMatchSampleFactory.RivalNickname, CenterGroove);
+        WallPlacedEventArgs rivalWall = WallPlacedSampleFactory.CreateFirstWall(
+            JoinedMatchSampleFactory.RivalNickname,
+            CenterGroove);
         _matchClient.RaiseWallPlaced(rivalWall);
         viewModel.Start();
 
@@ -102,8 +103,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     [Fact]
     public void Rotate_PendingWall_TurnsPendingWallVertical()
     {
-        WallPlacementViewModel viewModel = CreateActiveViewModel();
-        viewModel.ChooseGroove(_centerGroove);
+        WallPlacementViewModel viewModel = CreateViewModelWithChosenGroove();
 
         viewModel.Rotate();
 
@@ -113,8 +113,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     [Fact]
     public async Task Confirm_PendingWall_SendsWall()
     {
-        WallPlacementViewModel viewModel = CreateActiveViewModel();
-        viewModel.ChooseGroove(_centerGroove);
+        WallPlacementViewModel viewModel = CreateViewModelWithChosenGroove();
 
         await viewModel.Confirm();
 
@@ -124,8 +123,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     [Fact]
     public async Task Confirm_AcceptedBeforeWallPlaced_KeepsPendingWall()
     {
-        WallPlacementViewModel viewModel = CreateActiveViewModel();
-        viewModel.ChooseGroove(_centerGroove);
+        WallPlacementViewModel viewModel = CreateViewModelWithChosenGroove();
 
         await viewModel.Confirm();
 
@@ -135,8 +133,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     [Fact]
     public async Task Confirm_TwiceBeforeWallPlaced_SendsOneWall()
     {
-        WallPlacementViewModel viewModel = CreateActiveViewModel();
-        viewModel.ChooseGroove(_centerGroove);
+        WallPlacementViewModel viewModel = CreateViewModelWithChosenGroove();
         await viewModel.Confirm();
 
         await viewModel.Confirm();
@@ -147,8 +144,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     [Fact]
     public async Task Confirm_Rejected_StaysInWallMode()
     {
-        WallPlacementViewModel viewModel = CreateActiveViewModel();
-        viewModel.ChooseGroove(_centerGroove);
+        WallPlacementViewModel viewModel = CreateViewModelWithChosenGroove();
         var cause = new InvalidOperationException();
         var grooveTaken = new IllegalWallException(WallPlacementRejection.GrooveTaken, blockedTurnOrder: null, cause);
         _matchClient.WallFailure = grooveTaken;
@@ -161,8 +157,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     [Fact]
     public void Cancel_PendingWall_ClearsPendingWall()
     {
-        WallPlacementViewModel viewModel = CreateActiveViewModel();
-        viewModel.ChooseGroove(_centerGroove);
+        WallPlacementViewModel viewModel = CreateViewModelWithChosenGroove();
 
         viewModel.Cancel();
 
@@ -173,8 +168,9 @@ public sealed class TestWallPlacementViewModel : IDisposable
     public void WallPlaced_TurnPassed_LeavesWallMode()
     {
         WallPlacementViewModel viewModel = CreateActiveViewModel();
-        WallPlacedEventArgs ownWall =
-            WallPlacedSampleFactory.CreateFirstWall(JoinedMatchSampleFactory.OwnNickname, CenterGroove);
+        WallPlacedEventArgs ownWall = WallPlacedSampleFactory.CreateFirstWall(
+            JoinedMatchSampleFactory.OwnNickname,
+            CenterGroove);
 
         _matchClient.RaiseWallPlaced(ownWall);
 
@@ -184,6 +180,13 @@ public sealed class TestWallPlacementViewModel : IDisposable
     private static void DisposeViewModel(IDisposable viewModel)
     {
         viewModel.Dispose();
+    }
+
+    private WallPlacementViewModel CreateViewModelWithChosenGroove()
+    {
+        WallPlacementViewModel viewModel = CreateActiveViewModel();
+        viewModel.ChooseGroove(_centerGroove);
+        return viewModel;
     }
 
     private WallPlacementViewModel CreateActiveViewModel()
@@ -196,8 +199,8 @@ public sealed class TestWallPlacementViewModel : IDisposable
     private WallPlacementViewModel CreateViewModel(byte ownTurnOrder)
     {
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
-        MatchPlayViewModel play =
-            InlineUiContext.CreateViewModel(() => new MatchPlayViewModel(joinedMatch, _matchClient, _timeProvider));
+        MatchPlayViewModel play = InlineUiContext.CreateViewModel(
+            () => new MatchPlayViewModel(joinedMatch, _matchClient, _timeProvider));
         var viewModel = new WallPlacementViewModel(play);
         _viewModels.Add(viewModel);
         _viewModels.Add(play);

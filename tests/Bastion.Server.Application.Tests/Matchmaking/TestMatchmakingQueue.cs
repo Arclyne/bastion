@@ -18,10 +18,14 @@ public sealed class TestMatchmakingQueue
 
     private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
 
+    public TestMatchmakingQueue()
+    {
+        AddFirstSearch();
+    }
+
     [Fact]
     public void TryAdd_PlayerAlreadySearching_ReturnsFalse()
     {
-        AddFirstSearch();
         var repeatedSearch = new MatchSearch(FirstAccountId, FirstNickname, _startedAt);
 
         bool isAdded = _matchmakingQueue.TryAdd(repeatedSearch);
@@ -32,7 +36,6 @@ public sealed class TestMatchmakingQueue
     [Fact]
     public void Review_TwoWaitingPlayers_PairsThem()
     {
-        AddFirstSearch();
         AddSecondSearch(_startedAt);
 
         QueueReview review = _matchmakingQueue.Review(_startedAt);
@@ -43,8 +46,6 @@ public sealed class TestMatchmakingQueue
     [Fact]
     public void Review_FifteenMinutesWaiting_RequestsPresence()
     {
-        AddFirstSearch();
-
         QueueReview review = _matchmakingQueue.Review(_presenceCheckAt);
 
         Assert.Single(review.PresenceRequests);
@@ -53,7 +54,6 @@ public sealed class TestMatchmakingQueue
     [Fact]
     public void Review_PlayerAwaitingPresence_IsNotPaired()
     {
-        AddFirstSearch();
         _matchmakingQueue.Review(_presenceCheckAt);
         AddSecondSearch(_presenceCheckAt);
 
@@ -65,7 +65,6 @@ public sealed class TestMatchmakingQueue
     [Fact]
     public void Review_PresenceUnanswered_EndsSearch()
     {
-        AddFirstSearch();
         _matchmakingQueue.Review(_presenceCheckAt);
 
         QueueReview review = _matchmakingQueue.Review(_responseDeadline);
@@ -76,7 +75,6 @@ public sealed class TestMatchmakingQueue
     [Fact]
     public void Review_PresenceConfirmed_KeepsSearching()
     {
-        AddFirstSearch();
         _matchmakingQueue.Review(_presenceCheckAt);
         _matchmakingQueue.ConfirmPresence(FirstAccountId, _presenceCheckAt);
 

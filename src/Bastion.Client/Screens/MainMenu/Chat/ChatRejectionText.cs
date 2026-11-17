@@ -37,9 +37,10 @@ public static class ChatRejectionText
         }
     }
 
-    public static string DescribeMute(ChatMute mute)
+    public static string DescribeMute(ChatMute mute, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(mute);
+        ArgumentNullException.ThrowIfNull(timeProvider);
 
         if (!mute.IsMuted)
         {
@@ -51,7 +52,7 @@ public static class ChatRejectionText
             return Strings.ChatMutedPermanently;
         }
 
-        string localEnd = ChatTimeText.FormatMoment(endsAt);
+        string localEnd = ChatTimeText.FormatMoment(endsAt, timeProvider);
         return string.Format(CultureInfo.CurrentCulture, Strings.ChatMutedUntilFormat, localEnd);
     }
 }

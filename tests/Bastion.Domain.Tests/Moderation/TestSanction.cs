@@ -46,7 +46,7 @@ public sealed class TestSanction
     [Fact]
     public void IsInEffectAt_Permanent_ReturnsTrue()
     {
-        var sanction = new Sanction(AccountId, SanctionScope.Chat, endsAt: null);
+        Sanction sanction = CreatePermanentChatSanction();
 
         bool isInEffect = sanction.IsInEffectAt(_now);
 
@@ -56,10 +56,15 @@ public sealed class TestSanction
     [Fact]
     public void IsPermanent_WithoutEnd_ReturnsTrue()
     {
-        var sanction = new Sanction(AccountId, SanctionScope.Chat, endsAt: null);
+        Sanction sanction = CreatePermanentChatSanction();
 
         bool isPermanent = sanction.IsPermanent();
 
         Assert.True(isPermanent);
+    }
+
+    private static Sanction CreatePermanentChatSanction()
+    {
+        return new Sanction(AccountId, SanctionScope.Chat, endsAt: null);
     }
 }

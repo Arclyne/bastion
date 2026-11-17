@@ -6,10 +6,10 @@ public static class GameModeSampleFactory
 {
     public const byte ClassicBoardSize = 9;
     public const byte QuickBoardSize = 7;
+    public const byte ClassicWallsPerPlayer = 10;
 
     private const byte TwoPlayers = 2;
     private const byte FourPlayers = 4;
-    private const byte ClassicWallsPerPlayer = 10;
     private const byte QuickWallsPerPlayer = 6;
     private const byte FourPlayerWallsPerPlayer = 5;
 

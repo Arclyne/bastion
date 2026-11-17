@@ -17,13 +17,7 @@ public sealed class TestChatContractTranslator
     [Fact]
     public void ToTranscript_OwnMessage_KeepsOwnFlag()
     {
-        var message = new LobbyChatMessage
-        {
-            SenderNickname = SenderNickname,
-            Text = Text,
-            IsOwn = true,
-        };
-        LobbyChatLog log = CreateLog(message);
+        LobbyChatLog log = CreateOwnMessageLog();
 
         LobbyChatTranscript transcript = ChatContractTranslator.ToTranscript(log);
 
@@ -83,9 +77,15 @@ public sealed class TestChatContractTranslator
         Assert.Equal(expected, rejection);
     }
 
-    private static LobbyChatLog CreateLog(LobbyChatMessage message)
+    private static LobbyChatLog CreateOwnMessageLog()
     {
-        message.SentAt = _sentAt;
+        var message = new LobbyChatMessage
+        {
+            SenderNickname = SenderNickname,
+            Text = Text,
+            SentAt = _sentAt,
+            IsOwn = true,
+        };
         LobbyChatMessage[] messages = { message };
         return new LobbyChatLog
         {

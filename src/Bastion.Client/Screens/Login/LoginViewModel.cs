@@ -60,7 +60,7 @@ public sealed class LoginViewModel : ViewModel
         get => Get<string>();
         set
         {
-            if (!Set(value))
+            if (value is null || !Set(value))
             {
                 return;
             }
@@ -75,7 +75,7 @@ public sealed class LoginViewModel : ViewModel
         get => Get<string>();
         set
         {
-            if (!Set(value))
+            if (value is null || !Set(value))
             {
                 return;
             }
@@ -208,6 +208,18 @@ public sealed class LoginViewModel : ViewModel
         IsDialogOpen = false;
     }
 
+    private void ClearNotice()
+    {
+        ShowNotice(NoticeTone.None, string.Empty, string.Empty);
+    }
+
+    private void ShowNotice(NoticeTone tone, string title, string message)
+    {
+        NoticeTitle = title;
+        NoticeMessage = message;
+        NoticeTone = tone;
+    }
+
     private void MarkInvalidFields()
     {
         IsIdentifierMissing = string.IsNullOrWhiteSpace(Identifier);
@@ -219,18 +231,6 @@ public sealed class LoginViewModel : ViewModel
     {
         string identifier = Identifier.Trim();
         return AccountPolicy.IsValidLoginIdentifier(identifier);
-    }
-
-    private void ClearNotice()
-    {
-        ShowNotice(NoticeTone.None, string.Empty, string.Empty);
-    }
-
-    private void ShowNotice(NoticeTone tone, string title, string message)
-    {
-        NoticeTitle = title;
-        NoticeMessage = message;
-        NoticeTone = tone;
     }
 
     private async Task RequestSession()

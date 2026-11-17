@@ -13,13 +13,11 @@ public sealed class FriendRowView : Panel
     private const float RowWidth = PanelMetrics.ContentWidth;
     private const float RowHeight = 52;
     private const float DotSize = 10;
-    private const float ContentPaddingX = 6;
     private const float ContentSpacing = 12;
-    private const float TextSpacing = 2;
     private const float MoreButtonWidth = 64;
     private const float MoreButtonHeight = 32;
 
-    private readonly FriendRowViewModel _viewModel;
+    private readonly FriendRowViewModel _row;
     private readonly FriendActionsViewModel _actions;
 
     public FriendRowView(FriendRowViewModel viewModel, FriendActionsViewModel actions)
@@ -27,7 +25,7 @@ public sealed class FriendRowView : Panel
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(actions);
 
-        _viewModel = viewModel;
+        _row = viewModel;
         _actions = actions;
         BindingContext = viewModel;
         Width = RowWidth;
@@ -45,7 +43,7 @@ public sealed class FriendRowView : Panel
         content.AddChild(presenceDot);
         content.AddChild(text);
         content.Anchor(Gum.Wireframe.Anchor.Left);
-        content.X = ContentPaddingX;
+        content.X = PanelMetrics.RowContentPaddingX;
         Button moreButton = CreateMoreButton();
         AddChild(content);
         AddChild(moreButton);
@@ -71,19 +69,18 @@ public sealed class FriendRowView : Panel
     {
         var text = new StackPanel
         {
-            Spacing = TextSpacing,
+            Spacing = PanelMetrics.TextSpacing,
         };
-        Label nickname = CreateBoundLabel(nameof(FriendRowViewModel.Nickname), TextStyleCatalog.IdentityName);
-        Label status = CreateBoundLabel(nameof(FriendRowViewModel.StatusText), TextStyleCatalog.Hint);
+        Label nickname = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(FriendRowViewModel.Nickname),
+            TextStyleCatalog.IdentityName);
+        Label status = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(FriendRowViewModel.StatusText),
+            TextStyleCatalog.Hint);
         text.AddChild(nickname);
         text.AddChild(status);
         ViewFactory.CenterVertically(text);
         return text;
-    }
-
-    private static Label CreateBoundLabel(string propertyName, TextStyle style)
-    {
-        return ViewFactory.CreateBoundUntranslatedLabel(propertyName, style);
     }
 
     private Button CreateMoreButton()
@@ -97,6 +94,6 @@ public sealed class FriendRowView : Panel
 
     private void HandleMoreClick(object? sender, EventArgs e)
     {
-        _actions.OpenMenu(_viewModel);
+        _actions.OpenMenu(_row);
     }
 }

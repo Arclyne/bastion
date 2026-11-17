@@ -12,10 +12,10 @@ public sealed class ServiceChannel<TContract> : IServiceChannel<TContract>, IDis
     {
         ArgumentNullException.ThrowIfNull(path);
 
-        NetTcpBinding binding = ChannelSettings.CreateBinding();
-        EndpointAddress address = ChannelSettings.CreateAddress(path);
+        NetTcpBinding binding = ChannelConfiguration.CreateBinding();
+        EndpointAddress address = ChannelConfiguration.CreateAddress(path);
         _channelFactory = new ChannelFactory<TContract>(binding, address);
-        ChannelSettings.ApplyCertificateValidation(_channelFactory);
+        ChannelConfiguration.ApplyCertificateValidation(_channelFactory);
     }
 
     public void Call(Action<TContract> operation)

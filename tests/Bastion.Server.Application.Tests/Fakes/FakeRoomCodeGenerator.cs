@@ -5,7 +5,12 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeRoomCodeGenerator : IRoomCodeGenerator
 {
-    public Queue<string> Codes { get; } = new Queue<string>();
+    public FakeRoomCodeGenerator()
+    {
+        Codes = new Queue<string>();
+    }
+
+    public Queue<string> Codes { get; }
 
     public string CreateCode()
     {

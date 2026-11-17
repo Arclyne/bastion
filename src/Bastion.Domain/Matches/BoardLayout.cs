@@ -62,9 +62,7 @@ public static class BoardLayout
     {
         ArgumentNullException.ThrowIfNull(coordinates);
 
-        bool isColumnInside = coordinates.ColumnIndex >= FirstIndex && coordinates.ColumnIndex < boardSize;
-        bool isRowInside = coordinates.RowIndex >= FirstIndex && coordinates.RowIndex < boardSize;
-        return isColumnInside && isRowInside;
+        return AreIndexesBelow(coordinates, boardSize);
     }
 
     public static BoardCoordinates ParseSquare(string square)
@@ -124,5 +122,12 @@ public static class BoardLayout
                     turnOrder,
                     "Goals are defined for four players at most.");
         }
+    }
+
+    internal static bool AreIndexesBelow(BoardCoordinates coordinates, int limit)
+    {
+        bool isColumnInside = coordinates.ColumnIndex >= FirstIndex && coordinates.ColumnIndex < limit;
+        bool isRowInside = coordinates.RowIndex >= FirstIndex && coordinates.RowIndex < limit;
+        return isColumnInside && isRowInside;
     }
 }

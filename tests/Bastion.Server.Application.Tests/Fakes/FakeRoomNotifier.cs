@@ -5,9 +5,15 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeRoomNotifier : IRoomNotifier
 {
-    public List<NotifiedRoom> UpdatedRooms { get; } = new List<NotifiedRoom>();
+    public FakeRoomNotifier()
+    {
+        UpdatedRooms = new List<NotifiedRoom>();
+        ClosedRooms = new List<NotifiedRoom>();
+    }
 
-    public List<NotifiedRoom> ClosedRooms { get; } = new List<NotifiedRoom>();
+    public List<NotifiedRoom> UpdatedRooms { get; }
+
+    public List<NotifiedRoom> ClosedRooms { get; }
 
     public void NotifyRoomUpdated(RoomSnapshot room, int originAccountId)
     {

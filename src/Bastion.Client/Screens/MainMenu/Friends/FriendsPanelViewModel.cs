@@ -27,9 +27,10 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
     private readonly INotificationClient _notifications;
     private readonly IClipboard _clipboard;
     private readonly SynchronizationContext? _uiContext;
-    private readonly List<FriendRowViewModel> _allRows = new List<FriendRowViewModel>();
+    private readonly List<FriendRowViewModel> _allRows;
+    private string _formattedFriendCode;
 
-    public FriendsPanelViewModel(LoggedInSession session, SocialClients clients, LocalServices localServices)
+    public FriendsPanelViewModel(LoggedInSession session, SocialClientSet clients, LocalServiceSet localServices)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(clients);
@@ -37,9 +38,10 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
 
         _session = session;
         _friends = clients.Friends;
-        _notifications = clients.Notifications;
+        _notifications = clients.Chat.Notifications;
         _clipboard = localServices.Clipboard;
         _uiContext = SynchronizationContext.Current;
+        _allRows = new List<FriendRowViewModel>();
         AddFriend = new AddFriendViewModel(session, clients.Friends);
         AddFriend.FriendshipStarted += HandleFriendshipStarted;
         Actions = new FriendActionsViewModel(session, clients.Friends);
@@ -60,7 +62,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         ConnectedGroupTitle = string.Empty;
         OfflineGroupTitle = string.Empty;
         OwnFriendCodeText = string.Empty;
-        FormattedFriendCode = string.Empty;
+        _formattedFriendCode = string.Empty;
         NoMatchText = string.Empty;
     }
 
@@ -78,16 +80,16 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         private set => Set(value);
     }
 
-    public bool IsAddingFriend
+    private bool IsAddingFriend
     {
         get => Get<bool>();
-        private set => Set(value);
+        set => Set(value);
     }
 
-    public FriendsTab SelectedTab
+    private FriendsTab SelectedTab
     {
         get => Get<FriendsTab>();
-        private set => Set(value);
+        set => Set(value);
     }
 
     [DependsOn(nameof(SelectedTab))]
@@ -100,7 +102,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
     public bool IsChatTab => SelectedTab == FriendsTab.Chat;
 
     [DependsOn(nameof(SelectedTab))]
-    public bool ShowsFriendCode => SelectedTab != FriendsTab.Chat;
+    public bool IsFriendCodeVisible => SelectedTab != FriendsTab.Chat;
 
     [DependsOn(nameof(SelectedTab))]
     [DependsOn(nameof(IsAddingFriend))]
@@ -143,12 +145,6 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
     }
 
     public string OwnFriendCodeText
-    {
-        get => Get<string>();
-        private set => Set(value);
-    }
-
-    public string FormattedFriendCode
     {
         get => Get<string>();
         private set => Set(value);
@@ -211,7 +207,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         SelectedTab = tab;
         if (tab == FriendsTab.Chat)
         {
-            _ = Chat.Load();
+            _ = RunSafely(Chat.Load());
         }
     }
 
@@ -236,7 +232,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
 
     public void CopyOwnCode()
     {
-        bool isCopied = _clipboard.TryCopyText(FormattedFriendCode);
+        bool isCopied = _clipboard.TryCopyText(_formattedFriendCode);
         if (!isCopied)
         {
             _logger.Warn("The friend code could not be copied because there is no clipboard.");
@@ -296,12 +292,17 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
 
     private void HandleFriendshipStarted(object? sender, EventArgs e)
     {
-        _ = LoadFriends();
+        _ = RunSafely(LoadFriends());
     }
 
     private void HandleFriendRemoved(object? sender, FriendRemovedEventArgs e)
     {
         _allRows.RemoveAll(row => row.FriendCode == e.FriendCode);
+        RefreshFriendGroups();
+    }
+
+    private void RefreshFriendGroups()
+    {
         IsEmpty = _allRows.Count == 0;
         UpdateHeaderText();
         ApplyFilter();
@@ -325,8 +326,8 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         IEnumerable<FriendRowViewModel> matchingRows = _allRows.Where(IsMatchingFilter);
         foreach (FriendRowViewModel row in matchingRows)
         {
-            ObservableCollection<FriendRowViewModel> group = row.IsConnected ? ConnectedFriends : OfflineFriends;
-            group.Add(row);
+            ObservableCollection<FriendRowViewModel> groupRows = row.IsConnected ? ConnectedFriends : OfflineFriends;
+            groupRows.Add(row);
         }
 
         ConnectedGroupTitle = FormatText(Strings.FriendsGroupInMenuFormat, ConnectedFriends.Count);
@@ -364,8 +365,7 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         }
 
         _allRows[index] = new FriendRowViewModel(change.Friend, change.OccurredAt);
-        UpdateHeaderText();
-        ApplyFilter();
+        RefreshFriendGroups();
         Chat.RefreshPresence(change.Friend.Friend.FriendCode);
     }
 
@@ -387,8 +387,20 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
 
     private void ReloadFriendsAndRequests()
     {
-        _ = LoadFriends();
-        _ = Requests.LoadRequests();
+        _ = RunSafely(LoadFriends());
+        _ = RunSafely(Requests.LoadRequests());
+    }
+
+    private static async Task RunSafely(Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("A friends panel load ended after the panel was closed.", ex);
+        }
     }
 
     private void ShowListing(FriendListing listing)
@@ -400,11 +412,9 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
             _allRows.Add(row);
         }
 
-        FormattedFriendCode = FriendCodePolicy.Format(listing.OwnFriendCode);
-        OwnFriendCodeText = FormatText(Strings.FriendsOwnCodeFormat, FormattedFriendCode);
-        IsEmpty = _allRows.Count == 0;
-        UpdateHeaderText();
-        ApplyFilter();
+        _formattedFriendCode = FriendCodePolicy.Format(listing.OwnFriendCode);
+        OwnFriendCodeText = FormatText(Strings.FriendsOwnCodeFormat, _formattedFriendCode);
+        RefreshFriendGroups();
     }
 
     private void ReportLoadFailure(Exception cause)

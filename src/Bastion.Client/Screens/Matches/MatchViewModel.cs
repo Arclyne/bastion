@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using Bastion.Client.Localization;
-using Bastion.Client.Networking.Notifications;
+using Bastion.Client.Networking.Matchmaking;
 using Bastion.Domain.Matches;
 using Gum.Mvvm;
 
@@ -13,7 +14,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
 {
     private readonly MatchAbandonmentViewModel _abandonmentViewModel;
     private readonly string _ownNickname;
-    private List<BoardPawn> _pawns = new List<BoardPawn>();
+    private List<BoardPawn> _pawns;
 
     public MatchViewModel(
         JoinedMatch joinedMatch,
@@ -32,10 +33,9 @@ public sealed class MatchViewModel : ViewModel, IDisposable
             .OrderBy(participant => participant.TurnOrder)
             .Select(participant => CreatePlayerViewModel(joinedMatch, participant, format));
         Players = new List<MatchPlayerViewModel>(orderedPlayers);
-        BoardSize = format.BoardSize;
-        MatchPlayerViewModel ownPlayer = Players.First(player => player.IsOwn);
-        OwnTurnOrder = ownPlayer.TurnOrder;
-        _ownNickname = ownPlayer.Nickname;
+        BoardSize = joinedMatch.GetBoardSize();
+        OwnTurnOrder = joinedMatch.GetOwnTurnOrder();
+        _ownNickname = joinedMatch.Session.Nickname;
         TurnText = string.Empty;
         foreach (string nickname in abandonmentViewModel.LeftNicknames)
         {
@@ -87,14 +87,15 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         player?.MarkLeft();
     }
 
+    [MemberNotNull(nameof(_pawns))]
     private void RefreshPlay()
     {
-        RebuildPawns();
+        _pawns = RebuildPawns();
         ShowWalls();
         ShowTurn();
     }
 
-    private void RebuildPawns()
+    private List<BoardPawn> RebuildPawns()
     {
         var pawns = new List<BoardPawn>(Players.Count);
         foreach (MatchPlayerViewModel player in Players)
@@ -106,7 +107,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
             }
         }
 
-        _pawns = pawns;
+        return pawns;
     }
 
     private void ShowWalls()
@@ -178,7 +179,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
     private void HandlePlayerLeft(object? sender, PlayerLeftEventArgs e)
     {
         MarkPlayerLeft(e.Nickname);
-        RebuildPawns();
+        _pawns = RebuildPawns();
     }
 
     private void HandlePlayStateChanged(object? sender, EventArgs e)

@@ -2,9 +2,9 @@ using System;
 
 namespace Bastion.Client.Screens.Matches;
 
-public sealed record JoinedMatchViewModels
+public sealed record JoinedMatchViewModelSet
 {
-    public JoinedMatchViewModels(
+    public JoinedMatchViewModelSet(
         MatchChatViewModel chat,
         MatchAbandonmentViewModel abandonment,
         MatchPlayViewModel play)

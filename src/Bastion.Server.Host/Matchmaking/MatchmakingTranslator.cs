@@ -24,8 +24,9 @@ public static class MatchmakingTranslator
     {
         ArgumentNullException.ThrowIfNull(createdMatch);
 
-        MatchFoundParticipant[] participants =
-            ContractArray.ConvertAll(createdMatch.Participants, ToMatchFoundParticipant);
+        MatchFoundParticipant[] participants = ContractArray.ConvertAll(
+            createdMatch.Participants,
+            ToMatchFoundParticipant);
         return new MatchFoundNotification
         {
             OccurredAt = now,

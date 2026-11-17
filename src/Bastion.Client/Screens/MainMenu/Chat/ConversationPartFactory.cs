@@ -7,12 +7,12 @@ using Gum.Forms.Controls;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
-public static class ConversationParts
+public static class ConversationPartFactory
 {
     public const float ViewWidth = PanelMetrics.ContentWidth;
+    public const float MessageRowWidth = 340;
 
     private const float HeaderSpacing = 12;
-    private const float TextSpacing = 2;
     private const float BackButtonWidth = 96;
     private const float BackButtonHeight = 36;
     private const float InputHeight = 44;
@@ -31,7 +31,7 @@ public static class ConversationParts
 
         var titleLines = new StackPanel
         {
-            Spacing = TextSpacing,
+            Spacing = PanelMetrics.TextSpacing,
         };
         titleLines.AddChild(title);
         titleLines.AddChild(detail);

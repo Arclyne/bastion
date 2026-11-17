@@ -24,15 +24,9 @@ public static class ButtonLookCatalog
         Text = TextStyleCatalog.PrimaryButton,
     };
 
-    public static ButtonLook Hero { get; } = new ButtonLook
+    public static ButtonLook Hero { get; } = Primary with
     {
-        Fill = Palette.AccentLight,
-        FillEnd = Palette.Accent,
-        HoverFill = Palette.AccentHover,
-        HoverFillEnd = Palette.AccentHoverEnd,
-        ShadowColor = Palette.AccentDark,
         ShadowOffsetY = HeroEdge,
-        ShouldSinkWhenPressed = true,
         Radius = HeroRadius,
         Text = TextStyleCatalog.HeroTitle,
     };

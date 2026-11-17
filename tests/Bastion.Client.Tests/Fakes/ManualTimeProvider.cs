@@ -8,11 +8,12 @@ namespace Bastion.Client.Tests.Fakes;
 
 public sealed class ManualTimeProvider : TimeProvider
 {
-    private readonly List<ManualTimer> _timers = new List<ManualTimer>();
+    private readonly List<ManualTimer> _timers;
     private DateTimeOffset _utcNow;
 
     public ManualTimeProvider(DateTimeOffset utcNow)
     {
+        _timers = new List<ManualTimer>();
         _utcNow = utcNow;
     }
 

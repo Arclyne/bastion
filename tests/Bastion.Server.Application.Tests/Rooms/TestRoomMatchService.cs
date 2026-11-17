@@ -30,11 +30,8 @@ public sealed class TestRoomMatchService
 
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
     private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
-    private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
-    private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
     private readonly FakeRoomCodeGenerator _codeGenerator = new FakeRoomCodeGenerator();
     private readonly FakeRoomRepository _roomRepository = new FakeRoomRepository();
-    private readonly FakeRoomNotifier _roomNotifier = new FakeRoomNotifier();
     private readonly FakeTurnOrderShuffler _turnOrderShuffler = new FakeTurnOrderShuffler();
     private readonly RoomRegistry _roomRegistry;
     private readonly PrivateRoomService _privateRoomService;
@@ -42,13 +39,16 @@ public sealed class TestRoomMatchService
 
     public TestRoomMatchService()
     {
+        var roomNotifier = new FakeRoomNotifier();
+        var matchRepository = new FakeMatchRepository();
+        var matchmakingQueue = new MatchmakingQueue();
         _roomRegistry = new RoomRegistry(_codeGenerator);
-        var playerActivity = new PlayerActivity(_matchmakingNotifier, _matchmakingQueue, _roomRegistry);
-        var playerVerifier = new RoomPlayerVerifier(_sessionVerifier, _matchRepository, playerActivity);
-        var roomKeeper = new RoomKeeper(_roomRegistry, _roomRepository, _roomNotifier);
-        var settingsValidator = new RoomSettingsValidator(_matchRepository);
+        var playerActivity = new PlayerActivity(_matchmakingNotifier, matchmakingQueue, _roomRegistry);
+        var playerVerifier = new RoomPlayerVerifier(_sessionVerifier, matchRepository, playerActivity);
+        var roomKeeper = new RoomKeeper(_roomRegistry, _roomRepository, roomNotifier);
+        var settingsValidator = new RoomSettingsValidator(matchRepository);
         _privateRoomService = new PrivateRoomService(playerVerifier, settingsValidator, roomKeeper);
-        var matchCreator = new PrivateMatchCreator(_matchRepository, _roomRepository, _turnOrderShuffler);
+        var matchCreator = new PrivateMatchCreator(matchRepository, _roomRepository, _turnOrderShuffler);
         var matchStarter = new RoomMatchStarter(_roomRegistry, matchCreator, _matchmakingNotifier);
         _roomMatchService = new RoomMatchService(playerVerifier, matchStarter);
     }

@@ -1,6 +1,7 @@
 using System;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Sessions;
+using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Application.Tests.Fakes;
 using Xunit;
@@ -25,13 +26,12 @@ public sealed class TestSessionVerifier
     public TestSessionVerifier()
     {
         _verifier = new SessionVerifier(_unitOfWork, _tokenGenerator);
+        AddSession();
     }
 
     [Fact]
     public void Verify_UnknownToken_ThrowsInvalidSessionException()
     {
-        AddSession();
-
         Action verify = () => _verifier.Verify(UnknownToken, _beforeExpiry);
 
         Assert.Throws<InvalidSessionException>(verify);
@@ -40,7 +40,6 @@ public sealed class TestSessionVerifier
     [Fact]
     public void Verify_ExpiredSession_ThrowsInvalidSessionException()
     {
-        AddSession();
         DateTime afterExpiry = _issuedAt.AddHours(Session.MaximumLifetimeHours);
 
         Action verify = () => _verifier.Verify(FakeSessionTokenGenerator.Token, afterExpiry);
@@ -51,11 +50,17 @@ public sealed class TestSessionVerifier
     [Fact]
     public void Verify_ActiveSession_ReturnsNickname()
     {
-        AddSession();
-
         ConnectedPlayer player = _verifier.Verify(FakeSessionTokenGenerator.Token, _beforeExpiry);
 
         Assert.Equal(Nickname, player.Nickname);
+    }
+
+    [Fact]
+    public void VerifyIdentity_ActiveSession_ReturnsNickname()
+    {
+        PlayerIdentity identity = _verifier.VerifyIdentity(FakeSessionTokenGenerator.Token, _beforeExpiry);
+
+        Assert.Equal(Nickname, identity.Nickname);
     }
 
     private void AddSession()

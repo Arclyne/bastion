@@ -81,21 +81,29 @@ public sealed class MatchClient : IMatchClient
 
     private static Exception ToClientException(Exception cause)
     {
-        switch (cause)
+        if (cause is FaultException<MatchNotJoinedFault>)
         {
-            case FaultException<MatchNotJoinedFault>:
-                return new MatchNotJoinedException(cause);
-            case FaultException<NotYourTurnFault> notYourTurn:
-                return new NotYourTurnException(
-                    notYourTurn.Detail.CurrentTurnOrder,
-                    notYourTurn.Detail.NextMoveNumber,
-                    cause);
-            case FaultException<IllegalMoveFault>:
-                return new IllegalMoveException(cause);
-            case FaultException<IllegalWallFault> illegalWall:
-                return MatchContractTranslator.ToIllegalWallException(illegalWall);
-            default:
-                return ServiceFailureTranslator.ToClientException(cause);
+            return new MatchNotJoinedException(cause);
         }
+
+        if (cause is FaultException<NotYourTurnFault> notYourTurn)
+        {
+            return new NotYourTurnException(
+                notYourTurn.Detail.CurrentTurnOrder,
+                notYourTurn.Detail.NextMoveNumber,
+                cause);
+        }
+
+        if (cause is FaultException<IllegalMoveFault>)
+        {
+            return new IllegalMoveException(cause);
+        }
+
+        if (cause is FaultException<IllegalWallFault> illegalWall)
+        {
+            return MatchContractTranslator.ToIllegalWallException(illegalWall);
+        }
+
+        return ServiceFailureTranslator.ToClientException(cause);
     }
 }

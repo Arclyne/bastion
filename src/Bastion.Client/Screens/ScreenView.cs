@@ -7,10 +7,11 @@ namespace Bastion.Client.Screens;
 
 public abstract class ScreenView : Panel
 {
-    private readonly List<ModalLayer> _dialogs = new List<ModalLayer>();
+    private readonly List<ModalLayer> _dialogs;
 
     protected ScreenView()
     {
+        _dialogs = new List<ModalLayer>();
         Dock(Gum.Wireframe.Dock.Fill);
     }
 

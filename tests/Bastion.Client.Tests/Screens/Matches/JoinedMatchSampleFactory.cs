@@ -1,4 +1,5 @@
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Matchmaking;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Screens.Matches;
 using Bastion.Domain.Matches;

@@ -149,7 +149,7 @@ public sealed class MatchMoveService : IMatchMoveService
     {
         Participation mover = match.GetParticipation(player.AccountId);
         short nextMoveNumber = match.GetNextMoveNumber();
-        bool isMatchOver = match.Status == MatchStatus.Finished;
+        bool isMatchOver = match.IsFinished();
         var notice = new PawnMoveNotice
         {
             MoverNickname = player.Nickname,
@@ -166,8 +166,7 @@ public sealed class MatchMoveService : IMatchMoveService
 
     private static List<int> ListParticipantAccountIds(Match match)
     {
-        IEnumerable<int> participantAccountIds =
-            match.Participations.Select(participation => participation.AccountId);
+        IEnumerable<int> participantAccountIds = match.Participations.Select(participation => participation.AccountId);
         return new List<int>(participantAccountIds);
     }
 

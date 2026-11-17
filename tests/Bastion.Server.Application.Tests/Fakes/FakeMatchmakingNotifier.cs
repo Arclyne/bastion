@@ -5,13 +5,21 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeMatchmakingNotifier : IMatchmakingNotifier
 {
-    public HashSet<int> SubscribedAccountIds { get; } = new HashSet<int>();
+    public FakeMatchmakingNotifier()
+    {
+        SubscribedAccountIds = new HashSet<int>();
+        CreatedMatches = new List<CreatedMatch>();
+        PresenceRequests = new List<PresenceRequest>();
+        EndReasons = new Dictionary<int, SearchEndReason>();
+    }
 
-    public List<CreatedMatch> CreatedMatches { get; } = new List<CreatedMatch>();
+    public HashSet<int> SubscribedAccountIds { get; }
 
-    public List<PresenceRequest> PresenceRequests { get; } = new List<PresenceRequest>();
+    public List<CreatedMatch> CreatedMatches { get; }
 
-    public Dictionary<int, SearchEndReason> EndReasons { get; } = new Dictionary<int, SearchEndReason>();
+    public List<PresenceRequest> PresenceRequests { get; }
+
+    public Dictionary<int, SearchEndReason> EndReasons { get; }
 
     public bool HasNotificationChannel(int accountId)
     {

@@ -30,13 +30,13 @@ public sealed class TestMatchSearchService
     private readonly MatchmakingQueue _matchmakingQueue = new MatchmakingQueue();
     private readonly FakeMatchmakingNotifier _matchmakingNotifier = new FakeMatchmakingNotifier();
     private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
-    private readonly FakeRoomCodeGenerator _codeGenerator = new FakeRoomCodeGenerator();
     private readonly RoomRegistry _roomRegistry;
     private readonly MatchSearchService _matchSearchService;
 
     public TestMatchSearchService()
     {
-        _roomRegistry = new RoomRegistry(_codeGenerator);
+        var codeGenerator = new FakeRoomCodeGenerator();
+        _roomRegistry = new RoomRegistry(codeGenerator);
         var playerActivity = new PlayerActivity(_matchmakingNotifier, _matchmakingQueue, _roomRegistry);
         var playerVerifier = new MatchmakingPlayerVerifier(_sessionVerifier, playerActivity, _matchRepository);
         _matchSearchService = new MatchSearchService(playerVerifier, _matchmakingQueue, _matchmakingNotifier);
@@ -51,24 +51,28 @@ public sealed class TestMatchSearchService
     }
 
     [Fact]
-    public void StartSearch_PlayerWithoutNotifications_ThrowsSearchRejectedException()
+    public void StartSearch_PlayerWithoutNotifications_RejectsNotificationsUnavailable()
     {
         _sessionVerifier.Add(Token, _player);
-
         Action start = () => _matchSearchService.StartSearch(Token, _now);
 
-        Assert.Throws<SearchRejectedException>(start);
+        Exception? exception = Record.Exception(start);
+
+        var rejection = exception as SearchRejectedException;
+        Assert.Equal(SearchRejection.NotificationsUnavailable, rejection?.Rejection);
     }
 
     [Fact]
-    public void StartSearch_PlayerWithUnfinishedMatch_ThrowsSearchRejectedException()
+    public void StartSearch_PlayerWithUnfinishedMatch_RejectsUnfinishedMatch()
     {
         AddPlayer();
         _matchRepository.AccountIdsWithUnfinishedParticipation.Add(AccountId);
-
         Action start = () => _matchSearchService.StartSearch(Token, _now);
 
-        Assert.Throws<SearchRejectedException>(start);
+        Exception? exception = Record.Exception(start);
+
+        var rejection = exception as SearchRejectedException;
+        Assert.Equal(SearchRejection.UnfinishedMatch, rejection?.Rejection);
     }
 
     [Fact]
@@ -96,15 +100,14 @@ public sealed class TestMatchSearchService
 
         _matchSearchService.StartSearch(Token, _now);
 
-        bool isRemoved = _matchmakingQueue.TryRemove(AccountId);
-        Assert.True(isRemoved);
+        bool isSearching = _matchmakingQueue.IsSearching(AccountId);
+        Assert.True(isSearching);
     }
 
     [Fact]
     public void StartSearch_PlayerAlreadySearching_KeepsFirstSearch()
     {
-        AddPlayer();
-        _matchSearchService.StartSearch(Token, _now);
+        AddSearchingPlayer();
         DateTime repeatedStartAt = _now.AddMinutes(RepeatedStartMinutes);
 
         _matchSearchService.StartSearch(Token, repeatedStartAt);
@@ -116,8 +119,7 @@ public sealed class TestMatchSearchService
     [Fact]
     public void CancelSearch_SearchingPlayer_NotifiesCancelled()
     {
-        AddPlayer();
-        _matchSearchService.StartSearch(Token, _now);
+        AddSearchingPlayer();
 
         _matchSearchService.CancelSearch(Token, _now);
 
@@ -138,8 +140,7 @@ public sealed class TestMatchSearchService
     [Fact]
     public void ConfirmPresence_PlayerAwaitingPresence_KeepsSearching()
     {
-        AddPlayer();
-        _matchSearchService.StartSearch(Token, _now);
+        AddSearchingPlayer();
         _matchmakingQueue.Review(_presenceCheckAt);
         DateTime responseDeadline = _presenceCheckAt.Add(MatchmakingPolicy.PresenceResponseWindow);
 
@@ -147,6 +148,12 @@ public sealed class TestMatchSearchService
 
         QueueReview review = _matchmakingQueue.Review(responseDeadline);
         Assert.Empty(review.ExpiredSearches);
+    }
+
+    private void AddSearchingPlayer()
+    {
+        AddPlayer();
+        _matchSearchService.StartSearch(Token, _now);
     }
 
     private void AddPlayer()

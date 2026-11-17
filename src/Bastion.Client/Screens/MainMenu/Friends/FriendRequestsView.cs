@@ -4,7 +4,6 @@ using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 
 namespace Bastion.Client.Screens.MainMenu.Friends;
@@ -13,9 +12,10 @@ public sealed class FriendRequestsView : StackPanel
 {
     private const float ViewWidth = PanelMetrics.ContentWidth;
     private const float ViewSpacing = 10;
-    private const float SubtabWidth = 177;
+    private const float SubtabWidth = (ViewWidth - SubtabSpacing) / SubtabCount;
     private const float SubtabHeight = 36;
     private const float SubtabSpacing = 6;
+    private const int SubtabCount = 2;
     private const float RowsHeight = 470;
 
     private readonly FriendRequestsViewModel _requests;
@@ -55,11 +55,11 @@ public sealed class FriendRequestsView : StackPanel
         };
         TabButton receivedTab = CreateSubtab(
             nameof(FriendRequestsViewModel.ReceivedTitle),
-            nameof(FriendRequestsViewModel.ShowsReceived),
+            nameof(FriendRequestsViewModel.IsReceivedTab),
             HandleReceivedClick);
         TabButton sentTab = CreateSubtab(
             nameof(FriendRequestsViewModel.SentTitle),
-            nameof(FriendRequestsViewModel.ShowsSent),
+            nameof(FriendRequestsViewModel.IsSentTab),
             HandleSentClick);
         row.AddChild(receivedTab);
         row.AddChild(sentTab);
@@ -68,11 +68,8 @@ public sealed class FriendRequestsView : StackPanel
 
     private static TabButton CreateSubtab(string titleProperty, string selectedProperty, EventHandler handleClick)
     {
-        Button button = ViewFactory.CreateButton(string.Empty, SubtabWidth, SubtabHeight);
+        Button button = ViewFactory.CreateBoundUntranslatedButton(titleProperty, SubtabWidth, SubtabHeight);
         ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Pill);
-        var buttonVisual = (ButtonVisual)button.Visual;
-        buttonVisual.TextInstance.LocalizeText = false;
-        button.SetBinding(nameof(Button.Text), titleProperty);
         button.Click += handleClick;
         return new TabButton(button, selectedProperty, SubtabSpacing);
     }

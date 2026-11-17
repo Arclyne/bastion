@@ -15,11 +15,14 @@ public sealed class TestMessage
     private const int SecondReadMinutes = 5;
 
     private static readonly DateTime _sentAt = new DateTime(2026, 11, 5, 12, 0, 0, DateTimeKind.Utc);
+    private static readonly MatchChatSubmission _matchChatSubmission = new MatchChatSubmission(MatchId, MatchChatText);
 
     [Fact]
     public void CreatePrivate_DifferentPlayers_UsesFriendsChannel()
     {
-        Message message = CreateMessage();
+        var route = new MessageRoute(AuthorId, RecipientId);
+
+        var message = Message.CreatePrivate(route, PrivateText, _sentAt);
 
         Assert.Equal(MessageChannel.Friends, message.Channel);
     }
@@ -27,9 +30,9 @@ public sealed class TestMessage
     [Fact]
     public void CreatePrivate_SameAuthorAndRecipient_ThrowsArgumentException()
     {
-        var participants = new MessageParticipants(AuthorId, AuthorId);
+        var route = new MessageRoute(AuthorId, AuthorId);
 
-        Action createSelfMessage = () => Message.CreatePrivate(participants, PrivateText, _sentAt);
+        Action createSelfMessage = () => Message.CreatePrivate(route, PrivateText, _sentAt);
 
         Assert.Throws<ArgumentException>(createSelfMessage);
     }
@@ -55,6 +58,16 @@ public sealed class TestMessage
     }
 
     [Fact]
+    public void GetPartnerId_MatchMessageAuthor_ThrowsInvalidOperationException()
+    {
+        var message = Message.CreateForMatch(_matchChatSubmission, AuthorId, _sentAt);
+
+        Action getPartnerId = () => message.GetPartnerId(AuthorId);
+
+        Assert.Throws<InvalidOperationException>(getPartnerId);
+    }
+
+    [Fact]
     public void MarkRead_AlreadyRead_KeepsFirstMoment()
     {
         Message message = CreateMessage();
@@ -70,9 +83,7 @@ public sealed class TestMessage
     [Fact]
     public void CreateForMatch_MatchSubmission_UsesMatchChannel()
     {
-        var submission = new MatchChatSubmission(MatchId, MatchChatText);
-
-        var message = Message.CreateForMatch(submission, AuthorId, _sentAt);
+        var message = Message.CreateForMatch(_matchChatSubmission, AuthorId, _sentAt);
 
         Assert.Equal(MessageChannel.Match, message.Channel);
     }
@@ -80,16 +91,14 @@ public sealed class TestMessage
     [Fact]
     public void CreateForMatch_MatchSubmission_KeepsMatchId()
     {
-        var submission = new MatchChatSubmission(MatchId, MatchChatText);
-
-        var message = Message.CreateForMatch(submission, AuthorId, _sentAt);
+        var message = Message.CreateForMatch(_matchChatSubmission, AuthorId, _sentAt);
 
         Assert.Equal(MatchId, message.MatchId);
     }
 
     private static Message CreateMessage()
     {
-        var participants = new MessageParticipants(AuthorId, RecipientId);
-        return Message.CreatePrivate(participants, PrivateText, _sentAt);
+        var route = new MessageRoute(AuthorId, RecipientId);
+        return Message.CreatePrivate(route, PrivateText, _sentAt);
     }
 }

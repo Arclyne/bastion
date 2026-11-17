@@ -11,10 +11,10 @@ public sealed class TestAccount
     private const int FailuresBelowLock = 2;
     private const int FailuresThatLock = 3;
     private const int FirstLockMinutes = 5;
-    private const int HoursAfterResetPeriod = 25;
+    private const int HoursPastResetPeriod = 1;
     private const byte FailuresAfterReset = 1;
     private const int PartialMinuteSeconds = 30;
-    private const int MinutesAfterLockEnds = 6;
+    private const int MinutesAfterLockEnds = FirstLockMinutes + 1;
     private const int NoMinutesLeft = 0;
 
     private static readonly DateTime _now = new DateTime(2026, 10, 15, 12, 0, 0, DateTimeKind.Utc);
@@ -33,10 +33,11 @@ public sealed class TestAccount
     public void RecordFailedLogin_TwoFailures_DoesNotLock()
     {
         Account account = CreateActiveAccount();
-        RecordFailures(account, FailuresBelowLock);
+        account.RecordFailedLogin(_now);
+
+        account.RecordFailedLogin(_now);
 
         bool isLocked = account.IsLockedAt(_now);
-
         Assert.False(isLocked);
     }
 
@@ -44,9 +45,10 @@ public sealed class TestAccount
     public void RecordFailedLogin_ThirdFailure_LocksForFiveMinutes()
     {
         Account account = CreateActiveAccount();
+        RecordFailures(account, FailuresBelowLock);
         DateTime expectedLockEnd = _now.AddMinutes(FirstLockMinutes);
 
-        RecordFailures(account, FailuresThatLock);
+        account.RecordFailedLogin(_now);
 
         Assert.Equal(expectedLockEnd, account.LockedUntil);
     }
@@ -56,7 +58,8 @@ public sealed class TestAccount
     {
         Account account = CreateActiveAccount();
         RecordFailures(account, FailuresBelowLock);
-        DateTime afterResetPeriod = _now.AddHours(HoursAfterResetPeriod);
+        DateTime resetPeriodEnd = _now.Add(LockoutPolicy.FailedLoginCountResetPeriod);
+        DateTime afterResetPeriod = resetPeriodEnd.AddHours(HoursPastResetPeriod);
 
         account.RecordFailedLogin(afterResetPeriod);
 

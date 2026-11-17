@@ -39,7 +39,7 @@ public sealed class BoardScene : IDisposable
     private readonly SceneModel _pawnModel;
     private readonly BasicEffect _highlightEffect;
     private readonly BasicEffect _wallEffect;
-    private readonly Dictionary<string, Color> _goalColorsByMeshName = new Dictionary<string, Color>();
+    private readonly Dictionary<string, Color> _goalColorsByMeshName;
     private MatchViewModel? _preparedMatch;
     private int _preparedPawnCount;
 
@@ -49,6 +49,7 @@ public sealed class BoardScene : IDisposable
         ArgumentNullException.ThrowIfNull(content);
 
         _graphicsDevice = graphicsDevice;
+        _goalColorsByMeshName = new Dictionary<string, Color>();
         _classicBoardModel = LoadSceneModel(content, ClassicBoardAssetName);
         _quickBoardModel = LoadSceneModel(content, QuickBoardAssetName);
         _pawnModel = LoadSceneModel(content, PawnAssetName);
@@ -83,26 +84,18 @@ public sealed class BoardScene : IDisposable
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        if (!TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint))
-        {
-            square = _offBoardCoordinates;
-            return false;
-        }
-
-        return BoardSceneLayout.TryGetCoordinates(match.BoardSize, surfacePoint, out square);
+        square = _offBoardCoordinates;
+        return TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint)
+            && BoardSceneLayout.TryGetCoordinates(match.BoardSize, surfacePoint, out square);
     }
 
     public bool TryFindGrooveUnderCursor(MatchViewModel match, Point cursorPosition, out BoardCoordinates groove)
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        if (!TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint))
-        {
-            groove = _offBoardCoordinates;
-            return false;
-        }
-
-        return BoardSceneLayout.TryGetGroove(match.BoardSize, surfacePoint, out groove);
+        groove = _offBoardCoordinates;
+        return TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint)
+            && BoardSceneLayout.TryGetGroove(match.BoardSize, surfacePoint, out groove);
     }
 
     public void Dispose()
@@ -143,8 +136,10 @@ public sealed class BoardScene : IDisposable
         IEnumerable<MatchPlayerViewModel> remainingPlayers = match.Players.Where(candidate => !candidate.HasLeft);
         foreach (MatchPlayerViewModel player in remainingPlayers)
         {
-            string goalMeshName =
-                BoardSceneLayout.GetGoalMeshName(match.BoardSize, player.TurnOrder, match.Players.Count);
+            string goalMeshName = BoardSceneLayout.GetGoalMeshName(
+                match.BoardSize,
+                player.TurnOrder,
+                match.Players.Count);
             _goalColorsByMeshName[goalMeshName] = Palette.GetPawnColor(player.PawnSymbol);
         }
 

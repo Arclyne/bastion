@@ -52,7 +52,7 @@ public static class MatchTranslator
         return FaultExceptionFactory.Create(fault, rejection);
     }
 
-    public static FaultException<IllegalWallFault> ToUnreadableWallFault()
+    public static FaultException<IllegalWallFault> CreateUnreadableWallFault()
     {
         var rejection = new IllegalWallException(DomainWallRejectionReason.OutOfBoard, blockedTurnOrder: null);
         return ToFault(rejection);

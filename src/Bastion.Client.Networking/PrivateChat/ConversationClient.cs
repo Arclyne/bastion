@@ -23,7 +23,7 @@ public sealed class ConversationClient : IConversationClient
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        ConversationEntry[] entries = Call(service => service.ListConversations(sessionToken));
+        ConversationEntry[]? entries = Call(service => service.ListConversations(sessionToken));
         return ConversationContractTranslator.ToPreviews(entries);
     }
 

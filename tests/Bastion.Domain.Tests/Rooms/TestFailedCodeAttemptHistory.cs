@@ -6,7 +6,7 @@ namespace Bastion.Domain.Tests.Rooms;
 
 public sealed class TestFailedCodeAttemptHistory
 {
-    private const int SecondsBetweenAttempts = 10;
+    private const int SecondsAfterAttempts = 10;
 
     private static readonly DateTime _firstAttemptAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
 
@@ -46,7 +46,7 @@ public sealed class TestFailedCodeAttemptHistory
     public void GetRetryDelay_LimitReached_WaitsUntilFirstAttemptExpires()
     {
         FailedCodeAttemptHistory attempts = RecordAttempts(RoomPolicy.MaximumFailedCodeAttempts);
-        var elapsed = TimeSpan.FromSeconds(SecondsBetweenAttempts);
+        var elapsed = TimeSpan.FromSeconds(SecondsAfterAttempts);
         DateTime now = _firstAttemptAt + elapsed;
         TimeSpan expectedDelay = RoomPolicy.FailedCodeWindow - elapsed;
 

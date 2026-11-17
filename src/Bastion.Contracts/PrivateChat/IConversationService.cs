@@ -23,7 +23,7 @@ public interface IConversationService
     /// <exception cref="FaultException">The server could not reach the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
-    ConversationEntry[] ListConversations(string? sessionToken);
+    ConversationEntry[]? ListConversations(string? sessionToken);
 
     /// <summary>
     /// Opens the conversation with the player who has the given friend code, gives its recent messages and marks the

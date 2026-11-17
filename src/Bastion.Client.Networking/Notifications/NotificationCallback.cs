@@ -57,14 +57,24 @@ public sealed class NotificationCallback : INotificationCallback
             return;
         }
 
-        if (TryDispatchChatNotification(notification)
-            || TryDispatchMatchEndNotification(notification)
-            || TryDispatchMatchMoveNotification(notification)
-            || TryDispatchFriendNotification(notification)
-            || TryDispatchPrivateMessageNotification(notification)
-            || TryDispatchRoomNotification(notification)
-            || TryDispatchMatchmakingNotification(notification))
+        try
         {
+            if (TryDispatchChatNotification(notification)
+                || TryDispatchMatchEndNotification(notification)
+                || TryDispatchMatchMoveNotification(notification)
+                || TryDispatchFriendNotification(notification)
+                || TryDispatchPrivateMessageNotification(notification)
+                || TryDispatchRoomNotification(notification)
+                || TryDispatchMatchmakingNotification(notification))
+            {
+                return;
+            }
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            _logger.Warn(
+                $"A notification with an unknown value was ignored. Type={notification.GetType().Name}",
+                ex);
             return;
         }
 
@@ -147,7 +157,7 @@ public sealed class NotificationCallback : INotificationCallback
 
         if (notification is WallPlacedNotification wallPlaced)
         {
-            var placement = MatchContractTranslator.ToWallPlacedEventArgs(wallPlaced);
+            WallPlacedEventArgs placement = ToWallPlacedEventArgs(wallPlaced);
             OnWallPlaced(placement);
             return true;
         }
@@ -170,6 +180,24 @@ public sealed class NotificationCallback : INotificationCallback
             NextMoveNumber = notification.NextMoveNumber,
             RemainingClockMilliseconds = notification.RemainingClockMilliseconds,
             IsMatchOver = notification.IsMatchOver,
+        };
+    }
+
+    private static WallPlacedEventArgs ToWallPlacedEventArgs(WallPlacedNotification notification)
+    {
+        string placerNickname = notification.PlacerNickname ?? string.Empty;
+        string groove = notification.Groove ?? string.Empty;
+        PlacedWallOrientation orientation = MatchContractTranslator.ToPlacedOrientation(notification.Orientation);
+        return new WallPlacedEventArgs
+        {
+            MatchId = notification.MatchId,
+            PlacerNickname = placerNickname,
+            Groove = groove,
+            Orientation = orientation,
+            RemainingWalls = notification.RemainingWalls,
+            NextTurnOrder = notification.NextTurnOrder,
+            NextMoveNumber = notification.NextMoveNumber,
+            RemainingClockMilliseconds = notification.RemainingClockMilliseconds,
         };
     }
 

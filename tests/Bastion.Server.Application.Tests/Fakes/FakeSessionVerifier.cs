@@ -7,8 +7,14 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeSessionVerifier : ISessionVerifier
 {
-    private readonly Dictionary<string, ConnectedPlayer> _players = new Dictionary<string, ConnectedPlayer>();
-    private readonly Dictionary<string, PlayerIdentity> _identities = new Dictionary<string, PlayerIdentity>();
+    private readonly Dictionary<string, ConnectedPlayer> _players;
+    private readonly Dictionary<string, PlayerIdentity> _identities;
+
+    public FakeSessionVerifier()
+    {
+        _players = new Dictionary<string, ConnectedPlayer>();
+        _identities = new Dictionary<string, PlayerIdentity>();
+    }
 
     public void Add(string sessionToken, ConnectedPlayer player)
     {

@@ -9,13 +9,14 @@ namespace Bastion.Client.Screens.Matches;
 public sealed class WallPlacementViewModel : ViewModel, IDisposable
 {
     private readonly MatchPlayViewModel _play;
+    private WallOrientation _orientation;
 
     public WallPlacementViewModel(MatchPlayViewModel play)
     {
         ArgumentNullException.ThrowIfNull(play);
 
         _play = play;
-        Orientation = WallOrientation.Horizontal;
+        _orientation = WallOrientation.Horizontal;
         HintText = string.Empty;
         CanStart = play.CanPlaceWall();
         _play.StateChanged += HandlePlayStateChanged;
@@ -54,8 +55,6 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
     [DependsOn(nameof(HintText))]
     public bool HasHint => HintText.Length > 0;
 
-    public WallOrientation Orientation { get; private set; }
-
     public Wall? HoveredWall { get; private set; }
 
     public bool IsHoveredWallValid { get; private set; }
@@ -89,7 +88,9 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
             return;
         }
 
-        Orientation = Orientation == WallOrientation.Horizontal ? WallOrientation.Vertical : WallOrientation.Horizontal;
+        _orientation = _orientation == WallOrientation.Horizontal
+            ? WallOrientation.Vertical
+            : WallOrientation.Horizontal;
         if (PendingWall is not null)
         {
             ChooseGroove(PendingWall.Groove);
@@ -129,7 +130,7 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
             return;
         }
 
-        var wall = new Wall(groove, Orientation);
+        var wall = new Wall(groove, _orientation);
         WallRejection? rejection = FindRejection(wall);
         if (rejection is not null)
         {
@@ -178,7 +179,7 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
 
     private void ShowHoveredWall(BoardCoordinates groove)
     {
-        var wall = new Wall(groove, Orientation);
+        var wall = new Wall(groove, _orientation);
         WallRejection? rejection = FindRejection(wall);
         HoveredWall = wall;
         IsHoveredWallValid = rejection is null;

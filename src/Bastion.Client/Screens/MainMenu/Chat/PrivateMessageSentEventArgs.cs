@@ -4,9 +4,9 @@ using Bastion.Client.Networking.PrivateChat;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
-public sealed class ConversationUpdatedEventArgs : EventArgs
+public sealed class PrivateMessageSentEventArgs : EventArgs
 {
-    public ConversationUpdatedEventArgs(PlayerTag partner, PrivateMessage message)
+    public PrivateMessageSentEventArgs(PlayerTag partner, PrivateMessage message)
     {
         ArgumentNullException.ThrowIfNull(partner);
         ArgumentNullException.ThrowIfNull(message);

@@ -2,7 +2,7 @@ using System;
 
 namespace Bastion.Server.Application.Accounts;
 
-public sealed record LoggedInPlayer
+public sealed class LoggedInPlayer
 {
     public LoggedInPlayer(string sessionToken, string nickname, string preferredLanguage)
     {

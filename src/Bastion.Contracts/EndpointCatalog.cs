@@ -2,7 +2,7 @@ using System;
 
 namespace Bastion.Contracts;
 
-public static class ServiceEndpoints
+public static class EndpointCatalog
 {
     public const string DefaultHost = "localhost";
     public const int DefaultPort = 8000;

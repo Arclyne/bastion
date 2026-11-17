@@ -36,8 +36,10 @@ public sealed class TestMatchSearchViewModel : IDisposable
 
     private static readonly DateTimeOffset _searchStartedAt = new DateTimeOffset(2026, 11, 5, 18, 0, 0, TimeSpan.Zero);
     private static readonly FoundMatchParticipant _own = new FoundMatchParticipant(OwnNickname, OwnEloRating, OwnTurnOrder);
-    private static readonly FoundMatchParticipant _rival =
-        new FoundMatchParticipant(RivalNickname, RivalEloRating, RivalTurnOrder);
+    private static readonly FoundMatchParticipant _rival = new FoundMatchParticipant(
+        RivalNickname,
+        RivalEloRating,
+        RivalTurnOrder);
     private static readonly FoundMatchParticipant[] _foundMatchParticipants = { _own, _rival };
     private static readonly TimeSpan _presenceWindow = TimeSpan.FromSeconds(PresenceWindowSeconds);
 
@@ -101,7 +103,7 @@ public sealed class TestMatchSearchViewModel : IDisposable
     [Fact]
     public async Task StartSearch_MatchFoundBeforeReply_KeepsMatchFound()
     {
-        _matchmakingClient.MatchFoundDuringStart = _foundMatchParticipants;
+        _matchmakingClient.ParticipantsFoundDuringStart = _foundMatchParticipants;
 
         await _viewModel.StartSearch();
 
@@ -111,8 +113,7 @@ public sealed class TestMatchSearchViewModel : IDisposable
     [Fact]
     public async Task MatchFound_WhileSearching_RaisesMatchFound()
     {
-        _viewModel.MatchFound += HandleMatchFound;
-        await _viewModel.StartSearch();
+        await StartSearchListeningForMatchFound();
 
         _matchmakingClient.RaiseMatchFound(_foundMatchParticipants);
 
@@ -122,8 +123,7 @@ public sealed class TestMatchSearchViewModel : IDisposable
     [Fact]
     public async Task MatchFound_Twice_RaisesMatchFoundOnce()
     {
-        _viewModel.MatchFound += HandleMatchFound;
-        await _viewModel.StartSearch();
+        await StartSearchListeningForMatchFound();
         _matchmakingClient.RaiseMatchFound(_foundMatchParticipants);
 
         _matchmakingClient.RaiseMatchFound(_foundMatchParticipants);
@@ -158,8 +158,7 @@ public sealed class TestMatchSearchViewModel : IDisposable
             CultureInfo.CurrentCulture,
             Strings.MatchSearchPresenceMessageFormat,
             ExpectedSecondsLeft);
-        await _viewModel.StartSearch();
-        _matchmakingClient.RaisePresenceRequested(_presenceWindow);
+        await StartSearchWithPresenceRequest();
         var countdownElapsed = TimeSpan.FromSeconds(CountdownElapsedSeconds);
 
         _timeProvider.Advance(countdownElapsed);
@@ -170,8 +169,7 @@ public sealed class TestMatchSearchViewModel : IDisposable
     [Fact]
     public async Task ConfirmPresence_DialogOpen_SendsConfirmation()
     {
-        await _viewModel.StartSearch();
-        _matchmakingClient.RaisePresenceRequested(_presenceWindow);
+        await StartSearchWithPresenceRequest();
 
         await _viewModel.ConfirmPresence();
 
@@ -181,8 +179,7 @@ public sealed class TestMatchSearchViewModel : IDisposable
     [Fact]
     public async Task ConfirmPresence_DialogOpen_ClosesDialog()
     {
-        await _viewModel.StartSearch();
-        _matchmakingClient.RaisePresenceRequested(_presenceWindow);
+        await StartSearchWithPresenceRequest();
 
         await _viewModel.ConfirmPresence();
 
@@ -281,8 +278,20 @@ public sealed class TestMatchSearchViewModel : IDisposable
         Assert.False(hasSubscribers);
     }
 
+    private async Task StartSearchListeningForMatchFound()
+    {
+        _viewModel.MatchFound += HandleMatchFound;
+        await _viewModel.StartSearch();
+    }
+
     private void HandleMatchFound(object? sender, MatchFoundEventArgs e)
     {
         _matchFoundCount++;
+    }
+
+    private async Task StartSearchWithPresenceRequest()
+    {
+        await _viewModel.StartSearch();
+        _matchmakingClient.RaisePresenceRequested(_presenceWindow);
     }
 }

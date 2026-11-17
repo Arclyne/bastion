@@ -9,7 +9,12 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeFriendRequestRepository : IFriendRequestRepository
 {
-    private readonly List<FriendRequest> _requests = new List<FriendRequest>();
+    private readonly List<FriendRequest> _requests;
+
+    public FakeFriendRequestRepository()
+    {
+        _requests = new List<FriendRequest>();
+    }
 
     public FriendRequest? FindBetween(int firstAccountId, int secondAccountId)
     {

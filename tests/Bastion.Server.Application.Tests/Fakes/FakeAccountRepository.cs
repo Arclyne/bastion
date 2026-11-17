@@ -8,8 +8,14 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeAccountRepository : IAccountRepository
 {
-    private readonly List<Account> _accounts = new List<Account>();
-    private readonly List<PlayerIdentity> _playerIdentities = new List<PlayerIdentity>();
+    private readonly List<Account> _accounts;
+    private readonly List<PlayerIdentity> _playerIdentities;
+
+    public FakeAccountRepository()
+    {
+        _accounts = new List<Account>();
+        _playerIdentities = new List<PlayerIdentity>();
+    }
 
     public void AddAccount(Account account)
     {
@@ -54,11 +60,15 @@ public sealed class FakeAccountRepository : IAccountRepository
     public IReadOnlyList<PlayerIdentity> SearchPlayerIdentities(string nicknamePrefix, int limit)
     {
         IEnumerable<PlayerIdentity> matchingIdentities = _playerIdentities
-            .Where(playerIdentity =>
-                playerIdentity.Nickname.StartsWith(nicknamePrefix, StringComparison.OrdinalIgnoreCase))
+            .Where(playerIdentity => HasNicknamePrefix(playerIdentity, nicknamePrefix))
             .OrderBy(playerIdentity => playerIdentity.Nickname, StringComparer.OrdinalIgnoreCase)
             .Take(limit);
         return new List<PlayerIdentity>(matchingIdentities);
+    }
+
+    private static bool HasNicknamePrefix(PlayerIdentity playerIdentity, string nicknamePrefix)
+    {
+        return playerIdentity.Nickname.StartsWith(nicknamePrefix, StringComparison.OrdinalIgnoreCase);
     }
 
     public IReadOnlyList<PlayerIdentity> ListPlayerIdentities(IReadOnlyCollection<int> accountIds)

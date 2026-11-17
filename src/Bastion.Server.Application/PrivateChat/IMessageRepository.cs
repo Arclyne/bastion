@@ -14,5 +14,5 @@ public interface IMessageRepository
 
     IReadOnlyDictionary<int, int> CountUnreadByAuthor(int recipientId);
 
-    void MarkRead(MessageParticipants participants, DateTime readAt);
+    void MarkRead(MessageRoute route, DateTime readAt);
 }

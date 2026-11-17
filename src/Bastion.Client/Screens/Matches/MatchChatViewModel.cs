@@ -51,22 +51,19 @@ public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
             return;
         }
 
-        string text = Draft;
-        if (!ChatPolicy.IsValidMessage(text))
+        if (!TryTakeValidDraft(out string trimmedText))
         {
-            StatusText = ChatRejectionText.DescribeInvalidMessage();
             return;
         }
 
-        string trimmedText = text.Trim();
         DateTime createdAt = GetUtcNow();
-        var row = ChatMessageRowViewModel.CreatePending(trimmedText, createdAt);
+        var row = ChatMessageRowViewModel.CreatePending(trimmedText, createdAt, TimeProvider);
         AddMessage(row);
         Draft = string.Empty;
         IsSending = true;
         try
         {
-            DateTime sentAt = await Task.Run(() => SendToJoinedMatch(text));
+            DateTime sentAt = await Task.Run(() => SendToJoinedMatch(trimmedText));
             row.Confirm(sentAt);
         }
         catch (ChatMessageRejectedException ex)
@@ -109,12 +106,12 @@ public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
 
     private void HandleMatchChatMessageReceived(object? sender, MatchChatMessageReceivedEventArgs e)
     {
-        if (e.MatchId != _joinedMatch.FoundMatch.MatchId)
+        if (!_joinedMatch.IsJoinedMatch(e.MatchId))
         {
             return;
         }
 
-        var row = new ChatMessageRowViewModel(e.Message);
+        var row = new ChatMessageRowViewModel(e.Message, TimeProvider);
         UiThread.Run(_uiContext, () => AddMessage(row));
     }
 

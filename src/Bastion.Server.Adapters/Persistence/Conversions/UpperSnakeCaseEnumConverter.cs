@@ -7,7 +7,7 @@ namespace Bastion.Server.Adapters.Persistence.Conversions;
 public sealed class UpperSnakeCaseEnumConverter<TEnum> : ValueConverter<TEnum, string>
     where TEnum : struct, Enum
 {
-    private const char Separator = '_';
+    private const string Separator = "_";
     private const int MaximumCodeLengthFactor = 2;
 
     public UpperSnakeCaseEnumConverter()
@@ -21,12 +21,14 @@ public sealed class UpperSnakeCaseEnumConverter<TEnum> : ValueConverter<TEnum, s
         var builder = new StringBuilder(name.Length * MaximumCodeLengthFactor);
         for (int letterIndex = 0; letterIndex < name.Length; letterIndex++)
         {
-            if (letterIndex > 0 && char.IsUpper(name[letterIndex]))
+            char letter = name[letterIndex];
+            if (letterIndex > 0 && char.IsUpper(letter))
             {
                 builder.Append(Separator);
             }
 
-            builder.Append(char.ToUpperInvariant(name[letterIndex]));
+            char upperLetter = char.ToUpperInvariant(letter);
+            builder.Append(upperLetter);
         }
 
         return builder.ToString();
@@ -34,9 +36,7 @@ public sealed class UpperSnakeCaseEnumConverter<TEnum> : ValueConverter<TEnum, s
 
     private static TEnum FromCode(string code)
     {
-        ArgumentNullException.ThrowIfNull(code);
-
-        string name = code.Replace(Separator.ToString(), string.Empty, StringComparison.Ordinal);
+        string name = code.Replace(Separator, string.Empty, StringComparison.Ordinal);
         return Enum.Parse<TEnum>(name, ignoreCase: true);
     }
 }

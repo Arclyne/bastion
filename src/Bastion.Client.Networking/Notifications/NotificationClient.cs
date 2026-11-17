@@ -132,11 +132,11 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         }
         catch (CommunicationException ex)
         {
-            throw AbortSubscription(channel, ex);
+            throw AbortAndTranslate(channel, ex);
         }
         catch (TimeoutException ex)
         {
-            throw AbortSubscription(channel, ex);
+            throw AbortAndTranslate(channel, ex);
         }
 
         var communicationObject = (ICommunicationObject)channel;
@@ -164,11 +164,17 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         Disconnect();
     }
 
-    private static Exception AbortSubscription(ISessionService channel, Exception cause)
+    private static Exception AbortAndTranslate(ISessionService channel, Exception cause)
     {
         var communicationObject = (ICommunicationObject)channel;
         communicationObject.Abort();
         return ServiceFailureTranslator.ToClientException(cause);
+    }
+
+    private void HandleChannelFaulted(object? sender, EventArgs e)
+    {
+        _logger.Warn("The notification channel faulted.");
+        OnDisconnected();
     }
 
     private void SendKeepAlive(object? state)
@@ -200,16 +206,10 @@ public sealed class NotificationClient : INotificationClient, IDisposable
     private void ReportConnectionLost(Exception cause)
     {
         _logger.Warn("The keep-alive could not reach the server.", cause);
-        RaiseDisconnected();
+        OnDisconnected();
     }
 
-    private void HandleChannelFaulted(object? sender, EventArgs e)
-    {
-        _logger.Warn("The notification channel faulted.");
-        RaiseDisconnected();
-    }
-
-    private void RaiseDisconnected()
+    private void OnDisconnected()
     {
         if (!TryStopKeepAlive())
         {

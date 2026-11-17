@@ -7,7 +7,12 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeSessionRepository : ISessionRepository
 {
-    public List<Session> Sessions { get; } = new List<Session>();
+    public FakeSessionRepository()
+    {
+        Sessions = new List<Session>();
+    }
+
+    public List<Session> Sessions { get; }
 
     public void Add(Session session)
     {

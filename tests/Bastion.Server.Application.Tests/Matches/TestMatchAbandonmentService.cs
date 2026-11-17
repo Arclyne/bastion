@@ -29,7 +29,6 @@ public sealed class TestMatchAbandonmentService
     private const int FourthAccountId = 15;
     private const string RivalNickname = "rival_uno";
     private const string RivalToken = "rival-token";
-    private const int RemainingAfterFirstLeaver = 3;
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 7, 0, DateTimeKind.Utc);
@@ -67,11 +66,12 @@ public sealed class TestMatchAbandonmentService
     {
         _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
         AddFourPlayerMatch();
+        int[] expectedRecipients = { RivalAccountId, ThirdAccountId, FourthAccountId };
 
         _abandonmentService.AbandonMatch(AbandoningToken, FourPlayerMatchId, _now);
 
         NotifiedMatchAbandonment notified = _matchEndNotifier.NotifiedAbandonments.Single();
-        Assert.Equal(RemainingAfterFirstLeaver, notified.RecipientAccountIds.Count);
+        Assert.Equal(expectedRecipients, notified.RecipientAccountIds);
     }
 
     [Fact]
@@ -92,8 +92,7 @@ public sealed class TestMatchAbandonmentService
     [Fact]
     public void AbandonMatch_Player_SavesFinishedMatch()
     {
-        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
-        AddTwoPlayerMatch();
+        AddAbandoningPlayerWithTwoPlayerMatch();
 
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
@@ -104,8 +103,7 @@ public sealed class TestMatchAbandonmentService
     [Fact]
     public void AbandonMatch_Player_AbandoningPlayerLoses()
     {
-        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
-        AddTwoPlayerMatch();
+        AddAbandoningPlayerWithTwoPlayerMatch();
 
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
@@ -117,8 +115,7 @@ public sealed class TestMatchAbandonmentService
     [Fact]
     public void AbandonMatch_Player_NotifiesOnlyTheRival()
     {
-        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
-        AddTwoPlayerMatch();
+        AddAbandoningPlayerWithTwoPlayerMatch();
         int[] expectedRecipients = { RivalAccountId };
 
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
@@ -130,8 +127,7 @@ public sealed class TestMatchAbandonmentService
     [Fact]
     public void AbandonMatch_Player_NotifiesAbandoningNickname()
     {
-        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
-        AddTwoPlayerMatch();
+        AddAbandoningPlayerWithTwoPlayerMatch();
 
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
@@ -163,8 +159,7 @@ public sealed class TestMatchAbandonmentService
     [Fact]
     public void AbandonMatch_FinishedMatch_ThrowsMatchNotJoinedException()
     {
-        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
-        AddTwoPlayerMatch();
+        AddAbandoningPlayerWithTwoPlayerMatch();
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
         Action abandonAgain = () => _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
@@ -196,6 +191,12 @@ public sealed class TestMatchAbandonmentService
     private static MatchEntrant CreateUnrankedEntrant(int accountId)
     {
         return new MatchEntrant(accountId, EloRating: null);
+    }
+
+    private void AddAbandoningPlayerWithTwoPlayerMatch()
+    {
+        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
+        AddTwoPlayerMatch();
     }
 
     private void AddTwoPlayerMatch()

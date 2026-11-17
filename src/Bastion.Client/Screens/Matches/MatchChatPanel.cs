@@ -4,7 +4,6 @@ using Bastion.Client.Localization;
 using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
-using Gum.Forms;
 using Gum.Forms.Controls;
 using log4net;
 
@@ -49,7 +48,7 @@ public sealed class MatchChatPanel : Panel
         };
         Label title = ViewFactory.CreateLabel(nameof(Strings.MatchChatTitle), TextStyleCatalog.SectionLabel);
         Label status = CreateStatus();
-        StackPanel inputRow = ConversationParts.CreateInputRow(HandleSendClick, ContentWidth);
+        StackPanel inputRow = ConversationPartFactory.CreateInputRow(HandleSendClick, ContentWidth);
         content.AddChild(title);
         content.AddChild(_messageScroller);
         content.AddChild(status);
@@ -63,7 +62,7 @@ public sealed class MatchChatPanel : Panel
     private ItemsControl CreateMessages()
     {
         ItemsControl messages = ViewFactory.CreateScrollList<ItemsControl>(ContentWidth, MessagesHeight);
-        messages.VisualTemplate = new VisualTemplate(ChatMessageRowView.CreateVisual);
+        messages.VisualTemplate = ChatMessageRowView.CreateTemplate(ContentWidth);
         messages.Items = _viewModel.Messages;
         return messages;
     }
@@ -93,6 +92,6 @@ public sealed class MatchChatPanel : Panel
 
     private void HandleMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        ConversationParts.ScrollToLatest(_messageScroller);
+        ConversationPartFactory.ScrollToLatest(_messageScroller);
     }
 }

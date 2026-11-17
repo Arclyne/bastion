@@ -10,13 +10,25 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeMatchRepository : IMatchRepository
 {
-    public HashSet<int> AccountIdsWithUnfinishedParticipation { get; } = new HashSet<int>();
+    public FakeMatchRepository()
+    {
+        AccountIdsWithUnfinishedParticipation = new HashSet<int>();
+        ActiveGameMode = GameModeSampleFactory.CreateClassic();
+        EloRatingsByAccountId = new Dictionary<int, short>();
+        SavedMatches = new List<Match>();
+        SavedMatchChatMessages = new List<Message>();
+        MatchesById = new Dictionary<int, Match>();
+        SavedAbandonments = new List<Match>();
+        SavedMoves = new List<Match>();
+    }
 
-    public GameMode? ActiveGameMode { get; set; } = GameModeSampleFactory.CreateClassic();
+    public HashSet<int> AccountIdsWithUnfinishedParticipation { get; }
 
-    public Dictionary<int, short> EloRatingsByAccountId { get; } = new Dictionary<int, short>();
+    public GameMode? ActiveGameMode { get; set; }
 
-    public List<Match> SavedMatches { get; } = new List<Match>();
+    public Dictionary<int, short> EloRatingsByAccountId { get; }
+
+    public List<Match> SavedMatches { get; }
 
     public int NextMatchId { get; set; }
 
@@ -25,15 +37,15 @@ public sealed class FakeMatchRepository : IMatchRepository
     public Dictionary<int, List<int>> UnfinishedParticipantAccountIdsByMatchId { get; } =
         new Dictionary<int, List<int>>();
 
-    public List<Message> SavedMatchChatMessages { get; } = new List<Message>();
+    public List<Message> SavedMatchChatMessages { get; }
 
     public MatchRepositoryException? MatchChatMessageSaveFailure { get; set; }
 
-    public Dictionary<int, Match> MatchesById { get; } = new Dictionary<int, Match>();
+    public Dictionary<int, Match> MatchesById { get; }
 
-    public List<Match> SavedAbandonments { get; } = new List<Match>();
+    public List<Match> SavedAbandonments { get; }
 
-    public List<Match> SavedMoves { get; } = new List<Match>();
+    public List<Match> SavedMoves { get; }
 
     public bool HasUnfinishedParticipation(int accountId)
     {

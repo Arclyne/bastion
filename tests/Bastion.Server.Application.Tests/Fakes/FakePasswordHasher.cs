@@ -7,7 +7,7 @@ public sealed class FakePasswordHasher : IPasswordHasher
 {
     public int SimulatedCheckCount { get; private set; }
 
-    public static byte[] HashOf(string password)
+    public static byte[] ComputeHash(string password)
     {
         return Encoding.UTF8.GetBytes(password);
     }

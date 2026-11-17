@@ -10,7 +10,6 @@ public sealed class FoundPlayerRowView : Panel
 {
     private const float RowWidth = PanelMetrics.ContentWidth;
     private const float RowHeight = 52;
-    private const float ContentPaddingX = 6;
     private const float ActionButtonWidth = 150;
     private const float ActionButtonHeight = 36;
 
@@ -40,7 +39,7 @@ public sealed class FoundPlayerRowView : Panel
     private static Label CreateNickname()
     {
         Label nickname = ViewFactory.CreateBoundUntranslatedLabel(nameof(FoundPlayerRowViewModel.Nickname), TextStyleCatalog.IdentityName);
-        nickname.X = ContentPaddingX;
+        nickname.X = PanelMetrics.RowContentPaddingX;
         ViewFactory.CenterVertically(nickname);
         return nickname;
     }

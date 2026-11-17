@@ -21,13 +21,16 @@ public sealed class TestBoardLayout
     private const string RowZeroSquare = "e0";
     private const int ClassicLastRowIndex = 8;
 
+    private static readonly BoardCoordinates _firstSquare = new BoardCoordinates(FirstColumnIndex, FirstRowIndex);
+
     [Fact]
     public void GetStartingCoordinates_FirstTurnOrderOnClassicBoard_ReturnsCenterOfFirstRow()
     {
         var expectedCoordinates = new BoardCoordinates(ClassicCenterColumnIndex, FirstRowIndex);
 
-        BoardCoordinates coordinates =
-            BoardLayout.GetStartingCoordinates(GameModeSampleFactory.ClassicBoardSize, Match.FirstTurnOrder);
+        BoardCoordinates coordinates = BoardLayout.GetStartingCoordinates(
+            GameModeSampleFactory.ClassicBoardSize,
+            Match.FirstTurnOrder);
 
         Assert.Equal(expectedCoordinates, coordinates);
     }
@@ -37,8 +40,9 @@ public sealed class TestBoardLayout
     {
         var expectedCoordinates = new BoardCoordinates(QuickCenterColumnIndex, QuickLastRowIndex);
 
-        BoardCoordinates coordinates =
-            BoardLayout.GetStartingCoordinates(GameModeSampleFactory.QuickBoardSize, Match.SecondTurnOrder);
+        BoardCoordinates coordinates = BoardLayout.GetStartingCoordinates(
+            GameModeSampleFactory.QuickBoardSize,
+            Match.SecondTurnOrder);
 
         Assert.Equal(expectedCoordinates, coordinates);
     }
@@ -48,8 +52,9 @@ public sealed class TestBoardLayout
     {
         var expectedCoordinates = new BoardCoordinates(FirstColumnIndex, ClassicCenterRowIndex);
 
-        BoardCoordinates coordinates =
-            BoardLayout.GetStartingCoordinates(GameModeSampleFactory.ClassicBoardSize, Match.ThirdTurnOrder);
+        BoardCoordinates coordinates = BoardLayout.GetStartingCoordinates(
+            GameModeSampleFactory.ClassicBoardSize,
+            Match.ThirdTurnOrder);
 
         Assert.Equal(expectedCoordinates, coordinates);
     }
@@ -59,8 +64,9 @@ public sealed class TestBoardLayout
     {
         var expectedCoordinates = new BoardCoordinates(ClassicLastColumnIndex, ClassicCenterRowIndex);
 
-        BoardCoordinates coordinates =
-            BoardLayout.GetStartingCoordinates(GameModeSampleFactory.ClassicBoardSize, Match.FourthTurnOrder);
+        BoardCoordinates coordinates = BoardLayout.GetStartingCoordinates(
+            GameModeSampleFactory.ClassicBoardSize,
+            Match.FourthTurnOrder);
 
         Assert.Equal(expectedCoordinates, coordinates);
     }
@@ -126,9 +132,7 @@ public sealed class TestBoardLayout
     [Fact]
     public void IsGoal_SecondTurnOrderOnFirstRow_ReturnsTrue()
     {
-        var coordinates = new BoardCoordinates(FirstColumnIndex, FirstRowIndex);
-
-        bool isGoal = BoardLayout.IsGoal(GameModeSampleFactory.ClassicBoardSize, Match.SecondTurnOrder, coordinates);
+        bool isGoal = BoardLayout.IsGoal(GameModeSampleFactory.ClassicBoardSize, Match.SecondTurnOrder, _firstSquare);
 
         Assert.True(isGoal);
     }
@@ -136,9 +140,7 @@ public sealed class TestBoardLayout
     [Fact]
     public void IsGoal_FirstTurnOrderOnFirstRow_ReturnsFalse()
     {
-        var coordinates = new BoardCoordinates(FirstColumnIndex, FirstRowIndex);
-
-        bool isGoal = BoardLayout.IsGoal(GameModeSampleFactory.ClassicBoardSize, Match.FirstTurnOrder, coordinates);
+        bool isGoal = BoardLayout.IsGoal(GameModeSampleFactory.ClassicBoardSize, Match.FirstTurnOrder, _firstSquare);
 
         Assert.False(isGoal);
     }
@@ -146,8 +148,9 @@ public sealed class TestBoardLayout
     [Fact]
     public void GetStartingCoordinates_FifthTurnOrder_ThrowsArgumentOutOfRangeException()
     {
-        Action getCoordinates =
-            () => BoardLayout.GetStartingCoordinates(GameModeSampleFactory.ClassicBoardSize, FifthTurnOrder);
+        Action getCoordinates = () => BoardLayout.GetStartingCoordinates(
+            GameModeSampleFactory.ClassicBoardSize,
+            FifthTurnOrder);
 
         Assert.Throws<ArgumentOutOfRangeException>(getCoordinates);
     }

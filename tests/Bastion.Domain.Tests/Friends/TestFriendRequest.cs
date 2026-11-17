@@ -14,7 +14,7 @@ public sealed class TestFriendRequest
     [Fact]
     public void IsExpiredAt_ThirtyDaysLater_ReturnsTrue()
     {
-        var request = new FriendRequest(RequesterId, RecipientId, _requestedAt);
+        FriendRequest request = CreateRequest();
         DateTime expiry = _requestedAt.AddDays(FriendshipPolicy.RequestLifetimeDays);
 
         bool isExpired = request.IsExpiredAt(expiry);
@@ -25,7 +25,7 @@ public sealed class TestFriendRequest
     [Fact]
     public void IsExpiredAt_TwentyNineDaysLater_ReturnsFalse()
     {
-        var request = new FriendRequest(RequesterId, RecipientId, _requestedAt);
+        FriendRequest request = CreateRequest();
         int daysBeforeExpiry = FriendshipPolicy.RequestLifetimeDays - 1;
         DateTime dayBeforeExpiry = _requestedAt.AddDays(daysBeforeExpiry);
 
@@ -45,10 +45,15 @@ public sealed class TestFriendRequest
     [Fact]
     public void IsSentBy_Requester_ReturnsTrue()
     {
-        var request = new FriendRequest(RequesterId, RecipientId, _requestedAt);
+        FriendRequest request = CreateRequest();
 
         bool isSentBy = request.IsSentBy(RequesterId);
 
         Assert.True(isSentBy);
+    }
+
+    private static FriendRequest CreateRequest()
+    {
+        return new FriendRequest(RequesterId, RecipientId, _requestedAt);
     }
 }

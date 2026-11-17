@@ -7,7 +7,12 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeSanctionRepository : ISanctionRepository
 {
-    private readonly List<Sanction> _sanctions = new List<Sanction>();
+    private readonly List<Sanction> _sanctions;
+
+    public FakeSanctionRepository()
+    {
+        _sanctions = new List<Sanction>();
+    }
 
     public void AddSanction(Sanction sanction)
     {
@@ -16,8 +21,8 @@ public sealed class FakeSanctionRepository : ISanctionRepository
 
     public IReadOnlyList<Sanction> ListChatSanctions(int accountId)
     {
-        return _sanctions
-            .Where(sanction => sanction.AccountId == accountId && sanction.Scope == SanctionScope.Chat)
-            .ToList();
+        IEnumerable<Sanction> chatSanctions = _sanctions
+            .Where(sanction => sanction.AccountId == accountId && sanction.Scope == SanctionScope.Chat);
+        return new List<Sanction>(chatSanctions);
     }
 }

@@ -12,12 +12,14 @@ public sealed class FakeMatchmakingClient : IMatchmakingClient
     private const byte ClassicWallsPerPlayer = 10;
     private const byte ClockMinutes = 5;
 
-    private static readonly FoundMatchFormat _classicFormat =
-        new FoundMatchFormat(ClassicBoardSize, ClassicWallsPerPlayer, ClockMinutes);
+    private static readonly FoundMatchFormat _classicFormat = new FoundMatchFormat(
+        ClassicBoardSize,
+        ClassicWallsPerPlayer,
+        ClockMinutes);
 
     public Exception? StartSearchFailure { get; set; }
 
-    public IReadOnlyList<FoundMatchParticipant>? MatchFoundDuringStart { get; set; }
+    public IReadOnlyList<FoundMatchParticipant>? ParticipantsFoundDuringStart { get; set; }
 
     public int CancelSearchCount { get; private set; }
 
@@ -38,9 +40,9 @@ public sealed class FakeMatchmakingClient : IMatchmakingClient
             throw StartSearchFailure;
         }
 
-        if (MatchFoundDuringStart is not null)
+        if (ParticipantsFoundDuringStart is not null)
         {
-            RaiseMatchFound(MatchFoundDuringStart);
+            RaiseMatchFound(ParticipantsFoundDuringStart);
         }
     }
 
@@ -56,10 +58,22 @@ public sealed class FakeMatchmakingClient : IMatchmakingClient
 
     public bool HasSubscribers()
     {
-        return MatchFound is not null
-            || PresenceRequested is not null
-            || SearchEnded is not null
-            || Disconnected is not null;
+        if (MatchFound is not null)
+        {
+            return true;
+        }
+
+        if (PresenceRequested is not null)
+        {
+            return true;
+        }
+
+        if (SearchEnded is not null)
+        {
+            return true;
+        }
+
+        return Disconnected is not null;
     }
 
     public void RaiseMatchFound(IReadOnlyList<FoundMatchParticipant> participants)

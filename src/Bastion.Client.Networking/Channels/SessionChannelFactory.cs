@@ -15,10 +15,10 @@ public sealed class SessionChannelFactory : ISessionChannelFactory, IDisposable
         ArgumentNullException.ThrowIfNull(notificationCallback);
 
         var callbackContext = new InstanceContext(notificationCallback);
-        NetTcpBinding binding = ChannelSettings.CreateBinding();
-        EndpointAddress address = ChannelSettings.CreateAddress(ServiceEndpoints.SessionsPath);
+        NetTcpBinding binding = ChannelConfiguration.CreateBinding();
+        EndpointAddress address = ChannelConfiguration.CreateAddress(EndpointCatalog.SessionsPath);
         _channelFactory = new DuplexChannelFactory<ISessionService>(callbackContext, binding, address);
-        ChannelSettings.ApplyCertificateValidation(_channelFactory);
+        ChannelConfiguration.ApplyCertificateValidation(_channelFactory);
     }
 
     public ISessionService CreateChannel()

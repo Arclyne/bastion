@@ -25,7 +25,7 @@ public sealed class TestSession
     }
 
     [Fact]
-    public void IsActiveAt_AfterExpiry_ReturnsFalse()
+    public void IsActiveAt_AtExpiry_ReturnsFalse()
     {
         Session session = CreateSession();
         DateTime expiry = _issuedAt.AddHours(Session.MaximumLifetimeHours);

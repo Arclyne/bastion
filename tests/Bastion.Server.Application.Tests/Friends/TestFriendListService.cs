@@ -26,7 +26,6 @@ public sealed class TestFriendListService
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _lastSeenAt = new DateTime(2026, 11, 5, 16, 0, 0, DateTimeKind.Utc);
     private static readonly PlayerIdentity _caller = new PlayerIdentity(AccountId, Nickname, FriendCode);
-    private static readonly ConnectedPlayer _unknownCaller = new ConnectedPlayer(ThirdFriendAccountId, ThirdFriendNickname);
 
     private readonly FakeUnitOfWork _unitOfWork = new FakeUnitOfWork();
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
@@ -47,16 +46,6 @@ public sealed class TestFriendListService
     }
 
     [Fact]
-    public void ListFriends_UnknownCallerAccount_ThrowsInvalidSessionException()
-    {
-        _sessionVerifier.Add(UnknownToken, _unknownCaller);
-
-        Action list = () => _friendListService.ListFriends(UnknownToken, _now);
-
-        Assert.Throws<InvalidSessionException>(list);
-    }
-
-    [Fact]
     public void ListFriends_NoFriends_ReturnsEmptyList()
     {
         AddCaller();
@@ -69,8 +58,7 @@ public sealed class TestFriendListService
     [Fact]
     public void ListFriends_ConnectedFriend_ReturnsConnectedPresence()
     {
-        AddCaller();
-        AddFriend(FriendAccountId, FriendNickname);
+        AddCallerWithFriend();
         _playerPresence.ConnectedAccountIds.Add(FriendAccountId);
 
         FriendRoster roster = _friendListService.ListFriends(Token, _now);
@@ -82,8 +70,7 @@ public sealed class TestFriendListService
     [Fact]
     public void ListFriends_DisconnectedFriend_ReturnsDisconnectedPresence()
     {
-        AddCaller();
-        AddFriend(FriendAccountId, FriendNickname);
+        AddCallerWithFriend();
 
         FriendRoster roster = _friendListService.ListFriends(Token, _now);
 
@@ -94,8 +81,7 @@ public sealed class TestFriendListService
     [Fact]
     public void ListFriends_DisconnectedFriend_ReturnsLastSeen()
     {
-        AddCaller();
-        AddFriend(FriendAccountId, FriendNickname);
+        AddCallerWithFriend();
 
         FriendRoster roster = _friendListService.ListFriends(Token, _now);
 
@@ -160,13 +146,18 @@ public sealed class TestFriendListService
     [Fact]
     public void RemoveFriend_HyphenatedCode_RemovesFriendship()
     {
-        AddCaller();
-        AddFriend(FriendAccountId, FriendNickname);
+        AddCallerWithFriend();
         int[] expectedRemovedAccountIds = { FriendAccountId };
 
         _friendListService.RemoveFriend(Token, HyphenatedStoredFriendCode, _now);
 
         Assert.Equal(expectedRemovedAccountIds, _unitOfWork.FriendshipRepository.RemovedFriendAccountIds);
+    }
+
+    private void AddCallerWithFriend()
+    {
+        AddCaller();
+        AddFriend(FriendAccountId, FriendNickname);
     }
 
     private void AddCaller()

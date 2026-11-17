@@ -5,7 +5,12 @@ namespace Bastion.Server.Application.Tests.Fakes;
 
 public sealed class FakeMatchEndNotifier : IMatchEndNotifier
 {
-    public List<NotifiedMatchAbandonment> NotifiedAbandonments { get; } = new List<NotifiedMatchAbandonment>();
+    public FakeMatchEndNotifier()
+    {
+        NotifiedAbandonments = new List<NotifiedMatchAbandonment>();
+    }
+
+    public List<NotifiedMatchAbandonment> NotifiedAbandonments { get; }
 
     public void NotifyMatchAbandoned(
         int matchId,

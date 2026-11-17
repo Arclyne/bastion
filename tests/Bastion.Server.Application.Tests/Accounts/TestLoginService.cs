@@ -28,12 +28,12 @@ public sealed class TestLoginService
 
     private readonly FakeUnitOfWork _unitOfWork = new FakeUnitOfWork();
     private readonly FakePasswordHasher _passwordHasher = new FakePasswordHasher();
-    private readonly FakeSessionTokenGenerator _tokenGenerator = new FakeSessionTokenGenerator();
     private readonly LoginService _loginService;
 
     public TestLoginService()
     {
-        _loginService = new LoginService(_unitOfWork, _passwordHasher, _tokenGenerator);
+        var tokenGenerator = new FakeSessionTokenGenerator();
+        _loginService = new LoginService(_unitOfWork, _passwordHasher, tokenGenerator);
     }
 
     [Fact]
@@ -234,7 +234,7 @@ public sealed class TestLoginService
     private Account AddPendingAccount()
     {
         var account = new Account(Nickname, Email);
-        byte[] passwordHash = FakePasswordHasher.HashOf(Password);
+        byte[] passwordHash = FakePasswordHasher.ComputeHash(Password);
         account.ChangePassword(passwordHash, _salt);
         _unitOfWork.AccountRepository.AddAccount(account);
         return account;

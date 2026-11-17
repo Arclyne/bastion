@@ -6,7 +6,8 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public sealed class ChatMessageRowViewModel : MessageRowViewModel
 {
-    public ChatMessageRowViewModel(ChatMessage message)
+    public ChatMessageRowViewModel(ChatMessage message, TimeProvider timeProvider)
+        : base(timeProvider)
     {
         ArgumentNullException.ThrowIfNull(message);
 
@@ -18,13 +19,14 @@ public sealed class ChatMessageRowViewModel : MessageRowViewModel
 
     public string AuthorText { get; }
 
-    public static ChatMessageRowViewModel CreatePending(string text, DateTime createdAt)
+    public static ChatMessageRowViewModel CreatePending(string text, DateTime createdAt, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(timeProvider);
 
         var author = new ChatAuthor(string.Empty, isOwn: true);
         var message = new ChatMessage(author, text, createdAt);
-        var row = new ChatMessageRowViewModel(message);
+        var row = new ChatMessageRowViewModel(message, timeProvider);
         row.MarkPending();
         return row;
     }

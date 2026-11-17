@@ -61,11 +61,9 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
 
         int requesterId = request.RequesterId;
         int recipientId = request.RecipientId;
-        _context.Database
-            .SqlQuery<DeletedRowCount>(
-                $"EXEC dbo.usp_FriendRequest_Delete @RequesterId = {requesterId}, @RecipientId = {recipientId}")
-            .AsEnumerable()
-            .Single();
+        FormattableString command =
+            $"EXEC dbo.usp_FriendRequest_Delete @RequesterId = {requesterId}, @RecipientId = {recipientId}";
+        DeleteProcedure.Run(_context.Database, command);
         _context.Entry(request).State = EntityState.Detached;
     }
 

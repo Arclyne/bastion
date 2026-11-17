@@ -8,7 +8,7 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Localization;
 
-[Collection(nameof(GlobalCultureCollection))]
+[Collection(nameof(GlobalCultureCollectionDefinition))]
 public sealed class TestLanguageService : IDisposable
 {
     private const string SavedCultureName = "es-MX";

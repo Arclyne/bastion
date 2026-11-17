@@ -60,18 +60,18 @@ public sealed class MessageRepository : IMessageRepository
     {
         IQueryable<KeyValuePair<int, int>> unreadCounts = SelectPrivateMessages()
             .Where(message => message.RecipientId == recipientId)
-            .Where(message => message.ReadAt == null)
+            .Where(message => !message.ReadAt.HasValue)
             .GroupBy(message => message.AuthorId)
             .Select(unreadMessages => new KeyValuePair<int, int>(unreadMessages.Key, unreadMessages.Count()));
         return new Dictionary<int, int>(unreadCounts);
     }
 
-    public void MarkRead(MessageParticipants participants, DateTime readAt)
+    public void MarkRead(MessageRoute route, DateTime readAt)
     {
-        ArgumentNullException.ThrowIfNull(participants);
+        ArgumentNullException.ThrowIfNull(route);
 
-        IQueryable<Message> unreadMessages = SelectMessagesFrom(participants.AuthorId, participants.RecipientId)
-            .Where(message => message.ReadAt == null);
+        IQueryable<Message> unreadMessages = SelectMessagesFrom(route.AuthorId, route.RecipientId)
+            .Where(message => !message.ReadAt.HasValue);
         unreadMessages.ExecuteUpdate(setters => setters.SetProperty(_readAt, readAt));
     }
 

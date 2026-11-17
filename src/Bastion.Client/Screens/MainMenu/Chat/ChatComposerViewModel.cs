@@ -10,24 +10,24 @@ public abstract class ChatComposerViewModel : ViewModel
 {
     private const int CounterVisibleFromLength = 180;
 
-    private readonly TimeProvider _timeProvider;
-
     protected ChatComposerViewModel(TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
 
-        _timeProvider = timeProvider;
+        TimeProvider = timeProvider;
         Draft = string.Empty;
         CounterText = string.Empty;
         StatusText = string.Empty;
     }
+
+    protected TimeProvider TimeProvider { get; }
 
     public string Draft
     {
         get => Get<string>();
         set
         {
-            if (!Set(value))
+            if (value is null || !Set(value))
             {
                 return;
             }
@@ -85,13 +85,27 @@ public abstract class ChatComposerViewModel : ViewModel
 
     protected DateTime GetUtcNow()
     {
-        DateTimeOffset now = _timeProvider.GetUtcNow();
+        DateTimeOffset now = TimeProvider.GetUtcNow();
         return now.UtcDateTime;
     }
 
     protected DateTime GetLocalToday()
     {
-        return ChatTimeText.GetLocalToday(_timeProvider);
+        return ChatTimeText.GetLocalToday(TimeProvider);
+    }
+
+    protected bool TryTakeValidDraft(out string trimmedText)
+    {
+        string text = Draft;
+        if (!ChatPolicy.IsValidMessage(text))
+        {
+            StatusText = ChatRejectionText.DescribeInvalidMessage();
+            trimmedText = string.Empty;
+            return false;
+        }
+
+        trimmedText = text.Trim();
+        return true;
     }
 
     private void UpdateCounter()

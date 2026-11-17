@@ -132,8 +132,7 @@ public sealed class NotificationChannelRegistry
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
         ArgumentNullException.ThrowIfNull(notice);
 
-        MatchAbandonedNotification notification =
-            MatchTranslator.ToAbandonedNotification(matchId, notice, GetUtcNow());
+        MatchAbandonedNotification notification = MatchTranslator.ToAbandonedNotification(matchId, notice, GetUtcNow());
         NotifyPlayers(recipientAccountIds, notification);
     }
 
@@ -198,7 +197,8 @@ public sealed class NotificationChannelRegistry
     {
         ArgumentNullException.ThrowIfNull(delivery);
 
-        int recipientAccountId = delivery.Message.RecipientId.GetValueOrDefault();
+        int recipientAccountId = delivery.Message.RecipientId
+            ?? throw new InvalidOperationException("A private message has no recipient.");
         var notification = PrivateChatTranslator.ToPrivateMessageNotification(delivery);
         NotifyPlayer(recipientAccountId, notification);
     }

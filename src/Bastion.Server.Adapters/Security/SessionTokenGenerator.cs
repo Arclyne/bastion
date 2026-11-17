@@ -13,7 +13,8 @@ public sealed class SessionTokenGenerator : ISessionTokenGenerator
 
     public GeneratedToken Generate()
     {
-        string token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(TokenByteCount));
+        byte[] randomValue = RandomNumberGenerator.GetBytes(TokenByteCount);
+        string token = Convert.ToBase64String(randomValue);
         byte[] tokenHash = Hash(token);
         return new GeneratedToken(token, tokenHash);
     }
@@ -22,7 +23,7 @@ public sealed class SessionTokenGenerator : ISessionTokenGenerator
     {
         ArgumentNullException.ThrowIfNull(token);
 
-        byte[] tokenBytes = Encoding.UTF8.GetBytes(token);
-        return SHA256.HashData(tokenBytes);
+        byte[] encodedToken = Encoding.UTF8.GetBytes(token);
+        return SHA256.HashData(encodedToken);
     }
 }

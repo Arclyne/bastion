@@ -1,6 +1,5 @@
 using System;
 using System.ServiceModel;
-using Bastion.Client.Networking.Notifications;
 using Bastion.Contracts.Matches;
 using Bastion.Contracts.Notifications;
 
@@ -42,26 +41,6 @@ public static class MatchContractTranslator
         return new IllegalWallException(rejection, fault.Detail.BlockedTurnOrder, fault);
     }
 
-    public static WallPlacedEventArgs ToWallPlacedEventArgs(WallPlacedNotification notification)
-    {
-        ArgumentNullException.ThrowIfNull(notification);
-
-        string placerNickname = notification.PlacerNickname ?? string.Empty;
-        string groove = notification.Groove ?? string.Empty;
-        PlacedWallOrientation orientation = ToPlacedOrientation(notification.Orientation);
-        return new WallPlacedEventArgs
-        {
-            MatchId = notification.MatchId,
-            PlacerNickname = placerNickname,
-            Groove = groove,
-            Orientation = orientation,
-            RemainingWalls = notification.RemainingWalls,
-            NextTurnOrder = notification.NextTurnOrder,
-            NextMoveNumber = notification.NextMoveNumber,
-            RemainingClockMilliseconds = notification.RemainingClockMilliseconds,
-        };
-    }
-
     private static WallOrientation ToContractOrientation(PlacedWallOrientation orientation)
     {
         switch (orientation)
@@ -95,7 +74,7 @@ public static class MatchContractTranslator
         }
     }
 
-    private static PlacedWallOrientation ToPlacedOrientation(WallOrientation orientation)
+    public static PlacedWallOrientation ToPlacedOrientation(WallOrientation orientation)
     {
         switch (orientation)
         {

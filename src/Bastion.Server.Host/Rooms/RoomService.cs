@@ -91,11 +91,11 @@ public sealed class RoomService : IRoomService
 
     private static RequestedRoomSettings RequireSettings(RoomOptions? options, string operationName)
     {
-        if (options is null)
+        if (options is null || !Enum.IsDefined(options.GameMode))
         {
-            _logger.Warn($"A room request arrived without settings. Operation={operationName}");
-            var missingSettings = new RoomRejectedException(RoomRejection.InvalidSettings);
-            throw RoomTranslator.ToFault(missingSettings);
+            _logger.Warn($"A room request arrived without valid settings. Operation={operationName}");
+            var invalidSettings = new RoomRejectedException(RoomRejection.InvalidSettings);
+            throw RoomTranslator.ToFault(invalidSettings);
         }
 
         return RoomTranslator.ToRequestedSettings(options);

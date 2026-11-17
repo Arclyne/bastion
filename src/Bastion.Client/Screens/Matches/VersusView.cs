@@ -4,7 +4,7 @@ using Bastion.Client.Theme;
 using Bastion.Domain.Matches;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
-using Gum.GueDeriving;
+using Microsoft.Xna.Framework;
 
 namespace Bastion.Client.Screens.Matches;
 
@@ -85,17 +85,8 @@ public sealed class VersusView : ScreenView
 
     private static StackPanel CreatePlayerCard(VersusPlayer player)
     {
-        var avatar = new Panel
-        {
-            Width = AvatarSize,
-            WidthUnits = DimensionUnitType.Absolute,
-            Height = AvatarSize,
-            HeightUnits = DimensionUnitType.Absolute,
-        };
-        RectangleRuntime circle = ShapeFactory.CreateCircle(Palette.AvatarFill, AvatarSize);
-        circle.StrokeColor = Palette.GetPawnColor(player.PawnSymbol);
-        circle.StrokeWidth = AvatarRingWidth;
-        ShapeFactory.InsertBehindContent(avatar.Visual, circle);
+        Color ringColor = Palette.GetPawnColor(player.PawnSymbol);
+        Panel avatar = ShapeFactory.CreateAvatar(AvatarSize, ringColor, AvatarRingWidth);
 
         var card = new StackPanel
         {
