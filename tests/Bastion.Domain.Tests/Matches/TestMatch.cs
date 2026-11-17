@@ -658,7 +658,7 @@ public sealed class TestMatch
         var placement = new WallPlacement(FirstAccountId, ThirdMoveNumber, _wallAheadOfFirstPawn);
         var expectedRejection = new WallRejection(WallRejectionReason.NoWallsLeft, BlockedTurnOrder: null);
 
-        WallRejection? rejection = match.FindWallRejection(placement, GameModeSampleFactory.ClassicBoardSize);
+        WallRejection rejection = match.FindWallRejection(placement, GameModeSampleFactory.ClassicBoardSize);
 
         Assert.Equal(expectedRejection, rejection);
     }

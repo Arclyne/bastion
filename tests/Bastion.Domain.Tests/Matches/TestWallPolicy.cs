@@ -37,13 +37,13 @@ public sealed class TestWallPolicy
         BlockedTurnOrder: null);
 
     [Fact]
-    public void FindRejection_FreeGroove_ReturnsNull()
+    public void FindRejection_FreeGroove_ReturnsNone()
     {
         Board board = CreateBoard(_firstStart);
 
-        WallRejection? rejection = WallPolicy.FindRejection(board, _centerHorizontal);
+        WallRejection rejection = WallPolicy.FindRejection(board, _centerHorizontal);
 
-        Assert.Null(rejection);
+        Assert.Equal(WallRejection.None, rejection);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public sealed class TestWallPolicy
         var wall = new Wall(_lastColumnGroove, WallOrientation.Horizontal);
         var expectedRejection = new WallRejection(WallRejectionReason.OutOfBoard, BlockedTurnOrder: null);
 
-        WallRejection? rejection = WallPolicy.FindRejection(board, wall);
+        WallRejection rejection = WallPolicy.FindRejection(board, wall);
 
         Assert.Equal(expectedRejection, rejection);
     }
@@ -63,7 +63,7 @@ public sealed class TestWallPolicy
     {
         Board board = CreateBoard(_firstStart, _centerHorizontal);
 
-        WallRejection? rejection = WallPolicy.FindRejection(board, _centerHorizontal);
+        WallRejection rejection = WallPolicy.FindRejection(board, _centerHorizontal);
 
         Assert.Equal(_grooveTakenRejection, rejection);
     }
@@ -74,7 +74,7 @@ public sealed class TestWallPolicy
         Board board = CreateBoard(_firstStart, _centerHorizontal);
         var crossingWall = new Wall(_centerGroove, WallOrientation.Vertical);
 
-        WallRejection? rejection = WallPolicy.FindRejection(board, crossingWall);
+        WallRejection rejection = WallPolicy.FindRejection(board, crossingWall);
 
         Assert.Equal(_grooveTakenRejection, rejection);
     }
@@ -85,20 +85,20 @@ public sealed class TestWallPolicy
         Board board = CreateBoard(_firstStart, _centerHorizontal);
         var overlappingWall = new Wall(_rightOfCenterGroove, WallOrientation.Horizontal);
 
-        WallRejection? rejection = WallPolicy.FindRejection(board, overlappingWall);
+        WallRejection rejection = WallPolicy.FindRejection(board, overlappingWall);
 
         Assert.Equal(_grooveTakenRejection, rejection);
     }
 
     [Fact]
-    public void FindRejection_WallRightAfterPlacedOne_ReturnsNull()
+    public void FindRejection_WallRightAfterPlacedOne_ReturnsNone()
     {
         Board board = CreateBoard(_firstStart, _centerHorizontal);
         var followingWall = new Wall(_twoRightOfCenterGroove, WallOrientation.Horizontal);
 
-        WallRejection? rejection = WallPolicy.FindRejection(board, followingWall);
+        WallRejection rejection = WallPolicy.FindRejection(board, followingWall);
 
-        Assert.Null(rejection);
+        Assert.Equal(WallRejection.None, rejection);
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public sealed class TestWallPolicy
         Board board = CreateBoard(_firstStart, placedWall);
         var overlappingWall = new Wall(_highColumnGroove, WallOrientation.Vertical);
 
-        WallRejection? rejection = WallPolicy.FindRejection(board, overlappingWall);
+        WallRejection rejection = WallPolicy.FindRejection(board, overlappingWall);
 
         Assert.Equal(_grooveTakenRejection, rejection);
     }
@@ -121,7 +121,7 @@ public sealed class TestWallPolicy
         var closingWall = new Wall(_secondColumnGroove, WallOrientation.Vertical);
         var expectedRejection = new WallRejection(WallRejectionReason.WouldBlockPlayer, Match.FirstTurnOrder);
 
-        WallRejection? rejection = WallPolicy.FindRejection(board, closingWall);
+        WallRejection rejection = WallPolicy.FindRejection(board, closingWall);
 
         Assert.Equal(expectedRejection, rejection);
     }
