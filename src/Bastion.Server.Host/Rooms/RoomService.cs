@@ -1,13 +1,14 @@
-using System;
 using System.Data.Common;
+using System;
 using Bastion.Contracts.Rooms;
+using Bastion.Domain.Common;
 using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Rooms;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Sessions;
 using CoreWCF;
-using log4net;
 using Microsoft.Extensions.DependencyInjection;
+using log4net;
 
 namespace Bastion.Server.Host.Rooms;
 
@@ -82,10 +83,10 @@ public sealed class RoomService : IRoomService
     }
 
     /// <inheritdoc/>
-    public RoomState? FindOwnRoom(string? sessionToken)
+    public OwnRoomResult FindOwnRoom(string? sessionToken)
     {
         string token = SessionTranslator.RequireSessionToken(sessionToken);
-        Func<RoomState?> findOwnRoom = () => FindOwnRoomInRequestScope(token);
+        Func<OwnRoomResult> findOwnRoom = () => FindOwnRoomInRequestScope(token);
         return TranslateRoomFailures(nameof(FindOwnRoom), findOwnRoom);
     }
 
@@ -175,17 +176,12 @@ public sealed class RoomService : IRoomService
         }
     }
 
-    private RoomState? FindOwnRoomInRequestScope(string token)
+    private OwnRoomResult FindOwnRoomInRequestScope(string token)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         IPrivateRoomService privateRoomService = scope.ServiceProvider.GetRequiredService<IPrivateRoomService>();
-        RoomSnapshot? room = privateRoomService.FindOwnRoom(token, GetUtcNow());
-        if (room is null)
-        {
-            return null;
-        }
-
-        return RoomTranslator.ToState(room);
+        Lookup<RoomSnapshot> foundRoom = privateRoomService.FindOwnRoom(token, GetUtcNow());
+        return RoomTranslator.ToOwnRoomResult(foundRoom);
     }
 
     private TResult TranslateRoomFailures<TResult>(string operationName, Func<TResult> operation)
