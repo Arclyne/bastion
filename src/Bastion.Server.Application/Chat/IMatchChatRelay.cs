@@ -5,7 +5,7 @@ namespace Bastion.Server.Application.Chat;
 
 public interface IMatchChatRelay
 {
-    IReadOnlyList<int> ListParticipantAccountIds(int matchId);
+    IReadOnlyList<int> ListActiveParticipantAccountIds(int matchId);
 
     bool TryStartCooldown(int accountId, DateTime now);
 
