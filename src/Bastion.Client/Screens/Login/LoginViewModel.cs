@@ -237,7 +237,8 @@ public sealed class LoginViewModel : ViewModel
     {
         try
         {
-            var credentials = new LoginCredentials(Identifier.Trim(), Password);
+            string identifier = Identifier.Trim();
+            var credentials = new LoginCredentials(identifier, Password);
             LoggedInSession session = await Task.Run(() => _accounts.LogIn(credentials));
             EnterMainMenu(session);
         }
@@ -306,10 +307,8 @@ public sealed class LoginViewModel : ViewModel
         switch (restriction)
         {
             case AccountRestriction.Locked:
-                ShowNotice(
-                    NoticeTone.Warning,
-                    FormatWithCurrentCulture(Strings.LoginAccountLockedTitleFormat, lockMinutes),
-                    Strings.LoginAccountLockedMessage);
+                string lockedTitle = FormatWithCurrentCulture(Strings.LoginAccountLockedTitleFormat, lockMinutes);
+                ShowNotice(NoticeTone.Warning, lockedTitle, Strings.LoginAccountLockedMessage);
                 break;
             case AccountRestriction.Pending:
                 ShowNotice(NoticeTone.Warning, string.Empty, Strings.LoginAccountPending);
