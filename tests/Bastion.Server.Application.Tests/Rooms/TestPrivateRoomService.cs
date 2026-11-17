@@ -37,7 +37,6 @@ public sealed class TestPrivateRoomService
     private const int SecondSeatIndex = 1;
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
-    private static readonly int[] _hostOnlyAccountIds = { HostAccountId };
     private static readonly ConnectedPlayer _host = new ConnectedPlayer(HostAccountId, HostNickname);
     private static readonly ConnectedPlayer _guest = new ConnectedPlayer(GuestAccountId, GuestNickname);
     private static readonly ConnectedPlayer _third = new ConnectedPlayer(ThirdAccountId, ThirdNickname);
@@ -244,6 +243,21 @@ public sealed class TestPrivateRoomService
         Assert.Equal(expectedGuest, guest);
     }
 
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void JoinRoom_EnglishOrSpanishNickname_SeatsSameNickname(string nickname)
+    {
+        OpenHostRoom();
+        var guest = new ConnectedPlayer(GuestAccountId, nickname);
+        AddPlayer(GuestToken, guest);
+
+        RoomSnapshot room = _privateRoomService.JoinRoom(GuestToken, FirstCode, _now);
+
+        RoomMemberSnapshot seatedGuest = room.Members[SecondSeatIndex];
+        Assert.Equal(nickname, seatedGuest.Nickname);
+    }
+
     [Fact]
     public void JoinRoom_OpenRoom_NotifiesOthersFromJoiningPlayer()
     {
@@ -396,12 +410,13 @@ public sealed class TestPrivateRoomService
     public void LeaveRoom_Member_NotifiesRemainingMembers()
     {
         OpenHostRoomWithGuest();
+        int[] expectedAccountIds = { HostAccountId };
 
         _privateRoomService.LeaveRoom(GuestToken, _now);
 
         NotifiedRoom lastUpdate = _roomNotifier.UpdatedRooms.Last();
         IEnumerable<int> accountIds = lastUpdate.Room.Members.Select(member => member.AccountId);
-        Assert.Equal(_hostOnlyAccountIds, accountIds);
+        Assert.Equal(expectedAccountIds, accountIds);
     }
 
     [Fact]
@@ -422,8 +437,8 @@ public sealed class TestPrivateRoomService
 
         _privateRoomService.LeaveRoom(HostToken, _now);
 
-        NotifiedRoom closure = _roomNotifier.ClosedRooms.Single();
-        Assert.Equal(HostAccountId, closure.OriginAccountId);
+        NotifiedRoom closedRoom = _roomNotifier.ClosedRooms.Single();
+        Assert.Equal(HostAccountId, closedRoom.OriginAccountId);
     }
 
     [Fact]

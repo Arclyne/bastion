@@ -82,7 +82,7 @@ public sealed class TestRoomMatchService
     [Fact]
     public void StartMatch_Guest_RejectsNotHost()
     {
-        FillRoom();
+        FillRoom(_guest);
         Action start = () => _roomMatchService.StartMatch(GuestToken, _now);
 
         Exception? exception = Record.Exception(start);
@@ -94,7 +94,7 @@ public sealed class TestRoomMatchService
     [Fact]
     public void StartMatch_ReadyRoom_SavesPrivateMatchForRoom()
     {
-        int roomId = FillRoom();
+        int roomId = FillRoom(_guest);
 
         _roomMatchService.StartMatch(HostToken, _now);
 
@@ -105,7 +105,7 @@ public sealed class TestRoomMatchService
     [Fact]
     public void StartMatch_ReadyRoom_GivesWallsOfRoomToEveryPlayer()
     {
-        int roomId = FillRoom();
+        int roomId = FillRoom(_guest);
         byte[] expectedWalls = { RoomWallsPerPlayer, RoomWallsPerPlayer };
 
         _roomMatchService.StartMatch(HostToken, _now);
@@ -118,7 +118,7 @@ public sealed class TestRoomMatchService
     [Fact]
     public void StartMatch_ReadyRoom_ReturnsSavedMatchId()
     {
-        FillRoom();
+        FillRoom(_guest);
 
         int matchId = _roomMatchService.StartMatch(HostToken, _now);
 
@@ -128,7 +128,7 @@ public sealed class TestRoomMatchService
     [Fact]
     public void StartMatch_ShuffledTurnOrder_GivesFirstTurnToGuest()
     {
-        FillRoom();
+        FillRoom(_guest);
         _turnOrderShuffler.ShouldReverseOrder = true;
         (int AccountId, byte TurnOrder) expectedFirstPlayer = (GuestAccountId, Match.FirstTurnOrder);
 
@@ -139,10 +139,26 @@ public sealed class TestRoomMatchService
         Assert.Equal(expectedFirstPlayer, (firstPlayer.Player.AccountId, firstPlayer.TurnOrder));
     }
 
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void StartMatch_EnglishOrSpanishNickname_KeepsSameNickname(string nickname)
+    {
+        var guest = new ConnectedPlayer(GuestAccountId, nickname);
+        FillRoom(guest);
+
+        _roomMatchService.StartMatch(HostToken, _now);
+
+        CreatedMatch createdMatch = _matchmakingNotifier.CreatedMatches.Single();
+        CreatedMatchParticipant guestParticipant = createdMatch.Participants
+            .Single(participant => participant.Player.AccountId == GuestAccountId);
+        Assert.Equal(nickname, guestParticipant.Player.Nickname);
+    }
+
     [Fact]
     public void StartMatch_ReadyRoom_NotifiesMatchWithRoomWalls()
     {
-        FillRoom();
+        FillRoom(_guest);
 
         _roomMatchService.StartMatch(HostToken, _now);
 
@@ -153,7 +169,7 @@ public sealed class TestRoomMatchService
     [Fact]
     public void StartMatch_ReadyRoom_FreesGuestFromRoom()
     {
-        FillRoom();
+        FillRoom(_guest);
 
         _roomMatchService.StartMatch(HostToken, _now);
 
@@ -164,7 +180,7 @@ public sealed class TestRoomMatchService
     [Fact]
     public void StartMatch_MatchCannotBeSaved_KeepsRoomOpen()
     {
-        FillRoom();
+        FillRoom(_guest);
         _roomRepository.MatchSaveFailure = new RoomRepositoryException();
         Action start = () => _roomMatchService.StartMatch(HostToken, _now);
 
@@ -174,10 +190,10 @@ public sealed class TestRoomMatchService
         Assert.True(isGuestInRoom);
     }
 
-    private int FillRoom()
+    private int FillRoom(ConnectedPlayer guest)
     {
         int roomId = OpenRoom();
-        AddPlayer(GuestToken, _guest);
+        AddPlayer(GuestToken, guest);
         _privateRoomService.JoinRoom(GuestToken, Code, _now);
         _privateRoomService.SetReady(GuestToken, isReady: true, _now);
         return roomId;
