@@ -21,7 +21,6 @@ public sealed class BoardScene : IDisposable
     private const float FarPlaneDistance = 60f;
     private const float NearScreenDepth = 0f;
     private const float FarScreenDepth = 1f;
-    private const int OffBoardIndex = -1;
     private const float HighlightHalfSize = 0.4f;
     private const float HighlightHeight = 0.02f;
     private const int FirstVertex = 0;
@@ -31,7 +30,6 @@ public sealed class BoardScene : IDisposable
     private const float GhostAlpha = 0.55f;
 
     private static readonly VertexPositionColor[] _highlightVertices = CreateHighlightQuad();
-    private static readonly BoardCoordinates _offBoardCoordinates = new BoardCoordinates(OffBoardIndex, OffBoardIndex);
 
     private readonly GraphicsDevice _graphicsDevice;
     private readonly SceneModel _classicBoardModel;
@@ -80,22 +78,20 @@ public sealed class BoardScene : IDisposable
         }
     }
 
-    public bool TryFindSquareUnderCursor(MatchViewModel match, Point cursorPosition, out BoardCoordinates square)
+    public BoardCoordinates FindSquareUnderCursor(MatchViewModel match, Point cursorPosition)
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        square = _offBoardCoordinates;
-        return TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint)
-            && BoardSceneLayout.TryGetCoordinates(match.BoardSize, surfacePoint, out square);
+        Vector3 surfacePoint = FindSurfacePoint(match, cursorPosition);
+        return BoardSceneLayout.FindCoordinates(match.BoardSize, surfacePoint);
     }
 
-    public bool TryFindGrooveUnderCursor(MatchViewModel match, Point cursorPosition, out BoardCoordinates groove)
+    public BoardCoordinates FindGrooveUnderCursor(MatchViewModel match, Point cursorPosition)
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        groove = _offBoardCoordinates;
-        return TryFindSurfacePoint(match, cursorPosition, out Vector3 surfacePoint)
-            && BoardSceneLayout.TryGetGroove(match.BoardSize, surfacePoint, out groove);
+        Vector3 surfacePoint = FindSurfacePoint(match, cursorPosition);
+        return BoardSceneLayout.FindGroove(match.BoardSize, surfacePoint);
     }
 
     public void Dispose()
@@ -302,20 +298,18 @@ public sealed class BoardScene : IDisposable
         return selectedColor;
     }
 
-    private bool TryFindSurfacePoint(MatchViewModel match, Point cursorPosition, out Vector3 surfacePoint)
+    private Vector3 FindSurfacePoint(MatchViewModel match, Point cursorPosition)
     {
         SceneCamera camera = CreateCamera(match.OwnTurnOrder);
         Ray cursorRay = CreateCursorRay(cursorPosition, camera);
         float? surfaceDistance = cursorRay.Intersects(BoardSceneLayout.Surface);
         if (surfaceDistance is not float distance)
         {
-            surfacePoint = Vector3.Zero;
-            return false;
+            return BoardSceneLayout.OffBoardPoint;
         }
 
         Vector3 surfaceOffset = cursorRay.Direction * distance;
-        surfacePoint = cursorRay.Position + surfaceOffset;
-        return true;
+        return cursorRay.Position + surfaceOffset;
     }
 
     private Ray CreateCursorRay(Point cursorPosition, SceneCamera camera)
