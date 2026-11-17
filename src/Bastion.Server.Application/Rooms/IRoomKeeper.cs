@@ -1,4 +1,5 @@
 using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.Rooms;
 using Bastion.Server.Application.Sessions;
 
@@ -16,7 +17,7 @@ public interface IRoomKeeper
 
     void Leave(int accountId, DateTime now);
 
-    RoomSnapshot? FindRoomOf(int accountId);
+    Lookup<RoomSnapshot> FindRoomOf(int accountId);
 
     int CloseRoomsLeftOpen(DateTime now);
 }

@@ -1,5 +1,6 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
+using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.Rooms;
 
 namespace Bastion.Server.Application.Rooms;
@@ -25,9 +26,9 @@ public interface IRoomRegistry
 
     RoomSnapshot ChangeSettings(int accountId, RoomSettings settings);
 
-    RoomDeparture? Leave(int accountId);
+    Lookup<RoomDeparture> Leave(int accountId);
 
-    RoomSnapshot? FindRoomOf(int accountId);
+    Lookup<RoomSnapshot> FindRoomOf(int accountId);
 
     TResult StartMatch<TResult>(int hostAccountId, Func<RoomSnapshot, TResult> startMatch);
 }

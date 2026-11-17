@@ -1,4 +1,5 @@
 using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Rooms;
 using Bastion.Server.Application.Matches;
@@ -20,12 +21,13 @@ public sealed class RoomSettingsValidator : IRoomSettingsValidator
     {
         ArgumentNullException.ThrowIfNull(requestedSettings);
 
-        GameMode? gameMode = _matchRepository.FindActiveGameMode(requestedSettings.GameMode);
-        if (gameMode is null)
+        Lookup<GameMode> foundGameMode = _matchRepository.FindActiveGameMode(requestedSettings.GameMode);
+        if (!foundGameMode.IsFound)
         {
             throw new RoomRejectedException(RoomRejection.InvalidSettings);
         }
 
+        GameMode gameMode = foundGameMode.GetValue();
         var settings = new RoomSettings(gameMode, requestedSettings.WallsPerPlayer, requestedSettings.ClockMinutes);
         if (!settings.IsValid())
         {

@@ -1,4 +1,5 @@
 using System;
+using Bastion.Domain.Common;
 using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Sessions;
 
@@ -84,8 +85,8 @@ public interface IPrivateRoomService
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
     /// <param name="now">The current UTC time.</param>
-    /// <returns>The room of the player, or null if the player is not in a room.</returns>
+    /// <returns>The lookup of the player's room; it finds nothing when the player is not in a room.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sessionToken"/> is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
-    RoomSnapshot? FindOwnRoom(string sessionToken, DateTime now);
+    Lookup<RoomSnapshot> FindOwnRoom(string sessionToken, DateTime now);
 }
