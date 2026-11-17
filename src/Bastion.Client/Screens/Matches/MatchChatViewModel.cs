@@ -48,7 +48,8 @@ public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
             return;
         }
 
-        if (!TryTakeValidDraft(out string trimmedText))
+        string trimmedText = TakeValidDraft();
+        if (trimmedText.Length == 0)
         {
             return;
         }
