@@ -1,7 +1,6 @@
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
@@ -21,25 +20,26 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
 
     private readonly IMatchRepository _matchRepository;
     private readonly ITurnOrderShuffler _turnOrderShuffler;
+    private readonly IMatchmakingNotifier _matchmakingNotifier;
 
-    public RankedMatchCreator(IMatchRepository matchRepository, ITurnOrderShuffler turnOrderShuffler)
+    public RankedMatchCreator(
+        IMatchRepository matchRepository,
+        ITurnOrderShuffler turnOrderShuffler,
+        IMatchmakingNotifier matchmakingNotifier)
     {
         ArgumentNullException.ThrowIfNull(matchRepository);
         ArgumentNullException.ThrowIfNull(turnOrderShuffler);
+        ArgumentNullException.ThrowIfNull(matchmakingNotifier);
 
         _matchRepository = matchRepository;
         _turnOrderShuffler = turnOrderShuffler;
+        _matchmakingNotifier = matchmakingNotifier;
     }
 
-    public bool TryCreateMatch(
-        MatchPairing pairing,
-        DateTime startedAt,
-        [NotNullWhen(true)]
-        out CreatedMatch? createdMatch)
+    public void CreateMatch(MatchPairing pairing, DateTime startedAt)
     {
         ArgumentNullException.ThrowIfNull(pairing);
 
-        createdMatch = null;
         IEnumerable<int> pairedAccountIds = pairing.Players.Select(player => player.AccountId);
         string accountIdsText = string.Join(AccountIdSeparator, pairedAccountIds);
         try
@@ -50,7 +50,8 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
                 _logger.Error(
                     "The ranked match was not created because no active game mode has its code. "
                     + $"AccountIds={accountIdsText}");
-                return false;
+                NotifyMatchCreationFailed(pairing);
+                return;
             }
 
             GameMode gameMode = foundGameMode.GetValue();
@@ -59,18 +60,27 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
                 _logger.Error(
                     "The ranked match was not created because its game mode seats another number of players. "
                     + $"PlayerCount={gameMode.PlayerCount}; AccountIds={accountIdsText}");
-                return false;
+                NotifyMatchCreationFailed(pairing);
+                return;
             }
 
             var format = new MatchFormat(gameMode, MatchmakingPolicy.RankedClockMinutes);
-            createdMatch = StartAndSaveMatch(pairing, format, startedAt);
+            CreatedMatch createdMatch = StartAndSaveMatch(pairing, format, startedAt);
             _logger.Info($"Ranked match created. MatchId={createdMatch.MatchId}; AccountIds={accountIdsText}");
-            return true;
+            _matchmakingNotifier.NotifyMatchFound(createdMatch);
         }
         catch (MatchRepositoryException ex)
         {
             _logger.Error($"The ranked match could not be created. AccountIds={accountIdsText}", ex);
-            return false;
+            NotifyMatchCreationFailed(pairing);
+        }
+    }
+
+    private void NotifyMatchCreationFailed(MatchPairing pairing)
+    {
+        foreach (MatchSearch search in pairing.Players)
+        {
+            _matchmakingNotifier.NotifySearchEnded(search.AccountId, SearchEndReason.MatchCreationFailed);
         }
     }
 
