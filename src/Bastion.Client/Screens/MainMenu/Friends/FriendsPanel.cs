@@ -160,19 +160,22 @@ public sealed class FriendsPanel : Panel
     private static FriendCodeFooter CreateFooter(FriendsPanelViewModel viewModel)
     {
         var footer = new FriendCodeFooter(viewModel);
-        footer.Anchor(Gum.Wireframe.Anchor.BottomLeft);
-        footer.X = PaddingX;
-        footer.Y = -PaddingBottom;
+        PlaceAtBottomLeft(footer);
         footer.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsFriendCodeVisible));
         return footer;
+    }
+
+    private static void PlaceAtBottomLeft(FrameworkElement element)
+    {
+        element.Anchor(Gum.Wireframe.Anchor.BottomLeft);
+        element.X = PaddingX;
+        element.Y = -PaddingBottom;
     }
 
     private static FriendActionsMenu CreateActionsMenu(FriendsPanelViewModel viewModel)
     {
         var menu = new FriendActionsMenu(viewModel.Actions);
-        menu.Anchor(Gum.Wireframe.Anchor.BottomLeft);
-        menu.X = PaddingX;
-        menu.Y = -PaddingBottom;
+        PlaceAtBottomLeft(menu);
         return menu;
     }
 }
