@@ -130,16 +130,24 @@ public sealed class TestNotificationCallback
     public void ReceiveNotification_ChatMessage_RaisesSenderNickname()
     {
         _notificationCallback.ChatMessageReceived += HandleChatMessageReceived;
-        var notification = new ChatMessageNotification
-        {
-            SenderNickname = FirstNickname,
-            Text = MessageText,
-            OccurredAt = _sentAt,
-        };
+        ChatMessageNotification notification = CreateChatMessageNotification(FirstNickname, MessageText);
 
         _notificationCallback.ReceiveNotification(notification);
 
         Assert.Equal(FirstNickname, _chatMessage?.Message.Author.Nickname);
+    }
+
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void ReceiveNotification_EnglishOrSpanishSenderNickname_RaisesSameNickname(string nickname)
+    {
+        _notificationCallback.ChatMessageReceived += HandleChatMessageReceived;
+        ChatMessageNotification notification = CreateChatMessageNotification(nickname, MessageText);
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(nickname, _chatMessage?.Message.Author.Nickname);
     }
 
     [Theory]
@@ -148,12 +156,7 @@ public sealed class TestNotificationCallback
     public void ReceiveNotification_EnglishOrSpanishChatText_RaisesSameText(string text)
     {
         _notificationCallback.ChatMessageReceived += HandleChatMessageReceived;
-        var notification = new ChatMessageNotification
-        {
-            SenderNickname = FirstNickname,
-            Text = text,
-            OccurredAt = _sentAt,
-        };
+        ChatMessageNotification notification = CreateChatMessageNotification(FirstNickname, text);
 
         _notificationCallback.ReceiveNotification(notification);
 
@@ -350,6 +353,16 @@ public sealed class TestNotificationCallback
     private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)
     {
         _chatMessage = e;
+    }
+
+    private static ChatMessageNotification CreateChatMessageNotification(string senderNickname, string text)
+    {
+        return new ChatMessageNotification
+        {
+            SenderNickname = senderNickname,
+            Text = text,
+            OccurredAt = _sentAt,
+        };
     }
 
     private void HandleMatchChatMessageReceived(object? sender, MatchChatMessageReceivedEventArgs e)
