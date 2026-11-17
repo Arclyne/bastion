@@ -1,6 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.Matches;
 using Bastion.Server.Application.Sessions;
 using log4net;
@@ -36,8 +37,8 @@ public sealed class MatchAbandonmentService : IMatchAbandonmentService
         ArgumentNullException.ThrowIfNull(sessionToken);
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
-        Match? match = _matchRepository.FindMatch(matchId);
-        if (match is null || !match.CanBeAbandonedBy(player.AccountId))
+        Lookup<Match> foundMatch = _matchRepository.FindMatch(matchId);
+        if (!foundMatch.IsFound || !foundMatch.GetValue().CanBeAbandonedBy(player.AccountId))
         {
             _logger.Warn(
                 "A player without an active participation tried to leave the match. "
@@ -45,6 +46,7 @@ public sealed class MatchAbandonmentService : IMatchAbandonmentService
             throw new MatchNotJoinedException();
         }
 
+        Match match = foundMatch.GetValue();
         match.Abandon(player.AccountId, now);
         bool isMatchOver = match.IsFinished();
         _matchRepository.SaveAbandonment(match);
