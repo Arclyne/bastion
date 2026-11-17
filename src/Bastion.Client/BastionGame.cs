@@ -206,8 +206,8 @@ public sealed class BastionGame : Game
         }
 
         var cursorPosition = new Point(cursor.X, cursor.Y);
-        if (IsOverGumControl(cursor)
-            || !boardScene.TryFindGrooveUnderCursor(shownMatch, cursorPosition, out BoardCoordinates groove))
+        BoardCoordinates groove = boardScene.FindGrooveUnderCursor(shownMatch, cursorPosition);
+        if (IsOverGumControl(cursor) || groove == BoardLayout.OffBoardSquare)
         {
             wallPlacement.ClearHover();
             return;
@@ -234,7 +234,8 @@ public sealed class BastionGame : Game
         }
 
         var cursorPosition = new Point(cursor.X, cursor.Y);
-        if (!boardScene.TryFindSquareUnderCursor(shownMatch, cursorPosition, out BoardCoordinates square))
+        BoardCoordinates square = boardScene.FindSquareUnderCursor(shownMatch, cursorPosition);
+        if (square == BoardLayout.OffBoardSquare)
         {
             shownMatch.Play.ClearSelection();
             return;
