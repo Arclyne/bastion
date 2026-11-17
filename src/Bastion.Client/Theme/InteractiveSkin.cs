@@ -13,7 +13,7 @@ public abstract class InteractiveSkin
     private const string DisabledMarker = "Disabled";
     private const string CheckedSuffix = "On";
 
-    public abstract void ShowState(InteractionFlags flags);
+    public abstract void ShowState(InteractionStates flags);
 
     protected void Attach(FrameworkElement control)
     {
@@ -27,7 +27,7 @@ public abstract class InteractiveSkin
             }
         }
 
-        ShowState(InteractionFlags.None);
+        ShowState(InteractionStates.None);
     }
 
     private static bool IsInteractionCategory(StateSaveCategory category)
@@ -47,32 +47,32 @@ public abstract class InteractiveSkin
     {
         foreach (StateSave state in category.States)
         {
-            InteractionFlags flags = ReadFlags(state.Name);
+            InteractionStates flags = ReadFlags(state.Name);
             var skinState = new SkinState(this, flags);
             state.Apply = skinState.Show;
         }
     }
 
-    private static InteractionFlags ReadFlags(string stateName)
+    private static InteractionStates ReadFlags(string stateName)
     {
-        InteractionFlags flags = InteractionFlags.None;
-        flags |= ReadFlag(stateName, HoveredMarker, InteractionFlags.Hovered);
-        flags |= ReadFlag(stateName, PressedMarker, InteractionFlags.Pressed | InteractionFlags.Hovered);
-        flags |= ReadFlag(stateName, FocusedMarker, InteractionFlags.Focused);
-        flags |= ReadFlag(stateName, DisabledMarker, InteractionFlags.Disabled);
+        InteractionStates flags = InteractionStates.None;
+        flags |= ReadFlag(stateName, HoveredMarker, InteractionStates.Hovered);
+        flags |= ReadFlag(stateName, PressedMarker, InteractionStates.Pressed | InteractionStates.Hovered);
+        flags |= ReadFlag(stateName, FocusedMarker, InteractionStates.Focused);
+        flags |= ReadFlag(stateName, DisabledMarker, InteractionStates.Disabled);
         if (stateName.EndsWith(CheckedSuffix, StringComparison.Ordinal))
         {
-            flags |= InteractionFlags.Checked;
+            flags |= InteractionStates.Checked;
         }
 
         return flags;
     }
 
-    private static InteractionFlags ReadFlag(string stateName, string marker, InteractionFlags flag)
+    private static InteractionStates ReadFlag(string stateName, string marker, InteractionStates flag)
     {
         if (!stateName.Contains(marker, StringComparison.Ordinal))
         {
-            return InteractionFlags.None;
+            return InteractionStates.None;
         }
 
         return flag;

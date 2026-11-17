@@ -5,9 +5,9 @@ namespace Bastion.Client.Theme;
 public sealed class SkinState
 {
     private readonly InteractiveSkin _skin;
-    private readonly InteractionFlags _flags;
+    private readonly InteractionStates _flags;
 
-    public SkinState(InteractiveSkin skin, InteractionFlags flags)
+    public SkinState(InteractiveSkin skin, InteractionStates flags)
     {
         ArgumentNullException.ThrowIfNull(skin);
 
