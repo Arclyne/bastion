@@ -6,9 +6,9 @@ namespace Bastion.Domain.Tests.Rooms;
 
 public static class RoomSampleFactory
 {
-    public const string Code = "K7MTQ3";
     public const int HostAccountId = 7;
 
+    private const string Code = "K7MTQ3";
     private const int RoomId = 3;
     private const string HostNickname = "marta_muros";
     private const byte WallsPerPlayer = 10;

@@ -97,7 +97,7 @@ public class Account
 
     public void RecordFailedLogin(DateTime now)
     {
-        if (LastFailedLoginAt is DateTime lastFailure && now - lastFailure >= LockoutPolicy.FailedLoginCountResetPeriod)
+        if (HasResetPeriodPassed(now))
         {
             FailedLoginCount = 0;
         }
@@ -137,5 +137,16 @@ public class Account
 
         lockEnd = default;
         return false;
+    }
+
+    private bool HasResetPeriodPassed(DateTime now)
+    {
+        if (LastFailedLoginAt is not DateTime lastFailure)
+        {
+            return false;
+        }
+
+        TimeSpan timeSinceLastFailure = now - lastFailure;
+        return timeSinceLastFailure >= LockoutPolicy.FailedLoginCountResetPeriod;
     }
 }

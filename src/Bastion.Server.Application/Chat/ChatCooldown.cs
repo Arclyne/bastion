@@ -13,8 +13,7 @@ public sealed class ChatCooldown
     {
         lock (_cooldownLock)
         {
-            if (_lastMessageTimesByAccountId.TryGetValue(accountId, out DateTime lastMessageAt)
-                && now < lastMessageAt.AddSeconds(ChatPolicy.MessageCooldownSeconds))
+            if (IsCoolingDown(accountId, now))
             {
                 return false;
             }
@@ -22,5 +21,16 @@ public sealed class ChatCooldown
             _lastMessageTimesByAccountId[accountId] = now;
             return true;
         }
+    }
+
+    private bool IsCoolingDown(int accountId, DateTime now)
+    {
+        if (!_lastMessageTimesByAccountId.TryGetValue(accountId, out DateTime lastMessageAt))
+        {
+            return false;
+        }
+
+        DateTime cooldownEnd = lastMessageAt.AddSeconds(ChatPolicy.MessageCooldownSeconds);
+        return now < cooldownEnd;
     }
 }

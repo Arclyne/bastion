@@ -37,16 +37,16 @@ public sealed class ChatService : IChatService
     {
         string token = SessionTranslator.RequireSessionToken(sessionToken);
         string messageText = ChatTranslator.RequireText(text);
-        Func<ChatMessageReceipt> sendMessage = () => SendChatMessageInRequestScope(token, messageText);
-        return TranslateChatFailures(nameof(SendChatMessage), sendMessage);
+        Func<ChatMessageReceipt> sendChatMessage = () => SendChatMessageInRequestScope(token, messageText);
+        return TranslateChatFailures(nameof(SendChatMessage), sendChatMessage);
     }
 
     /// <inheritdoc/>
     public LobbyChatLog OpenLobbyChat(string? sessionToken)
     {
         string token = SessionTranslator.RequireSessionToken(sessionToken);
-        Func<LobbyChatLog> openChat = () => OpenLobbyChatInRequestScope(token);
-        return TranslateChatFailures(nameof(OpenLobbyChat), openChat);
+        Func<LobbyChatLog> openLobbyChat = () => OpenLobbyChatInRequestScope(token);
+        return TranslateChatFailures(nameof(OpenLobbyChat), openLobbyChat);
     }
 
     /// <inheritdoc/>
@@ -55,8 +55,8 @@ public sealed class ChatService : IChatService
         string token = SessionTranslator.RequireSessionToken(sessionToken);
         string messageText = ChatTranslator.RequireText(text);
         var submission = new MatchChatSubmission(matchId, messageText);
-        Func<ChatMessageReceipt> sendMessage = () => SendMatchChatMessageInRequestScope(token, submission);
-        return TranslateChatFailures(nameof(SendMatchChatMessage), sendMessage);
+        Func<ChatMessageReceipt> sendMatchChatMessage = () => SendMatchChatMessageInRequestScope(token, submission);
+        return TranslateChatFailures(nameof(SendMatchChatMessage), sendMatchChatMessage);
     }
 
     private ChatMessageReceipt SendChatMessageInRequestScope(string token, string messageText)
@@ -108,7 +108,7 @@ public sealed class ChatService : IChatService
         }
         catch (DbException ex)
         {
-            _logger.Error($"The database could not be reached. Operation={operationName}", ex);
+            _logger.Error($"A database command failed. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
     }

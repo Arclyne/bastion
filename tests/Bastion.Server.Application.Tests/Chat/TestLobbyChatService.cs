@@ -100,6 +100,19 @@ public sealed class TestLobbyChatService
         Assert.Equal(CleanText, broadcastLine.Line.Text);
     }
 
+    [Theory]
+    [InlineData("Good game, well played!")]
+    [InlineData("¿Otra partida? ¡Qué peón, Ñandú!")]
+    public void SendMessage_EnglishOrSpanishText_BroadcastsSameText(string text)
+    {
+        _sessionVerifier.Add(Token, _player);
+
+        _lobbyChatService.SendMessage(Token, text, _now);
+
+        PostedChatLine broadcastLine = _broadcaster.Lines[0];
+        Assert.Equal(text, broadcastLine.Line.Text);
+    }
+
     [Fact]
     public void SendMessage_ValidText_BroadcastsSender()
     {
@@ -219,7 +232,7 @@ public sealed class TestLobbyChatService
     }
 
     [Fact]
-    public void SendMessage_AfterRejectedMessage_KeepsTurn()
+    public void SendMessage_AfterRejectedMessage_DoesNotStartCooldown()
     {
         AddPlayerWithBannedTerm();
         Action sendBanned = () => _lobbyChatService.SendMessage(Token, BannedTerm, _now);

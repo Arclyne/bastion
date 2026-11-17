@@ -34,8 +34,8 @@ public sealed class TestMatchChatViewModel : IDisposable
     {
         var timeProvider = new ManualTimeProvider(_openedAt);
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
-        _viewModel = InlineUiContext.CreateViewModel(
-            () => new MatchChatViewModel(joinedMatch, _chatClient, timeProvider));
+        Func<MatchChatViewModel> createViewModel = () => new MatchChatViewModel(joinedMatch, _chatClient, timeProvider);
+        _viewModel = InlineUiContext.CreateViewModel(createViewModel);
     }
 
     public void Dispose()
@@ -139,7 +139,8 @@ public sealed class TestMatchChatViewModel : IDisposable
 
         _chatClient.RaiseMatchChatMessageReceived(JoinedMatchSampleFactory.MatchId, rivalMessage);
 
-        Assert.Single(_viewModel.Messages);
+        ChatMessageRowViewModel rivalRow = _viewModel.Messages[0];
+        Assert.Equal(RivalMessageText, rivalRow.Text);
     }
 
     [Fact]
@@ -155,15 +156,11 @@ public sealed class TestMatchChatViewModel : IDisposable
     [Fact]
     public void MatchChatMessageReceived_OverMaximumRecentMessages_DropsOldestMessage()
     {
-        int messageCount = ChatPolicy.MaximumRecentMessages + 1;
+        ReceiveMessagesUpToMaximum();
+        ChatMessage overflowingMessage = CreateRivalMessage(RivalMessageText);
         string expectedOldestText = SecondMessageNumber.ToString(CultureInfo.InvariantCulture);
 
-        for (int messageNumber = FirstMessageNumber; messageNumber <= messageCount; messageNumber++)
-        {
-            string text = messageNumber.ToString(CultureInfo.InvariantCulture);
-            ChatMessage rivalMessage = CreateRivalMessage(text);
-            _chatClient.RaiseMatchChatMessageReceived(JoinedMatchSampleFactory.MatchId, rivalMessage);
-        }
+        _chatClient.RaiseMatchChatMessageReceived(JoinedMatchSampleFactory.MatchId, overflowingMessage);
 
         ChatMessageRowViewModel oldestRow = _viewModel.Messages[0];
         Assert.Equal(expectedOldestText, oldestRow.Text);
@@ -182,5 +179,15 @@ public sealed class TestMatchChatViewModel : IDisposable
     {
         var rival = new ChatAuthor(JoinedMatchSampleFactory.RivalNickname, isOwn: false);
         return new ChatMessage(rival, text, _rivalSentAt);
+    }
+
+    private void ReceiveMessagesUpToMaximum()
+    {
+        for (int messageNumber = FirstMessageNumber; messageNumber <= ChatPolicy.MaximumRecentMessages; messageNumber++)
+        {
+            string text = messageNumber.ToString(CultureInfo.InvariantCulture);
+            ChatMessage rivalMessage = CreateRivalMessage(text);
+            _chatClient.RaiseMatchChatMessageReceived(JoinedMatchSampleFactory.MatchId, rivalMessage);
+        }
     }
 }

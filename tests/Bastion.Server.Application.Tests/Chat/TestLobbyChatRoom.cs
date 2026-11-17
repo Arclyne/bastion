@@ -48,13 +48,20 @@ public sealed class TestLobbyChatRoom
         var oldestLine = new ChatLine(_sender, OldestText, _now);
         var newerLine = new ChatLine(_sender, NewerText, _now);
         PostedChatLine oldest = _chatRoom.Post(oldestLine);
+        FillToCapacity(newerLine);
 
-        for (int lineIndex = 0; lineIndex < ChatPolicy.MaximumRecentMessages; lineIndex++)
-        {
-            _chatRoom.Post(newerLine);
-        }
+        _chatRoom.Post(newerLine);
 
         IReadOnlyList<PostedChatLine> recentLines = _chatRoom.ListRecent();
         Assert.DoesNotContain(oldest, recentLines);
+    }
+
+    private void FillToCapacity(ChatLine line)
+    {
+        int postedLineCount = _chatRoom.ListRecent().Count;
+        for (int lineCount = postedLineCount; lineCount < ChatPolicy.MaximumRecentMessages; lineCount++)
+        {
+            _chatRoom.Post(line);
+        }
     }
 }

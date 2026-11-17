@@ -40,9 +40,9 @@ public sealed class TestSessionVerifier
     [Fact]
     public void Verify_ExpiredSession_ThrowsInvalidSessionException()
     {
-        DateTime afterExpiry = _issuedAt.AddHours(Session.MaximumLifetimeHours);
+        DateTime atExpiry = _issuedAt.AddHours(Session.MaximumLifetimeHours);
 
-        Action verify = () => _verifier.Verify(FakeSessionTokenGenerator.Token, afterExpiry);
+        Action verify = () => _verifier.Verify(FakeSessionTokenGenerator.Token, atExpiry);
 
         Assert.Throws<InvalidSessionException>(verify);
     }

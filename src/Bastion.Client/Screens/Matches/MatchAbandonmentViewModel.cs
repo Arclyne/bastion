@@ -122,7 +122,8 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
             return;
         }
 
-        UiThread.Run(_uiContext, () => ReceiveAbandonment(e.AbandoningNickname, e.IsMatchOver));
+        Action receiveAbandonment = () => ReceiveAbandonment(e.AbandoningNickname, e.IsMatchOver);
+        UiThread.Run(_uiContext, receiveAbandonment);
     }
 
     private void ReceiveAbandonment(string abandoningNickname, bool isMatchOver)

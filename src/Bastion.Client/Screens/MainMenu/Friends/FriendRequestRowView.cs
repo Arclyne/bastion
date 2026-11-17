@@ -88,7 +88,7 @@ public sealed class FriendRequestRowView : Panel
         }
         catch (ObjectDisposedException ex)
         {
-            _logger.Warn("The friend request response could not be sent because the connection is closed.", ex);
+            _logger.Warn("The friend request action could not be sent because the connection is closed.", ex);
         }
     }
 

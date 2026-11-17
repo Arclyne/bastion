@@ -23,6 +23,7 @@ public static class BoardSceneLayout
     private const float WallLength = 1.8f;
     private const float WallThickness = 0.14f;
     private const float WallHeight = 0.45f;
+    private const float WallCenterHeight = SurfaceHeight + (WallHeight * WallMesh.HalfSide);
 
     private static readonly Vector3 _surfaceCenter = new Vector3(BoardCenter, SurfaceHeight, BoardCenter);
 
@@ -56,13 +57,12 @@ public static class BoardSceneLayout
 
         float centerIndex = GetCenterIndex(boardSize);
         float centerX = wall.Groove.ColumnIndex + GrooveOffset - centerIndex;
-        float centerY = SurfaceHeight + (WallHeight * WallMesh.HalfSide);
         float centerZ = centerIndex - wall.Groove.RowIndex - GrooveOffset;
         bool isHorizontal = wall.Orientation == WallOrientation.Horizontal;
         float scaleX = isHorizontal ? WallLength : WallThickness;
         float scaleZ = isHorizontal ? WallThickness : WallLength;
         var scale = Matrix.CreateScale(scaleX, WallHeight, scaleZ);
-        var translation = Matrix.CreateTranslation(centerX, centerY, centerZ);
+        var translation = Matrix.CreateTranslation(centerX, WallCenterHeight, centerZ);
         Matrix transform = scale * translation;
         return transform;
     }

@@ -15,28 +15,12 @@ public static class GameModeSampleFactory
 
     public static GameMode CreateClassic()
     {
-        return new GameMode
-        {
-            GameModeId = ClassicGameModeId,
-            Code = GameModeCode.Classic,
-            BoardSize = BoardSize,
-            PlayerCount = TwoPlayers,
-            WallsPerPlayer = ClassicWallsPerPlayer,
-            IsActive = true,
-        };
+        return CreateClassicWithSeats(TwoPlayers);
     }
 
     public static GameMode CreateClassicWithFourSeats()
     {
-        return new GameMode
-        {
-            GameModeId = ClassicGameModeId,
-            Code = GameModeCode.Classic,
-            BoardSize = BoardSize,
-            PlayerCount = FourPlayers,
-            WallsPerPlayer = ClassicWallsPerPlayer,
-            IsActive = true,
-        };
+        return CreateClassicWithSeats(FourPlayers);
     }
 
     public static GameMode CreateFourPlayers()
@@ -48,6 +32,19 @@ public static class GameModeSampleFactory
             BoardSize = BoardSize,
             PlayerCount = FourPlayers,
             WallsPerPlayer = FourPlayersWallsPerPlayer,
+            IsActive = true,
+        };
+    }
+
+    private static GameMode CreateClassicWithSeats(byte playerCount)
+    {
+        return new GameMode
+        {
+            GameModeId = ClassicGameModeId,
+            Code = GameModeCode.Classic,
+            BoardSize = BoardSize,
+            PlayerCount = playerCount,
+            WallsPerPlayer = ClassicWallsPerPlayer,
             IsActive = true,
         };
     }

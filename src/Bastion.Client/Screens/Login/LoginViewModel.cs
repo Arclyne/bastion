@@ -293,10 +293,12 @@ public sealed class LoginViewModel : ViewModel
 
         var preferredCulture = new CultureInfo(preferredLanguage);
         SupportedLanguage? language = LanguageCatalog.FindClosest(preferredCulture);
-        if (language is not null)
+        if (language is null)
         {
-            SelectedLanguage = language;
+            return;
         }
+
+        SelectedLanguage = language;
     }
 
     private void ShowRestriction(AccountRestriction restriction, int lockMinutes)

@@ -17,14 +17,13 @@ public sealed class TestBoardLayout
     private const int ClassicLastColumnIndex = 8;
     private const string ThirdPlayerSquare = "a5";
     private const string FirstPlayerSquare = "e1";
-
-    private static readonly BoardCoordinates _classicFirstRowCenter = new BoardCoordinates(
-        ClassicCenterColumnIndex,
-        FirstRowIndex);
     private const string SecondPlayerSquare = "e9";
     private const string RowZeroSquare = "e0";
     private const int ClassicLastRowIndex = 8;
 
+    private static readonly BoardCoordinates _classicFirstRowCenter = new BoardCoordinates(
+        ClassicCenterColumnIndex,
+        FirstRowIndex);
     private static readonly BoardCoordinates _firstSquare = new BoardCoordinates(FirstColumnIndex, FirstRowIndex);
 
     [Fact]

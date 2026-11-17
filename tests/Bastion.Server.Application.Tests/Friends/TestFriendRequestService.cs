@@ -24,7 +24,7 @@ public sealed class TestFriendRequestService
     private const string ShortPrefix = "ma";
     private const string OwnPrefix = "luis";
     private const string UnusedFriendCode = "AB2CD9";
-    private const string MalformedFriendCode = "no-es-codigo";
+    private const string MalformedFriendCode = "not-a-code";
     private const int FirstFillerAccountId = 1000;
     private const string FillerNicknamePrefix = "amigo_";
     private const int DaysAgo = 1;

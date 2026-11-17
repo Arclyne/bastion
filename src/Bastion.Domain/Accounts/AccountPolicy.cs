@@ -10,7 +10,7 @@ public static class AccountPolicy
     public const int MaximumEmailLength = 254;
     public const int MaximumLoginIdentifierLength = MaximumEmailLength;
 
-    private static readonly Regex _nicknameCharacters = TextPattern.Create("^[A-Za-z0-9_]+$");
+    private static readonly Regex _nicknameCharacters = TextPattern.Create("^[A-Za-z0-9_ÁÉÍÓÚÜÑáéíóúüñ]+$");
 
     private static readonly Regex _emailPattern = TextPattern.Create(@"^[^@\s]+@[^@\s.]+(?:\.[^@\s.]+)+$");
 

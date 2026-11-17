@@ -27,9 +27,9 @@ public sealed class TestVersusViewModel
     public void Constructor_RivalListedFirst_ShowsOwnNickname()
     {
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
+        Func<VersusViewModel> createViewModel = () => new VersusViewModel(joinedMatch, _timeProvider);
 
-        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(
-            () => new VersusViewModel(joinedMatch, _timeProvider));
+        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(createViewModel);
 
         Assert.Equal(JoinedMatchSampleFactory.OwnNickname, viewModel.Own.Nickname);
     }
@@ -38,9 +38,9 @@ public sealed class TestVersusViewModel
     public void Constructor_RivalListedFirst_ShowsRivalNickname()
     {
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
+        Func<VersusViewModel> createViewModel = () => new VersusViewModel(joinedMatch, _timeProvider);
 
-        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(
-            () => new VersusViewModel(joinedMatch, _timeProvider));
+        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(createViewModel);
 
         VersusPlayer rival = viewModel.Rivals.Single();
         Assert.Equal(JoinedMatchSampleFactory.RivalNickname, rival.Nickname);
@@ -54,9 +54,9 @@ public sealed class TestVersusViewModel
             Strings.MatchEloFormat,
             JoinedMatchSampleFactory.RivalEloRating);
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
+        Func<VersusViewModel> createViewModel = () => new VersusViewModel(joinedMatch, _timeProvider);
 
-        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(
-            () => new VersusViewModel(joinedMatch, _timeProvider));
+        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(createViewModel);
 
         VersusPlayer rival = viewModel.Rivals.Single();
         Assert.Equal(expectedText, rival.EloText);
@@ -71,9 +71,9 @@ public sealed class TestVersusViewModel
             JoinedMatchSampleFactory.BoardSize,
             JoinedMatchSampleFactory.WallsPerPlayer);
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
+        Func<VersusViewModel> createViewModel = () => new VersusViewModel(joinedMatch, _timeProvider);
 
-        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(
-            () => new VersusViewModel(joinedMatch, _timeProvider));
+        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(createViewModel);
 
         Assert.Equal(expectedText, viewModel.ModeText);
     }
@@ -82,9 +82,9 @@ public sealed class TestVersusViewModel
     public void Constructor_OwnSecondTurnOrder_GivesOwnRedPawn()
     {
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.SecondTurnOrder);
+        Func<VersusViewModel> createViewModel = () => new VersusViewModel(joinedMatch, _timeProvider);
 
-        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(
-            () => new VersusViewModel(joinedMatch, _timeProvider));
+        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(createViewModel);
 
         Assert.Equal(PawnSymbol.Red, viewModel.Own.PawnSymbol);
     }
@@ -93,9 +93,9 @@ public sealed class TestVersusViewModel
     public void Constructor_OwnSecondTurnOrder_GivesRivalBluePawn()
     {
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.SecondTurnOrder);
+        Func<VersusViewModel> createViewModel = () => new VersusViewModel(joinedMatch, _timeProvider);
 
-        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(
-            () => new VersusViewModel(joinedMatch, _timeProvider));
+        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(createViewModel);
 
         VersusPlayer rival = viewModel.Rivals.Single();
         Assert.Equal(PawnSymbol.Blue, rival.PawnSymbol);
@@ -111,9 +111,9 @@ public sealed class TestVersusViewModel
             JoinedMatchSampleFactory.SecondRivalNickname,
             JoinedMatchSampleFactory.ThirdRivalNickname,
         };
+        Func<VersusViewModel> createViewModel = () => new VersusViewModel(joinedMatch, _timeProvider);
 
-        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(
-            () => new VersusViewModel(joinedMatch, _timeProvider));
+        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(createViewModel);
 
         IEnumerable<string> nicknames = viewModel.Rivals.Select(rival => rival.Nickname);
         Assert.Equal(expectedNicknames, nicknames);
@@ -124,9 +124,9 @@ public sealed class TestVersusViewModel
     {
         string expectedText = FormatCountdown(VersusViewModel.CountdownSeconds);
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
+        Func<VersusViewModel> createViewModel = () => new VersusViewModel(joinedMatch, _timeProvider);
 
-        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(
-            () => new VersusViewModel(joinedMatch, _timeProvider));
+        using VersusViewModel viewModel = InlineUiContext.CreateViewModel(createViewModel);
 
         Assert.Equal(expectedText, viewModel.CountdownText);
     }
@@ -220,7 +220,8 @@ public sealed class TestVersusViewModel
     private VersusViewModel CreateViewModel(byte ownTurnOrder)
     {
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
-        return InlineUiContext.CreateViewModel(() => new VersusViewModel(joinedMatch, _timeProvider));
+        Func<VersusViewModel> createViewModel = () => new VersusViewModel(joinedMatch, _timeProvider);
+        return InlineUiContext.CreateViewModel(createViewModel);
     }
 
     private void HandleCountdownFinished(object? sender, EventArgs e)

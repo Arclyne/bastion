@@ -16,12 +16,11 @@ public sealed class FriendListView : StackPanel
     private const float FilterHeight = 44;
     private const float AddFriendButtonWidth = 150;
     private const float ScrollHeight = 460;
-    private const float ListSpacing = 10;
-    private const float FilterFieldWidth = ListWidth - AddFriendButtonWidth - ListSpacing;
+    private const float FilterFieldWidth = ListWidth - AddFriendButtonWidth - PanelMetrics.SectionSpacing;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(FriendListView));
 
-    private readonly FriendsPanelViewModel _viewModel;
+    private readonly FriendsPanelViewModel _friendsPanelViewModel;
     private readonly StackPanel _connectedRows;
     private readonly StackPanel _offlineRows;
 
@@ -29,12 +28,12 @@ public sealed class FriendListView : StackPanel
     {
         ArgumentNullException.ThrowIfNull(viewModel);
 
-        _viewModel = viewModel;
+        _friendsPanelViewModel = viewModel;
         _connectedRows = new StackPanel();
         _offlineRows = new StackPanel();
         Width = ListWidth;
         WidthUnits = DimensionUnitType.Absolute;
-        Spacing = ListSpacing;
+        Spacing = PanelMetrics.SectionSpacing;
 
         StackPanel filterRow = CreateFilterRow();
         ScrollViewer groups = CreateGroups();
@@ -50,8 +49,8 @@ public sealed class FriendListView : StackPanel
         AddChild(noMatchLabel);
         AddChild(loadFailure);
 
-        _viewModel.ConnectedFriends.CollectionChanged += HandleConnectedFriendsChanged;
-        _viewModel.OfflineFriends.CollectionChanged += HandleOfflineFriendsChanged;
+        _friendsPanelViewModel.ConnectedFriends.CollectionChanged += HandleConnectedFriendsChanged;
+        _friendsPanelViewModel.OfflineFriends.CollectionChanged += HandleOfflineFriendsChanged;
     }
 
     private StackPanel CreateFilterRow()
@@ -74,7 +73,7 @@ public sealed class FriendListView : StackPanel
         var row = new StackPanel
         {
             Orientation = Orientation.Horizontal,
-            Spacing = ListSpacing,
+            Spacing = PanelMetrics.SectionSpacing,
         };
         row.AddChild(filter);
         row.AddChild(addFriend);
@@ -83,7 +82,7 @@ public sealed class FriendListView : StackPanel
 
     private void HandleAddFriendClick(object? sender, EventArgs e)
     {
-        _viewModel.OpenAddFriend();
+        _friendsPanelViewModel.OpenAddFriend();
     }
 
     private ScrollViewer CreateGroups()
@@ -126,7 +125,7 @@ public sealed class FriendListView : StackPanel
     {
         try
         {
-            await _viewModel.LoadFriends();
+            await _friendsPanelViewModel.LoadFriends();
         }
         catch (ObjectDisposedException ex)
         {
@@ -136,7 +135,7 @@ public sealed class FriendListView : StackPanel
 
     private void HandleConnectedFriendsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        RebuildRows(_connectedRows, _viewModel.ConnectedFriends);
+        RebuildRows(_connectedRows, _friendsPanelViewModel.ConnectedFriends);
     }
 
     private void RebuildRows(StackPanel rows, IEnumerable<FriendRowViewModel> friends)
@@ -144,13 +143,13 @@ public sealed class FriendListView : StackPanel
         ViewFactory.ClearRows(rows.Visual);
         foreach (FriendRowViewModel friend in friends)
         {
-            var friendRow = new FriendRowView(friend, _viewModel.Actions);
+            var friendRow = new FriendRowView(friend, _friendsPanelViewModel.Actions);
             rows.AddChild(friendRow);
         }
     }
 
     private void HandleOfflineFriendsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        RebuildRows(_offlineRows, _viewModel.OfflineFriends);
+        RebuildRows(_offlineRows, _friendsPanelViewModel.OfflineFriends);
     }
 }

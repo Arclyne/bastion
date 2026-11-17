@@ -139,7 +139,7 @@ public sealed class TestMatchSearchService
     }
 
     [Fact]
-    public void ConfirmPresence_PlayerAwaitingPresence_KeepsSearching()
+    public void ConfirmPresence_PlayerAwaitingPresence_StopsAwaitingPresence()
     {
         AddSearchingPlayer();
         _matchmakingQueue.Review(_presenceCheckAt);

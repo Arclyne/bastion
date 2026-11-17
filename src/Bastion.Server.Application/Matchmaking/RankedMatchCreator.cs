@@ -66,7 +66,7 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         }
         catch (MatchRepositoryException ex)
         {
-            _logger.Error($"The ranked match could not be saved. AccountIds={accountIdsText}", ex);
+            _logger.Error($"The ranked match could not be created. AccountIds={accountIdsText}", ex);
             return false;
         }
     }

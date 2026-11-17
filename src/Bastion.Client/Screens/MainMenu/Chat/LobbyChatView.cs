@@ -32,7 +32,7 @@ public sealed class LobbyChatView : StackPanel
         BindingContext = chat;
         Width = ConversationPartFactory.ViewWidth;
         WidthUnits = DimensionUnitType.Absolute;
-        Spacing = ConversationPartFactory.SectionSpacing;
+        Spacing = PanelMetrics.SectionSpacing;
         _messages = CreateMessages();
         StackPanel header = CreateHeader();
         Label systemNotice = ConversationPartFactory.CreateWrappedLabel(

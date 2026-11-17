@@ -1,7 +1,6 @@
 using System;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
-using Bastion.Domain.Matches;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Microsoft.Xna.Framework;

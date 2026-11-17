@@ -40,7 +40,6 @@ public sealed class TestNotificationCallback
     private const int SecondSeatIndex = 1;
 
     private static readonly DateTime _sentAt = new DateTime(2026, 11, 4, 18, 15, 0, DateTimeKind.Utc);
-    private static readonly string[] _participantNicknames = { FirstNickname, SecondNickname };
 
     private readonly NotificationCallback _notificationCallback = new NotificationCallback();
     private ChatMessageReceivedEventArgs? _chatMessage;
@@ -193,11 +192,12 @@ public sealed class TestNotificationCallback
     {
         _notificationCallback.MatchFound += HandleMatchFound;
         MatchFoundNotification notification = CreateMatchFoundNotification();
+        string[] expectedNicknames = { FirstNickname, SecondNickname };
 
         _notificationCallback.ReceiveNotification(notification);
 
         IEnumerable<string>? nicknames = _matchFound?.Participants.Select(participant => participant.Nickname);
-        Assert.Equal(_participantNicknames, nicknames);
+        Assert.Equal(expectedNicknames, nicknames);
     }
 
     [Fact]

@@ -11,7 +11,6 @@ namespace Bastion.Client.Screens.MainMenu.Friends;
 public sealed class FriendRequestsView : StackPanel
 {
     private const float ViewWidth = PanelMetrics.ContentWidth;
-    private const float ViewSpacing = 10;
     private const float SubtabWidth = (ViewWidth - SubtabSpacing) / SubtabCount;
     private const float SubtabHeight = 36;
     private const float SubtabSpacing = 6;
@@ -28,7 +27,7 @@ public sealed class FriendRequestsView : StackPanel
         BindingContext = requests;
         Width = ViewWidth;
         WidthUnits = DimensionUnitType.Absolute;
-        Spacing = ViewSpacing;
+        Spacing = PanelMetrics.SectionSpacing;
 
         StackPanel subtabRow = CreateSubtabRow();
         Label status = ViewFactory.CreateBoundNotice(

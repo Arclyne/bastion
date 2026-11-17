@@ -335,7 +335,7 @@ public sealed class PrivateConversationViewModel : ModeratedChatViewModel
         }
         catch (ObjectDisposedException ex)
         {
-            _logger.Warn("Marking the conversation read ended after it was closed.", ex);
+            _logger.Warn("Marking the conversation read ended because the connection was closed.", ex);
         }
     }
 
@@ -364,7 +364,7 @@ public sealed class PrivateConversationViewModel : ModeratedChatViewModel
     private void ReportLoadFailure(Exception cause)
     {
         _logger.Error("The private conversation could not be loaded.", cause);
-        HasLoadFailed = true;
+        ShowLoadFailure();
     }
 
     private void OnMessageSent(PrivateMessageSentEventArgs e)

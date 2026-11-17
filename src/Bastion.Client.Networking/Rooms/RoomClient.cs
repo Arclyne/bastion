@@ -44,7 +44,8 @@ public sealed class RoomClient : IRoomClient
         ArgumentNullException.ThrowIfNull(options);
 
         var contractOptions = RoomContractTranslator.ToRoomOptions(options);
-        return CallForRoom(service => service.CreateRoom(sessionToken, contractOptions));
+        Func<IRoomService, RoomState> createRoom = service => service.CreateRoom(sessionToken, contractOptions);
+        return CallForRoom(createRoom);
     }
 
     public PrivateRoom JoinRoom(string sessionToken, string code)
@@ -52,14 +53,16 @@ public sealed class RoomClient : IRoomClient
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(code);
 
-        return CallForRoom(service => service.JoinRoom(sessionToken, code));
+        Func<IRoomService, RoomState> joinRoom = service => service.JoinRoom(sessionToken, code);
+        return CallForRoom(joinRoom);
     }
 
     public PrivateRoom SetReady(string sessionToken, bool isReady)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        return CallForRoom(service => service.SetReady(sessionToken, isReady));
+        Func<IRoomService, RoomState> setReady = service => service.SetReady(sessionToken, isReady);
+        return CallForRoom(setReady);
     }
 
     public PrivateRoom ChangeOptions(string sessionToken, PrivateRoomOptions options)
@@ -68,28 +71,32 @@ public sealed class RoomClient : IRoomClient
         ArgumentNullException.ThrowIfNull(options);
 
         var contractOptions = RoomContractTranslator.ToRoomOptions(options);
-        return CallForRoom(service => service.ChangeOptions(sessionToken, contractOptions));
+        Func<IRoomService, RoomState> changeOptions = service => service.ChangeOptions(sessionToken, contractOptions);
+        return CallForRoom(changeOptions);
     }
 
     public void StartMatch(string sessionToken)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        Call(service => service.StartMatch(sessionToken));
+        Action<IRoomService> startMatch = service => service.StartMatch(sessionToken);
+        Call(startMatch);
     }
 
     public void LeaveRoom(string sessionToken)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        Call(service => service.LeaveRoom(sessionToken));
+        Action<IRoomService> leaveRoom = service => service.LeaveRoom(sessionToken);
+        Call(leaveRoom);
     }
 
     public PrivateRoom? FindOwnRoom(string sessionToken)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        RoomState? state = Call(service => service.FindOwnRoom(sessionToken));
+        Func<IRoomService, RoomState?> findOwnRoom = service => service.FindOwnRoom(sessionToken);
+        RoomState? state = Call(findOwnRoom);
         if (state is null)
         {
             return null;

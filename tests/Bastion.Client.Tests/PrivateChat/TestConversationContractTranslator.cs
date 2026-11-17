@@ -79,7 +79,7 @@ public sealed class TestConversationContractTranslator
     }
 
     [Fact]
-    public void ToTranscript_FormerFriend_IsNotFriend()
+    public void ToTranscript_NonFriendPartner_IsNotFriend()
     {
         var log = new PrivateConversationLog
         {
@@ -106,6 +106,42 @@ public sealed class TestConversationContractTranslator
         PlayerTag sender = ConversationContractTranslator.ToSender(notification);
 
         Assert.Equal(PartnerFriendCode, sender.FriendCode);
+    }
+
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void ToSender_EnglishOrSpanishNickname_KeepsNickname(string nickname)
+    {
+        var notification = new PrivateMessageNotification
+        {
+            SenderNickname = nickname,
+            SenderFriendCode = PartnerFriendCode,
+            Text = MessageText,
+            OccurredAt = _sentAt,
+        };
+
+        PlayerTag sender = ConversationContractTranslator.ToSender(notification);
+
+        Assert.Equal(nickname, sender.Nickname);
+    }
+
+    [Theory]
+    [InlineData("See you in the next match.")]
+    [InlineData("¿Jugamos otra? ¡Qué peón, Ñandú!")]
+    public void ToPrivateMessage_EnglishOrSpanishText_KeepsText(string text)
+    {
+        var notification = new PrivateMessageNotification
+        {
+            SenderNickname = PartnerNickname,
+            SenderFriendCode = PartnerFriendCode,
+            Text = text,
+            OccurredAt = _sentAt,
+        };
+
+        var message = ConversationContractTranslator.ToPrivateMessage(notification);
+
+        Assert.Equal(text, message.Text);
     }
 
     private static ConversationEntry CreateEntry(PrivateChatMessage? lastMessage)

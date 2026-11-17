@@ -13,9 +13,12 @@ public sealed class MatchView : ScreenView
     private const int HorizontalSideCount = 2;
     private const float AbandonButtonWidth = 210;
     private const float AbandonStatusGap = 8;
+    private const float AbandonStatusOffsetY = -(ScreenMetrics.MarginY + ScreenMetrics.MenuPillHeight
+        + AbandonStatusGap);
     private const float PlayerLeftNoticeWidth = 420;
     private const float MoveNoticeWidth = 360;
     private const float MoveNoticeHeight = 28;
+    private const float WallControlsOffsetY = -(ScreenMetrics.MarginY + MoveNoticeHeight);
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchView));
 
@@ -103,7 +106,7 @@ public sealed class MatchView : ScreenView
     {
         var panel = new WallControlsPanel(wallPlacement);
         panel.Anchor(Gum.Wireframe.Anchor.Bottom);
-        panel.Y = -(ScreenMetrics.MarginY + MoveNoticeHeight);
+        panel.Y = WallControlsOffsetY;
         return panel;
     }
 
@@ -154,7 +157,7 @@ public sealed class MatchView : ScreenView
         status.BindingContext = _abandonmentViewModel;
         status.Anchor(Gum.Wireframe.Anchor.BottomLeft);
         status.X = ScreenMetrics.MarginX;
-        status.Y = -(ScreenMetrics.MarginY + ScreenMetrics.MenuPillHeight + AbandonStatusGap);
+        status.Y = AbandonStatusOffsetY;
         return status;
     }
 

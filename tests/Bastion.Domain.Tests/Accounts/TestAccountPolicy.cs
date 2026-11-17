@@ -11,6 +11,9 @@ public sealed class TestAccountPolicy
     [InlineData("marta_muros")]
     [InlineData("Ana")]
     [InlineData("jugador_con_30_caracteres_ok_1")]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    [InlineData("PINGÜINO_ÁGIL")]
     public void IsValidNickname_ValidNickname_ReturnsTrue(string nickname)
     {
         bool isValidNickname = AccountPolicy.IsValidNickname(nickname);
@@ -23,6 +26,7 @@ public sealed class TestAccountPolicy
     [InlineData("marta muros")]
     [InlineData("marta@muros")]
     [InlineData("jugador_con_31_caracteres_ok_12")]
+    [InlineData("пешка_1")]
     [InlineData(null)]
     public void IsValidNickname_InvalidNickname_ReturnsFalse(string? nickname)
     {
@@ -34,6 +38,8 @@ public sealed class TestAccountPolicy
     [Theory]
     [InlineData("marta@example.com")]
     [InlineData("a.villalobos@correo-universitario.uv.mx")]
+    [InlineData("a.wolf@university-mail.edu")]
+    [InlineData("josé.peña@correo.mx")]
     public void IsValidEmail_ValidEmail_ReturnsTrue(string email)
     {
         bool isValidEmail = AccountPolicy.IsValidEmail(email);
@@ -55,6 +61,8 @@ public sealed class TestAccountPolicy
     [Theory]
     [InlineData("marta_muros")]
     [InlineData("marta@example.com")]
+    [InlineData("peón_ñandú")]
+    [InlineData("josé.peña@correo.mx")]
     public void IsValidLoginIdentifier_NicknameOrEmail_ReturnsTrue(string identifier)
     {
         bool isValidLoginIdentifier = AccountPolicy.IsValidLoginIdentifier(identifier);

@@ -95,6 +95,14 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
         return expiredSearches;
     }
 
+    private void RemoveAll(IEnumerable<MatchSearch> searches)
+    {
+        foreach (MatchSearch search in searches)
+        {
+            _searches.Remove(search.AccountId);
+        }
+    }
+
     private List<MatchPairing> TakePairings()
     {
         IEnumerable<MatchPairing> completePairings = _searches.Values
@@ -110,14 +118,6 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
         }
 
         return pairings;
-    }
-
-    private void RemoveAll(IEnumerable<MatchSearch> searches)
-    {
-        foreach (MatchSearch search in searches)
-        {
-            _searches.Remove(search.AccountId);
-        }
     }
 
     private List<PresenceRequest> StartPresenceChecks(DateTime now)

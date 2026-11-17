@@ -26,6 +26,7 @@ public sealed class LoginView : ScreenView
     private const float FieldHeight = 50;
     private const float RevealButtonWidth = 96;
     private const float RevealButtonSpacing = 8;
+    private const float PasswordInputWidth = ContentWidth - RevealButtonWidth - RevealButtonSpacing;
     private const float PrimaryButtonHeight = 52;
     private const float SecondaryButtonHeight = 48;
     private const float ExitButtonWidth = 96;
@@ -191,12 +192,10 @@ public sealed class LoginView : ScreenView
 
     private static StackPanel CreatePasswordInputs()
     {
-        float inputWidth = ContentWidth - RevealButtonWidth - RevealButtonSpacing;
-
         var maskedInput = new PasswordField
         {
             Placeholder = string.Empty,
-            Width = inputWidth,
+            Width = PasswordInputWidth,
             Height = FieldHeight,
         };
         maskedInput.SetBinding(nameof(PasswordField.Password), nameof(LoginViewModel.Password));
@@ -207,7 +206,7 @@ public sealed class LoginView : ScreenView
         var revealedInput = new TextField
         {
             Placeholder = string.Empty,
-            Width = inputWidth,
+            Width = PasswordInputWidth,
             Height = FieldHeight,
         };
         revealedInput.SetBinding(nameof(TextField.Text), nameof(LoginViewModel.Password));

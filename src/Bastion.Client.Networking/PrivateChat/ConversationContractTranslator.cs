@@ -21,8 +21,7 @@ public static class ConversationContractTranslator
     {
         ArgumentNullException.ThrowIfNull(log);
 
-        var partner = FriendContractTranslator.ToPlayerTag(log.PartnerNickname, log.PartnerFriendCode);
-        var contact = new ConversationContact(partner, log.IsFriend);
+        ConversationContact contact = ToContact(log.PartnerNickname, log.PartnerFriendCode, log.IsFriend);
         PrivateChatMessage[] logMessages = log.Messages ?? Array.Empty<PrivateChatMessage>();
         IEnumerable<PrivateMessage> privateMessages = logMessages.Select(ToPrivateMessage);
         var messages = new List<PrivateMessage>(privateMessages);
@@ -47,11 +46,16 @@ public static class ConversationContractTranslator
 
     private static ConversationPreview ToPreview(ConversationEntry entry)
     {
-        var partner = FriendContractTranslator.ToPlayerTag(entry.PartnerNickname, entry.PartnerFriendCode);
-        var contact = new ConversationContact(partner, entry.IsFriend);
-        PrivateChatMessage lastEntry = entry.LastMessage ?? new PrivateChatMessage();
-        PrivateMessage lastMessage = ToPrivateMessage(lastEntry);
+        ConversationContact contact = ToContact(entry.PartnerNickname, entry.PartnerFriendCode, entry.IsFriend);
+        PrivateChatMessage lastChatMessage = entry.LastMessage ?? new PrivateChatMessage();
+        PrivateMessage lastMessage = ToPrivateMessage(lastChatMessage);
         return new ConversationPreview(contact, lastMessage, entry.UnreadCount);
+    }
+
+    private static ConversationContact ToContact(string? partnerNickname, string? partnerFriendCode, bool isFriend)
+    {
+        var partner = FriendContractTranslator.ToPlayerTag(partnerNickname, partnerFriendCode);
+        return new ConversationContact(partner, isFriend);
     }
 
     private static PrivateMessage ToPrivateMessage(PrivateChatMessage message)

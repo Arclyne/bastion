@@ -54,16 +54,16 @@ public sealed class FriendshipService : IFriendshipService
     {
         string token = SessionTranslator.RequireSessionToken(sessionToken);
         string recipientCode = RequireFriendCode(friendCode, FriendshipRejection.PlayerNotFound);
-        Func<FriendRequestResult> sendRequest = () => SendFriendRequestInRequestScope(token, recipientCode);
-        return TranslateFriendshipFailures(nameof(SendFriendRequest), sendRequest);
+        Func<FriendRequestResult> sendFriendRequest = () => SendFriendRequestInRequestScope(token, recipientCode);
+        return TranslateFriendshipFailures(nameof(SendFriendRequest), sendFriendRequest);
     }
 
     /// <inheritdoc/>
     public FriendRequestList ListFriendRequests(string? sessionToken)
     {
         string token = SessionTranslator.RequireSessionToken(sessionToken);
-        Func<FriendRequestList> listRequests = () => ListFriendRequestsInRequestScope(token);
-        return TranslateFriendshipFailures(nameof(ListFriendRequests), listRequests);
+        Func<FriendRequestList> listFriendRequests = () => ListFriendRequestsInRequestScope(token);
+        return TranslateFriendshipFailures(nameof(ListFriendRequests), listFriendRequests);
     }
 
     /// <inheritdoc/>
@@ -71,8 +71,8 @@ public sealed class FriendshipService : IFriendshipService
     {
         string token = SessionTranslator.RequireSessionToken(sessionToken);
         string requesterCode = RequireFriendCode(requesterFriendCode, FriendshipRejection.RequestNotFound);
-        Action acceptRequest = () => AcceptFriendRequestInRequestScope(token, requesterCode);
-        TranslateFriendshipFailures(nameof(AcceptFriendRequest), acceptRequest);
+        Action acceptFriendRequest = () => AcceptFriendRequestInRequestScope(token, requesterCode);
+        TranslateFriendshipFailures(nameof(AcceptFriendRequest), acceptFriendRequest);
     }
 
     /// <inheritdoc/>
@@ -80,8 +80,8 @@ public sealed class FriendshipService : IFriendshipService
     {
         string token = SessionTranslator.RequireSessionToken(sessionToken);
         string requesterCode = RequireFriendCode(requesterFriendCode, FriendshipRejection.RequestNotFound);
-        Action rejectRequest = () => RejectFriendRequestInRequestScope(token, requesterCode);
-        TranslateFriendshipFailures(nameof(RejectFriendRequest), rejectRequest);
+        Action rejectFriendRequest = () => RejectFriendRequestInRequestScope(token, requesterCode);
+        TranslateFriendshipFailures(nameof(RejectFriendRequest), rejectFriendRequest);
     }
 
     /// <inheritdoc/>
@@ -89,8 +89,8 @@ public sealed class FriendshipService : IFriendshipService
     {
         string token = SessionTranslator.RequireSessionToken(sessionToken);
         string recipientCode = RequireFriendCode(recipientFriendCode, FriendshipRejection.RequestNotFound);
-        Action cancelRequest = () => CancelFriendRequestInRequestScope(token, recipientCode);
-        TranslateFriendshipFailures(nameof(CancelFriendRequest), cancelRequest);
+        Action cancelFriendRequest = () => CancelFriendRequestInRequestScope(token, recipientCode);
+        TranslateFriendshipFailures(nameof(CancelFriendRequest), cancelFriendRequest);
     }
 
     /// <inheritdoc/>
@@ -194,7 +194,7 @@ public sealed class FriendshipService : IFriendshipService
         }
         catch (DbException ex)
         {
-            _logger.Error($"The database could not be reached. Operation={operationName}", ex);
+            _logger.Error($"A database command failed. Operation={operationName}", ex);
             throw new FaultException(ServerFailureReason);
         }
     }

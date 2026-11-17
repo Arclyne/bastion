@@ -32,21 +32,28 @@ public sealed class RoomRegistry : IRoomRegistry
         }
     }
 
-    public string CreateUnusedCode()
+    public bool TryCreateUnusedCode(
+        [NotNullWhen(true)]
+        out string? code)
     {
         lock (_roomsLock)
         {
-            string code = _codeGenerator.CreateCode();
-            while (_roomsByCode.ContainsKey(code))
+            string createdCode = _codeGenerator.CreateCode();
+            if (_roomsByCode.ContainsKey(createdCode))
             {
-                code = _codeGenerator.CreateCode();
+                code = null;
+                return false;
             }
 
-            return code;
+            code = createdCode;
+            return true;
         }
     }
 
-    public bool TryOpen(WaitingRoom room, [NotNullWhen(true)] out RoomSnapshot? openedRoom)
+    public bool TryOpen(
+        WaitingRoom room,
+        [NotNullWhen(true)]
+        out RoomSnapshot? openedRoom)
     {
         ArgumentNullException.ThrowIfNull(room);
 

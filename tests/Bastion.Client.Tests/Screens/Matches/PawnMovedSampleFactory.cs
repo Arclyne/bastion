@@ -7,15 +7,12 @@ public static class PawnMovedSampleFactory
 {
     public const short SecondMoveNumber = 2;
 
-    private const string StartingSquare = "e1";
-
     public static PawnMovedEventArgs CreateFirstMove(int matchId, string moverNickname, string toSquare)
     {
         return new PawnMovedEventArgs
         {
             MatchId = matchId,
             MoverNickname = moverNickname,
-            FromSquare = StartingSquare,
             ToSquare = toSquare,
             NextTurnOrder = Match.SecondTurnOrder,
             NextMoveNumber = SecondMoveNumber,
@@ -30,7 +27,6 @@ public static class PawnMovedSampleFactory
         {
             MatchId = JoinedMatchSampleFactory.MatchId,
             MoverNickname = moverNickname,
-            FromSquare = StartingSquare,
             ToSquare = toSquare,
             NextTurnOrder = Match.SecondTurnOrder,
             NextMoveNumber = SecondMoveNumber,

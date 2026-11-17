@@ -13,11 +13,10 @@ namespace Bastion.Client.Screens.MainMenu.Friends;
 public sealed class AddFriendView : StackPanel
 {
     private const float ViewWidth = PanelMetrics.ContentWidth;
-    private const float ViewSpacing = 10;
     private const float BackButtonWidth = 110;
     private const float ControlHeight = 40;
     private const float SearchButtonWidth = 96;
-    private const float SearchFieldWidth = ViewWidth - SearchButtonWidth - ViewSpacing;
+    private const float SearchFieldWidth = ViewWidth - SearchButtonWidth - PanelMetrics.SectionSpacing;
     private const float ResultsHeight = 380;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(AddFriendView));
@@ -32,7 +31,7 @@ public sealed class AddFriendView : StackPanel
         BindingContext = friendsPanelViewModel.AddFriend;
         Width = ViewWidth;
         WidthUnits = DimensionUnitType.Absolute;
-        Spacing = ViewSpacing;
+        Spacing = PanelMetrics.SectionSpacing;
 
         Button backButton = CreateBackButton();
         StackPanel searchRow = CreateSearchRow();
@@ -77,7 +76,7 @@ public sealed class AddFriendView : StackPanel
         var row = new StackPanel
         {
             Orientation = Orientation.Horizontal,
-            Spacing = ViewSpacing,
+            Spacing = PanelMetrics.SectionSpacing,
         };
         row.AddChild(input);
         row.AddChild(search);

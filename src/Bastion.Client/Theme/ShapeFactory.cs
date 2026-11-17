@@ -16,6 +16,7 @@ public static class ShapeFactory
     private const int RadiiPerDiameter = 2;
     private const int SidesPerAxis = 2;
     private const float HaloSpread = 4;
+    private const float HaloGrowth = HaloSpread * SidesPerAxis;
     private const float RaisedBorderWidth = 1.5f;
 
     public static RectangleRuntime CreateRounded(Color fill, float radius)
@@ -40,9 +41,8 @@ public static class ShapeFactory
     public static RectangleRuntime CreateHalo(float radius)
     {
         RectangleRuntime halo = CreateRounded(Palette.FocusHalo, radius + HaloSpread);
-        float haloGrowth = HaloSpread * SidesPerAxis;
-        halo.Width = haloGrowth;
-        halo.Height = haloGrowth;
+        halo.Width = HaloGrowth;
+        halo.Height = HaloGrowth;
         halo.Visible = false;
         return halo;
     }
@@ -97,9 +97,11 @@ public static class ShapeFactory
     private static void HidePart(FrameworkElement control, string partName)
     {
         GraphicalUiElement? part = control.GetVisual(partName);
-        if (part is not null)
+        if (part is null)
         {
-            part.Visible = false;
+            return;
         }
+
+        part.Visible = false;
     }
 }

@@ -2,7 +2,6 @@ using System;
 using Bastion.Client.Controls;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
-using Gum.DataTypes;
 using Gum.Forms.Controls;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
@@ -11,7 +10,6 @@ public static class ConversationPartFactory
 {
     public const float ViewWidth = PanelMetrics.ContentWidth;
     public const float MessageRowWidth = ViewWidth - (MessageRowMarginX * HorizontalSideCount);
-    public const float SectionSpacing = 10;
 
     private const float HeaderSpacing = 12;
     private const float BackButtonWidth = 96;
@@ -104,7 +102,7 @@ public static class ConversationPartFactory
         StackPanel inputRow = CreateInputRow(handleSendClick, ViewWidth);
         var composer = new StackPanel
         {
-            Spacing = SectionSpacing,
+            Spacing = PanelMetrics.SectionSpacing,
         };
         composer.AddChild(statusNotice);
         composer.AddChild(counterNotice);

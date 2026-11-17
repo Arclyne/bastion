@@ -30,6 +30,7 @@ public sealed class TestMatchPlayViewModel : IDisposable
     private const int FourthRowIndex = 3;
     private const string GrooveAheadOfSecondPawn = "e8";
     private const string CenterGroove = "e4";
+    private const short ServerNextMoveNumber = 2;
 
     private static readonly BoardCoordinates _firstStart = new BoardCoordinates(CenterColumnIndex, FirstRowIndex);
     private static readonly BoardCoordinates _secondStart = new BoardCoordinates(CenterColumnIndex, LastRowIndex);
@@ -133,13 +134,13 @@ public sealed class TestMatchPlayViewModel : IDisposable
         var cause = new InvalidOperationException();
         var notYourTurn = new NotYourTurnException(
             Match.SecondTurnOrder,
-            PawnMovedSampleFactory.SecondMoveNumber,
+            ServerNextMoveNumber,
             cause);
         _matchClient.MoveFailure = notYourTurn;
 
         await viewModel.SelectSquare(_forward);
 
-        Assert.Equal(PawnMovedSampleFactory.SecondMoveNumber, viewModel.NextMoveNumber);
+        Assert.Equal(ServerNextMoveNumber, viewModel.NextMoveNumber);
     }
 
     [Fact]
@@ -398,8 +399,11 @@ public sealed class TestMatchPlayViewModel : IDisposable
     private MatchPlayViewModel CreateViewModel(byte ownTurnOrder)
     {
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
-        MatchPlayViewModel viewModel = InlineUiContext.CreateViewModel(
-            () => new MatchPlayViewModel(joinedMatch, _matchClient, _timeProvider));
+        Func<MatchPlayViewModel> createViewModel = () => new MatchPlayViewModel(
+            joinedMatch,
+            _matchClient,
+            _timeProvider);
+        MatchPlayViewModel viewModel = InlineUiContext.CreateViewModel(createViewModel);
         _viewModels.Add(viewModel);
         return viewModel;
     }

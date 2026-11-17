@@ -78,7 +78,7 @@ public sealed class AccountService : IAccountService
         }
         catch (DbException ex)
         {
-            _logger.Error($"The database could not be reached. Operation={operationName}; IpAddress={ipAddress}", ex);
+            _logger.Error($"A database command failed. Operation={operationName}; IpAddress={ipAddress}", ex);
             throw new FaultException(ServerFailureReason);
         }
     }

@@ -12,8 +12,8 @@ public sealed class TestLoginService
 {
     private const string Nickname = "marta_muros";
     private const string Email = "marta@example.com";
-    private const string Password = "Secreta#2026";
-    private const string WrongPassword = "Incorrecta#1";
+    private const string Password = "Secret#2026";
+    private const string WrongPassword = "Wrong#1";
     private const string UnknownIdentifier = "nobody";
     private const int FailuresThatLock = 3;
     private const int FirstLockMinutes = 5;
@@ -122,7 +122,7 @@ public sealed class TestLoginService
     }
 
     [Fact]
-    public void LogIn_LockedAccount_DoesNotExtendTheLock()
+    public void LogIn_LockedAccountWithWrongPassword_DoesNotExtendTheLock()
     {
         Account account = AddActiveAccount();
         LockAccount(account);
@@ -184,7 +184,7 @@ public sealed class TestLoginService
     }
 
     [Fact]
-    public void LogIn_ValidCredentials_ResetsFailedLoginCount()
+    public void LogIn_ValidCredentialsAfterAFailure_ResetsFailedLoginCount()
     {
         Account account = AddActiveAccount();
         AccessAttempt attempt = CreateAttempt(Nickname);

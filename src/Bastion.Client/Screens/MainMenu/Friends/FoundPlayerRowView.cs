@@ -9,7 +9,6 @@ namespace Bastion.Client.Screens.MainMenu.Friends;
 public sealed class FoundPlayerRowView : Panel
 {
     private const float RowWidth = PanelMetrics.ContentWidth;
-    private const float RowHeight = 52;
     private const float ActionButtonWidth = 150;
     private const float ActionButtonHeight = 36;
 
@@ -28,7 +27,7 @@ public sealed class FoundPlayerRowView : Panel
         BindingContext = row;
         Width = RowWidth;
         WidthUnits = DimensionUnitType.Absolute;
-        Height = RowHeight;
+        Height = PanelMetrics.PlayerRowHeight;
         HeightUnits = DimensionUnitType.Absolute;
         Label nickname = CreateNickname();
         Button actionButton = CreateActionButton();
@@ -46,9 +45,11 @@ public sealed class FoundPlayerRowView : Panel
 
     private Button CreateActionButton()
     {
-        Button button = ViewFactory.CreateButton(string.Empty, ActionButtonWidth, ActionButtonHeight);
+        Button button = ViewFactory.CreateBoundButton(
+            nameof(FoundPlayerRowViewModel.ActionKey),
+            ActionButtonWidth,
+            ActionButtonHeight);
         ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Secondary);
-        button.SetBinding(nameof(Button.Text), nameof(FoundPlayerRowViewModel.ActionKey));
         button.SetBinding(nameof(IsEnabled), nameof(FoundPlayerRowViewModel.CanPress));
         button.Anchor(Gum.Wireframe.Anchor.Right);
         button.Click += HandleActionClick;

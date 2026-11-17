@@ -169,13 +169,11 @@ public sealed class NotificationCallback : INotificationCallback
     private static PawnMovedEventArgs ToPawnMovedEventArgs(PawnMovedNotification notification)
     {
         string moverNickname = notification.MoverNickname ?? string.Empty;
-        string fromSquare = notification.FromSquare ?? string.Empty;
         string toSquare = notification.ToSquare ?? string.Empty;
         return new PawnMovedEventArgs
         {
             MatchId = notification.MatchId,
             MoverNickname = moverNickname,
-            FromSquare = fromSquare,
             ToSquare = toSquare,
             NextTurnOrder = notification.NextTurnOrder,
             NextMoveNumber = notification.NextMoveNumber,
