@@ -75,13 +75,15 @@ public sealed class NotificationCallback : INotificationCallback
     {
         if (notification is ChatMessageNotification chatMessage)
         {
-            OnChatMessageReceived(ToChatMessageReceivedEventArgs(chatMessage));
+            ChatMessageReceivedEventArgs lobbyMessage = ToChatMessageReceivedEventArgs(chatMessage);
+            OnChatMessageReceived(lobbyMessage);
             return true;
         }
 
         if (notification is MatchChatMessageNotification matchChatMessage)
         {
-            OnMatchChatMessageReceived(ToMatchChatMessageReceivedEventArgs(matchChatMessage));
+            MatchChatMessageReceivedEventArgs matchMessage = ToMatchChatMessageReceivedEventArgs(matchChatMessage);
+            OnMatchChatMessageReceived(matchMessage);
             return true;
         }
 
@@ -118,7 +120,8 @@ public sealed class NotificationCallback : INotificationCallback
             return false;
         }
 
-        OnMatchAbandoned(ToMatchAbandonedEventArgs(matchAbandoned));
+        MatchAbandonedEventArgs abandonment = ToMatchAbandonedEventArgs(matchAbandoned);
+        OnMatchAbandoned(abandonment);
         return true;
     }
 
@@ -137,13 +140,15 @@ public sealed class NotificationCallback : INotificationCallback
     {
         if (notification is PawnMovedNotification pawnMoved)
         {
-            OnPawnMoved(ToPawnMovedEventArgs(pawnMoved));
+            PawnMovedEventArgs move = ToPawnMovedEventArgs(pawnMoved);
+            OnPawnMoved(move);
             return true;
         }
 
         if (notification is WallPlacedNotification wallPlaced)
         {
-            OnWallPlaced(MatchContractTranslator.ToWallPlacedEventArgs(wallPlaced));
+            var placement = MatchContractTranslator.ToWallPlacedEventArgs(wallPlaced);
+            OnWallPlaced(placement);
             return true;
         }
 
@@ -182,19 +187,22 @@ public sealed class NotificationCallback : INotificationCallback
     {
         if (notification is FriendPresenceNotification friendPresence)
         {
-            OnFriendPresenceChanged(ToFriendPresenceChangedEventArgs(friendPresence));
+            FriendPresenceChangedEventArgs presenceChange = ToFriendPresenceChangedEventArgs(friendPresence);
+            OnFriendPresenceChanged(presenceChange);
             return true;
         }
 
         if (notification is FriendRequestNotification friendRequest)
         {
-            OnFriendRequestReceived(ToFriendRequestReceivedEventArgs(friendRequest));
+            FriendRequestReceivedEventArgs request = ToFriendRequestReceivedEventArgs(friendRequest);
+            OnFriendRequestReceived(request);
             return true;
         }
 
         if (notification is FriendshipStartedNotification friendshipStarted)
         {
-            OnFriendshipStarted(ToFriendshipStartedEventArgs(friendshipStarted));
+            FriendshipStartedEventArgs friendship = ToFriendshipStartedEventArgs(friendshipStarted);
+            OnFriendshipStarted(friendship);
             return true;
         }
 
@@ -243,7 +251,8 @@ public sealed class NotificationCallback : INotificationCallback
             return false;
         }
 
-        OnPrivateMessageReceived(ToPrivateMessageReceivedEventArgs(privateMessageNotification));
+        PrivateMessageReceivedEventArgs message = ToPrivateMessageReceivedEventArgs(privateMessageNotification);
+        OnPrivateMessageReceived(message);
         return true;
     }
 
@@ -264,7 +273,8 @@ public sealed class NotificationCallback : INotificationCallback
     {
         if (notification is RoomUpdatedNotification { Room: not null } roomUpdated)
         {
-            OnRoomUpdated(ToRoomUpdatedEventArgs(roomUpdated.Room));
+            RoomUpdatedEventArgs update = ToRoomUpdatedEventArgs(roomUpdated.Room);
+            OnRoomUpdated(update);
             return true;
         }
 
@@ -276,7 +286,8 @@ public sealed class NotificationCallback : INotificationCallback
 
         if (notification is RoomClosedNotification roomClosed)
         {
-            OnRoomClosed(ToRoomClosedEventArgs(roomClosed));
+            RoomClosedEventArgs closure = ToRoomClosedEventArgs(roomClosed);
+            OnRoomClosed(closure);
             return true;
         }
 
@@ -310,19 +321,22 @@ public sealed class NotificationCallback : INotificationCallback
     {
         if (notification is MatchFoundNotification matchFound)
         {
-            OnMatchFound(ToMatchFoundEventArgs(matchFound));
+            MatchFoundEventArgs foundMatch = ToMatchFoundEventArgs(matchFound);
+            OnMatchFound(foundMatch);
             return true;
         }
 
         if (notification is PresenceRequestedNotification presenceRequested)
         {
-            OnPresenceRequested(ToPresenceRequestedEventArgs(presenceRequested));
+            PresenceRequestedEventArgs presenceRequest = ToPresenceRequestedEventArgs(presenceRequested);
+            OnPresenceRequested(presenceRequest);
             return true;
         }
 
         if (notification is SearchEndedNotification searchEnded)
         {
-            OnSearchEnded(ToSearchEndedEventArgs(searchEnded));
+            SearchEndedEventArgs searchEnd = ToSearchEndedEventArgs(searchEnded);
+            OnSearchEnded(searchEnd);
             return true;
         }
 

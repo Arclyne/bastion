@@ -46,7 +46,7 @@ public interface IMatchService
     /// the detail holds the current turn and the expected move number.
     /// </exception>
     /// <exception cref="FaultException{TDetail}">
-    /// With <see cref="IllegalMoveFault"/>: the pawn cannot reach the destination square.
+    /// With <see cref="IllegalMoveFault"/>: the move is missing, or the pawn cannot reach the destination square.
     /// </exception>
     /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]
@@ -79,7 +79,8 @@ public interface IMatchService
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="IllegalWallFault"/>: the player has no walls left, or the wall falls outside the board, takes
     /// a groove already used or would leave a player without a way to the goal; the detail holds the reason and, in
-    /// the last case, the turn of that player.
+    /// the last case, the turn of that player. A missing wall or an unknown orientation is rejected as outside the
+    /// board.
     /// </exception>
     /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]

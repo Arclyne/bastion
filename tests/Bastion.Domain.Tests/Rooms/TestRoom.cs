@@ -14,7 +14,7 @@ public sealed class TestRoom
     private static readonly DateTime _changedAt = _openedAt.AddMinutes(2);
 
     [Fact]
-    public void Open_InvalidCode_ThrowsArgument()
+    public void Open_InvalidCode_ThrowsArgumentException()
     {
         var opening = new RoomOpening(InvalidCode, RoomSampleFactory.HostAccountId, _openedAt);
         RoomSettings settings = RoomSampleFactory.CreateTwoPlayerSettings();
@@ -56,7 +56,7 @@ public sealed class TestRoom
     }
 
     [Fact]
-    public void ChangeSettings_ClosedRoom_ThrowsInvalidOperation()
+    public void ChangeSettings_ClosedRoom_ThrowsInvalidOperationException()
     {
         Room room = OpenRoom();
         room.Close(_changedAt);
@@ -90,7 +90,7 @@ public sealed class TestRoom
     }
 
     [Fact]
-    public void FinishMatch_OpenRoom_ThrowsInvalidOperation()
+    public void FinishMatch_OpenRoom_ThrowsInvalidOperationException()
     {
         Room room = OpenRoom();
 

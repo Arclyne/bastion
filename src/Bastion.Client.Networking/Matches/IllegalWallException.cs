@@ -7,6 +7,8 @@ public sealed class IllegalWallException : Exception
     public IllegalWallException(WallPlacementRejection rejection, byte? blockedTurnOrder, Exception innerException)
         : base($"The wall was rejected. Rejection={rejection}; BlockedTurn={blockedTurnOrder}", innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
+
         Rejection = rejection;
         BlockedTurnOrder = blockedTurnOrder;
     }

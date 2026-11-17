@@ -8,6 +8,18 @@ namespace Bastion.Client.Networking.Matches;
 
 public static class MatchContractTranslator
 {
+    public static PawnMove ToPawnMove(ChosenPawnMove move)
+    {
+        ArgumentNullException.ThrowIfNull(move);
+
+        return new PawnMove
+        {
+            MatchId = move.MatchId,
+            MoveNumber = move.MoveNumber,
+            ToSquare = move.ToSquare,
+        };
+    }
+
     public static WallPlacement ToWallPlacement(ChosenWall wall)
     {
         ArgumentNullException.ThrowIfNull(wall);

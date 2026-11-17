@@ -50,7 +50,7 @@ public sealed class MatchClient : IMatchClient
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(move);
 
-        PawnMove contractMove = ToContractMove(move);
+        var contractMove = MatchContractTranslator.ToPawnMove(move);
         Call(service => service.MovePawn(sessionToken, contractMove));
     }
 
@@ -79,33 +79,23 @@ public sealed class MatchClient : IMatchClient
         }
     }
 
-    private static PawnMove ToContractMove(ChosenPawnMove move)
+    private static Exception ToClientException(Exception cause)
     {
-        return new PawnMove
-        {
-            MatchId = move.MatchId,
-            MoveNumber = move.MoveNumber,
-            ToSquare = move.ToSquare,
-        };
-    }
-
-    private static Exception ToClientException(Exception ex)
-    {
-        switch (ex)
+        switch (cause)
         {
             case FaultException<MatchNotJoinedFault>:
-                return new MatchNotJoinedException(ex);
+                return new MatchNotJoinedException(cause);
             case FaultException<NotYourTurnFault> notYourTurn:
                 return new NotYourTurnException(
                     notYourTurn.Detail.CurrentTurnOrder,
                     notYourTurn.Detail.NextMoveNumber,
-                    ex);
+                    cause);
             case FaultException<IllegalMoveFault>:
-                return new IllegalMoveException(ex);
+                return new IllegalMoveException(cause);
             case FaultException<IllegalWallFault> illegalWall:
                 return MatchContractTranslator.ToIllegalWallException(illegalWall);
             default:
-                return ServiceFailureTranslator.ToClientException(ex);
+                return ServiceFailureTranslator.ToClientException(cause);
         }
     }
 }

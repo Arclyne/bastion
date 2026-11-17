@@ -10,7 +10,6 @@ namespace Bastion.Client.Theme;
 public sealed class ButtonSkin : InteractiveSkin
 {
     private const float BorderWidth = 1.8f;
-    private const float RestingOffsetY = 0;
 
     private readonly ButtonLook _look;
     private readonly RectangleRuntime _halo;
@@ -22,7 +21,7 @@ public sealed class ButtonSkin : InteractiveSkin
         _look = look;
         _halo = ShapeFactory.CreateHalo(look.Radius);
         _surface = ShapeFactory.CreateRounded(look.Fill, look.Radius);
-        _surface.StrokeWidth = look.Border is null ? ShapeFactory.NoStrokeWidth : BorderWidth;
+        _surface.StrokeWidth = look.Border is null ? 0 : BorderWidth;
         _surface.GradientY2 = ShapeFactory.FullPercentage;
         _surface.GradientY2Units = GeneralUnitType.Percentage;
         _surface.HasDropshadow = true;
@@ -49,7 +48,7 @@ public sealed class ButtonSkin : InteractiveSkin
     {
         bool isDisabled = flags.HasFlag(InteractionFlags.Disabled);
         bool isHovered = flags.HasFlag(InteractionFlags.Hovered);
-        float sink = IsSinking(flags) ? _look.ShadowOffsetY : RestingOffsetY;
+        float sink = IsSinking(flags) ? _look.ShadowOffsetY : 0;
 
         _surface.FillColor = PickFill(flags);
         ApplyGradient(isHovered ? _look.HoverFillEnd : _look.FillEnd, isDisabled);

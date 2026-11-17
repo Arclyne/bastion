@@ -13,11 +13,11 @@ public static class ChatContractTranslator
     {
         ArgumentNullException.ThrowIfNull(log);
 
-        LobbyChatMessage[] messages = log.Messages ?? Array.Empty<LobbyChatMessage>();
-        IEnumerable<ChatMessage> chatMessages = messages.Select(ToChatMessage);
-        var messageList = new List<ChatMessage>(chatMessages);
+        LobbyChatMessage[] logMessages = log.Messages ?? Array.Empty<LobbyChatMessage>();
+        IEnumerable<ChatMessage> chatMessages = logMessages.Select(ToChatMessage);
+        var messages = new List<ChatMessage>(chatMessages);
         var mute = new ChatMute(log.IsMuted, log.MutedUntil);
-        return new LobbyChatTranscript(messageList, log.ConnectedPlayerCount, mute);
+        return new LobbyChatTranscript(messages, log.ConnectedPlayerCount, mute);
     }
 
     public static ChatMessage ToChatMessage(ChatMessageNotification notification)

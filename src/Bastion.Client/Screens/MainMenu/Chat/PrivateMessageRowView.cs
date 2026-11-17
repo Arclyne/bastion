@@ -3,6 +3,7 @@ using Bastion.Client.Theme;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
@@ -20,7 +21,6 @@ public sealed class PrivateMessageRowView : StackPanel
     private const float MetaSpacing = 6;
     private const int HorizontalSideCount = 2;
     private const int VerticalSideCount = 2;
-    private const float RightEdgeOffsetX = 0;
 
     public PrivateMessageRowView(PrivateMessageRowViewModel row)
     {
@@ -32,11 +32,16 @@ public sealed class PrivateMessageRowView : StackPanel
         Spacing = RowSpacing;
         if (row.HasDayLabel())
         {
-            AddChild(CreateDayLabel(row.DayLabel));
+            Panel day = CreateDayLabel(row.DayLabel);
+            AddChild(day);
         }
 
-        AddChild(CreateAligned(CreateBubble(row), row.IsOwn));
-        AddChild(CreateAligned(CreateMeta(), row.IsOwn));
+        Panel bubble = CreateBubble(row);
+        Panel alignedBubble = CreateAligned(bubble, row.IsOwn);
+        StackPanel meta = CreateMeta();
+        Panel alignedMeta = CreateAligned(meta, row.IsOwn);
+        AddChild(alignedBubble);
+        AddChild(alignedMeta);
     }
 
     public static GraphicalUiElement CreateVisual(object? item)
@@ -61,25 +66,6 @@ public sealed class PrivateMessageRowView : StackPanel
         return holder;
     }
 
-    private static Panel CreateAligned(FrameworkElement content, bool alignRight)
-    {
-        if (alignRight)
-        {
-            content.XUnits = GeneralUnitType.PixelsFromLarge;
-            content.XOrigin = HorizontalAlignment.Right;
-            content.X = RightEdgeOffsetX;
-        }
-
-        var holder = new Panel
-        {
-            Width = RowWidth,
-            WidthUnits = DimensionUnitType.Absolute,
-            HeightUnits = DimensionUnitType.RelativeToChildren,
-        };
-        holder.AddChild(content);
-        return holder;
-    }
-
     private static Panel CreateBubble(PrivateMessageRowViewModel row)
     {
         Label text = ViewFactory.CreateUntranslatedLabel(row.Text, TextStyleCatalog.NoticeMessage);
@@ -96,9 +82,29 @@ public sealed class PrivateMessageRowView : StackPanel
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
         Color fill = row.IsOwn ? Palette.WarningSoft : Palette.White;
-        ShapeFactory.InsertBehindContent(bubble.Visual, ShapeFactory.CreateRounded(fill, BubbleRadius));
+        RectangleRuntime background = ShapeFactory.CreateRounded(fill, BubbleRadius);
+        ShapeFactory.InsertBehindContent(bubble.Visual, background);
         bubble.AddChild(text);
         return bubble;
+    }
+
+    private static Panel CreateAligned(FrameworkElement content, bool shouldAlignRight)
+    {
+        if (shouldAlignRight)
+        {
+            content.XUnits = GeneralUnitType.PixelsFromLarge;
+            content.XOrigin = HorizontalAlignment.Right;
+            content.X = 0;
+        }
+
+        var holder = new Panel
+        {
+            Width = RowWidth,
+            WidthUnits = DimensionUnitType.Absolute,
+            HeightUnits = DimensionUnitType.RelativeToChildren,
+        };
+        holder.AddChild(content);
+        return holder;
     }
 
     private static StackPanel CreateMeta()

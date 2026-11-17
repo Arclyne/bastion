@@ -69,14 +69,6 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
         _context.Entry(request).State = EntityState.Detached;
     }
 
-    private static FriendRequestSummary ToSummary(RequestWithCounterpart requestWithCounterpart)
-    {
-        var counterpart = PlayerIdentity.FromAccount(requestWithCounterpart.Counterpart);
-        FriendRequest request = requestWithCounterpart.Request;
-        DateTime expiresAt = request.GetExpirationTime();
-        return new FriendRequestSummary(counterpart, request.RequestedAt, expiresAt);
-    }
-
     private FriendRequest? FindSent(int requesterId, int recipientId)
     {
         return _context.FriendRequests.Find(requesterId, recipientId);
@@ -99,6 +91,14 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
         IEnumerable<FriendRequestSummary> summaries = loadedRequests
             .Select(ToSummary);
         return new List<FriendRequestSummary>(summaries);
+    }
+
+    private static FriendRequestSummary ToSummary(RequestWithCounterpart requestWithCounterpart)
+    {
+        var counterpart = PlayerIdentity.FromAccount(requestWithCounterpart.Counterpart);
+        FriendRequest request = requestWithCounterpart.Request;
+        DateTime expiresAt = request.GetExpirationTime();
+        return new FriendRequestSummary(counterpart, request.RequestedAt, expiresAt);
     }
 
     private sealed record RequestWithCounterpart

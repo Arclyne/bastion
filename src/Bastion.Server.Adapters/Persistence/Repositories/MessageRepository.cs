@@ -62,7 +62,7 @@ public sealed class MessageRepository : IMessageRepository
             .Where(message => message.RecipientId == recipientId)
             .Where(message => message.ReadAt == null)
             .GroupBy(message => message.AuthorId)
-            .Select(unread => new KeyValuePair<int, int>(unread.Key, unread.Count()));
+            .Select(unreadMessages => new KeyValuePair<int, int>(unreadMessages.Key, unreadMessages.Count()));
         return new Dictionary<int, int>(unreadCounts);
     }
 

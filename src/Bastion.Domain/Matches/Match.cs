@@ -15,7 +15,6 @@ public class Match
 
     private const int LastStandingPlayerCount = 1;
     private const byte FirstPlacement = 1;
-    private const double NoTimeSpent = 0;
 
     private readonly List<Participation> _participations = new List<Participation>();
     private readonly List<Move> _moves = new List<Move>();
@@ -176,7 +175,7 @@ public class Match
         bool hasReachedGoal = BoardLayout.IsGoal(boardSize, mover.TurnOrder, pawnMove.Destination);
         if (hasReachedGoal && _participations.Count == TwoPlayerCount)
         {
-            EndByGoal(mover, playedAt);
+            FinishTwoPlayerMatch(mover.AccountId, MatchEndReason.Goal, playedAt);
             return;
         }
 
@@ -259,13 +258,19 @@ public class Match
 
     private void EndTwoPlayerMatchByAbandonment(int abandoningAccountId, DateTime endedAt)
     {
+        Participation rival = _participations.First(participation => participation.AccountId != abandoningAccountId);
+        FinishTwoPlayerMatch(rival.AccountId, MatchEndReason.Abandonment, endedAt);
+    }
+
+    private void FinishTwoPlayerMatch(int winnerAccountId, MatchEndReason endReason, DateTime endedAt)
+    {
         foreach (Participation participation in _participations)
         {
-            bool isAbandoning = participation.AccountId == abandoningAccountId;
-            participation.Finish(isAbandoning ? ParticipationResult.Lost : ParticipationResult.Won);
+            bool isWinner = participation.AccountId == winnerAccountId;
+            participation.Finish(isWinner ? ParticipationResult.Won : ParticipationResult.Lost);
         }
 
-        Finish(MatchEndReason.Abandonment, endedAt);
+        Finish(endReason, endedAt);
     }
 
     private void Finish(MatchEndReason endReason, DateTime endedAt)
@@ -278,8 +283,7 @@ public class Match
     private void LeaveFourPlayerMatch(int abandoningAccountId, DateTime abandonedAt)
     {
         List<Participation> activeParticipations = ListActiveParticipations();
-        Participation abandoning =
-            activeParticipations.First(participation => participation.AccountId == abandoningAccountId);
+        Participation abandoning = GetParticipation(abandoningAccountId);
         byte placement = (byte)activeParticipations.Count;
         abandoning.Leave(MatchEndReason.Abandonment, placement);
         activeParticipations.Remove(abandoning);
@@ -368,7 +372,7 @@ public class Match
     {
         DateTime turnStartedAt = _moves.Count == 0 ? StartedAt : _moves.Max(move => move.PlayedAt);
         TimeSpan elapsedTime = playedAt - turnStartedAt;
-        double elapsedMilliseconds = Math.Max(elapsedTime.TotalMilliseconds, NoTimeSpent);
+        double elapsedMilliseconds = Math.Max(elapsedTime.TotalMilliseconds, 0);
         int timeSpentMilliseconds = (int)elapsedMilliseconds;
         return timeSpentMilliseconds;
     }
@@ -377,16 +381,5 @@ public class Match
     {
         _moves.Add(move);
         player.SpendClock(move.TimeSpentMilliseconds);
-    }
-
-    private void EndByGoal(Participation winner, DateTime endedAt)
-    {
-        foreach (Participation participation in _participations)
-        {
-            bool isWinner = participation.AccountId == winner.AccountId;
-            participation.Finish(isWinner ? ParticipationResult.Won : ParticipationResult.Lost);
-        }
-
-        Finish(MatchEndReason.Goal, endedAt);
     }
 }

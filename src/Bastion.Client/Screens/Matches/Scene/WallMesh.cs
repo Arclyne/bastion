@@ -7,8 +7,9 @@ namespace Bastion.Client.Screens.Matches.Scene;
 
 public static class WallMesh
 {
+    public const float HalfSide = 0.5f;
+    private const int FirstVertex = 0;
     private const int TriangleCount = 12;
-    private const float HalfSide = 0.5f;
 
     private static readonly VertexPositionNormalTexture[] _vertices = CreateUnitBox();
 
@@ -20,36 +21,47 @@ public static class WallMesh
         foreach (EffectPass pass in effect.CurrentTechnique.Passes)
         {
             pass.Apply();
-            graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, 0, TriangleCount);
+            graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, FirstVertex, TriangleCount);
         }
     }
 
     private static VertexPositionNormalTexture[] CreateUnitBox()
     {
+        var topFace = new BoxFace(Vector3.Up, Vector3.Right, Vector3.Backward);
+        var bottomFace = new BoxFace(Vector3.Down, Vector3.Right, Vector3.Forward);
+        var rightFace = new BoxFace(Vector3.Right, Vector3.Forward, Vector3.Up);
+        var leftFace = new BoxFace(Vector3.Left, Vector3.Backward, Vector3.Up);
+        var backFace = new BoxFace(Vector3.Backward, Vector3.Right, Vector3.Up);
+        var frontFace = new BoxFace(Vector3.Forward, Vector3.Left, Vector3.Up);
+
         var vertices = new List<VertexPositionNormalTexture>();
-        AddFace(vertices, Vector3.Up, Vector3.Right, Vector3.Backward);
-        AddFace(vertices, Vector3.Down, Vector3.Right, Vector3.Forward);
-        AddFace(vertices, Vector3.Right, Vector3.Forward, Vector3.Up);
-        AddFace(vertices, Vector3.Left, Vector3.Backward, Vector3.Up);
-        AddFace(vertices, Vector3.Backward, Vector3.Right, Vector3.Up);
-        AddFace(vertices, Vector3.Forward, Vector3.Left, Vector3.Up);
+        AddFace(vertices, topFace);
+        AddFace(vertices, bottomFace);
+        AddFace(vertices, rightFace);
+        AddFace(vertices, leftFace);
+        AddFace(vertices, backFace);
+        AddFace(vertices, frontFace);
         return vertices.ToArray();
     }
 
-    private static void AddFace(List<VertexPositionNormalTexture> vertices, Vector3 normal, Vector3 side, Vector3 up)
+    private static void AddFace(List<VertexPositionNormalTexture> vertices, BoxFace face)
     {
-        Vector3 center = normal * HalfSide;
-        Vector3 sideOffset = side * HalfSide;
-        Vector3 upOffset = up * HalfSide;
+        Vector3 center = face.Normal * HalfSide;
+        Vector3 sideOffset = face.Side * HalfSide;
+        Vector3 upOffset = face.Up * HalfSide;
         Vector3 bottomLeft = center - sideOffset - upOffset;
         Vector3 bottomRight = center + sideOffset - upOffset;
         Vector3 topLeft = center - sideOffset + upOffset;
         Vector3 topRight = center + sideOffset + upOffset;
-        vertices.Add(new VertexPositionNormalTexture(bottomLeft, normal, Vector2.Zero));
-        vertices.Add(new VertexPositionNormalTexture(topLeft, normal, Vector2.Zero));
-        vertices.Add(new VertexPositionNormalTexture(topRight, normal, Vector2.Zero));
-        vertices.Add(new VertexPositionNormalTexture(bottomLeft, normal, Vector2.Zero));
-        vertices.Add(new VertexPositionNormalTexture(topRight, normal, Vector2.Zero));
-        vertices.Add(new VertexPositionNormalTexture(bottomRight, normal, Vector2.Zero));
+        var bottomLeftVertex = new VertexPositionNormalTexture(bottomLeft, face.Normal, Vector2.Zero);
+        var bottomRightVertex = new VertexPositionNormalTexture(bottomRight, face.Normal, Vector2.Zero);
+        var topLeftVertex = new VertexPositionNormalTexture(topLeft, face.Normal, Vector2.Zero);
+        var topRightVertex = new VertexPositionNormalTexture(topRight, face.Normal, Vector2.Zero);
+        vertices.Add(bottomLeftVertex);
+        vertices.Add(topLeftVertex);
+        vertices.Add(topRightVertex);
+        vertices.Add(bottomLeftVertex);
+        vertices.Add(topRightVertex);
+        vertices.Add(bottomRightVertex);
     }
 }

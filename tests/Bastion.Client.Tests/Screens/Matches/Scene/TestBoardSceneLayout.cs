@@ -13,19 +13,17 @@ public sealed class TestBoardSceneLayout
     private const int ClassicLastIndex = 8;
     private const int QuickCenterIndex = 3;
     private const float ClassicHalfSpan = 4f;
-    private const float BoardHeight = 0f;
     private const string ClassicFirstRowGoal = "Meta_Fila1";
     private const string ClassicLastRowGoal = "Meta_Fila9";
     private const string QuickLastRowGoal = "Meta_Fila7";
     private const string FourPlayerGoal = "Meta4J_ColumnaA";
     private const string FirstCell = "Casilla_a1";
-    private const int TwoPlayers = 2;
     private const int FourPlayers = 4;
 
     [Fact]
     public void GetCellCenter_FirstCell_SitsAtNearLeftCorner()
     {
-        var expectedCenter = new Vector3(-ClassicHalfSpan, BoardHeight, ClassicHalfSpan);
+        var expectedCenter = new Vector3(-ClassicHalfSpan, BoardSceneLayout.SurfaceHeight, ClassicHalfSpan);
         var firstCell = new BoardCoordinates(FirstIndex, FirstIndex);
 
         Vector3 center = BoardSceneLayout.GetCellCenter(ClassicBoardSize, firstCell);
@@ -36,7 +34,7 @@ public sealed class TestBoardSceneLayout
     [Fact]
     public void GetCellCenter_LastCell_SitsAtFarRightCorner()
     {
-        var expectedCenter = new Vector3(ClassicHalfSpan, BoardHeight, -ClassicHalfSpan);
+        var expectedCenter = new Vector3(ClassicHalfSpan, BoardSceneLayout.SurfaceHeight, -ClassicHalfSpan);
         var lastCell = new BoardCoordinates(ClassicLastIndex, ClassicLastIndex);
 
         Vector3 center = BoardSceneLayout.GetCellCenter(ClassicBoardSize, lastCell);
@@ -93,7 +91,8 @@ public sealed class TestBoardSceneLayout
     [Fact]
     public void GetGoalMeshName_FirstTurnOrder_ReturnsLastRowGoal()
     {
-        string goalMeshName = BoardSceneLayout.GetGoalMeshName(ClassicBoardSize, Match.FirstTurnOrder, TwoPlayers);
+        string goalMeshName =
+            BoardSceneLayout.GetGoalMeshName(ClassicBoardSize, Match.FirstTurnOrder, Match.TwoPlayerCount);
 
         Assert.Equal(ClassicLastRowGoal, goalMeshName);
     }
@@ -101,7 +100,8 @@ public sealed class TestBoardSceneLayout
     [Fact]
     public void GetGoalMeshName_SecondTurnOrder_ReturnsFirstRowGoal()
     {
-        string goalMeshName = BoardSceneLayout.GetGoalMeshName(ClassicBoardSize, Match.SecondTurnOrder, TwoPlayers);
+        string goalMeshName =
+            BoardSceneLayout.GetGoalMeshName(ClassicBoardSize, Match.SecondTurnOrder, Match.TwoPlayerCount);
 
         Assert.Equal(ClassicFirstRowGoal, goalMeshName);
     }
@@ -109,7 +109,8 @@ public sealed class TestBoardSceneLayout
     [Fact]
     public void GetGoalMeshName_QuickBoardFirstTurnOrder_ReturnsLastRowGoal()
     {
-        string goalMeshName = BoardSceneLayout.GetGoalMeshName(QuickBoardSize, Match.FirstTurnOrder, TwoPlayers);
+        string goalMeshName =
+            BoardSceneLayout.GetGoalMeshName(QuickBoardSize, Match.FirstTurnOrder, Match.TwoPlayerCount);
 
         Assert.Equal(QuickLastRowGoal, goalMeshName);
     }

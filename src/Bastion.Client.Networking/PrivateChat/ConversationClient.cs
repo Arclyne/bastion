@@ -70,14 +70,14 @@ public sealed class ConversationClient : IConversationClient
         }
     }
 
-    private static Exception ToClientException(Exception ex)
+    private static Exception ToClientException(Exception cause)
     {
-        if (ex is FaultException<ChatMessageRejectedFault> rejected)
+        if (cause is FaultException<ChatMessageRejectedFault> rejected)
         {
             return ChatContractTranslator.ToMessageRejectedException(rejected);
         }
 
-        return ServiceFailureTranslator.ToClientException(ex);
+        return ServiceFailureTranslator.ToClientException(cause);
     }
 
     private void Call(Action<IConversationService> operation)

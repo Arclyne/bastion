@@ -24,5 +24,6 @@ public sealed class IllegalMoveException : Exception
     public IllegalMoveException(Exception innerException)
         : base(DefaultMessage, innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
     }
 }

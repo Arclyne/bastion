@@ -7,6 +7,8 @@ public sealed class RoomRejectedException : Exception
     public RoomRejectedException(RoomRejection rejection, TimeSpan retryDelay, Exception innerException)
         : base($"The room request was rejected. Rejection={rejection}", innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
+
         Rejection = rejection;
         RetryDelay = retryDelay;
     }

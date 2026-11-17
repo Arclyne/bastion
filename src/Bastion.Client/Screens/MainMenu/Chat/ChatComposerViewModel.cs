@@ -77,6 +77,9 @@ public abstract class ChatComposerViewModel : ViewModel
 
     protected static string FormatText(string format, params object[] arguments)
     {
+        ArgumentNullException.ThrowIfNull(format);
+        ArgumentNullException.ThrowIfNull(arguments);
+
         return string.Format(CultureInfo.CurrentCulture, format, arguments);
     }
 

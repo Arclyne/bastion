@@ -23,11 +23,11 @@ public static class ConversationContractTranslator
 
         var partner = FriendContractTranslator.ToPlayerTag(log.PartnerNickname, log.PartnerFriendCode);
         var contact = new ConversationContact(partner, log.IsFriend);
-        PrivateChatMessage[] messages = log.Messages ?? Array.Empty<PrivateChatMessage>();
-        IEnumerable<PrivateMessage> privateMessages = messages.Select(ToPrivateMessage);
-        var messageList = new List<PrivateMessage>(privateMessages);
+        PrivateChatMessage[] logMessages = log.Messages ?? Array.Empty<PrivateChatMessage>();
+        IEnumerable<PrivateMessage> privateMessages = logMessages.Select(ToPrivateMessage);
+        var messages = new List<PrivateMessage>(privateMessages);
         var mute = new ChatMute(log.IsMuted, log.MutedUntil);
-        return new ConversationTranscript(contact, messageList, mute);
+        return new ConversationTranscript(contact, messages, mute);
     }
 
     public static PlayerTag ToSender(PrivateMessageNotification notification)

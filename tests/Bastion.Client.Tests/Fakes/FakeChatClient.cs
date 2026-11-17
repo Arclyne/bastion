@@ -20,17 +20,11 @@ public sealed class FakeChatClient : IChatClient
 
     public DateTime SendMessage(string sessionToken, string text)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
-        ArgumentNullException.ThrowIfNull(text);
-
         throw new NotSupportedException(LobbyChatNotSupported);
     }
 
     public DateTime SendMatchChatMessage(string sessionToken, int matchId, string text)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
-        ArgumentNullException.ThrowIfNull(text);
-
         if (MatchChatSendFailure is not null)
         {
             throw MatchChatSendFailure;
@@ -43,8 +37,6 @@ public sealed class FakeChatClient : IChatClient
 
     public LobbyChatTranscript OpenLobbyChat(string sessionToken)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
-
         throw new NotSupportedException(LobbyChatNotSupported);
     }
 
@@ -55,8 +47,6 @@ public sealed class FakeChatClient : IChatClient
 
     public void RaiseMatchChatMessageReceived(int matchId, ChatMessage message)
     {
-        ArgumentNullException.ThrowIfNull(message);
-
         var receivedMessage = new MatchChatMessageReceivedEventArgs(matchId, message);
         MatchChatMessageReceived?.Invoke(this, receivedMessage);
     }

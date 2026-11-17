@@ -25,8 +25,10 @@ public sealed class WallControlsPanel : StackPanel
         _viewModel = viewModel;
         BindingContext = viewModel;
         Spacing = RowSpacing;
-        AddChild(CreateHint());
-        AddChild(CreateButtonRow());
+        Label hint = CreateHint();
+        StackPanel buttonRow = CreateButtonRow();
+        AddChild(hint);
+        AddChild(buttonRow);
     }
 
     private static Label CreateHint()

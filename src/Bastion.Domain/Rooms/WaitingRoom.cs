@@ -38,11 +38,6 @@ public sealed class WaitingRoom
         return accountId == HostAccountId;
     }
 
-    private bool HasMember(int accountId)
-    {
-        return _members.Any(member => member.AccountId == accountId);
-    }
-
     public bool IsFull()
     {
         return _members.Count >= GetSeatCount();
@@ -81,12 +76,12 @@ public sealed class WaitingRoom
 
     public void SetReady(int accountId, bool isReady)
     {
-        RoomMember member = GetMember(accountId);
         if (IsHost(accountId))
         {
             return;
         }
 
+        RoomMember member = GetMember(accountId);
         member.SetReady(isReady);
     }
 
@@ -117,14 +112,14 @@ public sealed class WaitingRoom
         _members.Remove(GetMember(accountId));
     }
 
-    private static int CompareSeats(RoomMember first, RoomMember second)
-    {
-        return first.SeatIndex.CompareTo(second.SeatIndex);
-    }
-
     private int GetSeatCount()
     {
         return Settings.GameMode.PlayerCount;
+    }
+
+    private bool HasMember(int accountId)
+    {
+        return _members.Any(member => member.AccountId == accountId);
     }
 
     private int FindFirstFreeSeat()
@@ -136,6 +131,11 @@ public sealed class WaitingRoom
         }
 
         return seatIndex;
+    }
+
+    private static int CompareSeats(RoomMember first, RoomMember second)
+    {
+        return first.SeatIndex.CompareTo(second.SeatIndex);
     }
 
     private RoomMember GetMember(int accountId)

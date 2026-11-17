@@ -28,8 +28,8 @@ public static class ThemeInitializer
         string fontsPath = Path.Combine(AppContext.BaseDirectory, game.Content.RootDirectory, FontsDirectory);
         foreach (KeyValuePair<string, string> fontFile in _fontFiles)
         {
-            byte[] fontData = File.ReadAllBytes(Path.Combine(fontsPath, fontFile.Value));
-            KernSmithFontCreator.RegisterFont(fontFile.Key, fontData, style: null, SingleFaceIndex);
+            byte[] fontBytes = File.ReadAllBytes(Path.Combine(fontsPath, fontFile.Value));
+            KernSmithFontCreator.RegisterFont(fontFile.Key, fontBytes, style: null, SingleFaceIndex);
         }
 
         CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(game.GraphicsDevice);

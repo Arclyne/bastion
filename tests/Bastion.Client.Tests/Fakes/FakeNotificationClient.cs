@@ -37,7 +37,6 @@ public sealed class FakeNotificationClient : INotificationClient
 
     public void Connect(string sessionToken)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
     }
 
     public void Disconnect()

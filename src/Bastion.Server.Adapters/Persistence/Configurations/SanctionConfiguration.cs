@@ -1,7 +1,7 @@
 using System;
+using Bastion.Domain.Moderation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Bastion.Domain.Moderation;
 
 namespace Bastion.Server.Adapters.Persistence.Configurations;
 

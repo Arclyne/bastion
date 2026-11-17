@@ -17,8 +17,9 @@ public sealed class TabButton : StackPanel
         ArgumentNullException.ThrowIfNull(selectedProperty);
 
         Spacing = spacing;
+        Panel marker = CreateMarker(button.Width, selectedProperty);
         AddChild(button);
-        AddChild(CreateMarker(button.Width, selectedProperty));
+        AddChild(marker);
     }
 
     private static Panel CreateMarker(float width, string selectedProperty)

@@ -1,4 +1,3 @@
-using System;
 using Bastion.Client.Localization;
 
 namespace Bastion.Client.Tests.Fakes;
@@ -19,6 +18,5 @@ public sealed class FakeLanguagePreferenceStore : ILanguagePreferenceStore
 
     public void SaveCultureName(string cultureName)
     {
-        ArgumentNullException.ThrowIfNull(cultureName);
     }
 }

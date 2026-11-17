@@ -18,13 +18,16 @@ public sealed class TestWallPlacementViewModel : IDisposable
     private const int LastColumnIndex = 8;
     private const int FirstRowIndex = 0;
     private const string CenterGroove = "e4";
+    private const int SingleWall = 1;
 
     private static readonly BoardCoordinates _centerGroove = new BoardCoordinates(CenterColumnIndex, FourthRowIndex);
     private static readonly BoardCoordinates _lastColumnGroove = new BoardCoordinates(LastColumnIndex, FirstRowIndex);
     private static readonly Wall _centerHorizontalWall = new Wall(_centerGroove, WallOrientation.Horizontal);
     private static readonly Wall _centerVerticalWall = new Wall(_centerGroove, WallOrientation.Vertical);
+    private static readonly DateTimeOffset _startedAt = new DateTimeOffset(2026, 11, 15, 18, 0, 0, TimeSpan.Zero);
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
+    private readonly ManualTimeProvider _timeProvider = new ManualTimeProvider(_startedAt);
     private readonly List<IDisposable> _viewModels = new List<IDisposable>();
 
     public void Dispose()
@@ -119,14 +122,26 @@ public sealed class TestWallPlacementViewModel : IDisposable
     }
 
     [Fact]
-    public async Task Confirm_Accepted_LeavesWallMode()
+    public async Task Confirm_AcceptedBeforeWallPlaced_KeepsPendingWall()
     {
         WallPlacementViewModel viewModel = CreateActiveViewModel();
         viewModel.ChooseGroove(_centerGroove);
 
         await viewModel.Confirm();
 
-        Assert.False(viewModel.IsActive);
+        Assert.Equal(_centerHorizontalWall, viewModel.PendingWall);
+    }
+
+    [Fact]
+    public async Task Confirm_TwiceBeforeWallPlaced_SendsOneWall()
+    {
+        WallPlacementViewModel viewModel = CreateActiveViewModel();
+        viewModel.ChooseGroove(_centerGroove);
+        await viewModel.Confirm();
+
+        await viewModel.Confirm();
+
+        Assert.Equal(SingleWall, _matchClient.PlacedWallCount);
     }
 
     [Fact]
@@ -182,7 +197,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
     {
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
         MatchPlayViewModel play =
-            InlineUiContext.CreateViewModel(() => new MatchPlayViewModel(joinedMatch, _matchClient));
+            InlineUiContext.CreateViewModel(() => new MatchPlayViewModel(joinedMatch, _matchClient, _timeProvider));
         var viewModel = new WallPlacementViewModel(play);
         _viewModels.Add(viewModel);
         _viewModels.Add(play);

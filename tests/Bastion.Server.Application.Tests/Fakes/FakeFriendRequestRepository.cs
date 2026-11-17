@@ -41,15 +41,11 @@ public sealed class FakeFriendRequestRepository : IFriendRequestRepository
 
     public void Add(FriendRequest request)
     {
-        ArgumentNullException.ThrowIfNull(request);
-
         _requests.Add(request);
     }
 
     public void Remove(FriendRequest request)
     {
-        ArgumentNullException.ThrowIfNull(request);
-
         _requests.Remove(request);
     }
 

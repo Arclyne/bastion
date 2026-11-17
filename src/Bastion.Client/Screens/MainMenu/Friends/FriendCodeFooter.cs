@@ -19,8 +19,10 @@ public sealed class FriendCodeFooter : StackPanel
         _viewModel = viewModel;
         Orientation = Orientation.Horizontal;
         Spacing = FooterSpacing;
-        AddChild(CreateCodeLabel());
-        AddChild(CreateCopyButton());
+        Label codeLabel = CreateCodeLabel();
+        Button copyButton = CreateCopyButton();
+        AddChild(codeLabel);
+        AddChild(copyButton);
     }
 
     private static Label CreateCodeLabel()

@@ -15,7 +15,7 @@ public static class BoardSceneLayout
     private const int FirstRowNumber = 1;
     private const int FirstIndex = 0;
     private const float BoardHalves = 2f;
-    private const float SurfaceHeight = 0f;
+    public const float SurfaceHeight = 0f;
     private const float BoardCenter = 0f;
     private const float CameraHeight = 16f;
     private const float CameraDistance = 12.5f;
@@ -23,6 +23,10 @@ public static class BoardSceneLayout
     private const float WallLength = 1.8f;
     private const float WallThickness = 0.14f;
     private const float WallHeight = 0.45f;
+
+    private static readonly Vector3 _surfaceCenter = new Vector3(BoardCenter, SurfaceHeight, BoardCenter);
+
+    public static Plane Surface { get; } = new Plane(_surfaceCenter, Vector3.Up);
 
     public static Vector3 GetCellCenter(byte boardSize, BoardCoordinates coordinates)
     {
@@ -36,33 +40,14 @@ public static class BoardSceneLayout
 
     public static bool TryGetCoordinates(byte boardSize, Vector3 surfacePoint, out BoardCoordinates coordinates)
     {
-        float centerIndex = GetCenterIndex(boardSize);
-        float columnPosition = surfacePoint.X + centerIndex;
-        float rowPosition = centerIndex - surfacePoint.Z;
-        float roundedColumn = MathF.Round(columnPosition);
-        float roundedRow = MathF.Round(rowPosition);
-        int columnIndex = (int)roundedColumn;
-        int rowIndex = (int)roundedRow;
-        coordinates = new BoardCoordinates(columnIndex, rowIndex);
-        bool isColumnInside = columnIndex >= FirstIndex && columnIndex < boardSize;
-        bool isRowInside = rowIndex >= FirstIndex && rowIndex < boardSize;
-        return isColumnInside && isRowInside;
+        coordinates = ToBoardCoordinates(boardSize, surfacePoint, MathF.Round);
+        return BoardLayout.IsInside(boardSize, coordinates);
     }
 
     public static bool TryGetGroove(byte boardSize, Vector3 surfacePoint, out BoardCoordinates groove)
     {
-        float centerIndex = GetCenterIndex(boardSize);
-        float columnPosition = surfacePoint.X + centerIndex;
-        float rowPosition = centerIndex - surfacePoint.Z;
-        float flooredColumn = MathF.Floor(columnPosition);
-        float flooredRow = MathF.Floor(rowPosition);
-        int columnIndex = (int)flooredColumn;
-        int rowIndex = (int)flooredRow;
-        groove = new BoardCoordinates(columnIndex, rowIndex);
-        int grooveCount = boardSize - FirstRowNumber;
-        bool isColumnInside = columnIndex >= FirstIndex && columnIndex < grooveCount;
-        bool isRowInside = rowIndex >= FirstIndex && rowIndex < grooveCount;
-        return isColumnInside && isRowInside;
+        groove = ToBoardCoordinates(boardSize, surfacePoint, MathF.Floor);
+        return WallPolicy.IsGrooveOnBoard(boardSize, groove);
     }
 
     public static Matrix GetWallTransform(byte boardSize, Wall wall)
@@ -71,12 +56,13 @@ public static class BoardSceneLayout
 
         float centerIndex = GetCenterIndex(boardSize);
         float centerX = wall.Groove.ColumnIndex + GrooveOffset - centerIndex;
+        float centerY = SurfaceHeight + (WallHeight * WallMesh.HalfSide);
         float centerZ = centerIndex - wall.Groove.RowIndex - GrooveOffset;
         bool isHorizontal = wall.Orientation == WallOrientation.Horizontal;
         float scaleX = isHorizontal ? WallLength : WallThickness;
         float scaleZ = isHorizontal ? WallThickness : WallLength;
         var scale = Matrix.CreateScale(scaleX, WallHeight, scaleZ);
-        var translation = Matrix.CreateTranslation(centerX, WallHeight / BoardHalves, centerZ);
+        var translation = Matrix.CreateTranslation(centerX, centerY, centerZ);
         Matrix transform = scale * translation;
         return transform;
     }
@@ -115,6 +101,19 @@ public static class BoardSceneLayout
         ArgumentNullException.ThrowIfNull(meshName);
 
         return meshName.StartsWith(GoalMeshPrefix, StringComparison.Ordinal);
+    }
+
+    private static BoardCoordinates ToBoardCoordinates(byte boardSize, Vector3 surfacePoint, Func<float, float> snap)
+    {
+        float centerIndex = GetCenterIndex(boardSize);
+        float columnPosition = surfacePoint.X + centerIndex;
+        float rowPosition = centerIndex - surfacePoint.Z;
+        float snappedColumn = snap(columnPosition);
+        float snappedRow = snap(rowPosition);
+        int columnIndex = (int)snappedColumn;
+        int rowIndex = (int)snappedRow;
+        var coordinates = new BoardCoordinates(columnIndex, rowIndex);
+        return coordinates;
     }
 
     private static float GetCenterIndex(byte boardSize)

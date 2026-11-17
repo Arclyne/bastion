@@ -54,8 +54,17 @@ public static class BoardLayout
 
     public static int GetLastIndex(byte boardSize)
     {
-        int lastIndex = boardSize - RowNumberOffset;
+        int lastIndex = boardSize - 1;
         return lastIndex;
+    }
+
+    public static bool IsInside(byte boardSize, BoardCoordinates coordinates)
+    {
+        ArgumentNullException.ThrowIfNull(coordinates);
+
+        bool isColumnInside = coordinates.ColumnIndex >= FirstIndex && coordinates.ColumnIndex < boardSize;
+        bool isRowInside = coordinates.RowIndex >= FirstIndex && coordinates.RowIndex < boardSize;
+        return isColumnInside && isRowInside;
     }
 
     public static BoardCoordinates ParseSquare(string square)

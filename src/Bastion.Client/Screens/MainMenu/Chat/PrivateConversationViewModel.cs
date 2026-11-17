@@ -327,14 +327,14 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         }
     }
 
-    private void ReportMarkReadRejection(Exception ex)
+    private void ReportMarkReadRejection(Exception cause)
     {
-        _logger.Warn("The server turned down marking the private conversation as read.", ex);
+        _logger.Warn("The server turned down marking the private conversation as read.", cause);
     }
 
-    private void ReportMarkReadFailure(Exception ex)
+    private void ReportMarkReadFailure(Exception cause)
     {
-        _logger.Error("The private conversation could not be marked as read.", ex);
+        _logger.Error("The private conversation could not be marked as read.", cause);
     }
 
     private void ShowTranscript(ConversationTranscript transcript)
@@ -355,15 +355,15 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         MuteText = ChatRejectionText.DescribeMute(transcript.Mute);
     }
 
-    private void ReportLoadRejection(Exception ex)
+    private void ReportLoadRejection(Exception cause)
     {
-        _logger.Warn("The server turned down the private conversation.", ex);
+        _logger.Warn("The server turned down the private conversation.", cause);
         HasLoadFailed = true;
     }
 
-    private void ReportLoadFailure(Exception ex)
+    private void ReportLoadFailure(Exception cause)
     {
-        _logger.Error("The private conversation could not be loaded.", ex);
+        _logger.Error("The private conversation could not be loaded.", cause);
         HasLoadFailed = true;
     }
 
@@ -384,9 +384,9 @@ public sealed class PrivateConversationViewModel : ChatComposerViewModel
         }
     }
 
-    private void ReportSendFailure(PrivateMessageRowViewModel row, Exception ex)
+    private void ReportSendFailure(PrivateMessageRowViewModel row, Exception cause)
     {
-        _logger.Error("The private message could not be sent.", ex);
+        _logger.Error("The private message could not be sent.", cause);
         row.Fail(Strings.ChatSendFailed);
     }
 }

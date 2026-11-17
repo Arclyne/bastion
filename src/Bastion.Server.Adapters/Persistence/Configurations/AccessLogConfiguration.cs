@@ -1,9 +1,9 @@
 using System;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Auditing;
 using Bastion.Domain.Sessions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Bastion.Server.Adapters.Persistence.Configurations;
 

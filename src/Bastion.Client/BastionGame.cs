@@ -71,6 +71,8 @@ public sealed class BastionGame : Game
 
     protected override void Update(GameTime gameTime)
     {
+        ArgumentNullException.ThrowIfNull(gameTime);
+
         GumService.Default.Update(gameTime);
         if (GumService.Default.Keyboard.KeyPushed(Keys.Escape))
         {
@@ -83,6 +85,8 @@ public sealed class BastionGame : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        ArgumentNullException.ThrowIfNull(gameTime);
+
         GraphicsDevice.Clear(Palette.Background);
         DrawShownMatchBoard();
         GumService.Default.Draw();

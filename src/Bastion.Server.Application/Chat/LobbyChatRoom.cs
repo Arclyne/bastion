@@ -7,7 +7,7 @@ namespace Bastion.Server.Application.Chat;
 public sealed class LobbyChatRoom : ILobbyChatRoom
 {
     private readonly object _roomLock = new object();
-    private readonly Queue<PostedChatLine> _history = new Queue<PostedChatLine>();
+    private readonly Queue<PostedChatLine> _recentLines = new Queue<PostedChatLine>();
     private readonly ChatCooldown _cooldown = new ChatCooldown();
     private readonly IChatBroadcaster _broadcaster;
     private long _lastMessageId;
@@ -37,7 +37,7 @@ public sealed class LobbyChatRoom : ILobbyChatRoom
     {
         lock (_roomLock)
         {
-            return new List<PostedChatLine>(_history);
+            return new List<PostedChatLine>(_recentLines);
         }
     }
 
@@ -52,10 +52,10 @@ public sealed class LobbyChatRoom : ILobbyChatRoom
         {
             _lastMessageId++;
             var postedLine = new PostedChatLine(_lastMessageId, line);
-            _history.Enqueue(postedLine);
-            if (_history.Count > ChatPolicy.MaximumRecentMessages)
+            _recentLines.Enqueue(postedLine);
+            if (_recentLines.Count > ChatPolicy.MaximumRecentMessages)
             {
-                _history.Dequeue();
+                _recentLines.Dequeue();
             }
 
             return postedLine;

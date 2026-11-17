@@ -37,7 +37,8 @@ public sealed class AccountService : IAccountService
     {
         if (credentials is null || device is null)
         {
-            throw LoginTranslator.ToFault(new InvalidCredentialsException());
+            var missingCredentials = new InvalidCredentialsException();
+            throw LoginTranslator.ToFault(missingCredentials);
         }
 
         ClientConnection connection = LoginTranslator.ToConnection(device, CallerAddress.GetCurrent());

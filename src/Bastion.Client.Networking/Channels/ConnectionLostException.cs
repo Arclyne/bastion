@@ -24,5 +24,6 @@ public sealed class ConnectionLostException : Exception
     public ConnectionLostException(Exception innerException)
         : base(DefaultMessage, innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
     }
 }

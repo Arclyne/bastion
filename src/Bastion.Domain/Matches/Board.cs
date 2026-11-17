@@ -5,9 +5,6 @@ namespace Bastion.Domain.Matches;
 
 public sealed record Board
 {
-    private const int FirstIndex = 0;
-    private const int PreviousIndexOffset = 1;
-
     private readonly Dictionary<byte, BoardCoordinates> _pawnsByTurnOrder;
     private readonly HashSet<Wall> _walls;
 
@@ -48,9 +45,7 @@ public sealed record Board
     {
         ArgumentNullException.ThrowIfNull(coordinates);
 
-        bool isColumnInside = coordinates.ColumnIndex >= FirstIndex && coordinates.ColumnIndex < Size;
-        bool isRowInside = coordinates.RowIndex >= FirstIndex && coordinates.RowIndex < Size;
-        return isColumnInside && isRowInside;
+        return BoardLayout.IsInside(Size, coordinates);
     }
 
     public bool IsOccupied(BoardCoordinates coordinates)
@@ -92,7 +87,7 @@ public sealed record Board
 
     private bool HasWallAlongRow(int columnIndex, int lowerRowIndex)
     {
-        int previousColumnIndex = columnIndex - PreviousIndexOffset;
+        int previousColumnIndex = columnIndex - 1;
         var sameColumnGroove = new BoardCoordinates(columnIndex, lowerRowIndex);
         var previousColumnGroove = new BoardCoordinates(previousColumnIndex, lowerRowIndex);
         var sameColumnWall = new Wall(sameColumnGroove, WallOrientation.Horizontal);
@@ -102,7 +97,7 @@ public sealed record Board
 
     private bool HasWallAlongColumn(int leftColumnIndex, int rowIndex)
     {
-        int previousRowIndex = rowIndex - PreviousIndexOffset;
+        int previousRowIndex = rowIndex - 1;
         var sameRowGroove = new BoardCoordinates(leftColumnIndex, rowIndex);
         var previousRowGroove = new BoardCoordinates(leftColumnIndex, previousRowIndex);
         var sameRowWall = new Wall(sameRowGroove, WallOrientation.Vertical);

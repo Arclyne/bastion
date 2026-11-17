@@ -1,11 +1,11 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using log4net;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Auditing;
 using Bastion.Domain.Sessions;
 using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Security;
+using log4net;
 
 namespace Bastion.Server.Application.Accounts;
 
@@ -39,16 +39,14 @@ public sealed class LoginService : ILoginService
         if (account is null || !account.HasPassword())
         {
             _passwordHasher.SimulatePasswordCheck(password);
-            throw Reject(
-                new AccessLog(AccessLogResult.AccountNotFound, attempt, accountId: null),
-                new InvalidCredentialsException());
+            RecordAccessLog(AccessLogResult.AccountNotFound, attempt, accountId: null);
+            throw new InvalidCredentialsException();
         }
 
         if (account.IsLockedAt(attempt.OccurredAt))
         {
-            throw Reject(
-                new AccessLog(AccessLogResult.AccountLocked, attempt, account.AccountId),
-                CreateLockRestriction(account, attempt.OccurredAt));
+            RecordAccessLog(AccessLogResult.AccountLocked, attempt, account.AccountId);
+            throw CreateLockRestriction(account, attempt.OccurredAt);
         }
 
         if (!_passwordHasher.IsPasswordCorrect(password, account.PasswordHash, account.PasswordSalt))
@@ -70,13 +68,13 @@ public sealed class LoginService : ILoginService
     private void RejectPassword(Account account, AccessAttempt attempt)
     {
         account.RecordFailedLogin(attempt.OccurredAt);
-        var accessLog = new AccessLog(AccessLogResult.WrongPassword, attempt, account.AccountId);
+        RecordAccessLog(AccessLogResult.WrongPassword, attempt, account.AccountId);
         if (account.IsLockedAt(attempt.OccurredAt))
         {
-            throw Reject(accessLog, CreateLockRestriction(account, attempt.OccurredAt));
+            throw CreateLockRestriction(account, attempt.OccurredAt);
         }
 
-        throw Reject(accessLog, new InvalidCredentialsException());
+        throw new InvalidCredentialsException();
     }
 
     private LoggedInPlayer AdmitByAccountStatus(Account account, AccessAttempt attempt)
@@ -86,21 +84,17 @@ public sealed class LoginService : ILoginService
             case AccountStatus.Active:
                 return OpenSession(account, attempt);
             case AccountStatus.Pending:
-                throw Reject(
-                    new AccessLog(AccessLogResult.AccountPending, attempt, account.AccountId),
-                    new AccountRestrictedException(AccountRestriction.Pending));
+                RecordAccessLog(AccessLogResult.AccountPending, attempt, account.AccountId);
+                throw new AccountRestrictedException(AccountRestriction.Pending);
             case AccountStatus.Suspended:
-                throw Reject(
-                    new AccessLog(AccessLogResult.AccountSanctioned, attempt, account.AccountId),
-                    new AccountRestrictedException(AccountRestriction.Suspended));
+                RecordAccessLog(AccessLogResult.AccountSanctioned, attempt, account.AccountId);
+                throw new AccountRestrictedException(AccountRestriction.Suspended);
             case AccountStatus.Banned:
-                throw Reject(
-                    new AccessLog(AccessLogResult.AccountSanctioned, attempt, account.AccountId),
-                    new AccountRestrictedException(AccountRestriction.Banned));
+                RecordAccessLog(AccessLogResult.AccountSanctioned, attempt, account.AccountId);
+                throw new AccountRestrictedException(AccountRestriction.Banned);
             case AccountStatus.Deleted:
-                throw Reject(
-                    new AccessLog(AccessLogResult.AccountNotFound, attempt, account.AccountId),
-                    new InvalidCredentialsException());
+                RecordAccessLog(AccessLogResult.AccountNotFound, attempt, account.AccountId);
+                throw new InvalidCredentialsException();
             default:
                 throw new InvalidOperationException(
                     $"Unsupported account status. AccountStatus={account.AccountStatus}");
@@ -111,24 +105,19 @@ public sealed class LoginService : ILoginService
     {
         GeneratedToken token = _tokenGenerator.Generate();
         var ticket = new SessionTicket(token.TokenHash, attempt.OccurredAt);
-        _unitOfWork.Sessions.Add(new Session(account.AccountId, ticket, attempt.Connection));
-        RecordAccessLog(new AccessLog(AccessLogResult.LoginSucceeded, attempt, account.AccountId));
+        var session = new Session(account.AccountId, ticket, attempt.Connection);
+        _unitOfWork.Sessions.Add(session);
+        RecordAccessLog(AccessLogResult.LoginSucceeded, attempt, account.AccountId);
         return new LoggedInPlayer(token.Token, account.Nickname, account.PreferredLanguage);
     }
 
-    private TException Reject<TException>(AccessLog accessLog, TException rejection)
-        where TException : Exception
+    private void RecordAccessLog(AccessLogResult result, AccessAttempt attempt, int? accountId)
     {
-        RecordAccessLog(accessLog);
-        return rejection;
-    }
-
-    private void RecordAccessLog(AccessLog accessLog)
-    {
+        var accessLog = new AccessLog(result, attempt, accountId);
         _unitOfWork.AccessLogs.Add(accessLog);
         _unitOfWork.SaveChanges();
-        string message = $"Login attempt processed. Result={accessLog.Result}; AccountId={accessLog.AccountId}";
-        if (accessLog.Result == AccessLogResult.LoginSucceeded)
+        string message = $"Login attempt processed. Result={result}; AccountId={accountId}";
+        if (result == AccessLogResult.LoginSucceeded)
         {
             _logger.Info(message);
             return;

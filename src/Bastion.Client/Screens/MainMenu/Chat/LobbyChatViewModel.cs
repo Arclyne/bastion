@@ -17,7 +17,6 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
 {
     private const int SingleMessage = 1;
-    private const int NoUnread = 0;
     private const int OldestMessageIndex = 0;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(LobbyChatViewModel));
@@ -116,7 +115,7 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
         IsReadingLatest = isReadingLatest;
         if (isReadingLatest)
         {
-            _unreadCount = NoUnread;
+            _unreadCount = 0;
             UnreadText = string.Empty;
         }
     }
@@ -207,6 +206,37 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
         _notifications.ChatMessageReceived -= HandleChatMessageReceived;
     }
 
+    private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)
+    {
+        var row = new ChatMessageRowViewModel(e.Message);
+        UiThread.Run(_uiContext, () => ReceiveMessage(row));
+    }
+
+    private void ReceiveMessage(ChatMessageRowViewModel row)
+    {
+        AddMessage(row);
+        if (!IsConversationOpen || IsReadingLatest)
+        {
+            return;
+        }
+
+        _unreadCount++;
+        UnreadText = _unreadCount == SingleMessage
+            ? Strings.ChatNewMessage
+            : FormatText(Strings.ChatNewMessagesFormat, _unreadCount);
+    }
+
+    private void AddMessage(ChatMessageRowViewModel row)
+    {
+        Messages.Add(row);
+        if (Messages.Count > ChatPolicy.MaximumRecentMessages)
+        {
+            Messages.RemoveAt(OldestMessageIndex);
+        }
+
+        IsEmpty = false;
+    }
+
     private void ShowTranscript(LobbyChatTranscript transcript)
     {
         Messages.Clear();
@@ -227,21 +257,10 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
         MuteText = ChatRejectionText.DescribeMute(mute);
     }
 
-    private void ReportLoadFailure(Exception ex)
+    private void ReportLoadFailure(Exception cause)
     {
-        _logger.Error("The lobby chat could not be loaded.", ex);
+        _logger.Error("The lobby chat could not be loaded.", cause);
         HasLoadFailed = true;
-    }
-
-    private void AddMessage(ChatMessageRowViewModel row)
-    {
-        Messages.Add(row);
-        if (Messages.Count > ChatPolicy.MaximumRecentMessages)
-        {
-            Messages.RemoveAt(OldestMessageIndex);
-        }
-
-        IsEmpty = false;
     }
 
     private void ShowRejection(ChatMessageRowViewModel row, ChatRejection rejection, DateTime? mutedUntil)
@@ -254,29 +273,9 @@ public sealed class LobbyChatViewModel : ChatComposerViewModel, IDisposable
         }
     }
 
-    private void ReportSendFailure(ChatMessageRowViewModel row, Exception ex)
+    private void ReportSendFailure(ChatMessageRowViewModel row, Exception cause)
     {
-        _logger.Error("The chat message could not be sent.", ex);
+        _logger.Error("The chat message could not be sent.", cause);
         row.Fail(Strings.ChatSendFailed);
-    }
-
-    private void ReceiveMessage(ChatMessageRowViewModel row)
-    {
-        AddMessage(row);
-        if (!IsConversationOpen || IsReadingLatest)
-        {
-            return;
-        }
-
-        _unreadCount++;
-        UnreadText = _unreadCount == SingleMessage
-            ? Strings.ChatNewMessage
-            : FormatText(Strings.ChatNewMessagesFormat, _unreadCount);
-    }
-
-    private void HandleChatMessageReceived(object? sender, ChatMessageReceivedEventArgs e)
-    {
-        var row = new ChatMessageRowViewModel(e.Message);
-        UiThread.Run(_uiContext, () => ReceiveMessage(row));
     }
 }

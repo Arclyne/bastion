@@ -25,7 +25,7 @@ public sealed class TestMessage
     }
 
     [Fact]
-    public void CreatePrivate_SameAuthorAndRecipient_Throws()
+    public void CreatePrivate_SameAuthorAndRecipient_ThrowsArgumentException()
     {
         var participants = new MessageParticipants(AuthorId, AuthorId);
 

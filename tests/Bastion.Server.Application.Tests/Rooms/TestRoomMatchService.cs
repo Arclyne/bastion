@@ -23,7 +23,6 @@ public sealed class TestRoomMatchService
     private const string Code = "K7MTQ3";
     private const byte RoomWallsPerPlayer = 3;
     private const byte FiveMinuteClock = 5;
-    private const int FirstMatchId = 100;
 
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly ConnectedPlayer _host = new ConnectedPlayer(HostAccountId, HostNickname);
@@ -123,7 +122,7 @@ public sealed class TestRoomMatchService
 
         int matchId = _roomMatchService.StartMatch(HostToken, _now);
 
-        Assert.Equal(FirstMatchId, matchId);
+        Assert.Equal(FakeRoomRepository.FirstMatchId, matchId);
     }
 
     [Fact]

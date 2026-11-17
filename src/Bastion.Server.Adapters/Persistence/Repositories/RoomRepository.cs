@@ -76,6 +76,14 @@ public sealed class RoomRepository : IRoomRepository
         return roomsNotClosed.Any();
     }
 
+    private static IQueryable<Room> SelectRoomsWithCode(BastionDbContext context, string code)
+    {
+        IQueryable<Room> roomsWithCode = context.Rooms
+            .AsNoTracking()
+            .Where(room => room.Code == code);
+        return roomsWithCode;
+    }
+
     private static bool IsRoomInMatchInContext(BastionDbContext context, string code)
     {
         IQueryable<Room> roomsInMatch = SelectRoomsWithCode(context, code)
@@ -126,13 +134,4 @@ public sealed class RoomRepository : IRoomRepository
         transaction.Commit();
         return match.MatchId;
     }
-
-    private static IQueryable<Room> SelectRoomsWithCode(BastionDbContext context, string code)
-    {
-        IQueryable<Room> roomsWithCode = context.Rooms
-            .AsNoTracking()
-            .Where(room => room.Code == code);
-        return roomsWithCode;
-    }
-
 }

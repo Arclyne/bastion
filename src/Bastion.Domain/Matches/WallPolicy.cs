@@ -13,12 +13,12 @@ public static class WallPolicy
         ArgumentNullException.ThrowIfNull(board);
         ArgumentNullException.ThrowIfNull(wall);
 
-        if (!IsGrooveOnBoard(board.Size, wall))
+        if (!IsGrooveOnBoard(board.Size, wall.Groove))
         {
             return new WallRejection(WallRejectionReason.OutOfBoard, BlockedTurnOrder: null);
         }
 
-        if (CollidesWithPlacedWall(board, wall))
+        if (IsGrooveTaken(board, wall))
         {
             return new WallRejection(WallRejectionReason.GrooveTaken, BlockedTurnOrder: null);
         }
@@ -28,16 +28,17 @@ public static class WallPolicy
         return blockingRejection;
     }
 
-    private static bool IsGrooveOnBoard(byte boardSize, Wall wall)
+    public static bool IsGrooveOnBoard(byte boardSize, BoardCoordinates groove)
     {
+        ArgumentNullException.ThrowIfNull(groove);
+
         int grooveCount = boardSize - GrooveCountOffset;
-        BoardCoordinates groove = wall.Groove;
         bool isColumnInside = groove.ColumnIndex >= FirstGrooveIndex && groove.ColumnIndex < grooveCount;
         bool isRowInside = groove.RowIndex >= FirstGrooveIndex && groove.RowIndex < grooveCount;
         return isColumnInside && isRowInside;
     }
 
-    private static bool CollidesWithPlacedWall(Board board, Wall wall)
+    private static bool IsGrooveTaken(Board board, Wall wall)
     {
         WallOrientation crossingOrientation = wall.Orientation == WallOrientation.Horizontal
             ? WallOrientation.Vertical

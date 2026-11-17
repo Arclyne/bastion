@@ -20,10 +20,14 @@ public sealed class ChatMessageRowView : StackPanel
         Width = RowWidth;
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = RowSpacing;
-        AddChild(CreateHeader(row));
-        AddChild(CreateFixedLabel(row.Text, TextStyleCatalog.NoticeMessage));
-        AddChild(CreateStateLabel(nameof(ChatMessageRowViewModel.IsPending), TextStyleCatalog.Hint));
-        AddChild(CreateStateLabel(nameof(ChatMessageRowViewModel.HasFailed), TextStyleCatalog.FieldError));
+        StackPanel header = CreateHeader(row);
+        Label text = CreateFixedLabel(row.Text, TextStyleCatalog.NoticeMessage);
+        Label pendingState = CreateStateLabel(nameof(ChatMessageRowViewModel.IsPending), TextStyleCatalog.Hint);
+        Label failedState = CreateStateLabel(nameof(ChatMessageRowViewModel.HasFailed), TextStyleCatalog.FieldError);
+        AddChild(header);
+        AddChild(text);
+        AddChild(pendingState);
+        AddChild(failedState);
     }
 
     public static GraphicalUiElement CreateVisual(object? item)

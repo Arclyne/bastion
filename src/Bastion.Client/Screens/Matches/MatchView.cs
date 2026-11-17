@@ -31,14 +31,22 @@ public sealed class MatchView : ScreenView
         ArgumentNullException.ThrowIfNull(abandonmentViewModel);
 
         _abandonmentViewModel = abandonmentViewModel;
-        AddChild(CreatePlayersPanel(matchViewModel));
-        AddChild(CreateTurnPill(matchViewModel));
-        AddChild(CreateMoveNotice(matchViewModel.Play));
-        AddChild(CreateWallControls(matchViewModel.WallPlacement));
-        AddChild(CreateChatPanel(chatViewModel));
-        AddChild(CreateAbandonButton());
-        AddChild(CreateAbandonStatus());
-        AddChild(CreatePlayerLeftNotice());
+        MatchPlayersPanel playersPanel = CreatePlayersPanel(matchViewModel);
+        Panel turnPill = CreateTurnPill(matchViewModel);
+        Label moveNotice = CreateMoveNotice(matchViewModel.Play);
+        WallControlsPanel wallControls = CreateWallControls(matchViewModel.WallPlacement);
+        MatchChatPanel chatPanel = CreateChatPanel(chatViewModel);
+        Button abandonButton = CreateAbandonButton();
+        Label abandonStatus = CreateAbandonStatus();
+        Label playerLeftNotice = CreatePlayerLeftNotice();
+        AddChild(playersPanel);
+        AddChild(turnPill);
+        AddChild(moveNotice);
+        AddChild(wallControls);
+        AddChild(chatPanel);
+        AddChild(abandonButton);
+        AddChild(abandonStatus);
+        AddChild(playerLeftNotice);
         var rivalAbandonedDialog = new RivalAbandonedDialogView(abandonmentViewModel);
         AddDialog(
             rivalAbandonedDialog,
@@ -123,6 +131,18 @@ public sealed class MatchView : ScreenView
         return button;
     }
 
+    private async void HandleAbandonClick(object? sender, EventArgs e)
+    {
+        try
+        {
+            await _abandonmentViewModel.AbandonMatch();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The match could not be left because the connection is closed.", ex);
+        }
+    }
+
     private Label CreateAbandonStatus()
     {
         Label status = ViewFactory.CreateBoundNotice(
@@ -150,17 +170,5 @@ public sealed class MatchView : ScreenView
         notice.Anchor(Gum.Wireframe.Anchor.Top);
         notice.Y = ScreenMetrics.MarginY;
         return notice;
-    }
-
-    private async void HandleAbandonClick(object? sender, EventArgs e)
-    {
-        try
-        {
-            await _abandonmentViewModel.AbandonMatch();
-        }
-        catch (ObjectDisposedException ex)
-        {
-            _logger.Warn("The match could not be left because the connection is closed.", ex);
-        }
     }
 }

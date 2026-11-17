@@ -80,7 +80,7 @@ public sealed class TestMatchChatService
     }
 
     [Fact]
-    public void SendMessage_PlayerOutsideMatch_ThrowsChatChannelForbidden()
+    public void SendMessage_PlayerOutsideMatch_ThrowsChatChannelForbiddenException()
     {
         var submission = new MatchChatSubmission(OtherMatchId, MessageText);
 
@@ -90,7 +90,7 @@ public sealed class TestMatchChatService
     }
 
     [Fact]
-    public void SendMessage_BlankText_ThrowsChatMessageRejected()
+    public void SendMessage_BlankText_ThrowsChatMessageRejectedException()
     {
         AddParticipants();
         var submission = new MatchChatSubmission(MatchId, string.Empty);

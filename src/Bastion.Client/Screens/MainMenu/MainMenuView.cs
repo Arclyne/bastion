@@ -73,22 +73,34 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         _friendsPanelViewModel = friendsPanelViewModel;
         _matchSearchViewModel = matchSearchViewModel;
         BindingContext = viewModel;
-        AddChild(CreateIdentityChip());
-        AddChild(CreateSettingsButton());
-        AddChild(CreateFriendsButton());
-        AddChild(CreateChatButton());
         var requestsBinding = new BadgeBinding(
             nameof(FriendRequestsViewModel.PendingCountText),
             nameof(FriendRequestsViewModel.HasPending));
         var unreadBinding = new BadgeBinding(nameof(ChatTabViewModel.UnreadText), nameof(ChatTabViewModel.HasUnread));
-        AddChild(CreateCountBadge(friendsPanelViewModel.Requests, requestsBinding, FriendsPillRightOffset));
-        AddChild(CreateCountBadge(friendsPanelViewModel.Chat, unreadBinding, ChatPillRightOffset));
-        AddChild(CreateMenuCard());
-        AddChild(CreateMatchSearchPanel());
-        AddChild(CreateHowToPlayButton());
-        AddChild(ViewFactory.CreateVersionLabel());
-        AddChild(CreateFriendsPanel(friendsPanelViewModel));
-        AddChild(CreateRequestToast(friendsPanelViewModel.Requests));
+        Panel identityChip = CreateIdentityChip();
+        Button settingsButton = CreateSettingsButton();
+        Button friendsButton = CreateFriendsButton();
+        Button chatButton = CreateChatButton();
+        Panel requestsBadge = CreateCountBadge(friendsPanelViewModel.Requests, requestsBinding, FriendsPillRightOffset);
+        Panel unreadBadge = CreateCountBadge(friendsPanelViewModel.Chat, unreadBinding, ChatPillRightOffset);
+        Panel menuCard = CreateMenuCard();
+        MatchSearchPanel matchSearchPanel = CreateMatchSearchPanel();
+        Button howToPlayButton = CreateHowToPlayButton();
+        Label version = ViewFactory.CreateVersionLabel();
+        FriendsPanel friendsPanel = CreateFriendsPanel(friendsPanelViewModel);
+        FriendRequestToast requestToast = CreateRequestToast(friendsPanelViewModel.Requests);
+        AddChild(identityChip);
+        AddChild(settingsButton);
+        AddChild(friendsButton);
+        AddChild(chatButton);
+        AddChild(requestsBadge);
+        AddChild(unreadBadge);
+        AddChild(menuCard);
+        AddChild(matchSearchPanel);
+        AddChild(howToPlayButton);
+        AddChild(version);
+        AddChild(friendsPanel);
+        AddChild(requestToast);
         var removeFriendDialog = new RemoveFriendDialogView(friendsPanelViewModel.Actions);
         var presenceDialog = new PresenceDialogView(matchSearchViewModel);
         AddDialog(removeFriendDialog, friendsPanelViewModel.Actions, nameof(FriendActionsViewModel.IsDialogOpen));
@@ -107,8 +119,10 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
             Orientation = Orientation.Horizontal,
             Spacing = ChipSpacing,
         };
-        content.AddChild(CreateAvatar());
-        content.AddChild(CreateIdentityText());
+        Panel avatar = CreateAvatar();
+        StackPanel identityText = CreateIdentityText();
+        content.AddChild(avatar);
+        content.AddChild(identityText);
         content.Anchor(Gum.Wireframe.Anchor.Left);
         content.X = ChipPaddingLeft;
 
@@ -155,13 +169,14 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         Label nickname = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MainMenuViewModel.Nickname),
             TextStyleCatalog.IdentityName);
+        Label mode = ViewFactory.CreateLabel(nameof(Strings.MainMenuClassicMode), TextStyleCatalog.IdentityDetail);
 
         var text = new StackPanel
         {
             Spacing = IdentitySpacing,
         };
         text.AddChild(nickname);
-        text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuClassicMode), TextStyleCatalog.IdentityDetail));
+        text.AddChild(mode);
         ViewFactory.CenterVertically(text);
         return text;
     }
@@ -194,11 +209,21 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         return button;
     }
 
+    private void HandleFriendsClick(object? sender, EventArgs e)
+    {
+        _friendsPanelViewModel.Open(FriendsTab.Friends);
+    }
+
     private Button CreateChatButton()
     {
         Button button = CreateTopRightPill(nameof(Strings.MainMenuChat), ChatPillWidth, ChatPillRightOffset);
         button.Click += HandleChatClick;
         return button;
+    }
+
+    private void HandleChatClick(object? sender, EventArgs e)
+    {
+        _friendsPanelViewModel.Open(FriendsTab.Chat);
     }
 
     private static Panel CreateCountBadge(object bindingContext, BadgeBinding binding, float pillRightOffset)
@@ -224,13 +249,19 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = MenuCardSpacing,
         };
-        content.AddChild(CreateBrand());
-        content.AddChild(CreateFindMatchButton());
-        content.AddChild(CreateMatchSearchStatus());
-        content.AddChild(CreateCenteredRow(ViewFactory.CreateLabel(
+        Panel brand = CreateBrand();
+        Button findMatchButton = CreateFindMatchButton();
+        Label matchSearchStatus = CreateMatchSearchStatus();
+        Label privateMatchLabel = ViewFactory.CreateLabel(
             nameof(Strings.MainMenuPrivateMatch),
-            TextStyleCatalog.SectionLabel)));
-        content.AddChild(CreatePrivateMatchButtons());
+            TextStyleCatalog.SectionLabel);
+        Panel privateMatchHeading = CreateCenteredRow(privateMatchLabel);
+        StackPanel privateMatchButtons = CreatePrivateMatchButtons();
+        content.AddChild(brand);
+        content.AddChild(findMatchButton);
+        content.AddChild(matchSearchStatus);
+        content.AddChild(privateMatchHeading);
+        content.AddChild(privateMatchButtons);
 
         var card = new Panel
         {
@@ -252,8 +283,10 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         {
             Spacing = BrandSpacing,
         };
-        brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.AppName), TextStyleCatalog.MenuTitle));
-        brand.AddChild(ViewFactory.CreateLabel(nameof(Strings.LoginTagline), TextStyleCatalog.MenuTagline));
+        Label appName = ViewFactory.CreateLabel(nameof(Strings.AppName), TextStyleCatalog.MenuTitle);
+        Label tagline = ViewFactory.CreateLabel(nameof(Strings.LoginTagline), TextStyleCatalog.MenuTagline);
+        brand.AddChild(appName);
+        brand.AddChild(tagline);
         return CreateCenteredRow(brand);
     }
 
@@ -294,11 +327,25 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
             X = HeroTextX,
             Spacing = HeroTextSpacing,
         };
-        text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatch), TextStyleCatalog.HeroTitle));
-        text.AddChild(ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatchDetail), TextStyleCatalog.HeroDetail));
+        Label title = ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatch), TextStyleCatalog.HeroTitle);
+        Label detail = ViewFactory.CreateLabel(nameof(Strings.MainMenuFindMatchDetail), TextStyleCatalog.HeroDetail);
+        text.AddChild(title);
+        text.AddChild(detail);
         ViewFactory.CenterVertically(text);
         button.AddChild(text);
         return button;
+    }
+
+    private async void HandleFindMatchClick(object? sender, EventArgs e)
+    {
+        try
+        {
+            await _matchSearchViewModel.StartSearch();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The match search could not be started because the connection is closed.", ex);
+        }
     }
 
     private Label CreateMatchSearchStatus()
@@ -319,8 +366,10 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
             Orientation = Orientation.Horizontal,
             Spacing = PrivateButtonSpacing,
         };
-        row.AddChild(CreatePrivateMatchButton(nameof(Strings.MainMenuCreateRoom)));
-        row.AddChild(CreatePrivateMatchButton(nameof(Strings.MainMenuJoinWithCode)));
+        Button createRoomButton = CreatePrivateMatchButton(nameof(Strings.MainMenuCreateRoom));
+        Button joinWithCodeButton = CreatePrivateMatchButton(nameof(Strings.MainMenuJoinWithCode));
+        row.AddChild(createRoomButton);
+        row.AddChild(joinWithCodeButton);
         return row;
     }
 
@@ -363,27 +412,5 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         toast.Anchor(Gum.Wireframe.Anchor.Top);
         toast.Y = ScreenMetrics.MarginY;
         return toast;
-    }
-
-    private void HandleFriendsClick(object? sender, EventArgs e)
-    {
-        _friendsPanelViewModel.Open(FriendsTab.Friends);
-    }
-
-    private void HandleChatClick(object? sender, EventArgs e)
-    {
-        _friendsPanelViewModel.Open(FriendsTab.Chat);
-    }
-
-    private async void HandleFindMatchClick(object? sender, EventArgs e)
-    {
-        try
-        {
-            await _matchSearchViewModel.StartSearch();
-        }
-        catch (ObjectDisposedException ex)
-        {
-            _logger.Warn("The match search could not be started because the connection is closed.", ex);
-        }
     }
 }

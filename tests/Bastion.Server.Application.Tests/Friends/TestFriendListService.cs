@@ -39,7 +39,7 @@ public sealed class TestFriendListService
     }
 
     [Fact]
-    public void ListFriends_InvalidSession_ThrowsInvalidSession()
+    public void ListFriends_InvalidSession_ThrowsInvalidSessionException()
     {
         Action list = () => _friendListService.ListFriends(UnknownToken, _now);
 
@@ -47,7 +47,7 @@ public sealed class TestFriendListService
     }
 
     [Fact]
-    public void ListFriends_UnknownCallerAccount_ThrowsInvalidSession()
+    public void ListFriends_UnknownCallerAccount_ThrowsInvalidSessionException()
     {
         _sessionVerifier.Add(UnknownToken, _unknownCaller);
 
@@ -138,7 +138,7 @@ public sealed class TestFriendListService
     }
 
     [Fact]
-    public void RemoveFriend_InvalidSession_ThrowsInvalidSession()
+    public void RemoveFriend_InvalidSession_ThrowsInvalidSessionException()
     {
         Action remove = () => _friendListService.RemoveFriend(UnknownToken, StoredFriendCode, _now);
 

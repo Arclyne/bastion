@@ -14,6 +14,7 @@ public sealed class RoomRepositoryException : Exception
     public RoomRepositoryException(Exception innerException)
         : base(DefaultMessage, innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
     }
 
     public RoomRepositoryException(string? message)

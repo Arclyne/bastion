@@ -7,6 +7,8 @@ public sealed class AccountRestrictedException : Exception
     public AccountRestrictedException(AccountRestriction restriction, int lockMinutes, Exception innerException)
         : base($"The account cannot log in. Restriction={restriction}", innerException)
     {
+        ArgumentNullException.ThrowIfNull(innerException);
+
         Restriction = restriction;
         LockMinutes = lockMinutes;
     }

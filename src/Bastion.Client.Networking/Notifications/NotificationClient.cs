@@ -142,7 +142,7 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         var communicationObject = (ICommunicationObject)channel;
         communicationObject.Faulted += HandleChannelFaulted;
         _sessionChannel = channel;
-        _keepAliveTimer = _timeProvider.CreateTimer(SendKeepAlive, null, _keepAliveInterval, _keepAliveInterval);
+        _keepAliveTimer = _timeProvider.CreateTimer(SendKeepAlive, state: null, _keepAliveInterval, _keepAliveInterval);
     }
 
     public void Disconnect()
@@ -164,11 +164,11 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         Disconnect();
     }
 
-    private static Exception AbortSubscription(ISessionService channel, Exception ex)
+    private static Exception AbortSubscription(ISessionService channel, Exception cause)
     {
         var communicationObject = (ICommunicationObject)channel;
         communicationObject.Abort();
-        return ServiceFailureTranslator.ToClientException(ex);
+        return ServiceFailureTranslator.ToClientException(cause);
     }
 
     private void SendKeepAlive(object? state)
@@ -221,7 +221,7 @@ public sealed class NotificationClient : INotificationClient, IDisposable
 
     private bool TryStopKeepAlive()
     {
-        ITimer? timer = Interlocked.Exchange(ref _keepAliveTimer, null);
+        ITimer? timer = Interlocked.Exchange(ref _keepAliveTimer, value: null);
         if (timer is null)
         {
             return false;

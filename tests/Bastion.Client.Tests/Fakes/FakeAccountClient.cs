@@ -1,4 +1,3 @@
-using System;
 using Bastion.Client.Networking.Accounts;
 
 namespace Bastion.Client.Tests.Fakes;
@@ -12,8 +11,6 @@ public sealed class FakeAccountClient : IAccountClient
 
     public LoggedInSession LogIn(LoginCredentials credentials)
     {
-        ArgumentNullException.ThrowIfNull(credentials);
-
         LogInCount++;
         return new LoggedInSession(SessionToken, Nickname, string.Empty);
     }

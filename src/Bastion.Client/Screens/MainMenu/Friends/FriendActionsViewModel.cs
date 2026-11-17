@@ -167,9 +167,9 @@ public sealed class FriendActionsViewModel : ViewModel
         FriendRemoved?.Invoke(this, removal);
     }
 
-    private void ReportFailure(Exception ex)
+    private void ReportFailure(Exception cause)
     {
-        _logger.Error("The friend could not be removed.", ex);
+        _logger.Error("The friend could not be removed.", cause);
         ErrorText = Strings.FriendsRemoveFailed;
     }
 }

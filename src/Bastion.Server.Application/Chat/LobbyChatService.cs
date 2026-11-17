@@ -47,11 +47,11 @@ public sealed class LobbyChatService : ILobbyChatService
 
         ConnectedPlayer player = _sessionVerifier.Verify(sessionToken, now);
         IReadOnlyList<PostedChatLine> recentLines = _chatRoom.ListRecent();
-        IEnumerable<ChatHistoryEntry> entries = recentLines
+        IEnumerable<ChatHistoryEntry> historyEntries = recentLines
             .Select(postedLine => new ChatHistoryEntry(postedLine, postedLine.Line.Sender.AccountId == player.AccountId));
-        var entryList = new List<ChatHistoryEntry>(entries);
+        var entries = new List<ChatHistoryEntry>(historyEntries);
         int connectedPlayerCount = _chatRoom.CountListeners();
         ChatMute mute = _chatModerator.FindMute(player.AccountId, now);
-        return new LobbyChatHistory(entryList, connectedPlayerCount, mute);
+        return new LobbyChatHistory(entries, connectedPlayerCount, mute);
     }
 }

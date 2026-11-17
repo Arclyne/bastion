@@ -294,11 +294,35 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         Chat.Dispose();
     }
 
+    private void HandleFriendshipStarted(object? sender, EventArgs e)
+    {
+        _ = LoadFriends();
+    }
+
+    private void HandleFriendRemoved(object? sender, FriendRemovedEventArgs e)
+    {
+        _allRows.RemoveAll(row => row.FriendCode == e.FriendCode);
+        IsEmpty = _allRows.Count == 0;
+        UpdateHeaderText();
+        ApplyFilter();
+    }
+
+    private void UpdateHeaderText()
+    {
+        int connectedCount = _allRows.Count(row => row.IsConnected);
+        HeaderText = FormatText(Strings.FriendsConnectedCountFormat, connectedCount, _allRows.Count);
+    }
+
+    private static string FormatText(string format, params object[] arguments)
+    {
+        return string.Format(CultureInfo.CurrentCulture, format, arguments);
+    }
+
     private void ApplyFilter()
     {
         ConnectedFriends.Clear();
         OfflineFriends.Clear();
-        IEnumerable<FriendRowViewModel> matchingRows = _allRows.Where(MatchesFilter);
+        IEnumerable<FriendRowViewModel> matchingRows = _allRows.Where(IsMatchingFilter);
         foreach (FriendRowViewModel row in matchingRows)
         {
             ObservableCollection<FriendRowViewModel> group = row.IsConnected ? ConnectedFriends : OfflineFriends;
@@ -313,15 +337,58 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         NoMatchText = hasNoMatch ? FormatText(Strings.FriendsNoMatchFormat, FilterText.Trim()) : string.Empty;
     }
 
-    private bool MatchesFilter(FriendRowViewModel row)
+    private bool IsMatchingFilter(FriendRowViewModel row)
     {
         string filter = FilterText.Trim();
         return filter.Length == 0 || row.Nickname.Contains(filter, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string FormatText(string format, params object[] arguments)
+    private void HandleMessageRequested(object? sender, MessageRequestedEventArgs e)
     {
-        return string.Format(CultureInfo.CurrentCulture, format, arguments);
+        Actions.CloseAll();
+        SelectTab(FriendsTab.Chat);
+        Chat.OpenPrivate(e.Friend);
+    }
+
+    private void HandleFriendPresenceChanged(object? sender, FriendPresenceChangedEventArgs e)
+    {
+        UiThread.Run(_uiContext, () => UpdateFriendPresence(e));
+    }
+
+    private void UpdateFriendPresence(FriendPresenceChangedEventArgs change)
+    {
+        int index = _allRows.FindIndex(row => row.FriendCode == change.Friend.Friend.FriendCode);
+        if (index < 0)
+        {
+            return;
+        }
+
+        _allRows[index] = new FriendRowViewModel(change.Friend, change.OccurredAt);
+        UpdateHeaderText();
+        ApplyFilter();
+        Chat.RefreshPresence(change.Friend.Friend.FriendCode);
+    }
+
+    private void HandleFriendRequestReceived(object? sender, FriendRequestReceivedEventArgs e)
+    {
+        UiThread.Run(_uiContext, () => ReceiveFriendRequest(e.Request));
+    }
+
+    private void ReceiveFriendRequest(PendingFriendRequest request)
+    {
+        bool isRequestsTabShown = IsOpen && IsRequestsTab;
+        Requests.ReceiveRequest(request, !isRequestsTabShown);
+    }
+
+    private void HandleRemoteFriendshipStarted(object? sender, FriendshipStartedEventArgs e)
+    {
+        UiThread.Run(_uiContext, ReloadFriendsAndRequests);
+    }
+
+    private void ReloadFriendsAndRequests()
+    {
+        _ = LoadFriends();
+        _ = Requests.LoadRequests();
     }
 
     private void ShowListing(FriendListing listing)
@@ -340,76 +407,9 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         ApplyFilter();
     }
 
-    private void UpdateHeaderText()
+    private void ReportLoadFailure(Exception cause)
     {
-        int connectedCount = _allRows.Count(row => row.IsConnected);
-        HeaderText = FormatText(Strings.FriendsConnectedCountFormat, connectedCount, _allRows.Count);
-    }
-
-    private void ReportLoadFailure(Exception ex)
-    {
-        _logger.Error("The friend list could not be loaded.", ex);
+        _logger.Error("The friend list could not be loaded.", cause);
         HasLoadFailed = true;
-    }
-
-    private void UpdateFriendPresence(FriendPresenceChangedEventArgs change)
-    {
-        int index = _allRows.FindIndex(row => row.FriendCode == change.Friend.Friend.FriendCode);
-        if (index < 0)
-        {
-            return;
-        }
-
-        _allRows[index] = new FriendRowViewModel(change.Friend, change.OccurredAt);
-        UpdateHeaderText();
-        ApplyFilter();
-        Chat.RefreshPresence(change.Friend.Friend.FriendCode);
-    }
-
-    private void ReceiveFriendRequest(PendingFriendRequest request)
-    {
-        bool isRequestsTabShown = IsOpen && IsRequestsTab;
-        Requests.ReceiveRequest(request, !isRequestsTabShown);
-    }
-
-    private void ReloadFriendsAndRequests()
-    {
-        _ = LoadFriends();
-        _ = Requests.LoadRequests();
-    }
-
-    private void HandleFriendshipStarted(object? sender, EventArgs e)
-    {
-        _ = LoadFriends();
-    }
-
-    private void HandleFriendRemoved(object? sender, FriendRemovedEventArgs e)
-    {
-        _allRows.RemoveAll(row => row.FriendCode == e.FriendCode);
-        IsEmpty = _allRows.Count == 0;
-        UpdateHeaderText();
-        ApplyFilter();
-    }
-
-    private void HandleMessageRequested(object? sender, MessageRequestedEventArgs e)
-    {
-        Actions.CloseAll();
-        SelectTab(FriendsTab.Chat);
-        Chat.OpenPrivate(e.Friend);
-    }
-
-    private void HandleFriendPresenceChanged(object? sender, FriendPresenceChangedEventArgs e)
-    {
-        UiThread.Run(_uiContext, () => UpdateFriendPresence(e));
-    }
-
-    private void HandleFriendRequestReceived(object? sender, FriendRequestReceivedEventArgs e)
-    {
-        UiThread.Run(_uiContext, () => ReceiveFriendRequest(e.Request));
-    }
-
-    private void HandleRemoteFriendshipStarted(object? sender, FriendshipStartedEventArgs e)
-    {
-        UiThread.Run(_uiContext, ReloadFriendsAndRequests);
     }
 }

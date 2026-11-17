@@ -648,7 +648,7 @@ public sealed class TestMatch
     }
 
     [Fact]
-    public void PlaceWall_GrooveTaken_Throws()
+    public void PlaceWall_GrooveTaken_ThrowsInvalidOperationException()
     {
         Match match = StartClassicMatch();
         PlaceFirstPlayerWall(match, _centerWall);
@@ -660,7 +660,7 @@ public sealed class TestMatch
     }
 
     [Fact]
-    public void PlaceWall_RivalTurn_Throws()
+    public void PlaceWall_RivalTurn_ThrowsInvalidOperationException()
     {
         Match match = StartClassicMatch();
         var placement = new WallPlacement(SecondAccountId, FirstMoveNumber, _centerWall);

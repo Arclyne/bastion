@@ -94,7 +94,8 @@ public sealed class RoomService : IRoomService
         if (options is null)
         {
             _logger.Warn($"A room request arrived without settings. Operation={operationName}");
-            throw RoomTranslator.ToFault(new RoomRejectedException(RoomRejection.InvalidSettings));
+            var missingSettings = new RoomRejectedException(RoomRejection.InvalidSettings);
+            throw RoomTranslator.ToFault(missingSettings);
         }
 
         return RoomTranslator.ToRequestedSettings(options);
@@ -144,6 +145,36 @@ public sealed class RoomService : IRoomService
         using IServiceScope scope = _scopeFactory.CreateScope();
         IPrivateRoomService privateRoomService = scope.ServiceProvider.GetRequiredService<IPrivateRoomService>();
         privateRoomService.LeaveRoom(token, GetUtcNow());
+    }
+
+    private static void LogOneWayFailures(string operationName, string? sessionToken, Action<string> operation)
+    {
+        if (sessionToken is null)
+        {
+            _logger.Warn($"A one-way room request arrived without a session. Operation={operationName}");
+            return;
+        }
+
+        try
+        {
+            operation(sessionToken);
+        }
+        catch (InvalidSessionException ex)
+        {
+            _logger.Warn(
+                $"A one-way room request was ignored because the session is not valid. Operation={operationName}",
+                ex);
+        }
+        catch (RoomRepositoryException ex)
+        {
+            _logger.Error($"The closed room could not be saved. Operation={operationName}", ex);
+        }
+        catch (DbException ex)
+        {
+            _logger.Error(
+                $"The database could not be reached during a one-way room request. Operation={operationName}",
+                ex);
+        }
     }
 
     private RoomState? FindOwnRoomInRequestScope(string token)
@@ -200,36 +231,6 @@ public sealed class RoomService : IRoomService
     {
         operation();
         return true;
-    }
-
-    private static void LogOneWayFailures(string operationName, string? sessionToken, Action<string> operation)
-    {
-        if (sessionToken is null)
-        {
-            _logger.Warn($"A one-way room request arrived without a session. Operation={operationName}");
-            return;
-        }
-
-        try
-        {
-            operation(sessionToken);
-        }
-        catch (InvalidSessionException ex)
-        {
-            _logger.Warn(
-                $"A one-way room request was ignored because the session is not valid. Operation={operationName}",
-                ex);
-        }
-        catch (RoomRepositoryException ex)
-        {
-            _logger.Error($"The closed room could not be saved. Operation={operationName}", ex);
-        }
-        catch (DbException ex)
-        {
-            _logger.Error(
-                $"The database could not be reached during a one-way room request. Operation={operationName}",
-                ex);
-        }
     }
 
     private DateTime GetUtcNow()

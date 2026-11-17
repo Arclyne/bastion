@@ -42,10 +42,11 @@ public sealed class PrivateMatchCreator : IPrivateMatchCreator
         var accountIds = new List<int>(accountIdsInTurnOrder);
         IReadOnlyDictionary<int, short> eloRatingsByAccountId =
             _matchRepository.FindEloRatingsByAccountId(format.GameMode.GameModeId, accountIds);
-        IEnumerable<MatchEntrant> entrants = membersInTurnOrder
+        IEnumerable<MatchEntrant> unratedEntrants = membersInTurnOrder
             .Select(member => new MatchEntrant(member.AccountId, EloRating: null));
-        var entrantList = new List<MatchEntrant>(entrants);
-        int matchId = _roomRepository.SaveRoomMatch(room.Identity.RoomId, Match.StartPrivate(format, entrantList, startedAt));
+        var entrants = new List<MatchEntrant>(unratedEntrants);
+        var match = Match.StartPrivate(format, entrants, startedAt);
+        int matchId = _roomRepository.SaveRoomMatch(room.Identity.RoomId, match);
         _logger.Info($"Private match created. MatchId={matchId}; RoomId={room.Identity.RoomId}");
         List<CreatedMatchParticipant> participants = ToParticipants(membersInTurnOrder, eloRatingsByAccountId);
         return new CreatedMatch(matchId, format, participants);
@@ -63,7 +64,8 @@ public sealed class PrivateMatchCreator : IPrivateMatchCreator
             var player = new ConnectedPlayer(member.AccountId, member.Nickname);
             int turnOrderNumber = Match.FirstTurnOrder + memberIndex;
             byte turnOrder = (byte)turnOrderNumber;
-            participants.Add(new CreatedMatchParticipant(player, eloRating, turnOrder));
+            var participant = new CreatedMatchParticipant(player, eloRating, turnOrder);
+            participants.Add(participant);
         }
 
         return participants;

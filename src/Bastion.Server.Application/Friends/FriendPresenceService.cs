@@ -30,7 +30,8 @@ public sealed class FriendPresenceService : IFriendPresenceService
             return;
         }
 
-        NotifyFriends(new FriendPresenceChange(identity, FriendPresence.Connected, lastSeenAt: null));
+        var change = new FriendPresenceChange(identity, FriendPresence.Connected, lastSeenAt: null);
+        NotifyFriends(change);
     }
 
     /// <inheritdoc/>
@@ -46,7 +47,8 @@ public sealed class FriendPresenceService : IFriendPresenceService
         _unitOfWork.SaveChanges();
 
         var identity = PlayerIdentity.FromAccount(account);
-        NotifyFriends(new FriendPresenceChange(identity, FriendPresence.Disconnected, now));
+        var change = new FriendPresenceChange(identity, FriendPresence.Disconnected, now);
+        NotifyFriends(change);
     }
 
     private void NotifyFriends(FriendPresenceChange change)

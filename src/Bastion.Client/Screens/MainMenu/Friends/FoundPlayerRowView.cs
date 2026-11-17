@@ -31,8 +31,10 @@ public sealed class FoundPlayerRowView : Panel
         WidthUnits = DimensionUnitType.Absolute;
         Height = RowHeight;
         HeightUnits = DimensionUnitType.Absolute;
-        AddChild(CreateNickname());
-        AddChild(CreateActionButton());
+        Label nickname = CreateNickname();
+        Button actionButton = CreateActionButton();
+        AddChild(nickname);
+        AddChild(actionButton);
     }
 
     private static Label CreateNickname()

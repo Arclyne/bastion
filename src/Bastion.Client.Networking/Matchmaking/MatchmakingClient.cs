@@ -81,15 +81,15 @@ public sealed class MatchmakingClient : IMatchmakingClient
         }
     }
 
-    private static Exception ToClientException(Exception ex)
+    private static Exception ToClientException(Exception cause)
     {
-        if (ex is FaultException<SearchRejectedFault> rejected)
+        if (cause is FaultException<SearchRejectedFault> rejected)
         {
             SearchRejection rejection = ToRejection(rejected.Detail.Reason);
-            return new SearchRejectedException(rejection, ex);
+            return new SearchRejectedException(rejection, cause);
         }
 
-        return ServiceFailureTranslator.ToClientException(ex);
+        return ServiceFailureTranslator.ToClientException(cause);
     }
 
     private static SearchRejection ToRejection(SearchRejectionReason reason)

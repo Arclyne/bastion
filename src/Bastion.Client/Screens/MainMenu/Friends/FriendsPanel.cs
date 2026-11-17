@@ -45,15 +45,23 @@ public sealed class FriendsPanel : Panel
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = ContentSpacing,
         };
-        content.AddChild(CreateTabRow());
-        content.AddChild(CreateHeader());
-        content.AddChild(CreateFriendList(viewModel));
-        content.AddChild(CreateAddFriend(viewModel));
-        content.AddChild(CreateRequests(viewModel));
-        content.AddChild(CreateChat(viewModel));
+        StackPanel tabRow = CreateTabRow();
+        Label header = CreateHeader();
+        FriendListView friendList = CreateFriendList(viewModel);
+        Panel addFriend = CreateAddFriend(viewModel);
+        Panel requests = CreateRequests(viewModel);
+        Panel chat = CreateChat(viewModel);
+        content.AddChild(tabRow);
+        content.AddChild(header);
+        content.AddChild(friendList);
+        content.AddChild(addFriend);
+        content.AddChild(requests);
+        content.AddChild(chat);
+        FriendCodeFooter footer = CreateFooter(viewModel);
+        FriendActionsMenu actionsMenu = CreateActionsMenu(viewModel);
         AddChild(content);
-        AddChild(CreateFooter(viewModel));
-        AddChild(CreateActionsMenu(viewModel));
+        AddChild(footer);
+        AddChild(actionsMenu);
         CardSkin.Apply(Visual);
     }
 
@@ -68,20 +76,28 @@ public sealed class FriendsPanel : Panel
             Orientation = Orientation.Horizontal,
             Spacing = TabSpacing,
         };
-        row.AddChild(CreateTab(
+        TabButton friendsTab = CreateTab(
             nameof(Strings.FriendsTabFriends),
             nameof(FriendsPanelViewModel.IsFriendsTab),
-            HandleFriendsTabClick));
-        row.AddChild(CreateTab(
+            HandleFriendsTabClick);
+        TabButton requestsTab = CreateTab(
             nameof(Strings.FriendsTabRequests),
             nameof(FriendsPanelViewModel.IsRequestsTab),
-            HandleRequestsTabClick));
-        row.AddChild(CreateTab(
+            HandleRequestsTabClick);
+        TabButton chatTab = CreateTab(
             nameof(Strings.FriendsTabChat),
             nameof(FriendsPanelViewModel.IsChatTab),
-            HandleChatTabClick));
+            HandleChatTabClick);
+        row.AddChild(friendsTab);
+        row.AddChild(requestsTab);
+        row.AddChild(chatTab);
         row.AddChild(close);
         return row;
+    }
+
+    private void HandleCloseClick(object? sender, EventArgs e)
+    {
+        _viewModel.Close();
     }
 
     private static TabButton CreateTab(string textKey, string selectedProperty, EventHandler handleClick)
@@ -90,6 +106,21 @@ public sealed class FriendsPanel : Panel
         ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Pill);
         button.Click += handleClick;
         return new TabButton(button, selectedProperty, TabSpacing);
+    }
+
+    private void HandleFriendsTabClick(object? sender, EventArgs e)
+    {
+        _viewModel.SelectTab(FriendsTab.Friends);
+    }
+
+    private void HandleRequestsTabClick(object? sender, EventArgs e)
+    {
+        _viewModel.SelectTab(FriendsTab.Requests);
+    }
+
+    private void HandleChatTabClick(object? sender, EventArgs e)
+    {
+        _viewModel.SelectTab(FriendsTab.Chat);
     }
 
     private static Label CreateHeader()
@@ -154,25 +185,5 @@ public sealed class FriendsPanel : Panel
         menu.X = PaddingX;
         menu.Y = -PaddingBottom;
         return menu;
-    }
-
-    private void HandleFriendsTabClick(object? sender, EventArgs e)
-    {
-        _viewModel.SelectTab(FriendsTab.Friends);
-    }
-
-    private void HandleRequestsTabClick(object? sender, EventArgs e)
-    {
-        _viewModel.SelectTab(FriendsTab.Requests);
-    }
-
-    private void HandleChatTabClick(object? sender, EventArgs e)
-    {
-        _viewModel.SelectTab(FriendsTab.Chat);
-    }
-
-    private void HandleCloseClick(object? sender, EventArgs e)
-    {
-        _viewModel.Close();
     }
 }

@@ -166,9 +166,9 @@ public sealed class AddFriendViewModel : ViewModel
         }
     }
 
-    private void ReportSearchFailure(Exception ex)
+    private void ReportSearchFailure(Exception cause)
     {
-        _logger.Error("The friend search could not reach the server.", ex);
+        _logger.Error("The friend search could not reach the server.", cause);
         StatusText = Strings.FriendsSearchFailed;
     }
 
@@ -191,10 +191,9 @@ public sealed class AddFriendViewModel : ViewModel
         StatusText = FriendRejectionText.Describe(rejection);
     }
 
-    private void ReportSendFailure(Exception ex)
+    private void ReportSendFailure(Exception cause)
     {
-        _logger.Error("The friend request could not reach the server.", ex);
+        _logger.Error("The friend request could not reach the server.", cause);
         StatusText = Strings.FriendsSendRequestFailed;
     }
-
 }

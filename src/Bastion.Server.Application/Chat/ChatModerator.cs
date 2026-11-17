@@ -45,8 +45,8 @@ public sealed class ChatModerator : IChatModerator
     public ChatMute FindMute(int accountId, DateTime now)
     {
         IReadOnlyList<Sanction> chatSanctions = _unitOfWork.Sanctions.ListChatSanctions(accountId);
-        IEnumerable<Sanction> sanctionsInEffect = chatSanctions.Where(sanction => sanction.IsInEffectAt(now));
-        var sanctionList = new List<Sanction>(sanctionsInEffect);
-        return ChatMute.FromSanctionsInEffect(sanctionList);
+        IEnumerable<Sanction> currentSanctions = chatSanctions.Where(sanction => sanction.IsInEffectAt(now));
+        var sanctionsInEffect = new List<Sanction>(currentSanctions);
+        return ChatMute.FromSanctionsInEffect(sanctionsInEffect);
     }
 }

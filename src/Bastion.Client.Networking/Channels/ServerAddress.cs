@@ -14,7 +14,9 @@ public static class ServerAddress
     {
         ArgumentNullException.ThrowIfNull(path);
 
-        return ServiceEndpoints.CreateAddress(GetHost(), GetPort(), path);
+        string host = GetHost();
+        int port = GetPort();
+        return ServiceEndpoints.CreateAddress(host, port, path);
     }
 
     public static string GetCertificateThumbprint()

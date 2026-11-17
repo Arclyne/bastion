@@ -28,7 +28,7 @@ public sealed class TestFriendship
     }
 
     [Fact]
-    public void Constructor_SameAccount_ThrowsArgument()
+    public void Constructor_SameAccount_ThrowsArgumentException()
     {
         Action befriendSelf = () => new Friendship(SmallerAccountId, SmallerAccountId, _befriendedAt);
 

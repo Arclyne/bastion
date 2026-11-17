@@ -50,20 +50,20 @@ public sealed class AccountClient : IAccountClient
         }
     }
 
-    private static Exception ToClientException(Exception ex)
+    private static Exception ToClientException(Exception cause)
     {
-        if (ex is FaultException<InvalidCredentialsFault>)
+        if (cause is FaultException<InvalidCredentialsFault>)
         {
-            return new InvalidCredentialsException(ex);
+            return new InvalidCredentialsException(cause);
         }
 
-        if (ex is FaultException<AccountRestrictedFault> restricted)
+        if (cause is FaultException<AccountRestrictedFault> restricted)
         {
             AccountRestriction restriction = ToRestriction(restricted.Detail.Reason);
-            return new AccountRestrictedException(restriction, restricted.Detail.LockMinutes, ex);
+            return new AccountRestrictedException(restriction, restricted.Detail.LockMinutes, cause);
         }
 
-        return ServiceFailureTranslator.ToClientException(ex);
+        return ServiceFailureTranslator.ToClientException(cause);
     }
 
     private static AccountRestriction ToRestriction(RestrictionReason reason)

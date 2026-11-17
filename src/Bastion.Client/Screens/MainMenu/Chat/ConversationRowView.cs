@@ -5,6 +5,7 @@ using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
+using Gum.GueDeriving;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
@@ -36,9 +37,12 @@ public sealed class ConversationRowView : Panel
         WidthUnits = DimensionUnitType.Absolute;
         Height = RowHeight;
         HeightUnits = DimensionUnitType.Absolute;
-        ShapeFactory.InsertBehindContent(Visual, ShapeFactory.CreateRounded(Palette.Selected, RowRadius));
-        AddChild(CreateText(row));
-        AddChild(CreateSide());
+        RectangleRuntime background = ShapeFactory.CreateRounded(Palette.Selected, RowRadius);
+        StackPanel text = CreateText(row);
+        StackPanel side = CreateSide();
+        ShapeFactory.InsertBehindContent(Visual, background);
+        AddChild(text);
+        AddChild(side);
     }
 
     private static StackPanel CreateText(ConversationRowViewModel row)
@@ -75,12 +79,19 @@ public sealed class ConversationRowView : Panel
             Orientation = Orientation.Horizontal,
             Spacing = SideSpacing,
         };
-        side.AddChild(CreateTime());
-        side.AddChild(CreateBadge());
+        Label time = CreateTime();
+        Panel badge = CreateBadge();
+        side.AddChild(time);
+        side.AddChild(badge);
         side.AddChild(open);
         side.Anchor(Gum.Wireframe.Anchor.Right);
         side.X = -PaddingX;
         return side;
+    }
+
+    private void HandleOpenClick(object? sender, EventArgs e)
+    {
+        _chatTab.OpenPrivate(_row.Partner);
     }
 
     private static Label CreateTime()
@@ -96,10 +107,5 @@ public sealed class ConversationRowView : Panel
         ViewFactory.CenterVertically(badge);
         badge.SetBinding(nameof(IsVisible), nameof(ConversationRowViewModel.HasUnread));
         return badge;
-    }
-
-    private void HandleOpenClick(object? sender, EventArgs e)
-    {
-        _chatTab.OpenPrivate(_row.Partner);
     }
 }

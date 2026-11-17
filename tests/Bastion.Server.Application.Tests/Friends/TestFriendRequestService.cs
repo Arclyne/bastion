@@ -46,7 +46,7 @@ public sealed class TestFriendRequestService
     }
 
     [Fact]
-    public void SearchPlayers_InvalidSession_ThrowsInvalidSession()
+    public void SearchPlayers_InvalidSession_ThrowsInvalidSessionException()
     {
         Action search = () => _friendRequestService.SearchPlayers(UnknownToken, OtherNicknamePrefix, _now);
 
@@ -157,7 +157,7 @@ public sealed class TestFriendRequestService
     }
 
     [Fact]
-    public void SendFriendRequest_InvalidSession_ThrowsInvalidSession()
+    public void SendFriendRequest_InvalidSession_ThrowsInvalidSessionException()
     {
         Action send = () => _friendRequestService.SendFriendRequest(UnknownToken, OtherFriendCode, _now);
 

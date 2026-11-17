@@ -30,16 +30,20 @@ public sealed class FriendRequestsView : StackPanel
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = ViewSpacing;
 
-        AddChild(CreateSubtabRow());
-        AddChild(ViewFactory.CreateBoundNotice(
+        StackPanel subtabRow = CreateSubtabRow();
+        Label status = ViewFactory.CreateBoundNotice(
             nameof(FriendRequestsViewModel.StatusText),
             nameof(FriendRequestsViewModel.HasStatus),
-            TextStyleCatalog.FieldError));
-        AddChild(ViewFactory.CreateBoundNotice(
+            TextStyleCatalog.FieldError);
+        Label emptyText = ViewFactory.CreateBoundNotice(
             nameof(FriendRequestsViewModel.EmptyText),
             nameof(FriendRequestsViewModel.HasEmptyText),
-            TextStyleCatalog.NoticeTitle));
-        AddChild(CreateRequestList());
+            TextStyleCatalog.NoticeTitle);
+        ItemsControl requestList = CreateRequestList();
+        AddChild(subtabRow);
+        AddChild(status);
+        AddChild(emptyText);
+        AddChild(requestList);
     }
 
     private StackPanel CreateSubtabRow()
@@ -49,14 +53,16 @@ public sealed class FriendRequestsView : StackPanel
             Orientation = Orientation.Horizontal,
             Spacing = SubtabSpacing,
         };
-        row.AddChild(CreateSubtab(
+        TabButton receivedTab = CreateSubtab(
             nameof(FriendRequestsViewModel.ReceivedTitle),
             nameof(FriendRequestsViewModel.ShowsReceived),
-            HandleReceivedClick));
-        row.AddChild(CreateSubtab(
+            HandleReceivedClick);
+        TabButton sentTab = CreateSubtab(
             nameof(FriendRequestsViewModel.SentTitle),
             nameof(FriendRequestsViewModel.ShowsSent),
-            HandleSentClick));
+            HandleSentClick);
+        row.AddChild(receivedTab);
+        row.AddChild(sentTab);
         return row;
     }
 
@@ -69,6 +75,16 @@ public sealed class FriendRequestsView : StackPanel
         button.SetBinding(nameof(Button.Text), titleProperty);
         button.Click += handleClick;
         return new TabButton(button, selectedProperty, SubtabSpacing);
+    }
+
+    private void HandleReceivedClick(object? sender, EventArgs e)
+    {
+        _requests.ShowReceived();
+    }
+
+    private void HandleSentClick(object? sender, EventArgs e)
+    {
+        _requests.ShowSent();
     }
 
     private ItemsControl CreateRequestList()
@@ -84,15 +100,5 @@ public sealed class FriendRequestsView : StackPanel
         FriendRequestRowViewModel row = ViewFactory.RequireRow<FriendRequestRowViewModel>(item);
         var rowView = new FriendRequestRowView(_requests, row);
         return rowView.Visual;
-    }
-
-    private void HandleReceivedClick(object? sender, EventArgs e)
-    {
-        _requests.ShowReceived();
-    }
-
-    private void HandleSentClick(object? sender, EventArgs e)
-    {
-        _requests.ShowSent();
     }
 }

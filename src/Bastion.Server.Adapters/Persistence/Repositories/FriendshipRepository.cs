@@ -58,12 +58,6 @@ public sealed class FriendshipRepository : IFriendshipRepository
         return deleted.DeletedRows > 0;
     }
 
-    private static FriendSummary ToFriendSummary(Account friend)
-    {
-        var identity = PlayerIdentity.FromAccount(friend);
-        return new FriendSummary(identity, friend.LastSeenAt);
-    }
-
     private IQueryable<int> SelectFriendAccountIds(int accountId)
     {
         IQueryable<int> friendIdsStoredAsLarger = _context.Friendships
@@ -73,5 +67,11 @@ public sealed class FriendshipRepository : IFriendshipRepository
             .Where(friendship => friendship.LargerAccountId == accountId)
             .Select(friendship => friendship.SmallerAccountId);
         return friendIdsStoredAsLarger.Concat(friendIdsStoredAsSmaller);
+    }
+
+    private static FriendSummary ToFriendSummary(Account friend)
+    {
+        var identity = PlayerIdentity.FromAccount(friend);
+        return new FriendSummary(identity, friend.LastSeenAt);
     }
 }

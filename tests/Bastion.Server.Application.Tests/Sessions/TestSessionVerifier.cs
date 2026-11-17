@@ -28,7 +28,7 @@ public sealed class TestSessionVerifier
     }
 
     [Fact]
-    public void Verify_UnknownToken_ThrowsInvalidSession()
+    public void Verify_UnknownToken_ThrowsInvalidSessionException()
     {
         AddSession();
 
@@ -38,7 +38,7 @@ public sealed class TestSessionVerifier
     }
 
     [Fact]
-    public void Verify_ExpiredSession_ThrowsInvalidSession()
+    public void Verify_ExpiredSession_ThrowsInvalidSessionException()
     {
         AddSession();
         DateTime afterExpiry = _issuedAt.AddHours(Session.MaximumLifetimeHours);

@@ -18,8 +18,6 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
 
     public void AddFriendSummary(int accountId, FriendSummary friend)
     {
-        ArgumentNullException.ThrowIfNull(friend);
-
         if (!_friendsByAccountId.TryGetValue(accountId, out List<FriendSummary>? friends))
         {
             friends = new List<FriendSummary>();
@@ -48,8 +46,6 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
 
     public void Add(Friendship friendship)
     {
-        ArgumentNullException.ThrowIfNull(friendship);
-
         AddedFriendships.Add(friendship);
         FriendSummary largerFriend = CreateSummary(friendship.LargerAccountId);
         FriendSummary smallerFriend = CreateSummary(friendship.SmallerAccountId);
@@ -59,9 +55,9 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
 
     public bool Remove(int firstAccountId, int secondAccountId)
     {
-        bool removedFirst = RemoveSummary(firstAccountId, secondAccountId);
-        bool removedSecond = RemoveSummary(secondAccountId, firstAccountId);
-        bool isRemoved = removedFirst || removedSecond;
+        bool isFirstRemoved = RemoveSummary(firstAccountId, secondAccountId);
+        bool isSecondRemoved = RemoveSummary(secondAccountId, firstAccountId);
+        bool isRemoved = isFirstRemoved || isSecondRemoved;
         if (isRemoved)
         {
             RemovedFriendAccountIds.Add(secondAccountId);

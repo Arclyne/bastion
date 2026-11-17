@@ -107,15 +107,15 @@ public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
         _chat.MatchChatMessageReceived -= HandleMatchChatMessageReceived;
     }
 
-    private static void ReportSendFailure(ChatMessageRowViewModel row, Exception ex)
+    private void HandleMatchChatMessageReceived(object? sender, MatchChatMessageReceivedEventArgs e)
     {
-        _logger.Error("A match chat message could not be sent.", ex);
-        row.Fail(Strings.MatchChatUnavailable);
-    }
+        if (e.MatchId != _joinedMatch.FoundMatch.MatchId)
+        {
+            return;
+        }
 
-    private DateTime SendToJoinedMatch(string text)
-    {
-        return _chat.SendMatchChatMessage(_joinedMatch.Session.Token, _joinedMatch.FoundMatch.MatchId, text);
+        var row = new ChatMessageRowViewModel(e.Message);
+        UiThread.Run(_uiContext, () => AddMessage(row));
     }
 
     private void AddMessage(ChatMessageRowViewModel row)
@@ -127,14 +127,14 @@ public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
         }
     }
 
-    private void HandleMatchChatMessageReceived(object? sender, MatchChatMessageReceivedEventArgs e)
+    private DateTime SendToJoinedMatch(string text)
     {
-        if (e.MatchId != _joinedMatch.FoundMatch.MatchId)
-        {
-            return;
-        }
+        return _chat.SendMatchChatMessage(_joinedMatch.Session.Token, _joinedMatch.FoundMatch.MatchId, text);
+    }
 
-        var row = new ChatMessageRowViewModel(e.Message);
-        UiThread.Run(_uiContext, () => AddMessage(row));
+    private static void ReportSendFailure(ChatMessageRowViewModel row, Exception cause)
+    {
+        _logger.Error("A match chat message could not be sent.", cause);
+        row.Fail(Strings.MatchChatUnavailable);
     }
 }

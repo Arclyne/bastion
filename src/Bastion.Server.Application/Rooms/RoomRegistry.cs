@@ -179,7 +179,7 @@ public sealed class RoomRegistry : IRoomRegistry
         if (!_roomsByCode.TryGetValue(code, out WaitingRoom? room))
         {
             failedAttempts.Record(now);
-            throw new RoomRejectedException(RoomRejection.RoomNotFound);
+            throw new OpenRoomNotFoundException();
         }
 
         ForgetEmptyHistory(accountId, failedAttempts);

@@ -263,7 +263,8 @@ public sealed class NotificationChannelRegistry
 
     private void UnregisterChannel(int accountId, INotificationCallback callback)
     {
-        if (!_callbacksByAccountId.TryRemove(new KeyValuePair<int, INotificationCallback>(accountId, callback)))
+        var registration = new KeyValuePair<int, INotificationCallback>(accountId, callback);
+        if (!_callbacksByAccountId.TryRemove(registration))
         {
             return;
         }
@@ -276,7 +277,8 @@ public sealed class NotificationChannelRegistry
             _logger.Info($"Match search ended because the player disconnected. AccountId={accountId}");
         }
 
-        OnPlayerDisconnected(new PlayerDisconnectedEventArgs(accountId));
+        var disconnection = new PlayerDisconnectedEventArgs(accountId);
+        OnPlayerDisconnected(disconnection);
     }
 
     private void OnPlayerDisconnected(PlayerDisconnectedEventArgs e)

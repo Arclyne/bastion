@@ -18,6 +18,8 @@ public sealed class FakeMatchClient : IMatchClient
 
     public ChosenWall? LastWall { get; private set; }
 
+    public int PlacedWallCount { get; private set; }
+
     public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
 
     public event EventHandler<PawnMovedEventArgs>? PawnMoved;
@@ -26,8 +28,6 @@ public sealed class FakeMatchClient : IMatchClient
 
     public void AbandonMatch(string sessionToken, int matchId)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
-
         if (AbandonFailure is not null)
         {
             throw AbandonFailure;
@@ -38,9 +38,6 @@ public sealed class FakeMatchClient : IMatchClient
 
     public void MovePawn(string sessionToken, ChosenPawnMove move)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
-        ArgumentNullException.ThrowIfNull(move);
-
         if (MoveFailure is not null)
         {
             throw MoveFailure;
@@ -51,15 +48,13 @@ public sealed class FakeMatchClient : IMatchClient
 
     public void PlaceWall(string sessionToken, ChosenWall wall)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
-        ArgumentNullException.ThrowIfNull(wall);
-
         if (WallFailure is not null)
         {
             throw WallFailure;
         }
 
         LastWall = wall;
+        PlacedWallCount++;
     }
 
     public bool HasMatchAbandonedSubscribers()
@@ -74,23 +69,17 @@ public sealed class FakeMatchClient : IMatchClient
 
     public void RaiseMatchAbandoned(int matchId, string abandoningNickname, bool isMatchOver)
     {
-        ArgumentNullException.ThrowIfNull(abandoningNickname);
-
         var abandonment = new MatchAbandonedEventArgs(matchId, abandoningNickname, isMatchOver);
         MatchAbandoned?.Invoke(this, abandonment);
     }
 
     public void RaisePawnMoved(PawnMovedEventArgs e)
     {
-        ArgumentNullException.ThrowIfNull(e);
-
         PawnMoved?.Invoke(this, e);
     }
 
     public void RaiseWallPlaced(WallPlacedEventArgs e)
     {
-        ArgumentNullException.ThrowIfNull(e);
-
         WallPlaced?.Invoke(this, e);
     }
 }

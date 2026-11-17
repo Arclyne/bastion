@@ -136,7 +136,7 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
             PendingWall = null;
             HoveredWall = wall;
             IsHoveredWallValid = false;
-            HintText = DescribeRejection(rejection);
+            HintText = _play.DescribeWallRejection(rejection.Reason, rejection.BlockedTurnOrder);
             return;
         }
 
@@ -152,10 +152,9 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
             return;
         }
 
-        bool isPlaced = await _play.PlaceWall(wall);
-        if (isPlaced || !IsWallTurn())
+        await _play.PlaceWall(wall);
+        if (!_play.HasNotice)
         {
-            Cancel();
             return;
         }
 
@@ -168,13 +167,24 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
         _play.StateChanged -= HandlePlayStateChanged;
     }
 
+    private void HandlePlayStateChanged(object? sender, EventArgs e)
+    {
+        CanStart = _play.CanPlaceWall();
+        if (IsActive && !_play.IsWallTurn())
+        {
+            Cancel();
+        }
+    }
+
     private void ShowHoveredWall(BoardCoordinates groove)
     {
         var wall = new Wall(groove, Orientation);
         WallRejection? rejection = FindRejection(wall);
         HoveredWall = wall;
         IsHoveredWallValid = rejection is null;
-        HintText = rejection is null ? Strings.MatchWallChooseHint : DescribeRejection(rejection);
+        HintText = rejection is null
+            ? Strings.MatchWallChooseHint
+            : _play.DescribeWallRejection(rejection.Reason, rejection.BlockedTurnOrder);
     }
 
     private WallRejection? FindRejection(Wall wall)
@@ -182,29 +192,5 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
         Board board = _play.BuildBoard();
         WallRejection? rejection = WallPolicy.FindRejection(board, wall);
         return rejection;
-    }
-
-    private string DescribeRejection(WallRejection rejection)
-    {
-        string blockedNickname = rejection.BlockedTurnOrder is byte blockedTurnOrder
-            ? _play.FindNickname(blockedTurnOrder)
-            : string.Empty;
-        string description = WallRejectionText.Describe(rejection.Reason, blockedNickname);
-        return description;
-    }
-
-    private bool IsWallTurn()
-    {
-        byte ownRemainingWalls = _play.GetRemainingWalls(_play.OwnTurnOrder);
-        return !_play.IsMatchOver && _play.IsOwnTurn() && ownRemainingWalls > Participation.NoWallsLeft;
-    }
-
-    private void HandlePlayStateChanged(object? sender, EventArgs e)
-    {
-        CanStart = _play.CanPlaceWall();
-        if (IsActive && !IsWallTurn())
-        {
-            Cancel();
-        }
     }
 }

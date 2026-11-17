@@ -56,8 +56,8 @@ public sealed class TestLobbyChatRoom
         }
 
         IReadOnlyList<PostedChatLine> recentLines = _chatRoom.ListRecent();
-        bool keepsOldest = recentLines.Contains(oldest);
-        Assert.False(keepsOldest);
+        bool isOldestKept = recentLines.Contains(oldest);
+        Assert.False(isOldestKept);
     }
 
     [Fact]

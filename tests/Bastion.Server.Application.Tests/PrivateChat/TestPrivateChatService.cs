@@ -73,7 +73,7 @@ public sealed class TestPrivateChatService
     }
 
     [Fact]
-    public void SendPrivateMessage_InvalidSession_ThrowsInvalidSession()
+    public void SendPrivateMessage_InvalidSession_ThrowsInvalidSessionException()
     {
         PrivateMessageDraft draft = CreateDraftToFriend(CleanText);
 

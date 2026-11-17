@@ -37,7 +37,7 @@ public sealed class TestLoginService
     }
 
     [Fact]
-    public void LogIn_UnknownIdentifier_ThrowsInvalidCredentials()
+    public void LogIn_UnknownIdentifier_ThrowsInvalidCredentialsException()
     {
         AccessAttempt attempt = CreateAttempt(UnknownIdentifier);
 
@@ -70,7 +70,7 @@ public sealed class TestLoginService
     }
 
     [Fact]
-    public void LogIn_WrongPassword_ThrowsInvalidCredentials()
+    public void LogIn_WrongPassword_ThrowsInvalidCredentialsException()
     {
         AddActiveAccount();
         AccessAttempt attempt = CreateAttempt(Nickname);

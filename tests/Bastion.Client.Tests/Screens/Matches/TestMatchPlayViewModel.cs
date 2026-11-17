@@ -49,8 +49,12 @@ public sealed class TestMatchPlayViewModel : IDisposable
         _leftOfFirstStart,
     };
     private static readonly Wall _centerWall = new Wall(_centerGrooveCoordinates, WallOrientation.Horizontal);
+    private static readonly DateTimeOffset _startedAt = new DateTimeOffset(2026, 11, 15, 18, 0, 0, TimeSpan.Zero);
+    private static readonly TimeSpan _moveNotificationWait =
+        TimeSpan.FromSeconds(MatchPlayViewModel.MoveNotificationWaitSeconds);
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
+    private readonly ManualTimeProvider _timeProvider = new ManualTimeProvider(_startedAt);
     private readonly List<MatchPlayViewModel> _viewModels = new List<MatchPlayViewModel>();
 
     public void Dispose()
@@ -330,6 +334,40 @@ public sealed class TestMatchPlayViewModel : IDisposable
     }
 
     [Fact]
+    public async Task PlaceWall_SentBeforeWallPlaced_BlocksNextWall()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+
+        await viewModel.PlaceWall(_centerWall);
+
+        Assert.False(viewModel.CanPlaceWall());
+    }
+
+    [Fact]
+    public async Task WallPlaced_OwnWallSent_StopsSending()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        WallPlacedEventArgs ownWall =
+            WallPlacedSampleFactory.CreateFirstWall(JoinedMatchSampleFactory.OwnNickname, CenterGroove);
+        await viewModel.PlaceWall(_centerWall);
+
+        _matchClient.RaiseWallPlaced(ownWall);
+
+        Assert.False(viewModel.IsSending);
+    }
+
+    [Fact]
+    public async Task ClockTick_NoWallPlacedNotification_StopsSending()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        await viewModel.PlaceWall(_centerWall);
+
+        _timeProvider.Advance(_moveNotificationWait);
+
+        Assert.False(viewModel.IsSending);
+    }
+
+    [Fact]
     public void Dispose_Subscribed_StopsListeningToPawnMoves()
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
@@ -356,7 +394,7 @@ public sealed class TestMatchPlayViewModel : IDisposable
     {
         JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(ownTurnOrder);
         MatchPlayViewModel viewModel =
-            InlineUiContext.CreateViewModel(() => new MatchPlayViewModel(joinedMatch, _matchClient));
+            InlineUiContext.CreateViewModel(() => new MatchPlayViewModel(joinedMatch, _matchClient, _timeProvider));
         _viewModels.Add(viewModel);
         return viewModel;
     }

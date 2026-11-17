@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Bastion.Server.Application.Chat;
 
@@ -13,9 +12,6 @@ public sealed class FakeMatchChatNotifier : IMatchChatNotifier
         IReadOnlyCollection<int> recipientAccountIds,
         PostedChatLine postedLine)
     {
-        ArgumentNullException.ThrowIfNull(recipientAccountIds);
-        ArgumentNullException.ThrowIfNull(postedLine);
-
         var notifiedMessage = new NotifiedMatchChatMessage(matchId, recipientAccountIds, postedLine);
         NotifiedMessages.Add(notifiedMessage);
     }

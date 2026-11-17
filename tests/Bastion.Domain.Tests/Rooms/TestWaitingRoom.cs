@@ -40,7 +40,7 @@ public sealed class TestWaitingRoom
     }
 
     [Fact]
-    public void Admit_FullRoom_ThrowsInvalidOperation()
+    public void Admit_FullRoom_ThrowsInvalidOperationException()
     {
         WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
         AdmitGuest(room);
@@ -126,7 +126,7 @@ public sealed class TestWaitingRoom
     }
 
     [Fact]
-    public void ChangeSettings_FewerSeatsThanMembers_ThrowsInvalidOperation()
+    public void ChangeSettings_FewerSeatsThanMembers_ThrowsInvalidOperationException()
     {
         WaitingRoom room = RoomSampleFactory.CreateFourPlayerRoom();
         AdmitGuest(room);
@@ -154,7 +154,7 @@ public sealed class TestWaitingRoom
     }
 
     [Fact]
-    public void Remove_Host_ThrowsInvalidOperation()
+    public void Remove_Host_ThrowsInvalidOperationException()
     {
         WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
 

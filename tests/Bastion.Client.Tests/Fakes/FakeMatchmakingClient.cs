@@ -33,8 +33,6 @@ public sealed class FakeMatchmakingClient : IMatchmakingClient
 
     public void StartSearch(string sessionToken)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
-
         if (StartSearchFailure is not null)
         {
             throw StartSearchFailure;
@@ -48,15 +46,11 @@ public sealed class FakeMatchmakingClient : IMatchmakingClient
 
     public void CancelSearch(string sessionToken)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
-
         CancelSearchCount++;
     }
 
     public void ConfirmPresence(string sessionToken)
     {
-        ArgumentNullException.ThrowIfNull(sessionToken);
-
         ConfirmPresenceCount++;
     }
 
@@ -70,8 +64,6 @@ public sealed class FakeMatchmakingClient : IMatchmakingClient
 
     public void RaiseMatchFound(IReadOnlyList<FoundMatchParticipant> participants)
     {
-        ArgumentNullException.ThrowIfNull(participants);
-
         var matchFound = new MatchFoundEventArgs(FoundMatchId, _classicFormat, participants);
         MatchFound?.Invoke(this, matchFound);
     }

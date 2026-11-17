@@ -114,6 +114,43 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
         _matches.MatchAbandoned -= HandleMatchAbandoned;
     }
 
+    private void HandleMatchAbandoned(object? sender, MatchAbandonedEventArgs e)
+    {
+        if (e.MatchId != _joinedMatch.FoundMatch.MatchId)
+        {
+            return;
+        }
+
+        UiThread.Run(_uiContext, () => ReceiveAbandonment(e.AbandoningNickname, e.IsMatchOver));
+    }
+
+    private void ReceiveAbandonment(string abandoningNickname, bool isMatchOver)
+    {
+        if (isMatchOver)
+        {
+            ShowRivalAbandoned(abandoningNickname);
+            return;
+        }
+
+        _leftNicknames.Add(abandoningNickname);
+        PlayerLeftText = string.Format(CultureInfo.CurrentCulture, Strings.MatchPlayerLeftFormat, abandoningNickname);
+        var departure = new PlayerLeftEventArgs(abandoningNickname);
+        OnPlayerLeft(departure);
+    }
+
+    private void ShowRivalAbandoned(string abandoningNickname)
+    {
+        RivalAbandonedText = string.Format(
+            CultureInfo.CurrentCulture,
+            Strings.MatchRivalAbandonedFormat,
+            abandoningNickname);
+    }
+
+    private void OnPlayerLeft(PlayerLeftEventArgs e)
+    {
+        PlayerLeft?.Invoke(this, e);
+    }
+
     private async Task LeaveJoinedMatch()
     {
         try
@@ -148,51 +185,14 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
         _matches.AbandonMatch(_joinedMatch.Session.Token, _joinedMatch.FoundMatch.MatchId);
     }
 
-    private void ReportAbandonFailure(Exception ex)
+    private void ReportAbandonFailure(Exception cause)
     {
-        _logger.Error("The player could not leave the match.", ex);
+        _logger.Error("The player could not leave the match.", cause);
         StatusText = Strings.MatchAbandonFailed;
     }
 
     private void OnReturnToMenuRequested()
     {
         ReturnToMenuRequested?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void ReceiveAbandonment(string abandoningNickname, bool isMatchOver)
-    {
-        if (isMatchOver)
-        {
-            ShowRivalAbandoned(abandoningNickname);
-            return;
-        }
-
-        _leftNicknames.Add(abandoningNickname);
-        PlayerLeftText = string.Format(CultureInfo.CurrentCulture, Strings.MatchPlayerLeftFormat, abandoningNickname);
-        var departure = new PlayerLeftEventArgs(abandoningNickname);
-        OnPlayerLeft(departure);
-    }
-
-    private void ShowRivalAbandoned(string abandoningNickname)
-    {
-        RivalAbandonedText = string.Format(
-            CultureInfo.CurrentCulture,
-            Strings.MatchRivalAbandonedFormat,
-            abandoningNickname);
-    }
-
-    private void OnPlayerLeft(PlayerLeftEventArgs e)
-    {
-        PlayerLeft?.Invoke(this, e);
-    }
-
-    private void HandleMatchAbandoned(object? sender, MatchAbandonedEventArgs e)
-    {
-        if (e.MatchId != _joinedMatch.FoundMatch.MatchId)
-        {
-            return;
-        }
-
-        UiThread.Run(_uiContext, () => ReceiveAbandonment(e.AbandoningNickname, e.IsMatchOver));
     }
 }

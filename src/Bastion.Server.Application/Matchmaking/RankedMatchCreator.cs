@@ -63,20 +63,6 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         }
     }
 
-    private static List<CreatedMatchParticipant> ToParticipants(Match match, IReadOnlyList<MatchSearch> players)
-    {
-        var participants = new List<CreatedMatchParticipant>();
-        foreach (Participation participation in match.Participations)
-        {
-            MatchSearch search = players.First(player => player.AccountId == participation.AccountId);
-            var connectedPlayer = new ConnectedPlayer(search.AccountId, search.Nickname);
-            participants.Add(
-                new CreatedMatchParticipant(connectedPlayer, participation.InitialElo, participation.TurnOrder));
-        }
-
-        return participants;
-    }
-
     private CreatedMatch StartAndSaveMatch(MatchPairing pairing, MatchFormat format, DateTime startedAt)
     {
         IReadOnlyList<MatchSearch> playersInTurnOrder = _turnOrderShuffler.ShuffleTurnOrder(pairing.Players);
@@ -98,9 +84,25 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         foreach (int accountId in accountIds)
         {
             short eloRating = eloRatingsByAccountId.GetValueOrDefault(accountId, ModeStatistic.DefaultEloRating);
-            entrants.Add(new MatchEntrant(accountId, eloRating));
+            var entrant = new MatchEntrant(accountId, eloRating);
+            entrants.Add(entrant);
         }
 
         return entrants;
+    }
+
+    private static List<CreatedMatchParticipant> ToParticipants(Match match, IReadOnlyList<MatchSearch> players)
+    {
+        var participants = new List<CreatedMatchParticipant>();
+        foreach (Participation participation in match.Participations)
+        {
+            MatchSearch search = players.First(player => player.AccountId == participation.AccountId);
+            var connectedPlayer = new ConnectedPlayer(search.AccountId, search.Nickname);
+            var participant =
+                new CreatedMatchParticipant(connectedPlayer, participation.InitialElo, participation.TurnOrder);
+            participants.Add(participant);
+        }
+
+        return participants;
     }
 }

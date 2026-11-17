@@ -14,6 +14,7 @@ public sealed class NewContextRunner<TFailure>
         Func<Exception, TFailure> createFailure)
     {
         ArgumentNullException.ThrowIfNull(contextFactory);
+        ArgumentNullException.ThrowIfNull(createFailure);
 
         _contextFactory = contextFactory;
         _failureTranslator = new DatabaseFailureTranslator<TFailure>(createFailure);

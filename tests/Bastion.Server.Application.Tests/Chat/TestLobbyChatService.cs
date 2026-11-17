@@ -54,7 +54,7 @@ public sealed class TestLobbyChatService
     }
 
     [Fact]
-    public void SendMessage_InvalidSession_ThrowsInvalidSession()
+    public void SendMessage_InvalidSession_ThrowsInvalidSessionException()
     {
         Action send = () => _lobbyChatService.SendMessage(UnknownToken, CleanText, _now);
 
@@ -247,7 +247,7 @@ public sealed class TestLobbyChatService
     }
 
     [Fact]
-    public void OpenLobbyChat_InvalidSession_ThrowsInvalidSession()
+    public void OpenLobbyChat_InvalidSession_ThrowsInvalidSessionException()
     {
         Action open = () => _lobbyChatService.OpenLobbyChat(UnknownToken, _now);
 

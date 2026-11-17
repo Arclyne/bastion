@@ -1,6 +1,7 @@
 using System;
 using Bastion.Client.Theme;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 
 namespace Bastion.Client.Controls;
 
@@ -13,7 +14,8 @@ public sealed class ModalLayer : Panel
     public ModalLayer()
     {
         Dock(Gum.Wireframe.Dock.Fill);
-        ShapeFactory.InsertBehindContent(Visual, ShapeFactory.CreateRounded(Palette.Overlay, OverlayCornerRadius));
+        RectangleRuntime overlay = ShapeFactory.CreateRounded(Palette.Overlay, OverlayCornerRadius);
+        ShapeFactory.InsertBehindContent(Visual, overlay);
     }
 
     public bool IsOpen

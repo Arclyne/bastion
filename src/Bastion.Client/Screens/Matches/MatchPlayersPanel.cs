@@ -38,7 +38,8 @@ public sealed class MatchPlayersPanel : Panel
         };
         foreach (MatchPlayerViewModel player in viewModel.Players)
         {
-            rows.AddChild(CreatePlayerRow(player));
+            Panel playerRow = CreatePlayerRow(player);
+            rows.AddChild(playerRow);
         }
 
         AddChild(rows);
@@ -52,7 +53,8 @@ public sealed class MatchPlayersPanel : Panel
             Width = NameWidth,
             WidthUnits = DimensionUnitType.Absolute,
         };
-        nameColumn.AddChild(ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyleCatalog.IdentityName));
+        Label nickname = ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyleCatalog.IdentityName);
+        nameColumn.AddChild(nickname);
         Label detail = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchPlayerViewModel.DetailText),
             TextStyleCatalog.IdentityDetail,
@@ -66,10 +68,13 @@ public sealed class MatchPlayersPanel : Panel
             Orientation = Orientation.Horizontal,
             Spacing = RowContentSpacing,
         };
-        content.AddChild(CreatePawn(player));
+        Panel pawn = CreatePawn(player);
+        Label walls = CreateWallsLabel(player);
+        Label clock = ViewFactory.CreateUntranslatedLabel(player.ClockText, TextStyleCatalog.IdentityName);
+        content.AddChild(pawn);
         content.AddChild(nameColumn);
-        content.AddChild(CreateWallsLabel(player));
-        content.AddChild(ViewFactory.CreateUntranslatedLabel(player.ClockText, TextStyleCatalog.IdentityName));
+        content.AddChild(walls);
+        content.AddChild(clock);
         ViewFactory.CenterVertically(content);
 
         var row = new Panel
@@ -79,18 +84,10 @@ public sealed class MatchPlayersPanel : Panel
             Height = RowHeight,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        row.AddChild(CreateTurnHighlight(player));
+        Panel turnHighlight = CreateTurnHighlight(player);
+        row.AddChild(turnHighlight);
         row.AddChild(content);
         return row;
-    }
-
-    private static Label CreateWallsLabel(MatchPlayerViewModel player)
-    {
-        Label walls = ViewFactory.CreateBoundUntranslatedLabel(
-            nameof(MatchPlayerViewModel.WallsText),
-            TextStyleCatalog.IdentityDetail);
-        walls.BindingContext = player;
-        return walls;
     }
 
     private static Panel CreatePawn(MatchPlayerViewModel player)
@@ -108,6 +105,15 @@ public sealed class MatchPlayersPanel : Panel
         return pawn;
     }
 
+    private static Label CreateWallsLabel(MatchPlayerViewModel player)
+    {
+        Label walls = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(MatchPlayerViewModel.WallsText),
+            TextStyleCatalog.IdentityDetail);
+        walls.BindingContext = player;
+        return walls;
+    }
+
     private static Panel CreateTurnHighlight(MatchPlayerViewModel player)
     {
         var highlight = new Panel
@@ -116,7 +122,8 @@ public sealed class MatchPlayersPanel : Panel
         };
         highlight.Dock(Gum.Wireframe.Dock.Fill);
         highlight.SetBinding(nameof(IsVisible), nameof(MatchPlayerViewModel.HasTurn));
-        ShapeFactory.InsertBehindContent(highlight.Visual, ShapeFactory.CreateRounded(Palette.Selected, RowRadius));
+        RectangleRuntime background = ShapeFactory.CreateRounded(Palette.Selected, RowRadius);
+        ShapeFactory.InsertBehindContent(highlight.Visual, background);
         return highlight;
     }
 }
