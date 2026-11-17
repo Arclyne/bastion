@@ -1,4 +1,5 @@
 using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.Rooms;
 using Bastion.Server.Application.Sessions;
 
@@ -77,7 +78,7 @@ public sealed class PrivateRoomService : IPrivateRoomService
     }
 
     /// <inheritdoc/>
-    public RoomSnapshot? FindOwnRoom(string sessionToken, DateTime now)
+    public Lookup<RoomSnapshot> FindOwnRoom(string sessionToken, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 

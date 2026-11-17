@@ -1,4 +1,5 @@
 using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matchmaking;
 using Bastion.Domain.Rooms;
@@ -113,7 +114,8 @@ public sealed class TestMatchSearchService
 
         _matchSearchService.StartSearch(Token, repeatedStartAt);
 
-        DateTime? searchStart = _matchmakingQueue.FindSearchStart(AccountId);
+        Lookup<DateTime> foundSearchStart = _matchmakingQueue.FindSearchStart(AccountId);
+        DateTime searchStart = foundSearchStart.GetValue();
         Assert.Equal(_now, searchStart);
     }
 

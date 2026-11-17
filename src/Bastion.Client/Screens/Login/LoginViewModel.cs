@@ -1,11 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
+using System;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Networking.Channels;
 using Bastion.Domain.Accounts;
+using Bastion.Domain.Common;
 using Gum.Mvvm;
 using log4net;
 
@@ -293,13 +294,13 @@ public sealed class LoginViewModel : ViewModel
         }
 
         var preferredCulture = new CultureInfo(preferredLanguage);
-        SupportedLanguage? language = LanguageCatalog.FindClosest(preferredCulture);
-        if (language is null)
+        Lookup<SupportedLanguage> foundLanguage = LanguageCatalog.FindClosest(preferredCulture);
+        if (!foundLanguage.IsFound)
         {
             return;
         }
 
-        SelectedLanguage = language;
+        SelectedLanguage = foundLanguage.GetValue();
     }
 
     private void ShowRestriction(AccountRestriction restriction, int lockMinutes)

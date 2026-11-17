@@ -1,6 +1,7 @@
-using System;
 using System.Collections.Generic;
+using System;
 using Bastion.Domain.Chat;
+using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
 using Bastion.Server.Application.Matches;
@@ -52,14 +53,14 @@ public sealed class FakeMatchRepository : IMatchRepository
         return AccountIdsWithUnfinishedParticipation.Contains(accountId);
     }
 
-    public GameMode? FindActiveGameMode(GameModeCode code)
+    public Lookup<GameMode> FindActiveGameMode(GameModeCode code)
     {
         if (ActiveGameMode?.Code != code)
         {
-            return null;
+            return Lookup.Missing<GameMode>($"GameModeCode={code}");
         }
 
-        return ActiveGameMode;
+        return Lookup.FromNullable(ActiveGameMode, $"GameModeCode={code}");
     }
 
     public IReadOnlyDictionary<int, short> FindEloRatingsByAccountId(
@@ -101,9 +102,14 @@ public sealed class FakeMatchRepository : IMatchRepository
         return SavedMatchChatMessages.Count;
     }
 
-    public Match? FindMatch(int matchId)
+    public Lookup<Match> FindMatch(int matchId)
     {
-        return MatchesById.GetValueOrDefault(matchId);
+        if (!MatchesById.TryGetValue(matchId, out Match? match))
+        {
+            return Lookup.Missing<Match>($"MatchId={matchId}");
+        }
+
+        return Lookup.Found(match);
     }
 
     public void SaveAbandonment(Match match)
@@ -111,14 +117,14 @@ public sealed class FakeMatchRepository : IMatchRepository
         MatchesSavedWithAbandonment.Add(match);
     }
 
-    public GameMode? FindGameMode(byte gameModeId)
+    public Lookup<GameMode> FindGameMode(byte gameModeId)
     {
         if (ActiveGameMode?.GameModeId != gameModeId)
         {
-            return null;
+            return Lookup.Missing<GameMode>($"GameModeId={gameModeId}");
         }
 
-        return ActiveGameMode;
+        return Lookup.FromNullable(ActiveGameMode, $"GameModeId={gameModeId}");
     }
 
     public void SaveMove(Match match)

@@ -115,12 +115,12 @@ public interface IRoomService
     /// Finds the room of the player of the session, so a client that lost a reply can show where the player is.
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
-    /// <returns>The room of the player, or null if the player is not in a room.</returns>
+    /// <returns>Whether the player is in a room and, when they are, that room.</returns>
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="InvalidSessionFault"/>: the session is not open.
     /// </exception>
     /// <exception cref="FaultException">The server could not read or write the database.</exception>
     [OperationContract]
     [FaultContract(typeof(InvalidSessionFault))]
-    RoomState? FindOwnRoom(string? sessionToken);
+    OwnRoomResult FindOwnRoom(string? sessionToken);
 }

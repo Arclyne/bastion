@@ -22,28 +22,15 @@ public sealed class LanguagePreferenceStore : ILanguagePreferenceStore
         _filePath = Path.Combine(_directoryPath, FileName);
     }
 
-    public string? LoadCultureName()
+    public string LoadCultureName()
     {
         if (!File.Exists(_filePath))
         {
-            return null;
+            return string.Empty;
         }
 
-        try
-        {
-            string savedText = File.ReadAllText(_filePath);
-            return savedText.Trim();
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            LogReadFailure(ex);
-            return null;
-        }
-        catch (IOException ex)
-        {
-            LogReadFailure(ex);
-            return null;
-        }
+        string savedText = File.ReadAllText(_filePath);
+        return savedText.Trim();
     }
 
     public void SaveCultureName(string cultureName)
@@ -63,11 +50,6 @@ public sealed class LanguagePreferenceStore : ILanguagePreferenceStore
         {
             LogSaveFailure(cultureName, ex);
         }
-    }
-
-    private void LogReadFailure(Exception cause)
-    {
-        _logger.Warn($"The saved language could not be read. Path={_filePath}", cause);
     }
 
     private void LogSaveFailure(string cultureName, Exception cause)

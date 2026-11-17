@@ -14,6 +14,7 @@ public class Match
     public const short FirstMoveNumber = 1;
 
     private const int LastStandingPlayerCount = 1;
+    private const int NotFoundIndex = -1;
     private const byte FirstPlacement = 1;
 
     private readonly List<Participation> _participations;
@@ -91,8 +92,8 @@ public class Match
 
     public bool IsPlayedBy(int accountId)
     {
-        Participation? participation = FindActiveParticipation(accountId);
-        return participation is not null;
+        int participationIndex = FindActiveParticipationIndex(accountId);
+        return participationIndex != NotFoundIndex;
     }
 
     public bool IsFinished()
@@ -102,8 +103,8 @@ public class Match
 
     public Participation GetParticipation(int accountId)
     {
-        Participation? participation = FindParticipation(accountId);
-        if (participation is null)
+        int participationIndex = FindParticipationIndex(accountId);
+        if (participationIndex == NotFoundIndex)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(accountId),
@@ -111,7 +112,7 @@ public class Match
                 "The account does not play this match.");
         }
 
-        return participation;
+        return _participations[participationIndex];
     }
 
     public void Abandon(int abandoningAccountId, DateTime abandonedAt)
@@ -139,8 +140,14 @@ public class Match
 
     public bool IsTurnOf(int accountId)
     {
-        Participation? participation = FindActiveParticipation(accountId);
-        return participation is not null && participation.TurnOrder == CurrentTurnOrder;
+        int participationIndex = FindActiveParticipationIndex(accountId);
+        if (participationIndex == NotFoundIndex)
+        {
+            return false;
+        }
+
+        Participation participation = _participations[participationIndex];
+        return participation.TurnOrder == CurrentTurnOrder;
     }
 
     public Board BuildBoard(byte boardSize)
@@ -158,12 +165,13 @@ public class Match
 
     public IReadOnlyList<BoardCoordinates> ListReachableSquares(int accountId, byte boardSize)
     {
-        Participation? participation = FindActiveParticipation(accountId);
-        if (participation is null)
+        int participationIndex = FindActiveParticipationIndex(accountId);
+        if (participationIndex == NotFoundIndex)
         {
             return new List<BoardCoordinates>();
         }
 
+        Participation participation = _participations[participationIndex];
         Board board = BuildBoard(boardSize);
         IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(
             board,
@@ -192,23 +200,24 @@ public class Match
         PassTurnFrom(mover.TurnOrder);
     }
 
-    public WallRejection? FindWallRejection(WallPlacement placement, byte boardSize)
+    public WallRejection FindWallRejection(WallPlacement placement, byte boardSize)
     {
         ArgumentNullException.ThrowIfNull(placement);
 
-        Participation? placer = FindActiveParticipation(placement.AccountId);
-        if (placer is null)
+        int placerIndex = FindActiveParticipationIndex(placement.AccountId);
+        if (placerIndex == NotFoundIndex)
         {
             throw new InvalidOperationException("Only a player of a match in progress can place a wall.");
         }
 
+        Participation placer = _participations[placerIndex];
         if (!placer.HasWallsLeft())
         {
             return new WallRejection(WallRejectionReason.NoWallsLeft, BlockedTurnOrder: null);
         }
 
         Board board = BuildBoard(boardSize);
-        WallRejection? rejection = WallPolicy.FindRejection(board, placement.Wall);
+        WallRejection rejection = WallPolicy.FindRejection(board, placement.Wall);
         return rejection;
     }
 
@@ -217,8 +226,8 @@ public class Match
         ArgumentNullException.ThrowIfNull(placement);
 
         EnsureExpectedMove(placement.AccountId, placement.MoveNumber);
-        WallRejection? rejection = FindWallRejection(placement, boardSize);
-        if (rejection is not null)
+        WallRejection rejection = FindWallRejection(placement, boardSize);
+        if (rejection.Reason != WallRejectionReason.None)
         {
             throw new InvalidOperationException($"The wall cannot be placed. Reason={rejection.Reason}");
         }
@@ -250,25 +259,25 @@ public class Match
         }
     }
 
-    private Participation? FindActiveParticipation(int accountId)
+    private int FindActiveParticipationIndex(int accountId)
     {
         if (Status != MatchStatus.InProgress)
         {
-            return null;
+            return NotFoundIndex;
         }
 
-        Participation? participation = FindParticipation(accountId);
-        if (participation is null || participation.HasEnded())
+        int participationIndex = FindParticipationIndex(accountId);
+        if (participationIndex == NotFoundIndex || _participations[participationIndex].HasEnded())
         {
-            return null;
+            return NotFoundIndex;
         }
 
-        return participation;
+        return participationIndex;
     }
 
-    private Participation? FindParticipation(int accountId)
+    private int FindParticipationIndex(int accountId)
     {
-        return _participations.FirstOrDefault(participation => participation.AccountId == accountId);
+        return _participations.FindIndex(participation => participation.AccountId == accountId);
     }
 
     private bool IsTwoPlayerMatch()

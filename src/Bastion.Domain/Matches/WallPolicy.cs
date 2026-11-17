@@ -5,7 +5,7 @@ namespace Bastion.Domain.Matches;
 
 public static class WallPolicy
 {
-    public static WallRejection? FindRejection(Board board, Wall wall)
+    public static WallRejection FindRejection(Board board, Wall wall)
     {
         ArgumentNullException.ThrowIfNull(board);
         ArgumentNullException.ThrowIfNull(wall);
@@ -21,7 +21,7 @@ public static class WallPolicy
         }
 
         Board boardWithWall = board.CopyWithWall(wall);
-        WallRejection? blockingRejection = FindBlockedPlayer(boardWithWall);
+        WallRejection blockingRejection = FindBlockedPlayer(boardWithWall);
         return blockingRejection;
     }
 
@@ -55,7 +55,7 @@ public static class WallPolicy
         return board.HasWall(nextWall) || board.HasWall(previousWall);
     }
 
-    private static WallRejection? FindBlockedPlayer(Board boardWithWall)
+    private static WallRejection FindBlockedPlayer(Board boardWithWall)
     {
         foreach (byte turnOrder in boardWithWall.ListTurnOrders())
         {
@@ -65,7 +65,7 @@ public static class WallPolicy
             }
         }
 
-        return null;
+        return WallRejection.None;
     }
 
     private static bool HasPathToGoal(Board board, byte turnOrder)

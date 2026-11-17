@@ -116,8 +116,8 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         IsBusy = true;
         try
         {
-            string? failureKey = await SendRequest(_matchmakingClient.StartSearch, nameof(StartSearch));
-            if (failureKey is not null)
+            string failureKey = await SendRequest(_matchmakingClient.StartSearch, nameof(StartSearch));
+            if (failureKey.Length > 0)
             {
                 StatusKey = failureKey;
                 return;
@@ -146,8 +146,8 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         IsBusy = true;
         try
         {
-            string? failureKey = await SendRequest(_matchmakingClient.CancelSearch, nameof(CancelSearch));
-            EndActiveSearch(failureKey ?? string.Empty);
+            string failureKey = await SendRequest(_matchmakingClient.CancelSearch, nameof(CancelSearch));
+            EndActiveSearch(failureKey);
         }
         finally
         {
@@ -163,8 +163,8 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         }
 
         IsPresenceDialogOpen = false;
-        string? failureKey = await SendRequest(_matchmakingClient.ConfirmPresence, nameof(ConfirmPresence));
-        if (failureKey is not null)
+        string failureKey = await SendRequest(_matchmakingClient.ConfirmPresence, nameof(ConfirmPresence));
+        if (failureKey.Length > 0)
         {
             EndActiveSearch(failureKey);
         }
@@ -281,12 +281,12 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         UiThread.Run(_uiContext, endActiveSearch);
     }
 
-    private async Task<string?> SendRequest(Action<string> request, string operationName)
+    private async Task<string> SendRequest(Action<string> request, string operationName)
     {
         try
         {
             await Task.Run(() => request(_session.Token));
-            return null;
+            return string.Empty;
         }
         catch (InvalidSessionException ex)
         {

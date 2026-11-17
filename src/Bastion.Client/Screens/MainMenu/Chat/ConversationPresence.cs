@@ -1,18 +1,24 @@
 using System;
+using Bastion.Client.Localization;
 
 namespace Bastion.Client.Screens.MainMenu.Chat;
 
 public sealed record ConversationPresence
 {
-    public ConversationPresence(bool isConnected, string statusText)
+    public ConversationPresence(PartnerPresence presence, string statusText)
     {
         ArgumentNullException.ThrowIfNull(statusText);
 
-        IsConnected = isConnected;
+        Presence = presence;
         StatusText = statusText;
     }
 
-    public bool IsConnected { get; }
+    public PartnerPresence Presence { get; }
 
     public string StatusText { get; }
+
+    public static ConversationPresence CreateForNonFriend()
+    {
+        return new ConversationPresence(PartnerPresence.NotFriend, Strings.PrivateStatusNotFriend);
+    }
 }

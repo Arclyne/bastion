@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Bastion.Domain.Chat;
+using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
 
@@ -9,7 +10,7 @@ public interface IMatchRepository
 {
     bool HasUnfinishedParticipation(int accountId);
 
-    GameMode? FindActiveGameMode(GameModeCode code);
+    Lookup<GameMode> FindActiveGameMode(GameModeCode code);
 
     IReadOnlyDictionary<int, short> FindEloRatingsByAccountId(byte gameModeId, IReadOnlyCollection<int> accountIds);
 
@@ -19,11 +20,11 @@ public interface IMatchRepository
 
     long SaveMatchChatMessage(Message message);
 
-    Match? FindMatch(int matchId);
+    Lookup<Match> FindMatch(int matchId);
 
     void SaveAbandonment(Match match);
 
-    GameMode? FindGameMode(byte gameModeId);
+    Lookup<GameMode> FindGameMode(byte gameModeId);
 
     void SaveMove(Match match);
 }

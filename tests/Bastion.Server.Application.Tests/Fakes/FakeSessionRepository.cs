@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Bastion.Domain.Common;
 using Bastion.Domain.Sessions;
 using Bastion.Server.Application.Sessions;
 
@@ -19,8 +20,9 @@ public sealed class FakeSessionRepository : ISessionRepository
         Sessions.Add(session);
     }
 
-    public Session? FindByTokenHash(byte[] tokenHash)
+    public Lookup<Session> FindByTokenHash(byte[] tokenHash)
     {
-        return Sessions.Find(session => session.TokenHash.SequenceEqual(tokenHash));
+        Session? session = Sessions.Find(candidate => candidate.TokenHash.SequenceEqual(tokenHash));
+        return Lookup.FromNullable(session, "Search=TokenHash");
     }
 }

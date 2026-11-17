@@ -1,6 +1,7 @@
 using System;
 using Bastion.Domain.Accounts;
 using Bastion.Domain.Auditing;
+using Bastion.Domain.Common;
 using Bastion.Domain.Sessions;
 using Bastion.Server.Application.Common;
 using Bastion.Server.Application.Security;
@@ -34,12 +35,16 @@ public sealed class LoginService : ILoginService
         ArgumentNullException.ThrowIfNull(attempt);
         ArgumentNullException.ThrowIfNull(password);
 
-        Account? account = _unitOfWork.Accounts.FindByLoginIdentifier(attempt.EnteredIdentifier);
-        if (account is null || !account.HasPassword())
+        Lookup<Account> foundAccount = _unitOfWork.Accounts.FindByLoginIdentifier(attempt.EnteredIdentifier);
+        if (!foundAccount.IsFound)
         {
-            _passwordHasher.SimulatePasswordCheck(password);
-            RecordAccessLog(AccessLogResult.AccountNotFound, attempt, account?.AccountId);
-            throw new InvalidCredentialsException();
+            throw RejectUnknownAccount(password, attempt, accountId: null);
+        }
+
+        Account account = foundAccount.GetValue();
+        if (!account.HasPassword())
+        {
+            throw RejectUnknownAccount(password, attempt, account.AccountId);
         }
 
         if (account.IsLockedAt(attempt.OccurredAt))
@@ -55,6 +60,13 @@ public sealed class LoginService : ILoginService
 
         account.RecordSuccessfulLogin();
         return AdmitByAccountStatus(account, attempt);
+    }
+
+    private InvalidCredentialsException RejectUnknownAccount(string password, AccessAttempt attempt, int? accountId)
+    {
+        _passwordHasher.SimulatePasswordCheck(password);
+        RecordAccessLog(AccessLogResult.AccountNotFound, attempt, accountId);
+        return new InvalidCredentialsException();
     }
 
     private static AccountRestrictedException CreateLockRestriction(Account account, DateTime now)

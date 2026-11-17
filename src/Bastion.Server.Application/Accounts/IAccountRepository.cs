@@ -1,17 +1,18 @@
 using System.Collections.Generic;
 using Bastion.Domain.Accounts;
+using Bastion.Domain.Common;
 
 namespace Bastion.Server.Application.Accounts;
 
 public interface IAccountRepository
 {
-    Account? FindByLoginIdentifier(string loginIdentifier);
+    Lookup<Account> FindByLoginIdentifier(string loginIdentifier);
 
-    Account? FindById(int accountId);
+    Lookup<Account> FindById(int accountId);
 
-    PlayerIdentity? FindPlayerIdentity(int accountId);
+    Lookup<PlayerIdentity> FindPlayerIdentity(int accountId);
 
-    PlayerIdentity? FindPlayerIdentityByFriendCode(string friendCode);
+    Lookup<PlayerIdentity> FindPlayerIdentityByFriendCode(string friendCode);
 
     IReadOnlyList<PlayerIdentity> ListPlayerIdentities(IReadOnlyCollection<int> accountIds);
 

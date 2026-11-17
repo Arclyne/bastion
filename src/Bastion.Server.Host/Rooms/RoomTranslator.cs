@@ -1,7 +1,8 @@
-using System;
 using System.Collections.Generic;
+using System;
 using Bastion.Contracts.Notifications;
 using Bastion.Contracts.Rooms;
+using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Server.Application.Rooms;
 using Bastion.Server.Host.Common;
@@ -64,6 +65,24 @@ public static class RoomTranslator
             Options = options,
             SeatCount = seatCount,
             Members = members,
+        };
+    }
+
+    public static OwnRoomResult ToOwnRoomResult(Lookup<RoomSnapshot> foundRoom)
+    {
+        ArgumentNullException.ThrowIfNull(foundRoom);
+
+        if (!foundRoom.IsFound)
+        {
+            return new OwnRoomResult { IsInRoom = false };
+        }
+
+        RoomSnapshot room = foundRoom.GetValue();
+        RoomState state = ToState(room);
+        return new OwnRoomResult
+        {
+            IsInRoom = true,
+            Room = state,
         };
     }
 

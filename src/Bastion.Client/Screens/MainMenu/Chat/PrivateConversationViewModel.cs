@@ -132,16 +132,17 @@ public sealed class PrivateConversationViewModel : ModeratedChatViewModel
         return _isOpen && string.Equals(_partner.FriendCode, friendCode, StringComparison.Ordinal);
     }
 
-    public async Task Open(PlayerTag partner, ConversationPresence? presence)
+    public async Task Open(PlayerTag partner, ConversationPresence presence)
     {
         ArgumentNullException.ThrowIfNull(partner);
+        ArgumentNullException.ThrowIfNull(presence);
 
         _partner = partner;
         _isOpen = true;
         PartnerNickname = partner.Nickname;
         GreetingText = FormatText(Strings.PrivateGreetingFormat, partner.Nickname);
         OfflineText = FormatText(Strings.PrivateOfflineFormat, partner.Nickname);
-        IsFriend = presence is not null;
+        IsFriend = presence.Presence != PartnerPresence.NotFriend;
         ApplyPresence(presence);
         Draft = string.Empty;
         ClearMessages();
@@ -154,10 +155,12 @@ public sealed class PrivateConversationViewModel : ModeratedChatViewModel
         OnClosed();
     }
 
-    public void ApplyPresence(ConversationPresence? presence)
+    public void ApplyPresence(ConversationPresence presence)
     {
-        IsPartnerConnected = presence?.IsConnected ?? false;
-        PresenceText = presence?.StatusText ?? Strings.PrivateStatusNotFriend;
+        ArgumentNullException.ThrowIfNull(presence);
+
+        IsPartnerConnected = presence.Presence == PartnerPresence.Connected;
+        PresenceText = presence.StatusText;
     }
 
     public void Receive(PrivateMessage message)
@@ -350,7 +353,8 @@ public sealed class PrivateConversationViewModel : ModeratedChatViewModel
         IsFriend = transcript.Contact.IsFriend;
         if (!IsFriend)
         {
-            ApplyPresence(presence: null);
+            var nonFriendPresence = ConversationPresence.CreateForNonFriend();
+            ApplyPresence(nonFriendPresence);
         }
 
         ShowMute(transcript.Mute);
@@ -384,7 +388,8 @@ public sealed class PrivateConversationViewModel : ModeratedChatViewModel
         if (rejection == ChatRejection.NotFriends)
         {
             IsFriend = false;
-            ApplyPresence(presence: null);
+            var nonFriendPresence = ConversationPresence.CreateForNonFriend();
+            ApplyPresence(nonFriendPresence);
         }
     }
 

@@ -1,6 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.Rooms;
 
 namespace Bastion.Server.Application.Rooms;
@@ -122,39 +123,42 @@ public sealed class RoomRegistry : IRoomRegistry
         }
     }
 
-    public RoomDeparture? Leave(int accountId)
+    public Lookup<RoomDeparture> Leave(int accountId)
     {
         lock (_roomsLock)
         {
             if (!_roomsByAccountId.TryGetValue(accountId, out WaitingRoom? room))
             {
-                return null;
+                return Lookup.Missing<RoomDeparture>($"AccountId={accountId}");
             }
 
             if (room.IsHost(accountId))
             {
                 RemoveRoom(room);
                 var closedRoom = RoomSnapshot.Capture(room);
-                return new RoomDeparture(closedRoom, isRoomClosed: true);
+                var hostDeparture = new RoomDeparture(closedRoom, isRoomClosed: true);
+                return Lookup.Found(hostDeparture);
             }
 
             room.Remove(accountId);
             _roomsByAccountId.Remove(accountId);
             var remainingRoom = RoomSnapshot.Capture(room);
-            return new RoomDeparture(remainingRoom, isRoomClosed: false);
+            var memberDeparture = new RoomDeparture(remainingRoom, isRoomClosed: false);
+            return Lookup.Found(memberDeparture);
         }
     }
 
-    public RoomSnapshot? FindRoomOf(int accountId)
+    public Lookup<RoomSnapshot> FindRoomOf(int accountId)
     {
         lock (_roomsLock)
         {
             if (!_roomsByAccountId.TryGetValue(accountId, out WaitingRoom? room))
             {
-                return null;
+                return Lookup.Missing<RoomSnapshot>($"AccountId={accountId}");
             }
 
-            return RoomSnapshot.Capture(room);
+            var ownRoom = RoomSnapshot.Capture(room);
+            return Lookup.Found(ownRoom);
         }
     }
 

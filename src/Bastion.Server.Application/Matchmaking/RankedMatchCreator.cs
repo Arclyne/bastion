@@ -1,7 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
 using Bastion.Domain.Matchmaking;
@@ -43,8 +44,8 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         string accountIdsText = string.Join(AccountIdSeparator, pairedAccountIds);
         try
         {
-            GameMode? gameMode = _matchRepository.FindActiveGameMode(MatchmakingPolicy.RankedGameModeCode);
-            if (gameMode is null)
+            Lookup<GameMode> foundGameMode = _matchRepository.FindActiveGameMode(MatchmakingPolicy.RankedGameModeCode);
+            if (!foundGameMode.IsFound)
             {
                 _logger.Error(
                     "The ranked match was not created because no active game mode has its code. "
@@ -52,6 +53,7 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
                 return false;
             }
 
+            GameMode gameMode = foundGameMode.GetValue();
             if (gameMode.PlayerCount != pairing.Players.Count)
             {
                 _logger.Error(

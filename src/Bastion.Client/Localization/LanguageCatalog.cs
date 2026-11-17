@@ -1,6 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System;
+using Bastion.Domain.Common;
 
 namespace Bastion.Client.Localization;
 
@@ -14,25 +15,27 @@ public static class LanguageCatalog
 
     public static IReadOnlyList<SupportedLanguage> Languages { get; } = new[] { _spanish, English };
 
-    public static SupportedLanguage? FindByCultureName(string? cultureName)
+    public static Lookup<SupportedLanguage> FindByCultureName(string cultureName)
     {
+        ArgumentNullException.ThrowIfNull(cultureName);
+
         foreach (SupportedLanguage language in Languages)
         {
             if (string.Equals(language.CultureName, cultureName, StringComparison.OrdinalIgnoreCase))
             {
-                return language;
+                return Lookup.Found(language);
             }
         }
 
-        return null;
+        return Lookup.Missing<SupportedLanguage>($"CultureName={cultureName}");
     }
 
-    public static SupportedLanguage? FindClosest(CultureInfo culture)
+    public static Lookup<SupportedLanguage> FindClosest(CultureInfo culture)
     {
         ArgumentNullException.ThrowIfNull(culture);
 
-        SupportedLanguage? exactMatch = FindByCultureName(culture.Name);
-        if (exactMatch is not null)
+        Lookup<SupportedLanguage> exactMatch = FindByCultureName(culture.Name);
+        if (exactMatch.IsFound)
         {
             return exactMatch;
         }
@@ -42,10 +45,10 @@ public static class LanguageCatalog
             string languageCode = new CultureInfo(language.CultureName).TwoLetterISOLanguageName;
             if (languageCode == culture.TwoLetterISOLanguageName)
             {
-                return language;
+                return Lookup.Found(language);
             }
         }
 
-        return null;
+        return Lookup.Missing<SupportedLanguage>($"CultureName={culture.Name}");
     }
 }

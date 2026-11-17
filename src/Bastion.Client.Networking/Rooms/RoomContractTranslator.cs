@@ -1,6 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
+using Bastion.Client.Networking.Channels;
 using Bastion.Contracts.Notifications;
 using Bastion.Contracts.Rooms;
 
@@ -8,6 +9,8 @@ namespace Bastion.Client.Networking.Rooms;
 
 public static class RoomContractTranslator
 {
+    private const string MissingOwnRoomMessage = "The reply says the player is in a room but carries no room.";
+
     private static readonly IReadOnlyDictionary<RoomRejectionReason, RoomRejection> _rejectionsByReason =
         new Dictionary<RoomRejectionReason, RoomRejection>
         {
@@ -38,6 +41,20 @@ public static class RoomContractTranslator
             WallsPerPlayer = options.WallsPerPlayer,
             ClockMinutes = options.ClockMinutes,
         };
+    }
+
+    public static OwnRoom ToOwnRoom(OwnRoomResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+
+        if (!result.IsInRoom)
+        {
+            return OwnRoom.CreateOutsideRoom();
+        }
+
+        RoomState state = result.Room ?? throw new ServerErrorException(MissingOwnRoomMessage);
+        PrivateRoom room = ToPrivateRoom(state);
+        return OwnRoom.CreateInRoom(room);
     }
 
     public static PrivateRoom ToPrivateRoom(RoomState state)

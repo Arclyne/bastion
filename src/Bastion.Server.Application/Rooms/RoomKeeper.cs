@@ -1,4 +1,5 @@
 using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.Rooms;
 using Bastion.Server.Application.Sessions;
 
@@ -80,12 +81,13 @@ public sealed class RoomKeeper : IRoomKeeper
 
     public void Leave(int accountId, DateTime now)
     {
-        RoomDeparture? departure = _roomRegistry.Leave(accountId);
-        if (departure is null)
+        Lookup<RoomDeparture> foundDeparture = _roomRegistry.Leave(accountId);
+        if (!foundDeparture.IsFound)
         {
             return;
         }
 
+        RoomDeparture departure = foundDeparture.GetValue();
         if (!departure.IsRoomClosed)
         {
             _roomNotifier.NotifyRoomUpdated(departure.Room, accountId);
@@ -96,7 +98,7 @@ public sealed class RoomKeeper : IRoomKeeper
         _roomRepository.CloseRoom(departure.Room.Identity.RoomId, now);
     }
 
-    public RoomSnapshot? FindRoomOf(int accountId)
+    public Lookup<RoomSnapshot> FindRoomOf(int accountId)
     {
         return _roomRegistry.FindRoomOf(accountId);
     }

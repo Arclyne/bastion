@@ -269,17 +269,18 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         }
     }
 
-    public ConversationPresence? FindPresence(string friendCode)
+    public ConversationPresence GetPresence(string friendCode)
     {
         ArgumentNullException.ThrowIfNull(friendCode);
 
         FriendRowViewModel? row = _allRows.Find(friend => friend.FriendCode == friendCode);
         if (row is null)
         {
-            return null;
+            return ConversationPresence.CreateForNonFriend();
         }
 
-        return new ConversationPresence(row.IsConnected, row.StatusText);
+        PartnerPresence presence = row.IsConnected ? PartnerPresence.Connected : PartnerPresence.Disconnected;
+        return new ConversationPresence(presence, row.StatusText);
     }
 
     public void Dispose()

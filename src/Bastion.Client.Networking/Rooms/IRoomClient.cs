@@ -23,5 +23,5 @@ public interface IRoomClient
 
     void LeaveRoom(string sessionToken);
 
-    PrivateRoom? FindOwnRoom(string sessionToken);
+    OwnRoom FindOwnRoom(string sessionToken);
 }

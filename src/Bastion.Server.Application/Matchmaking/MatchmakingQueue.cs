@@ -1,6 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.Matchmaking;
 
 namespace Bastion.Server.Application.Matchmaking;
@@ -36,16 +37,16 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
         }
     }
 
-    public DateTime? FindSearchStart(int accountId)
+    public Lookup<DateTime> FindSearchStart(int accountId)
     {
         lock (_searchesLock)
         {
             if (!_searches.TryGetValue(accountId, out MatchSearch? search))
             {
-                return null;
+                return Lookup.Missing<DateTime>($"AccountId={accountId}");
             }
 
-            return search.StartedAt;
+            return Lookup.Found(search.StartedAt);
         }
     }
 

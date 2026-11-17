@@ -1,6 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
 using Bastion.Server.Application.Sessions;
@@ -76,8 +77,8 @@ public sealed class MatchMoveService : IMatchMoveService
 
     private Match FindPlayedMatch(ConnectedPlayer player, int matchId)
     {
-        Match? match = _matchRepository.FindMatch(matchId);
-        if (match is null || !match.IsPlayedBy(player.AccountId))
+        Lookup<Match> foundMatch = _matchRepository.FindMatch(matchId);
+        if (!foundMatch.IsFound || !foundMatch.GetValue().IsPlayedBy(player.AccountId))
         {
             _logger.Warn(
                 "A player without an active participation tried to move in the match. "
@@ -85,7 +86,7 @@ public sealed class MatchMoveService : IMatchMoveService
             throw new MatchNotJoinedException();
         }
 
-        return match;
+        return foundMatch.GetValue();
     }
 
     private static void EnsureTurn(Match match, ConnectedPlayer player, short moveNumber)
@@ -122,12 +123,13 @@ public sealed class MatchMoveService : IMatchMoveService
 
     private byte FindBoardSize(Match match)
     {
-        GameMode? gameMode = _matchRepository.FindGameMode(match.GameModeId);
-        if (gameMode is null)
+        Lookup<GameMode> foundGameMode = _matchRepository.FindGameMode(match.GameModeId);
+        if (!foundGameMode.IsFound)
         {
             throw new InvalidOperationException($"The game mode of the match does not exist. MatchId={match.MatchId}");
         }
 
+        GameMode gameMode = foundGameMode.GetValue();
         return gameMode.BoardSize;
     }
 
@@ -186,8 +188,8 @@ public sealed class MatchMoveService : IMatchMoveService
 
     private static void EnsureWallFits(Match match, WallPlacement placement, byte boardSize)
     {
-        WallRejection? rejection = match.FindWallRejection(placement, boardSize);
-        if (rejection is null)
+        WallRejection rejection = match.FindWallRejection(placement, boardSize);
+        if (rejection.Reason == WallRejectionReason.None)
         {
             return;
         }
