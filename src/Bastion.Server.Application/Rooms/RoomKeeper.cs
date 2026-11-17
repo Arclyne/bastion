@@ -108,7 +108,7 @@ public sealed class RoomKeeper : IRoomKeeper
 
     private string CreateFreeCode()
     {
-        for (int attempt = 0; attempt < MaximumCodeDraws; attempt++)
+        for (int draw = 0; draw < MaximumCodeDraws; draw++)
         {
             if (_roomRegistry.TryCreateUnusedCode(out string? code) && !_roomRepository.IsCodeTaken(code))
             {
