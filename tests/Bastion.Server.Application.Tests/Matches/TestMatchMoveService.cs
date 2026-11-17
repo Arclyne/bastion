@@ -108,6 +108,22 @@ public sealed class TestMatchMoveService
         Assert.Equal(Match.SecondTurnOrder, notified.Notice.NextTurnOrder);
     }
 
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void MovePawn_EnglishOrSpanishNickname_NotifiesSameNickname(string nickname)
+    {
+        var mover = new ConnectedPlayer(FirstAccountId, nickname);
+        _sessionVerifier.Add(FirstToken, mover);
+        AddClassicMatch();
+        ChosenPawnMove move = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+
+        _matchMoveService.MovePawn(FirstToken, move, _now);
+
+        NotifiedPawnMove notified = _matchMoveNotifier.NotifiedPawnMoves.Single();
+        Assert.Equal(nickname, notified.Notice.MoverNickname);
+    }
+
     [Fact]
     public void MovePawn_RivalHasTurn_ThrowsNotYourTurnException()
     {
@@ -259,6 +275,22 @@ public sealed class TestMatchMoveService
 
         NotifiedWallPlacement notified = _matchMoveNotifier.NotifiedWallPlacements.Single();
         Assert.Equal(Match.SecondTurnOrder, notified.Notice.NextTurnOrder);
+    }
+
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void PlaceWall_EnglishOrSpanishNickname_NotifiesSameNickname(string nickname)
+    {
+        var placer = new ConnectedPlayer(FirstAccountId, nickname);
+        _sessionVerifier.Add(FirstToken, placer);
+        AddClassicMatch();
+        ChosenWall wall = CreateWall(Match.FirstMoveNumber, CenterGroove);
+
+        _matchMoveService.PlaceWall(FirstToken, wall, _now);
+
+        NotifiedWallPlacement notified = _matchMoveNotifier.NotifiedWallPlacements.Single();
+        Assert.Equal(nickname, notified.Notice.PlacerNickname);
     }
 
     [Fact]

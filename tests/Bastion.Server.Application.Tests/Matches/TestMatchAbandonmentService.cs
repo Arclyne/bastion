@@ -135,6 +135,21 @@ public sealed class TestMatchAbandonmentService
         Assert.Equal(AbandoningNickname, notified.Notice.AbandoningNickname);
     }
 
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void AbandonMatch_EnglishOrSpanishNickname_NotifiesSameNickname(string nickname)
+    {
+        var abandoningPlayer = new ConnectedPlayer(AbandoningAccountId, nickname);
+        _sessionVerifier.Add(AbandoningToken, abandoningPlayer);
+        AddTwoPlayerMatch();
+
+        _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
+
+        NotifiedMatchAbandonment notified = _matchEndNotifier.NotifiedAbandonments.Single();
+        Assert.Equal(nickname, notified.Notice.AbandoningNickname);
+    }
+
     [Fact]
     public void AbandonMatch_Outsider_ThrowsMatchNotJoinedException()
     {
