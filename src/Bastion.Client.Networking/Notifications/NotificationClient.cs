@@ -227,7 +227,7 @@ public sealed class NotificationClient : INotificationClient, IDisposable
 
     private void ReportConnectionLost(Exception cause)
     {
-        _logger.Error("The keep-alive could not reach the server.", cause);
+        _logger.Error("The keep-alive could not be sent; the notification channel failed.", cause);
         OnDisconnected();
     }
 }
