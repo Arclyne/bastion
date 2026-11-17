@@ -91,18 +91,13 @@ public sealed class RoomClient : IRoomClient
         Call(leaveRoom);
     }
 
-    public PrivateRoom? FindOwnRoom(string sessionToken)
+    public OwnRoom FindOwnRoom(string sessionToken)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        Func<IRoomService, RoomState?> findOwnRoom = service => service.FindOwnRoom(sessionToken);
-        RoomState? state = Call(findOwnRoom);
-        if (state is null)
-        {
-            return null;
-        }
-
-        return RoomContractTranslator.ToPrivateRoom(state);
+        Func<IRoomService, OwnRoomResult> findOwnRoom = service => service.FindOwnRoom(sessionToken);
+        OwnRoomResult result = Call(findOwnRoom);
+        return RoomContractTranslator.ToOwnRoom(result);
     }
 
     private PrivateRoom CallForRoom(Func<IRoomService, RoomState> operation)
