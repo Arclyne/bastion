@@ -70,7 +70,10 @@ public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
         }
         catch (ChatChannelForbiddenException ex)
         {
-            _logger.Warn("The match chat message was turned down because the player is not in the match.", ex);
+            _logger.Warn(
+                "The server turned down the match chat message because the player has no unfinished participation "
+                + "in that match.",
+                ex);
             row.Fail(Strings.MatchChatUnavailable);
         }
         catch (InvalidSessionException ex)
