@@ -145,8 +145,9 @@ public class Match
 
     public Board BuildBoard(byte boardSize)
     {
-        var pawnsByTurnOrder = new Dictionary<byte, BoardCoordinates>();
-        foreach (Participation participation in ListActiveParticipations())
+        List<Participation> activeParticipations = ListActiveParticipations();
+        var pawnsByTurnOrder = new Dictionary<byte, BoardCoordinates>(activeParticipations.Count);
+        foreach (Participation participation in activeParticipations)
         {
             pawnsByTurnOrder[participation.TurnOrder] = FindPawnCoordinates(participation, boardSize);
         }
