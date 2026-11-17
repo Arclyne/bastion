@@ -1,7 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using Bastion.Domain.Chat;
+using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
 using Bastion.Domain.Rooms;
@@ -31,9 +32,9 @@ public sealed class MatchRepository : IMatchRepository
         return _newContextRunner.Run(hasUnfinishedParticipation);
     }
 
-    public GameMode? FindActiveGameMode(GameModeCode code)
+    public Lookup<GameMode> FindActiveGameMode(GameModeCode code)
     {
-        Func<BastionDbContext, GameMode?> findActiveGameMode = context => LoadActiveGameMode(context, code);
+        Func<BastionDbContext, Lookup<GameMode>> findActiveGameMode = context => LoadActiveGameMode(context, code);
         return _newContextRunner.Run(findActiveGameMode);
     }
 
@@ -74,9 +75,9 @@ public sealed class MatchRepository : IMatchRepository
         return _newContextRunner.Run(saveMatchChatMessage);
     }
 
-    public Match? FindMatch(int matchId)
+    public Lookup<Match> FindMatch(int matchId)
     {
-        Func<BastionDbContext, Match?> findMatch = context => LoadMatch(context, matchId);
+        Func<BastionDbContext, Lookup<Match>> findMatch = context => LoadMatch(context, matchId);
         return _newContextRunner.Run(findMatch);
     }
 
@@ -88,9 +89,9 @@ public sealed class MatchRepository : IMatchRepository
         _newContextRunner.Run(saveAbandonment);
     }
 
-    public GameMode? FindGameMode(byte gameModeId)
+    public Lookup<GameMode> FindGameMode(byte gameModeId)
     {
-        Func<BastionDbContext, GameMode?> findGameMode = context => LoadGameMode(context, gameModeId);
+        Func<BastionDbContext, Lookup<GameMode>> findGameMode = context => LoadGameMode(context, gameModeId);
         return _newContextRunner.Run(findGameMode);
     }
 
@@ -117,13 +118,14 @@ public sealed class MatchRepository : IMatchRepository
         return unfinishedParticipations;
     }
 
-    private static GameMode? LoadActiveGameMode(BastionDbContext context, GameModeCode code)
+    private static Lookup<GameMode> LoadActiveGameMode(BastionDbContext context, GameModeCode code)
     {
         IQueryable<GameMode> activeModesWithCode = context.GameModes
             .AsNoTracking()
             .Where(gameMode => gameMode.Code == code)
             .Where(gameMode => gameMode.IsActive);
-        return activeModesWithCode.FirstOrDefault();
+        GameMode? activeMode = activeModesWithCode.FirstOrDefault();
+        return Lookup.FromNullable(activeMode, $"GameModeCode={code}");
     }
 
     private static Dictionary<int, short> LoadEloRatingsByAccountId(
@@ -161,14 +163,15 @@ public sealed class MatchRepository : IMatchRepository
         return message.MessageId;
     }
 
-    private static Match? LoadMatch(BastionDbContext context, int matchId)
+    private static Lookup<Match> LoadMatch(BastionDbContext context, int matchId)
     {
         IQueryable<Match> matchesWithId = context.Matches
             .AsNoTracking()
             .Include(match => match.Participations)
             .Include(match => match.Moves)
             .Where(match => match.MatchId == matchId);
-        return matchesWithId.FirstOrDefault();
+        Match? storedMatch = matchesWithId.FirstOrDefault();
+        return Lookup.FromNullable(storedMatch, $"MatchId={matchId}");
     }
 
     private static int UpdateMatchAndRoom(BastionDbContext context, Match match)
@@ -203,12 +206,13 @@ public sealed class MatchRepository : IMatchRepository
         room.FinishMatch(endedAt);
     }
 
-    private static GameMode? LoadGameMode(BastionDbContext context, byte gameModeId)
+    private static Lookup<GameMode> LoadGameMode(BastionDbContext context, byte gameModeId)
     {
         IQueryable<GameMode> modesWithId = context.GameModes
             .AsNoTracking()
             .Where(gameMode => gameMode.GameModeId == gameModeId);
-        return modesWithId.FirstOrDefault();
+        GameMode? storedMode = modesWithId.FirstOrDefault();
+        return Lookup.FromNullable(storedMode, $"GameModeId={gameModeId}");
     }
 
     private static int UpdateMatchWithNewestMove(BastionDbContext context, Match match)

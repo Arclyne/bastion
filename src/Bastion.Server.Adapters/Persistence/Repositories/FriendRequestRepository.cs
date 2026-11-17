@@ -1,8 +1,9 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
+using System.Linq;
+using System;
 using Bastion.Domain.Accounts;
+using Bastion.Domain.Common;
 using Bastion.Domain.Friends;
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
@@ -21,9 +22,15 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
         _context = context;
     }
 
-    public FriendRequest? FindBetween(int firstAccountId, int secondAccountId)
+    public Lookup<FriendRequest> FindBetween(int firstAccountId, int secondAccountId)
     {
-        return FindSent(firstAccountId, secondAccountId) ?? FindSent(secondAccountId, firstAccountId);
+        Lookup<FriendRequest> sentByFirst = FindSent(firstAccountId, secondAccountId);
+        if (sentByFirst.IsFound)
+        {
+            return sentByFirst;
+        }
+
+        return FindSent(secondAccountId, firstAccountId);
     }
 
     public IReadOnlyList<FriendRequest> ListInvolving(int accountId)
@@ -69,9 +76,10 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
         _context.Entry(request).State = EntityState.Detached;
     }
 
-    private FriendRequest? FindSent(int requesterId, int recipientId)
+    private Lookup<FriendRequest> FindSent(int requesterId, int recipientId)
     {
-        return _context.FriendRequests.Find(requesterId, recipientId);
+        FriendRequest? request = _context.FriendRequests.Find(requesterId, recipientId);
+        return Lookup.FromNullable(request, $"RequesterId={requesterId}; RecipientId={recipientId}");
     }
 
     private List<FriendRequestSummary> ListSummaries(
