@@ -53,6 +53,37 @@ public sealed class TestBoardSceneLayout
     }
 
     [Fact]
+    public void FindCoordinates_FirstCellCenter_ReturnsFirstCell()
+    {
+        var firstCell = new BoardCoordinates(FirstIndex, FirstIndex);
+        Vector3 center = BoardSceneLayout.GetCellCenter(ClassicBoardSize, firstCell);
+
+        BoardCoordinates coordinates = BoardSceneLayout.FindCoordinates(ClassicBoardSize, center);
+
+        Assert.Equal(firstCell, coordinates);
+    }
+
+    [Fact]
+    public void FindCoordinates_OffBoardPoint_ReturnsOffBoardSquare()
+    {
+        Vector3 offBoardPoint = BoardSceneLayout.OffBoardPoint;
+
+        BoardCoordinates coordinates = BoardSceneLayout.FindCoordinates(ClassicBoardSize, offBoardPoint);
+
+        Assert.Equal(BoardLayout.OffBoardSquare, coordinates);
+    }
+
+    [Fact]
+    public void FindGroove_OffBoardPoint_ReturnsOffBoardSquare()
+    {
+        Vector3 offBoardPoint = BoardSceneLayout.OffBoardPoint;
+
+        BoardCoordinates groove = BoardSceneLayout.FindGroove(ClassicBoardSize, offBoardPoint);
+
+        Assert.Equal(BoardLayout.OffBoardSquare, groove);
+    }
+
+    [Fact]
     public void GetCameraPosition_FirstTurnOrder_LooksFromFirstRowSide()
     {
         Vector3 cameraPosition = BoardSceneLayout.GetCameraPosition(Match.FirstTurnOrder);
