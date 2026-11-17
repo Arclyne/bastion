@@ -1,5 +1,6 @@
-using System;
 using System.Collections.Generic;
+using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.Friends;
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Friends;
@@ -284,8 +285,8 @@ public sealed class TestFriendRequestService
 
         _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
-        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
-        Assert.NotNull(request);
+        Lookup<FriendRequest> foundRequest = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        Assert.True(foundRequest.IsFound);
     }
 
     [Fact]
@@ -315,8 +316,8 @@ public sealed class TestFriendRequestService
 
         _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
-        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
-        Assert.Null(request);
+        Lookup<FriendRequest> foundRequest = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        Assert.False(foundRequest.IsFound);
     }
 
     [Fact]
@@ -327,8 +328,9 @@ public sealed class TestFriendRequestService
 
         _friendRequestService.SendFriendRequest(Token, OtherFriendCode, _now);
 
-        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
-        Assert.Equal(_now, request?.RequestedAt);
+        Lookup<FriendRequest> foundRequest = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        FriendRequest request = foundRequest.GetValue();
+        Assert.Equal(_now, request.RequestedAt);
     }
 
     [Fact]
@@ -432,8 +434,8 @@ public sealed class TestFriendRequestService
 
         Record.Exception(accept);
 
-        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
-        Assert.NotNull(request);
+        Lookup<FriendRequest> foundRequest = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        Assert.True(foundRequest.IsFound);
     }
 
     [Fact]
@@ -453,8 +455,8 @@ public sealed class TestFriendRequestService
 
         _friendRequestService.AcceptFriendRequest(Token, OtherFriendCode, _now);
 
-        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
-        Assert.Null(request);
+        Lookup<FriendRequest> foundRequest = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        Assert.False(foundRequest.IsFound);
     }
 
     [Fact]
@@ -475,8 +477,8 @@ public sealed class TestFriendRequestService
 
         _friendRequestService.RejectFriendRequest(Token, OtherFriendCode, _now);
 
-        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
-        Assert.Null(request);
+        Lookup<FriendRequest> foundRequest = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        Assert.False(foundRequest.IsFound);
     }
 
     [Fact]
@@ -509,8 +511,8 @@ public sealed class TestFriendRequestService
 
         _friendRequestService.CancelFriendRequest(Token, OtherFriendCode, _now);
 
-        FriendRequest? request = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
-        Assert.Null(request);
+        Lookup<FriendRequest> foundRequest = _unitOfWork.FriendRequestRepository.FindBetween(AccountId, OtherAccountId);
+        Assert.False(foundRequest.IsFound);
     }
 
     private void AddFriendship()
