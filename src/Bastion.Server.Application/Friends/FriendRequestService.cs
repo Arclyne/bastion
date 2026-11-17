@@ -1,7 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using Bastion.Domain.Accounts;
+using Bastion.Domain.Common;
 using Bastion.Domain.Friends;
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Common;
@@ -71,15 +72,19 @@ public sealed class FriendRequestService : IFriendRequestService
             throw new FriendshipRejectedException(FriendshipRejection.AlreadyFriends);
         }
 
-        FriendRequest? pendingRequest = FindPendingRequestAndRemoveExpired(sender.AccountId, recipient.AccountId, now);
-        if (pendingRequest is not null && pendingRequest.IsSentBy(sender.AccountId))
+        Lookup<FriendRequest> foundPendingRequest = FindPendingRequestAndRemoveExpired(
+            sender.AccountId,
+            recipient.AccountId,
+            now);
+        if (foundPendingRequest.IsFound && foundPendingRequest.GetValue().IsSentBy(sender.AccountId))
         {
             throw new FriendshipRejectedException(FriendshipRejection.RequestAlreadySent);
         }
 
         EnsureBelowFriendLimit(ownFriendAccountIds.Count, recipient.AccountId);
-        if (pendingRequest is not null)
+        if (foundPendingRequest.IsFound)
         {
+            FriendRequest pendingRequest = foundPendingRequest.GetValue();
             StartFriendship(pendingRequest, sender, now);
             return FriendRequestOutcome.FriendshipStarted;
         }
@@ -154,9 +159,10 @@ public sealed class FriendRequestService : IFriendRequestService
 
     private IReadOnlyList<PlayerIdentity> FindPlayers(string searchText)
     {
-        PlayerIdentity? codeOwner = FriendCodeLookup.FindPlayer(_unitOfWork.Accounts, searchText);
-        if (codeOwner is not null)
+        Lookup<PlayerIdentity> foundCodeOwner = FriendCodeLookup.FindPlayer(_unitOfWork.Accounts, searchText);
+        if (foundCodeOwner.IsFound)
         {
+            PlayerIdentity codeOwner = foundCodeOwner.GetValue();
             return new[] { codeOwner };
         }
 
@@ -165,20 +171,26 @@ public sealed class FriendRequestService : IFriendRequestService
 
     private PlayerIdentity FindPlayerByCode(string friendCode)
     {
-        PlayerIdentity? player = FriendCodeLookup.FindPlayer(_unitOfWork.Accounts, friendCode);
-        return player ?? throw new FriendshipRejectedException(FriendshipRejection.PlayerNotFound);
-    }
-
-    private FriendRequest? FindPendingRequestAndRemoveExpired(int accountId, int otherAccountId, DateTime now)
-    {
-        FriendRequest? request = _unitOfWork.FriendRequests.FindBetween(accountId, otherAccountId);
-        if (request is null || !request.IsExpiredAt(now))
+        Lookup<PlayerIdentity> foundPlayer = FriendCodeLookup.FindPlayer(_unitOfWork.Accounts, friendCode);
+        if (!foundPlayer.IsFound)
         {
-            return request;
+            throw new FriendshipRejectedException(FriendshipRejection.PlayerNotFound);
         }
 
-        _unitOfWork.FriendRequests.Remove(request);
-        return null;
+        return foundPlayer.GetValue();
+    }
+
+    private Lookup<FriendRequest> FindPendingRequestAndRemoveExpired(int accountId, int otherAccountId, DateTime now)
+    {
+        Lookup<FriendRequest> foundRequest = _unitOfWork.FriendRequests.FindBetween(accountId, otherAccountId);
+        if (!foundRequest.IsFound || !foundRequest.GetValue().IsExpiredAt(now))
+        {
+            return foundRequest;
+        }
+
+        FriendRequest expiredRequest = foundRequest.GetValue();
+        _unitOfWork.FriendRequests.Remove(expiredRequest);
+        return Lookup.Missing<FriendRequest>($"AccountId={accountId}; OtherAccountId={otherAccountId}");
     }
 
     private void EnsureBelowFriendLimit(int ownFriendCount, int otherAccountId)
@@ -220,8 +232,16 @@ public sealed class FriendRequestService : IFriendRequestService
 
     private FriendRequest FindRequestSentBy(int requesterAccountId, int recipientAccountId, DateTime now)
     {
-        FriendRequest? request = _unitOfWork.FriendRequests.FindBetween(requesterAccountId, recipientAccountId);
-        if (request is null || !request.IsSentBy(requesterAccountId) || request.IsExpiredAt(now))
+        Lookup<FriendRequest> foundRequest = _unitOfWork.FriendRequests.FindBetween(
+            requesterAccountId,
+            recipientAccountId);
+        if (!foundRequest.IsFound)
+        {
+            throw new FriendshipRejectedException(FriendshipRejection.RequestNotFound);
+        }
+
+        FriendRequest request = foundRequest.GetValue();
+        if (!request.IsSentBy(requesterAccountId) || request.IsExpiredAt(now))
         {
             throw new FriendshipRejectedException(FriendshipRejection.RequestNotFound);
         }

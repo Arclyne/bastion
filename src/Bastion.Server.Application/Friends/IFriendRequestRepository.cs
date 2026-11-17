@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using Bastion.Domain.Common;
 using Bastion.Domain.Friends;
 
 namespace Bastion.Server.Application.Friends;
 
 public interface IFriendRequestRepository
 {
-    FriendRequest? FindBetween(int firstAccountId, int secondAccountId);
+    Lookup<FriendRequest> FindBetween(int firstAccountId, int secondAccountId);
 
     IReadOnlyList<FriendRequest> ListInvolving(int accountId);
 

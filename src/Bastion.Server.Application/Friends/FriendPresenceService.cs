@@ -1,6 +1,7 @@
-using System;
 using System.Collections.Generic;
+using System;
 using Bastion.Domain.Accounts;
+using Bastion.Domain.Common;
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Common;
 
@@ -24,12 +25,13 @@ public sealed class FriendPresenceService : IFriendPresenceService
     /// <inheritdoc/>
     public void ReportConnected(int accountId)
     {
-        PlayerIdentity? identity = _unitOfWork.Accounts.FindPlayerIdentity(accountId);
-        if (identity is null)
+        Lookup<PlayerIdentity> foundIdentity = _unitOfWork.Accounts.FindPlayerIdentity(accountId);
+        if (!foundIdentity.IsFound)
         {
             return;
         }
 
+        PlayerIdentity identity = foundIdentity.GetValue();
         var change = new FriendPresenceChange(identity, FriendPresence.Connected, lastSeenAt: null);
         NotifyFriends(change);
     }
@@ -37,12 +39,13 @@ public sealed class FriendPresenceService : IFriendPresenceService
     /// <inheritdoc/>
     public void ReportDisconnected(int accountId, DateTime now)
     {
-        Account? account = _unitOfWork.Accounts.FindById(accountId);
-        if (account is null)
+        Lookup<Account> foundAccount = _unitOfWork.Accounts.FindById(accountId);
+        if (!foundAccount.IsFound)
         {
             return;
         }
 
+        Account account = foundAccount.GetValue();
         account.RecordLastSeen(now);
         _unitOfWork.SaveChanges();
 
