@@ -72,7 +72,7 @@ public sealed class TestLoginService
     [Fact]
     public void LogIn_WrongPassword_ThrowsInvalidCredentialsException()
     {
-        AddActiveAccount();
+        AddActiveAccount(Nickname);
         AccessAttempt attempt = CreateAttempt(Nickname);
 
         Action logIn = () => _loginService.LogIn(attempt, WrongPassword);
@@ -83,7 +83,7 @@ public sealed class TestLoginService
     [Fact]
     public void LogIn_WrongPassword_CountsTheFailure()
     {
-        Account account = AddActiveAccount();
+        Account account = AddActiveAccount(Nickname);
         AccessAttempt attempt = CreateAttempt(Nickname);
         Action logIn = () => _loginService.LogIn(attempt, WrongPassword);
 
@@ -95,7 +95,7 @@ public sealed class TestLoginService
     [Fact]
     public void LogIn_ThirdWrongPassword_ThrowsAccountLockedForFiveMinutes()
     {
-        AddActiveAccount();
+        AddActiveAccount(Nickname);
         AccessAttempt attempt = CreateAttempt(Nickname);
         Action logIn = () => _loginService.LogIn(attempt, WrongPassword);
         Record.Exception(logIn);
@@ -110,7 +110,7 @@ public sealed class TestLoginService
     [Fact]
     public void LogIn_LockedAccountWithRightPassword_ThrowsAccountLocked()
     {
-        Account account = AddActiveAccount();
+        Account account = AddActiveAccount(Nickname);
         LockAccount(account);
         AccessAttempt attempt = CreateAttempt(Nickname);
         Action logIn = () => _loginService.LogIn(attempt, Password);
@@ -124,7 +124,7 @@ public sealed class TestLoginService
     [Fact]
     public void LogIn_LockedAccountWithWrongPassword_DoesNotExtendTheLock()
     {
-        Account account = AddActiveAccount();
+        Account account = AddActiveAccount(Nickname);
         LockAccount(account);
         DateTime? expectedLockEnd = account.LockedUntil;
         AccessAttempt attempt = CreateAttempt(Nickname);
@@ -138,7 +138,7 @@ public sealed class TestLoginService
     [Fact]
     public void LogIn_PendingAccount_ThrowsAccountPending()
     {
-        AddPendingAccount();
+        AddPendingAccount(Nickname);
         AccessAttempt attempt = CreateAttempt(Nickname);
         Action logIn = () => _loginService.LogIn(attempt, Password);
 
@@ -151,7 +151,7 @@ public sealed class TestLoginService
     [Fact]
     public void LogIn_ValidCredentials_ReturnsTheSessionToken()
     {
-        AddActiveAccount();
+        AddActiveAccount(Nickname);
         AccessAttempt attempt = CreateAttempt(Nickname);
 
         LoggedInPlayer player = _loginService.LogIn(attempt, Password);
@@ -162,7 +162,7 @@ public sealed class TestLoginService
     [Fact]
     public void LogIn_ValidEmail_ReturnsThePlayerNickname()
     {
-        AddActiveAccount();
+        AddActiveAccount(Nickname);
         AccessAttempt attempt = CreateAttempt(Email);
 
         LoggedInPlayer player = _loginService.LogIn(attempt, Password);
@@ -170,10 +170,23 @@ public sealed class TestLoginService
         Assert.Equal(Nickname, player.Nickname);
     }
 
+    [Theory]
+    [InlineData("rival_one")]
+    [InlineData("peón_ñandú")]
+    public void LogIn_EnglishOrSpanishNickname_ReturnsSameNickname(string nickname)
+    {
+        AddActiveAccount(nickname);
+        AccessAttempt attempt = CreateAttempt(nickname);
+
+        LoggedInPlayer player = _loginService.LogIn(attempt, Password);
+
+        Assert.Equal(nickname, player.Nickname);
+    }
+
     [Fact]
     public void LogIn_ValidCredentials_OpensASessionThatExpiresInADay()
     {
-        AddActiveAccount();
+        AddActiveAccount(Nickname);
         AccessAttempt attempt = CreateAttempt(Nickname);
         DateTime expectedExpiry = _now.AddHours(Session.MaximumLifetimeHours);
 
@@ -186,7 +199,7 @@ public sealed class TestLoginService
     [Fact]
     public void LogIn_ValidCredentialsAfterAFailure_ResetsFailedLoginCount()
     {
-        Account account = AddActiveAccount();
+        Account account = AddActiveAccount(Nickname);
         AccessAttempt attempt = CreateAttempt(Nickname);
         Action logInWithWrongPassword = () => _loginService.LogIn(attempt, WrongPassword);
         Record.Exception(logInWithWrongPassword);
@@ -199,7 +212,7 @@ public sealed class TestLoginService
     [Fact]
     public void LogIn_ValidCredentials_SavesEverythingOnce()
     {
-        AddActiveAccount();
+        AddActiveAccount(Nickname);
         AccessAttempt attempt = CreateAttempt(Nickname);
 
         _loginService.LogIn(attempt, Password);
@@ -210,7 +223,7 @@ public sealed class TestLoginService
     [Fact]
     public void LogIn_ValidCredentials_RecordsLoginSucceeded()
     {
-        AddActiveAccount();
+        AddActiveAccount(Nickname);
         AccessAttempt attempt = CreateAttempt(Nickname);
 
         _loginService.LogIn(attempt, Password);
@@ -224,16 +237,16 @@ public sealed class TestLoginService
         return new AccessAttempt(identifier, _connection, _now);
     }
 
-    private Account AddActiveAccount()
+    private Account AddActiveAccount(string nickname)
     {
-        Account account = AddPendingAccount();
+        Account account = AddPendingAccount(nickname);
         account.Activate();
         return account;
     }
 
-    private Account AddPendingAccount()
+    private Account AddPendingAccount(string nickname)
     {
-        var account = new Account(Nickname, Email);
+        var account = new Account(nickname, Email);
         byte[] passwordHash = FakePasswordHasher.ComputeHash(Password);
         account.ChangePassword(passwordHash, _salt);
         _unitOfWork.AccountRepository.AddAccount(account);
