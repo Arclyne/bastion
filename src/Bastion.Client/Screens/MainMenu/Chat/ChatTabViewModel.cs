@@ -19,6 +19,7 @@ namespace Bastion.Client.Screens.MainMenu.Chat;
 public sealed class ChatTabViewModel : ViewModel, IDisposable
 {
     private const int FirstPosition = 0;
+    private const int NotFoundIndex = -1;
     private const int OneUnread = 1;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(ChatTabViewModel));
@@ -145,10 +146,14 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         ArgumentNullException.ThrowIfNull(partner);
 
         Pane = ChatPane.Private;
-        ConversationRowViewModel? row = FindRow(partner.FriendCode);
-        row?.UpdateUnread(0);
+        int rowIndex = FindRowIndex(partner.FriendCode);
+        if (rowIndex != NotFoundIndex)
+        {
+            Conversations[rowIndex].UpdateUnread(0);
+        }
+
         UpdateUnreadTotal();
-        ConversationPresence? presence = _friends.FindPresence(partner.FriendCode);
+        ConversationPresence presence = _friends.GetPresence(partner.FriendCode);
         _ = RunSafely(PrivateConversation.Open(partner, presence));
     }
 
@@ -161,7 +166,7 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
             return;
         }
 
-        ConversationPresence? presence = _friends.FindPresence(friendCode);
+        ConversationPresence presence = _friends.GetPresence(friendCode);
         PrivateConversation.ApplyPresence(presence);
     }
 
@@ -188,9 +193,9 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
 
     private void UpdateConversation(PlayerTag partner, PrivateMessage message, int newUnread)
     {
-        ConversationRowViewModel? row = FindRow(partner.FriendCode);
+        int rowIndex = FindRowIndex(partner.FriendCode);
         DateTime today = ChatTimeText.GetLocalToday(_timeProvider);
-        if (row is null)
+        if (rowIndex == NotFoundIndex)
         {
             var contact = new ConversationContact(partner, isFriend: true);
             var preview = new ConversationPreview(contact, message, newUnread);
@@ -199,17 +204,26 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         }
         else
         {
+            ConversationRowViewModel row = Conversations[rowIndex];
             row.ShowMessage(message, row.UnreadCount + newUnread, today);
-            Conversations.Move(Conversations.IndexOf(row), FirstPosition);
+            Conversations.Move(rowIndex, FirstPosition);
         }
 
         HasConversations = true;
         UpdateUnreadTotal();
     }
 
-    private ConversationRowViewModel? FindRow(string friendCode)
+    private int FindRowIndex(string friendCode)
     {
-        return Conversations.FirstOrDefault(row => row.Partner.FriendCode == friendCode);
+        for (int rowIndex = 0; rowIndex < Conversations.Count; rowIndex++)
+        {
+            if (Conversations[rowIndex].Partner.FriendCode == friendCode)
+            {
+                return rowIndex;
+            }
+        }
+
+        return NotFoundIndex;
     }
 
     private void UpdateUnreadTotal()
