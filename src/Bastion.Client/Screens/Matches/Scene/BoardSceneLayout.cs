@@ -24,10 +24,13 @@ public static class BoardSceneLayout
     private const float WallThickness = 0.14f;
     private const float WallHeight = 0.45f;
     private const float WallCenterHeight = SurfaceHeight + (WallHeight * WallMesh.HalfSide);
+    private const float OffBoardDistance = 1000f;
 
     private static readonly Vector3 _surfaceCenter = new Vector3(BoardCenter, SurfaceHeight, BoardCenter);
 
     public static Plane Surface { get; } = new Plane(_surfaceCenter, Vector3.Up);
+
+    public static Vector3 OffBoardPoint { get; } = new Vector3(OffBoardDistance, SurfaceHeight, OffBoardDistance);
 
     public static Vector3 GetCellCenter(byte boardSize, BoardCoordinates coordinates)
     {
@@ -39,16 +42,26 @@ public static class BoardSceneLayout
         return new Vector3(columnOffset, SurfaceHeight, rowOffset);
     }
 
-    public static bool TryGetCoordinates(byte boardSize, Vector3 surfacePoint, out BoardCoordinates coordinates)
+    public static BoardCoordinates FindCoordinates(byte boardSize, Vector3 surfacePoint)
     {
-        coordinates = ToBoardCoordinates(boardSize, surfacePoint, MathF.Round);
-        return BoardLayout.IsInside(boardSize, coordinates);
+        BoardCoordinates coordinates = ToBoardCoordinates(boardSize, surfacePoint, MathF.Round);
+        if (!BoardLayout.IsInside(boardSize, coordinates))
+        {
+            return BoardLayout.OffBoardSquare;
+        }
+
+        return coordinates;
     }
 
-    public static bool TryGetGroove(byte boardSize, Vector3 surfacePoint, out BoardCoordinates groove)
+    public static BoardCoordinates FindGroove(byte boardSize, Vector3 surfacePoint)
     {
-        groove = ToBoardCoordinates(boardSize, surfacePoint, MathF.Floor);
-        return WallPolicy.IsGrooveOnBoard(boardSize, groove);
+        BoardCoordinates groove = ToBoardCoordinates(boardSize, surfacePoint, MathF.Floor);
+        if (!WallPolicy.IsGrooveOnBoard(boardSize, groove))
+        {
+            return BoardLayout.OffBoardSquare;
+        }
+
+        return groove;
     }
 
     public static Matrix GetWallTransform(byte boardSize, Wall wall)

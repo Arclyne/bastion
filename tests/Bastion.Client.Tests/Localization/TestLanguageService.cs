@@ -1,7 +1,7 @@
+using System;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
-using System;
 using Bastion.Client.Localization;
 using Bastion.Client.Tests.Fakes;
 using Gum.Localization;

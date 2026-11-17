@@ -1,9 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.Globalization;
 using System.IO;
 using System.Resources;
-using System;
 using Bastion.Domain.Common;
 using Gum.Localization;
 using log4net;

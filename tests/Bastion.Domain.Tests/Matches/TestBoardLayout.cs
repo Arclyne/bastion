@@ -111,11 +111,11 @@ public sealed class TestBoardLayout
     [InlineData("9e")]
     [InlineData("E1")]
     [InlineData("e-1")]
-    public void TryParseSquare_TextOutsideNotation_ReturnsFalse(string square)
+    public void FindSquare_TextOutsideNotation_ReturnsOffBoardSquare(string square)
     {
-        bool isSquare = BoardLayout.TryParseSquare(square, out _);
+        BoardCoordinates coordinates = BoardLayout.FindSquare(square);
 
-        Assert.False(isSquare);
+        Assert.Equal(BoardLayout.OffBoardSquare, coordinates);
     }
 
     [Fact]

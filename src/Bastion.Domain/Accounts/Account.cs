@@ -79,16 +79,13 @@ public class Account
 
     public bool IsLockedAt(DateTime now)
     {
-        return TryGetActiveLockEnd(now, out _);
+        DateTime lockEnd = GetLockEnd(now);
+        return lockEnd > now;
     }
 
     public int GetRemainingLockMinutes(DateTime now)
     {
-        if (!TryGetActiveLockEnd(now, out DateTime lockEnd))
-        {
-            return 0;
-        }
-
+        DateTime lockEnd = GetLockEnd(now);
         TimeSpan remainingLock = lockEnd - now;
         double roundedUpMinutes = Math.Ceiling(remainingLock.TotalMinutes);
         int remainingMinutes = (int)roundedUpMinutes;
@@ -127,16 +124,14 @@ public class Account
         LastSeenAt = now;
     }
 
-    private bool TryGetActiveLockEnd(DateTime now, out DateTime lockEnd)
+    private DateTime GetLockEnd(DateTime now)
     {
         if (LockedUntil is DateTime lockedUntil && lockedUntil > now)
         {
-            lockEnd = lockedUntil;
-            return true;
+            return lockedUntil;
         }
 
-        lockEnd = default;
-        return false;
+        return now;
     }
 
     private bool HasResetPeriodPassed(DateTime now)

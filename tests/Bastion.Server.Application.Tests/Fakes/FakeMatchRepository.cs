@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using Bastion.Domain.Chat;
 using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;

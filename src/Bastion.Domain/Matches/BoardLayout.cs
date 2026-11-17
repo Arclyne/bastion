@@ -13,6 +13,9 @@ public static class BoardLayout
     private const int BoardHalves = 2;
     private const int ColumnLength = 1;
     private const int ShortestSquareLength = 2;
+    private const int OffBoardIndex = -1;
+
+    public static BoardCoordinates OffBoardSquare { get; } = new BoardCoordinates(OffBoardIndex, OffBoardIndex);
 
     public static BoardCoordinates GetStartingCoordinates(byte boardSize, byte turnOrder)
     {
@@ -70,7 +73,8 @@ public static class BoardLayout
     {
         ArgumentNullException.ThrowIfNull(square);
 
-        if (!TryParseSquare(square, out BoardCoordinates coordinates))
+        BoardCoordinates coordinates = FindSquare(square);
+        if (coordinates == OffBoardSquare)
         {
             throw new FormatException($"The square '{square}' is not in board notation.");
         }
@@ -78,14 +82,13 @@ public static class BoardLayout
         return coordinates;
     }
 
-    public static bool TryParseSquare(string square, out BoardCoordinates coordinates)
+    public static BoardCoordinates FindSquare(string square)
     {
         ArgumentNullException.ThrowIfNull(square);
 
-        coordinates = new BoardCoordinates(FirstIndex, FirstIndex);
         if (square.Length < ShortestSquareLength)
         {
-            return false;
+            return OffBoardSquare;
         }
 
         char column = square[FirstIndex];
@@ -93,13 +96,13 @@ public static class BoardLayout
         bool isRowNumber = int.TryParse(rowText, NumberStyles.None, CultureInfo.InvariantCulture, out int rowNumber);
         if (column < FirstColumn || column > LastColumn || !isRowNumber || rowNumber < RowNumberOffset)
         {
-            return false;
+            return OffBoardSquare;
         }
 
         int columnIndex = column - FirstColumn;
         int rowIndex = rowNumber - RowNumberOffset;
-        coordinates = new BoardCoordinates(columnIndex, rowIndex);
-        return true;
+        var coordinates = new BoardCoordinates(columnIndex, rowIndex);
+        return coordinates;
     }
 
     public static bool IsGoal(byte boardSize, byte turnOrder, BoardCoordinates coordinates)

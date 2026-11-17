@@ -1,6 +1,5 @@
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System;
+using System.Collections.Generic;
 using Bastion.Domain.Common;
 using Bastion.Domain.Rooms;
 
@@ -33,28 +32,21 @@ public sealed class RoomRegistry : IRoomRegistry
         }
     }
 
-    public bool TryCreateUnusedCode(
-        [NotNullWhen(true)]
-        out string? code)
+    public string CreateUnusedCode()
     {
         lock (_roomsLock)
         {
             string createdCode = _codeGenerator.CreateCode();
             if (_roomsByCode.ContainsKey(createdCode))
             {
-                code = null;
-                return false;
+                return string.Empty;
             }
 
-            code = createdCode;
-            return true;
+            return createdCode;
         }
     }
 
-    public bool TryOpen(
-        WaitingRoom room,
-        [NotNullWhen(true)]
-        out RoomSnapshot? openedRoom)
+    public bool TryOpen(WaitingRoom room)
     {
         ArgumentNullException.ThrowIfNull(room);
 
@@ -62,13 +54,11 @@ public sealed class RoomRegistry : IRoomRegistry
         {
             if (_roomsByAccountId.ContainsKey(room.HostAccountId) || _roomsByCode.ContainsKey(room.Identity.Code))
             {
-                openedRoom = null;
                 return false;
             }
 
             _roomsByCode.Add(room.Identity.Code, room);
             _roomsByAccountId.Add(room.HostAccountId, room);
-            openedRoom = RoomSnapshot.Capture(room);
             return true;
         }
     }

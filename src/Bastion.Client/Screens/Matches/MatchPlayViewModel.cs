@@ -222,8 +222,9 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
     private void ReceivePawnMove(PawnMovedEventArgs pawnMove)
     {
+        BoardCoordinates destination = BoardLayout.FindSquare(pawnMove.ToSquare);
         if (!_turnOrdersByNickname.TryGetValue(pawnMove.MoverNickname, out byte moverTurnOrder)
-            || !BoardLayout.TryParseSquare(pawnMove.ToSquare, out BoardCoordinates destination))
+            || destination == BoardLayout.OffBoardSquare)
         {
             _logger.Warn(
                 $"A pawn move arrived that the board cannot place. MatchId={pawnMove.MatchId}; "
@@ -293,8 +294,9 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
     private void ReceiveWallPlacement(WallPlacedEventArgs wallPlacement)
     {
+        BoardCoordinates groove = BoardLayout.FindSquare(wallPlacement.Groove);
         if (!_turnOrdersByNickname.TryGetValue(wallPlacement.PlacerNickname, out byte placerTurnOrder)
-            || !BoardLayout.TryParseSquare(wallPlacement.Groove, out BoardCoordinates groove))
+            || groove == BoardLayout.OffBoardSquare)
         {
             _logger.Warn(
                 $"A wall arrived that the board cannot place. MatchId={wallPlacement.MatchId}; "

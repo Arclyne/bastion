@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
 using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matchmaking;
@@ -195,6 +195,20 @@ public sealed class TestPrivateRoomService
         RequestedRoomSettings settings = CreateClassicSettings();
 
         RoomSnapshot room = _privateRoomService.CreateRoom(HostToken, settings, _now);
+
+        Assert.Equal(SecondCode, room.Identity.Code);
+    }
+
+    [Fact]
+    public void CreateRoom_CodeOfOpenRoom_UsesNextCode()
+    {
+        OpenHostRoom();
+        AddPlayer(ThirdToken, _third);
+        _codeGenerator.Codes.Enqueue(FirstCode);
+        _codeGenerator.Codes.Enqueue(SecondCode);
+        RequestedRoomSettings settings = CreateClassicSettings();
+
+        RoomSnapshot room = _privateRoomService.CreateRoom(ThirdToken, settings, _now);
 
         Assert.Equal(SecondCode, room.Identity.Code);
     }

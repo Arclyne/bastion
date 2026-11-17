@@ -33,31 +33,12 @@ public sealed class MatchmakingDispatcher : IMatchmakingDispatcher
 
         foreach (MatchPairing pairing in review.Pairings)
         {
-            StartRankedMatch(pairing, now);
+            _rankedMatchCreator.CreateMatch(pairing, now);
         }
 
         foreach (PresenceRequest request in review.PresenceRequests)
         {
             _matchmakingNotifier.NotifyPresenceRequested(request);
-        }
-    }
-
-    private void StartRankedMatch(MatchPairing pairing, DateTime now)
-    {
-        if (!_rankedMatchCreator.TryCreateMatch(pairing, now, out CreatedMatch? createdMatch))
-        {
-            NotifyMatchCreationFailed(pairing);
-            return;
-        }
-
-        _matchmakingNotifier.NotifyMatchFound(createdMatch);
-    }
-
-    private void NotifyMatchCreationFailed(MatchPairing pairing)
-    {
-        foreach (MatchSearch search in pairing.Players)
-        {
-            _matchmakingNotifier.NotifySearchEnded(search.AccountId, SearchEndReason.MatchCreationFailed);
         }
     }
 }

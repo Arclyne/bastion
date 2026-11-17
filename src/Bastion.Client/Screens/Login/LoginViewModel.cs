@@ -1,7 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
-using System;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Networking.Channels;
