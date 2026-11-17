@@ -336,7 +336,8 @@ public sealed class MatchSearchViewModel : ViewModel, IDisposable
         }
 
         TimeSpan elapsed = _timeProvider.GetUtcNow() - _searchStartedAt;
-        SearchDetail = string.Concat(Strings.MainMenuFindMatchDetail, DetailSeparator, FormatElapsed(elapsed));
+        string elapsedText = FormatElapsed(elapsed);
+        SearchDetail = string.Concat(Strings.MainMenuFindMatchDetail, DetailSeparator, elapsedText);
         if (IsPresenceDialogOpen)
         {
             UpdatePresenceMessage();
