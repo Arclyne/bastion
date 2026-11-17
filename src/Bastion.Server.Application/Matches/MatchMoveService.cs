@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
 using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
@@ -110,7 +110,8 @@ public sealed class MatchMoveService : IMatchMoveService
 
     private static BoardCoordinates ReadDestination(ConnectedPlayer player, ChosenPawnMove chosenMove)
     {
-        if (!BoardLayout.TryParseSquare(chosenMove.DestinationSquare, out BoardCoordinates destination))
+        BoardCoordinates destination = BoardLayout.FindSquare(chosenMove.DestinationSquare);
+        if (destination == BoardLayout.OffBoardSquare)
         {
             _logger.Warn(
                 $"A move arrived with a square outside board notation. AccountId={player.AccountId}; "
@@ -175,7 +176,8 @@ public sealed class MatchMoveService : IMatchMoveService
 
     private static Wall ReadWall(ConnectedPlayer player, ChosenWall chosenWall)
     {
-        if (!BoardLayout.TryParseSquare(chosenWall.Groove, out BoardCoordinates groove))
+        BoardCoordinates groove = BoardLayout.FindSquare(chosenWall.Groove);
+        if (groove == BoardLayout.OffBoardSquare)
         {
             _logger.Warn(
                 $"A wall arrived with a groove outside board notation. AccountId={player.AccountId}; "
