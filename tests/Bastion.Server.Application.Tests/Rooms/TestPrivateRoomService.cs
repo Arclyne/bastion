@@ -1,6 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
+using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matchmaking;
 using Bastion.Domain.Rooms;
@@ -453,13 +454,13 @@ public sealed class TestPrivateRoomService
     }
 
     [Fact]
-    public void FindOwnRoom_PlayerNotInRoom_ReturnsNull()
+    public void FindOwnRoom_PlayerNotInRoom_ReturnsMissingRoom()
     {
         AddPlayer(GuestToken, _guest);
 
-        RoomSnapshot? room = _privateRoomService.FindOwnRoom(GuestToken, _now);
+        Lookup<RoomSnapshot> foundRoom = _privateRoomService.FindOwnRoom(GuestToken, _now);
 
-        Assert.Null(room);
+        Assert.False(foundRoom.IsFound);
     }
 
     private void QueueTakenCodesUpToLimit()
