@@ -17,7 +17,7 @@ public sealed class TestFriendContractTranslator
     [Fact]
     public void ToFriendListing_ConnectedEntry_MapsConnectedPresence()
     {
-        FriendListEntry entry = CreateEntry(FriendCode);
+        FriendListEntry entry = CreateEntry(FriendNickname, FriendCode);
         FriendList list = CreateList(entry);
 
         var listing = FriendContractTranslator.ToFriendListing(list);
@@ -43,7 +43,7 @@ public sealed class TestFriendContractTranslator
     [Fact]
     public void ToFriendListing_NullFriendCode_UsesEmptyText()
     {
-        FriendListEntry entry = CreateEntry(friendCode: null);
+        FriendListEntry entry = CreateEntry(FriendNickname, friendCode: null);
         FriendList list = CreateList(entry);
 
         var listing = FriendContractTranslator.ToFriendListing(list);
@@ -55,7 +55,7 @@ public sealed class TestFriendContractTranslator
     [Fact]
     public void ToFriendListing_AnyList_KeepsListedAt()
     {
-        FriendListEntry entry = CreateEntry(FriendCode);
+        FriendListEntry entry = CreateEntry(FriendNickname, FriendCode);
         FriendList list = CreateList(entry);
 
         var listing = FriendContractTranslator.ToFriendListing(list);
@@ -68,12 +68,7 @@ public sealed class TestFriendContractTranslator
     [InlineData("peón_ñandú")]
     public void ToFriendListing_EnglishOrSpanishNickname_KeepsNickname(string nickname)
     {
-        var entry = new FriendListEntry
-        {
-            Nickname = nickname,
-            FriendCode = FriendCode,
-            Presence = PresenceState.Connected,
-        };
+        FriendListEntry entry = CreateEntry(nickname, FriendCode);
         FriendList list = CreateList(entry);
 
         var listing = FriendContractTranslator.ToFriendListing(list);
@@ -126,11 +121,11 @@ public sealed class TestFriendContractTranslator
         Assert.Empty(listing.ReceivedRequests);
     }
 
-    private static FriendListEntry CreateEntry(string? friendCode)
+    private static FriendListEntry CreateEntry(string nickname, string? friendCode)
     {
         return new FriendListEntry
         {
-            Nickname = FriendNickname,
+            Nickname = nickname,
             FriendCode = friendCode,
             Presence = PresenceState.Connected,
         };
