@@ -1,15 +1,20 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using System.Globalization;
+using System.IO;
 using System.Resources;
+using System;
+using Bastion.Domain.Common;
 using Gum.Localization;
+using log4net;
 
 namespace Bastion.Client.Localization;
 
 /// <inheritdoc/>
 public sealed class LanguageService : ILanguageService
 {
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(LanguageService));
+
     private readonly ILanguagePreferenceStore _languagePreferenceStore;
     private readonly ILocalizationService _textDatabase;
 
@@ -101,9 +106,43 @@ public sealed class LanguageService : ILanguageService
 
     private SupportedLanguage ResolveInitialLanguage()
     {
-        SupportedLanguage? savedLanguage = LanguageCatalog.FindByCultureName(_languagePreferenceStore.LoadCultureName());
-        SupportedLanguage? systemLanguage = LanguageCatalog.FindClosest(CultureInfo.CurrentUICulture);
-        return savedLanguage ?? systemLanguage ?? LanguageCatalog.Default;
+        Lookup<SupportedLanguage> savedLanguage = FindSavedLanguage();
+        if (savedLanguage.IsFound)
+        {
+            return savedLanguage.GetValue();
+        }
+
+        Lookup<SupportedLanguage> systemLanguage = LanguageCatalog.FindClosest(CultureInfo.CurrentUICulture);
+        if (systemLanguage.IsFound)
+        {
+            return systemLanguage.GetValue();
+        }
+
+        return LanguageCatalog.Default;
+    }
+
+    private Lookup<SupportedLanguage> FindSavedLanguage()
+    {
+        try
+        {
+            string savedCultureName = _languagePreferenceStore.LoadCultureName();
+            return LanguageCatalog.FindByCultureName(savedCultureName);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            LogReadFailure(ex);
+        }
+        catch (IOException ex)
+        {
+            LogReadFailure(ex);
+        }
+
+        return Lookup.Missing<SupportedLanguage>("Search=SavedLanguage");
+    }
+
+    private static void LogReadFailure(Exception cause)
+    {
+        _logger.Warn("The saved language could not be read.", cause);
     }
 
     private void ApplyLanguage(SupportedLanguage language)
