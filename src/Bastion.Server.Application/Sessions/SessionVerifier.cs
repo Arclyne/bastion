@@ -1,5 +1,6 @@
 using System;
 using Bastion.Domain.Accounts;
+using Bastion.Domain.Common;
 using Bastion.Domain.Sessions;
 using Bastion.Server.Application.Accounts;
 using Bastion.Server.Application.Common;
@@ -40,13 +41,19 @@ public sealed class SessionVerifier : ISessionVerifier
     private Account FindSessionAccount(string sessionToken, DateTime now)
     {
         byte[] tokenHash = _tokenGenerator.Hash(sessionToken);
-        Session? session = _unitOfWork.Sessions.FindByTokenHash(tokenHash);
-        if (session is null || !session.IsActiveAt(now))
+        Lookup<Session> foundSession = _unitOfWork.Sessions.FindByTokenHash(tokenHash);
+        if (!foundSession.IsFound || !foundSession.GetValue().IsActiveAt(now))
         {
             throw new InvalidSessionException();
         }
 
-        Account? account = _unitOfWork.Accounts.FindById(session.AccountId);
-        return account ?? throw new InvalidSessionException();
+        Session session = foundSession.GetValue();
+        Lookup<Account> foundAccount = _unitOfWork.Accounts.FindById(session.AccountId);
+        if (!foundAccount.IsFound)
+        {
+            throw new InvalidSessionException();
+        }
+
+        return foundAccount.GetValue();
     }
 }
