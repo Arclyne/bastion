@@ -53,12 +53,7 @@ public sealed class TestChatContractTranslator
     [Fact]
     public void ToChatMessage_Notification_IsNotOwn()
     {
-        var notification = new ChatMessageNotification
-        {
-            SenderNickname = SenderNickname,
-            Text = Text,
-            OccurredAt = _sentAt,
-        };
+        ChatMessageNotification notification = CreateNotification(SenderNickname, Text);
 
         var message = ChatContractTranslator.ToChatMessage(notification);
 
@@ -70,12 +65,7 @@ public sealed class TestChatContractTranslator
     [InlineData("¿Otra partida? ¡Qué peón, Ñandú!")]
     public void ToChatMessage_EnglishOrSpanishText_KeepsText(string text)
     {
-        var notification = new ChatMessageNotification
-        {
-            SenderNickname = SenderNickname,
-            Text = text,
-            OccurredAt = _sentAt,
-        };
+        ChatMessageNotification notification = CreateNotification(SenderNickname, text);
 
         var message = ChatContractTranslator.ToChatMessage(notification);
 
@@ -87,12 +77,7 @@ public sealed class TestChatContractTranslator
     [InlineData("peón_ñandú")]
     public void ToChatMessage_EnglishOrSpanishNickname_KeepsNickname(string nickname)
     {
-        var notification = new ChatMessageNotification
-        {
-            SenderNickname = nickname,
-            Text = Text,
-            OccurredAt = _sentAt,
-        };
+        ChatMessageNotification notification = CreateNotification(nickname, Text);
 
         var message = ChatContractTranslator.ToChatMessage(notification);
 
@@ -125,6 +110,16 @@ public sealed class TestChatContractTranslator
         {
             Messages = messages,
             ConnectedPlayerCount = ConnectedPlayerCount,
+        };
+    }
+
+    private static ChatMessageNotification CreateNotification(string senderNickname, string text)
+    {
+        return new ChatMessageNotification
+        {
+            SenderNickname = senderNickname,
+            Text = text,
+            OccurredAt = _sentAt,
         };
     }
 }
