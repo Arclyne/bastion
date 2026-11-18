@@ -77,11 +77,14 @@ public sealed class FriendRowView : Panel
 
     private Button CreateMoreButton()
     {
-        Button more = ViewFactory.CreateButton(nameof(Strings.FriendsMoreOptions), MoreButtonWidth, MoreButtonHeight);
-        ButtonSkin.CreateAndAttach(more, ButtonLookCatalog.Pill);
-        more.Anchor(Gum.Wireframe.Anchor.Right);
-        more.Click += HandleMoreClick;
-        return more;
+        Button moreButton = ViewFactory.CreateButton(
+            nameof(Strings.FriendsMoreOptions),
+            MoreButtonWidth,
+            MoreButtonHeight);
+        ButtonSkin.CreateAndAttach(moreButton, ButtonLookCatalog.Pill);
+        moreButton.Anchor(Gum.Wireframe.Anchor.Right);
+        moreButton.Click += HandleMoreClick;
+        return moreButton;
     }
 
     private void HandleMoreClick(object? sender, EventArgs e)

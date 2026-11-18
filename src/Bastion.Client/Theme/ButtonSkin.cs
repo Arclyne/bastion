@@ -11,35 +11,35 @@ public sealed class ButtonSkin : InteractiveSkin
 {
     private const float BorderWidth = 1.8f;
 
-    private readonly ButtonLook _look;
+    private readonly ButtonLook _buttonLook;
     private readonly RectangleRuntime _halo;
     private readonly RectangleRuntime _surface;
     private readonly TextRuntime _text;
 
-    private ButtonSkin(ButtonBase button, ButtonLook look)
+    private ButtonSkin(ButtonBase button, ButtonLook buttonLook)
     {
-        _look = look;
-        _halo = ShapeFactory.CreateHalo(look.Radius);
-        _surface = ShapeFactory.CreateRounded(look.Fill, look.Radius);
-        _surface.StrokeWidth = look.Border is null ? 0 : BorderWidth;
+        _buttonLook = buttonLook;
+        _halo = ShapeFactory.CreateHalo(buttonLook.Radius);
+        _surface = ShapeFactory.CreateRounded(buttonLook.Fill, buttonLook.Radius);
+        _surface.StrokeWidth = buttonLook.Border is null ? 0 : BorderWidth;
         _surface.GradientY2 = ShapeFactory.FullPercentage;
         _surface.GradientY2Units = GeneralUnitType.Percentage;
         _surface.HasDropshadow = true;
-        _surface.DropshadowColor = look.ShadowColor;
-        _surface.DropshadowBlur = look.ShadowBlur;
+        _surface.DropshadowColor = buttonLook.ShadowColor;
+        _surface.DropshadowBlur = buttonLook.ShadowBlur;
         _text = FindText(button);
-        look.Text.ApplyTo(_text);
+        buttonLook.Text.ApplyTo(_text);
 
         ShapeFactory.HideDefaultParts(button);
         ShapeFactory.InsertBehindContent(button.Visual, _halo, _surface);
     }
 
-    public static ButtonSkin CreateAndAttach(ButtonBase button, ButtonLook look)
+    public static ButtonSkin CreateAndAttach(ButtonBase button, ButtonLook buttonLook)
     {
         ArgumentNullException.ThrowIfNull(button);
-        ArgumentNullException.ThrowIfNull(look);
+        ArgumentNullException.ThrowIfNull(buttonLook);
 
-        var skin = new ButtonSkin(button, look);
+        var skin = new ButtonSkin(button, buttonLook);
         skin.Attach(button);
         return skin;
     }
@@ -48,15 +48,15 @@ public sealed class ButtonSkin : InteractiveSkin
     {
         bool isDisabled = flags.HasFlag(InteractionStates.Disabled);
         bool isHovered = flags.HasFlag(InteractionStates.Hovered);
-        float sink = IsSinking(flags) ? _look.ShadowOffsetY : 0;
+        float sink = IsSinking(flags) ? _buttonLook.ShadowOffsetY : 0;
 
         _surface.FillColor = PickFill(flags);
-        ApplyGradient(isHovered ? _look.HoverFillEnd : _look.FillEnd, isDisabled);
-        _surface.StrokeColor = (isHovered ? _look.HoverBorder : _look.Border) ?? Color.Transparent;
-        _surface.DropshadowOffsetY = _look.ShadowOffsetY - sink;
+        ApplyGradient(isHovered ? _buttonLook.HoverFillEnd : _buttonLook.FillEnd, isDisabled);
+        _surface.StrokeColor = (isHovered ? _buttonLook.HoverBorder : _buttonLook.Border) ?? Color.Transparent;
+        _surface.DropshadowOffsetY = _buttonLook.ShadowOffsetY - sink;
         _surface.Y = sink;
         _text.Y = sink;
-        _text.Color = isDisabled ? Palette.Muted : _look.Text.Color;
+        _text.Color = isDisabled ? Palette.Muted : _buttonLook.Text.Color;
         _halo.Y = sink;
         _halo.Visible = flags.HasFlag(InteractionStates.Focused) && !isDisabled;
     }
@@ -76,7 +76,7 @@ public sealed class ButtonSkin : InteractiveSkin
 
     private bool IsSinking(InteractionStates flags)
     {
-        return _look.ShouldSinkWhenPressed && flags.HasFlag(InteractionStates.Pressed);
+        return _buttonLook.ShouldSinkWhenPressed && flags.HasFlag(InteractionStates.Pressed);
     }
 
     private Color PickFill(InteractionStates flags)
@@ -88,15 +88,15 @@ public sealed class ButtonSkin : InteractiveSkin
 
         if (flags.HasFlag(InteractionStates.Checked))
         {
-            return _look.SelectedFill;
+            return _buttonLook.SelectedFill;
         }
 
         if (flags.HasFlag(InteractionStates.Hovered))
         {
-            return _look.HoverFill;
+            return _buttonLook.HoverFill;
         }
 
-        return _look.Fill;
+        return _buttonLook.Fill;
     }
 
     private void ApplyGradient(Color? fillEnd, bool isDisabled)

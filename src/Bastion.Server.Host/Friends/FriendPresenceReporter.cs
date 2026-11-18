@@ -50,11 +50,11 @@ public sealed class FriendPresenceReporter : IFriendPresenceReporter
         presenceService.ReportDisconnected(accountId, now);
     }
 
-    private static void LogPresenceFailures(string operationName, int accountId, Action report)
+    private static void LogPresenceFailures(string operationName, int accountId, Action presenceReport)
     {
         try
         {
-            report();
+            presenceReport();
         }
         catch (DbUpdateException ex)
         {

@@ -26,9 +26,9 @@ public sealed class MatchmakingDispatcher : IMatchmakingDispatcher
     public void ReviewAndNotify(DateTime now)
     {
         QueueReview review = _matchmakingQueue.Review(now);
-        foreach (MatchSearch search in review.ExpiredSearches)
+        foreach (MatchSearch matchSearch in review.ExpiredSearches)
         {
-            _matchmakingNotifier.NotifySearchEnded(search.AccountId, SearchEndReason.PresenceExpired);
+            _matchmakingNotifier.NotifySearchEnded(matchSearch.AccountId, SearchEndReason.PresenceExpired);
         }
 
         foreach (MatchPairing pairing in review.Pairings)

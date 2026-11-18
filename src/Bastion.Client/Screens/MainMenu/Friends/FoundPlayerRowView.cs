@@ -14,15 +14,15 @@ public sealed class FoundPlayerRowView : Panel
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(FoundPlayerRowView));
 
-    private readonly AddFriendViewModel _addFriend;
+    private readonly AddFriendViewModel _addFriendViewModel;
     private readonly FoundPlayerRowViewModel _row;
 
-    public FoundPlayerRowView(AddFriendViewModel addFriend, FoundPlayerRowViewModel row)
+    public FoundPlayerRowView(AddFriendViewModel addFriendViewModel, FoundPlayerRowViewModel row)
     {
-        ArgumentNullException.ThrowIfNull(addFriend);
+        ArgumentNullException.ThrowIfNull(addFriendViewModel);
         ArgumentNullException.ThrowIfNull(row);
 
-        _addFriend = addFriend;
+        _addFriendViewModel = addFriendViewModel;
         _row = row;
         BindingContext = row;
         Width = RowWidth;
@@ -60,7 +60,7 @@ public sealed class FoundPlayerRowView : Panel
     {
         try
         {
-            await _addFriend.SendRequest(_row);
+            await _addFriendViewModel.SendRequest(_row);
         }
         catch (ObjectDisposedException ex)
         {

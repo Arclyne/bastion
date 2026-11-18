@@ -19,23 +19,23 @@ public static class ShapeFactory
     private const float HaloGrowth = HaloSpread * SidesPerAxis;
     private const float RaisedBorderWidth = 1.5f;
 
-    public static RectangleRuntime CreateRounded(Color fill, float radius)
+    public static RectangleRuntime CreateRounded(Color fillColor, float radius)
     {
         var shape = new RectangleRuntime
         {
             CornerRadius = radius,
             IsFilled = true,
-            FillColor = fill,
+            FillColor = fillColor,
             StrokeWidth = 0,
         };
         shape.Dock(Dock.Fill);
         return shape;
     }
 
-    public static RectangleRuntime CreateCircle(Color fill, float diameter)
+    public static RectangleRuntime CreateCircle(Color fillColor, float diameter)
     {
         float radius = diameter / RadiiPerDiameter;
-        return CreateRounded(fill, radius);
+        return CreateRounded(fillColor, radius);
     }
 
     public static RectangleRuntime CreateHalo(float radius)

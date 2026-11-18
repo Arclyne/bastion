@@ -152,9 +152,9 @@ public sealed class RoomRegistry : IRoomRegistry
         }
     }
 
-    public TResult StartMatch<TResult>(int hostAccountId, Func<RoomSnapshot, TResult> startMatch)
+    public TResult StartMatch<TResult>(int hostAccountId, Func<RoomSnapshot, TResult> matchStarter)
     {
-        ArgumentNullException.ThrowIfNull(startMatch);
+        ArgumentNullException.ThrowIfNull(matchStarter);
 
         lock (_roomsLock)
         {
@@ -165,7 +165,7 @@ public sealed class RoomRegistry : IRoomRegistry
             }
 
             var capturedRoom = RoomSnapshot.Capture(room);
-            TResult result = startMatch(capturedRoom);
+            TResult result = matchStarter(capturedRoom);
             RemoveRoom(room);
             return result;
         }

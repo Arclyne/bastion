@@ -54,20 +54,20 @@ public sealed class RemoveFriendDialogView : DialogCard
 
     private StackPanel CreateButtons()
     {
-        Button cancel = CreateDialogButton(nameof(Strings.FriendsCancel), ButtonLookCatalog.Secondary);
-        cancel.Click += HandleCancelClick;
+        Button cancelButton = CreateDialogButton(nameof(Strings.FriendsCancel), ButtonLookCatalog.Secondary);
+        cancelButton.Click += HandleCancelClick;
 
-        Button remove = CreateDialogButton(nameof(Strings.FriendsRemove), ButtonLookCatalog.Primary);
-        remove.SetBinding(nameof(IsEnabled), nameof(FriendActionsViewModel.CanConfirm));
-        remove.Click += HandleRemoveClick;
+        Button removeButton = CreateDialogButton(nameof(Strings.FriendsRemove), ButtonLookCatalog.Primary);
+        removeButton.SetBinding(nameof(IsEnabled), nameof(FriendActionsViewModel.CanConfirm));
+        removeButton.Click += HandleRemoveClick;
 
         var row = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = DialogMetrics.ButtonSpacing,
         };
-        row.AddChild(cancel);
-        row.AddChild(remove);
+        row.AddChild(cancelButton);
+        row.AddChild(removeButton);
         return row;
     }
 

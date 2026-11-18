@@ -7,13 +7,13 @@ namespace Bastion.Server.Adapters.Persistence;
 public sealed class DatabaseFailureTranslator<TFailure>
     where TFailure : Exception
 {
-    private readonly Func<Exception, TFailure> _createFailure;
+    private readonly Func<Exception, TFailure> _failureFactory;
 
-    public DatabaseFailureTranslator(Func<Exception, TFailure> createFailure)
+    public DatabaseFailureTranslator(Func<Exception, TFailure> failureFactory)
     {
-        ArgumentNullException.ThrowIfNull(createFailure);
+        ArgumentNullException.ThrowIfNull(failureFactory);
 
-        _createFailure = createFailure;
+        _failureFactory = failureFactory;
     }
 
     public TResult Run<TResult>(Func<TResult> operation)
@@ -26,11 +26,11 @@ public sealed class DatabaseFailureTranslator<TFailure>
         }
         catch (DbUpdateException ex)
         {
-            throw _createFailure(ex);
+            throw _failureFactory(ex);
         }
         catch (DbException ex)
         {
-            throw _createFailure(ex);
+            throw _failureFactory(ex);
         }
     }
 }

@@ -329,7 +329,7 @@ public sealed class TestLobbyChatService
 
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
 
-        Assert.False(history.Mute.IsMuted);
+        Assert.False(history.MuteStatus.IsMuted);
     }
 
     [Fact]
@@ -337,11 +337,11 @@ public sealed class TestLobbyChatService
     {
         _sessionVerifier.Add(Token, _player);
         AddSanction(SanctionScope.Chat, endsAt: null);
-        var expectedMute = new ChatMute(IsMuted: true, EndsAt: null);
+        var expectedMuteStatus = new ChatMuteStatus(IsMuted: true, EndsAt: null);
 
         LobbyChatHistory history = _lobbyChatService.OpenLobbyChat(Token, _now);
 
-        Assert.Equal(expectedMute, history.Mute);
+        Assert.Equal(expectedMuteStatus, history.MuteStatus);
     }
 
     private void AddSanction(SanctionScope scope, DateTime? endsAt)

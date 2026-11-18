@@ -135,9 +135,9 @@ public static class ViewFactory
         ArgumentNullException.ThrowIfNull(retryKey);
         ArgumentNullException.ThrowIfNull(handleRetryClick);
 
-        Button retry = CreateButton(retryKey, RetryButtonWidth, RetryButtonHeight);
-        ButtonSkin.CreateAndAttach(retry, ButtonLookCatalog.Secondary);
-        retry.Click += handleRetryClick;
+        Button retryButton = CreateButton(retryKey, RetryButtonWidth, RetryButtonHeight);
+        ButtonSkin.CreateAndAttach(retryButton, ButtonLookCatalog.Secondary);
+        retryButton.Click += handleRetryClick;
 
         var failure = new StackPanel
         {
@@ -145,7 +145,7 @@ public static class ViewFactory
         };
         Label message = CreateLabel(messageKey, TextStyleCatalog.FieldError);
         failure.AddChild(message);
-        failure.AddChild(retry);
+        failure.AddChild(retryButton);
         return failure;
     }
 

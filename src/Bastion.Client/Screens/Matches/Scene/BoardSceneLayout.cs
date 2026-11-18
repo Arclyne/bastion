@@ -116,13 +116,16 @@ public static class BoardSceneLayout
         return meshName.StartsWith(GoalMeshPrefix, StringComparison.Ordinal);
     }
 
-    private static BoardCoordinates ToBoardCoordinates(byte boardSize, Vector3 surfacePoint, Func<float, float> snap)
+    private static BoardCoordinates ToBoardCoordinates(
+        byte boardSize,
+        Vector3 surfacePoint,
+        Func<float, float> snapRule)
     {
         float centerIndex = GetCenterIndex(boardSize);
         float columnPosition = surfacePoint.X + centerIndex;
         float rowPosition = centerIndex - surfacePoint.Z;
-        float snappedColumn = snap(columnPosition);
-        float snappedRow = snap(rowPosition);
+        float snappedColumn = snapRule(columnPosition);
+        float snappedRow = snapRule(rowPosition);
         int columnIndex = (int)snappedColumn;
         int rowIndex = (int)snappedRow;
         var coordinates = new BoardCoordinates(columnIndex, rowIndex);

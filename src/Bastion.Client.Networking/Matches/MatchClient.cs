@@ -46,12 +46,12 @@ public sealed class MatchClient : IMatchClient
         Call(abandonMatch);
     }
 
-    public void MovePawn(string sessionToken, ChosenPawnMove move)
+    public void MovePawn(string sessionToken, ChosenPawnMove chosenMove)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
-        ArgumentNullException.ThrowIfNull(move);
+        ArgumentNullException.ThrowIfNull(chosenMove);
 
-        var contractMove = MatchContractTranslator.ToPawnMove(move);
+        var contractMove = MatchContractTranslator.ToPawnMove(chosenMove);
         Action<IMatchService> movePawn = service => service.MovePawn(sessionToken, contractMove);
         Call(movePawn);
     }

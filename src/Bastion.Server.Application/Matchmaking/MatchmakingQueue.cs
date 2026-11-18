@@ -11,13 +11,13 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
     private readonly object _searchesLock = new object();
     private readonly Dictionary<int, MatchSearch> _searches = new Dictionary<int, MatchSearch>();
 
-    public bool TryAdd(MatchSearch search)
+    public bool TryAdd(MatchSearch matchSearch)
     {
-        ArgumentNullException.ThrowIfNull(search);
+        ArgumentNullException.ThrowIfNull(matchSearch);
 
         lock (_searchesLock)
         {
-            return _searches.TryAdd(search.AccountId, search);
+            return _searches.TryAdd(matchSearch.AccountId, matchSearch);
         }
     }
 
@@ -41,12 +41,12 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
     {
         lock (_searchesLock)
         {
-            if (!_searches.TryGetValue(accountId, out MatchSearch? search))
+            if (!_searches.TryGetValue(accountId, out MatchSearch? matchSearch))
             {
                 return Lookup.Missing<DateTime>($"AccountId={accountId}");
             }
 
-            return Lookup.Found(search.StartedAt);
+            return Lookup.Found(matchSearch.StartedAt);
         }
     }
 
@@ -54,12 +54,12 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
     {
         lock (_searchesLock)
         {
-            if (!_searches.TryGetValue(accountId, out MatchSearch? search))
+            if (!_searches.TryGetValue(accountId, out MatchSearch? matchSearch))
             {
                 return false;
             }
 
-            bool isAwaitingPresence = !search.IsSearching();
+            bool isAwaitingPresence = !matchSearch.IsSearching();
             return isAwaitingPresence;
         }
     }
@@ -68,12 +68,12 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
     {
         lock (_searchesLock)
         {
-            if (!_searches.TryGetValue(accountId, out MatchSearch? search))
+            if (!_searches.TryGetValue(accountId, out MatchSearch? matchSearch))
             {
                 return;
             }
 
-            search.ConfirmPresence(now);
+            matchSearch.ConfirmPresence(now);
         }
     }
 
@@ -90,7 +90,8 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
 
     private List<MatchSearch> RemoveExpiredSearches(DateTime now)
     {
-        IEnumerable<MatchSearch> unansweredSearches = _searches.Values.Where(search => search.HasPresenceExpired(now));
+        IEnumerable<MatchSearch> unansweredSearches = _searches.Values
+            .Where(matchSearch => matchSearch.HasPresenceExpired(now));
         var expiredSearches = new List<MatchSearch>(unansweredSearches);
         RemoveAll(expiredSearches);
         return expiredSearches;
@@ -98,17 +99,17 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
 
     private void RemoveAll(IEnumerable<MatchSearch> searches)
     {
-        foreach (MatchSearch search in searches)
+        foreach (MatchSearch matchSearch in searches)
         {
-            _searches.Remove(search.AccountId);
+            _searches.Remove(matchSearch.AccountId);
         }
     }
 
     private List<MatchPairing> TakePairings()
     {
         IEnumerable<MatchPairing> completePairings = _searches.Values
-            .Where(search => search.IsSearching())
-            .OrderBy(search => search.StartedAt)
+            .Where(matchSearch => matchSearch.IsSearching())
+            .OrderBy(matchSearch => matchSearch.StartedAt)
             .Chunk(MatchmakingPolicy.PlayersPerMatch)
             .Where(players => players.Length == MatchmakingPolicy.PlayersPerMatch)
             .Select(players => new MatchPairing(players));
@@ -123,12 +124,13 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
 
     private List<PresenceRequest> StartPresenceChecks(DateTime now)
     {
-        IEnumerable<MatchSearch> idleSearches = _searches.Values.Where(search => search.ShouldStartPresenceCheck(now));
+        IEnumerable<MatchSearch> idleSearches = _searches.Values
+            .Where(matchSearch => matchSearch.ShouldStartPresenceCheck(now));
         var presenceRequests = new List<PresenceRequest>();
-        foreach (MatchSearch search in idleSearches)
+        foreach (MatchSearch matchSearch in idleSearches)
         {
-            DateTime presenceDeadline = search.StartPresenceCheck(now);
-            var presenceRequest = new PresenceRequest(search.AccountId, presenceDeadline);
+            DateTime presenceDeadline = matchSearch.StartPresenceCheck(now);
+            var presenceRequest = new PresenceRequest(matchSearch.AccountId, presenceDeadline);
             presenceRequests.Add(presenceRequest);
         }
 

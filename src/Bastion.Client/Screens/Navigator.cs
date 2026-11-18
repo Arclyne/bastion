@@ -164,13 +164,13 @@ public sealed class Navigator : INavigator, IDisposable
         var matchViewModel = new MatchViewModel(
             joinedMatch,
             joinedMatchViewModels.Abandonment,
-            joinedMatchViewModels.Play);
+            joinedMatchViewModels.MatchPlay);
         var matchView = new MatchView(matchViewModel, joinedMatchViewModels.Chat, joinedMatchViewModels.Abandonment);
         ShowScreen(
             matchView,
             joinedMatchViewModels.Chat,
             joinedMatchViewModels.Abandonment,
-            joinedMatchViewModels.Play,
+            joinedMatchViewModels.MatchPlay,
             matchViewModel);
         ShownMatch = matchViewModel;
     }

@@ -237,11 +237,11 @@ public sealed class BastionGame : Game
         BoardCoordinates square = boardScene.FindSquareUnderCursor(shownMatch, cursorPosition);
         if (square == BoardLayout.OffBoardSquare)
         {
-            shownMatch.Play.ClearSelection();
+            shownMatch.MatchPlay.ClearSelection();
             return;
         }
 
-        _ = RunSafely(shownMatch.Play.SelectSquare(square));
+        _ = RunSafely(shownMatch.MatchPlay.SelectSquare(square));
     }
 
     private void DrawShownMatchBoard()

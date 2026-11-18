@@ -39,19 +39,19 @@ public sealed class MatchService : IMatchService
     }
 
     /// <inheritdoc/>
-    public void MovePawn(string? sessionToken, PawnMove? move)
+    public void MovePawn(string? sessionToken, PawnMove? pawnMove)
     {
         string token = SessionTranslator.RequireSessionToken(sessionToken);
-        if (move is null)
+        if (pawnMove is null)
         {
             _logger.Warn("A pawn move arrived without its data.");
             var missingMove = new IllegalMoveException();
             throw MatchTranslator.ToFault(missingMove);
         }
 
-        var chosenMove = MatchTranslator.ToChosenPawnMove(move);
+        var chosenMove = MatchTranslator.ToChosenPawnMove(pawnMove);
         Action movePawn = () => MovePawnInRequestScope(token, chosenMove);
-        TranslateMatchFailures(nameof(MovePawn), move.MatchId, movePawn);
+        TranslateMatchFailures(nameof(MovePawn), pawnMove.MatchId, movePawn);
     }
 
     /// <inheritdoc/>

@@ -36,14 +36,14 @@ public sealed class FakeMatchClient : IMatchClient
         LastAbandonedMatchId = matchId;
     }
 
-    public void MovePawn(string sessionToken, ChosenPawnMove move)
+    public void MovePawn(string sessionToken, ChosenPawnMove chosenMove)
     {
         if (MoveFailure is not null)
         {
             throw MoveFailure;
         }
 
-        LastMove = move;
+        LastMove = chosenMove;
     }
 
     public void PlaceWall(string sessionToken, ChosenWall wall)

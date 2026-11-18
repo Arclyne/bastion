@@ -186,8 +186,8 @@ public class Match
         EnsurePawnCanMove(pawnMove, boardSize);
         Participation mover = GetParticipation(pawnMove.AccountId);
         MoveTiming timing = MeasureTurn(playedAt);
-        var move = new Move(pawnMove, mover.CurrentSquare, timing);
-        RecordMove(mover, move);
+        var playedMove = new Move(pawnMove, mover.CurrentSquare, timing);
+        RecordMove(mover, playedMove);
         string destinationSquare = BoardLayout.ToSquare(pawnMove.Destination);
         mover.MoveTo(destinationSquare);
         bool hasReachedGoal = BoardLayout.IsGoal(boardSize, mover.TurnOrder, pawnMove.Destination);
@@ -234,8 +234,8 @@ public class Match
 
         Participation placer = GetParticipation(placement.AccountId);
         MoveTiming timing = MeasureTurn(playedAt);
-        var move = new Move(placement, timing);
-        RecordMove(placer, move);
+        var playedMove = new Move(placement, timing);
+        RecordMove(placer, playedMove);
         placer.SpendWall();
         PassTurnFrom(placer.TurnOrder);
     }
@@ -352,8 +352,9 @@ public class Match
     private BoardCoordinates FindPawnCoordinates(Participation participation, byte boardSize)
     {
         Move? lastPawnMove = _moves
-            .Where(move => move.AccountId == participation.AccountId && move.MoveType == MoveType.PawnMove)
-            .OrderBy(move => move.MoveNumber)
+            .Where(playedMove => playedMove.AccountId == participation.AccountId
+                && playedMove.MoveType == MoveType.PawnMove)
+            .OrderBy(playedMove => playedMove.MoveNumber)
             .LastOrDefault();
         if (lastPawnMove is null)
         {
@@ -370,8 +371,8 @@ public class Match
     private List<Wall> ListPlacedWalls()
     {
         IEnumerable<Wall> placedWalls = _moves
-            .Where(move => move.MoveType == MoveType.Wall)
-            .Select(move => move.GetWall());
+            .Where(playedMove => playedMove.MoveType == MoveType.Wall)
+            .Select(playedMove => playedMove.GetWall());
         return new List<Wall>(placedWalls);
     }
 
@@ -401,16 +402,16 @@ public class Match
 
     private int GetTimeSpentMilliseconds(DateTime playedAt)
     {
-        DateTime turnStartedAt = _moves.Count == 0 ? StartedAt : _moves.Max(move => move.PlayedAt);
+        DateTime turnStartedAt = _moves.Count == 0 ? StartedAt : _moves.Max(playedMove => playedMove.PlayedAt);
         TimeSpan elapsedTime = playedAt - turnStartedAt;
         double elapsedMilliseconds = Math.Max(elapsedTime.TotalMilliseconds, 0);
         int timeSpentMilliseconds = (int)elapsedMilliseconds;
         return timeSpentMilliseconds;
     }
 
-    private void RecordMove(Participation player, Move move)
+    private void RecordMove(Participation player, Move playedMove)
     {
-        _moves.Add(move);
-        player.SpendClock(move.TimeSpentMilliseconds);
+        _moves.Add(playedMove);
+        player.SpendClock(playedMove.TimeSpentMilliseconds);
     }
 }

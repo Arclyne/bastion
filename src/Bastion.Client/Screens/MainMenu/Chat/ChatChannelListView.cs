@@ -51,11 +51,11 @@ public sealed class ChatChannelListView : StackPanel
 
     private Panel CreateGlobalRow()
     {
-        Button open = ViewFactory.CreateButton(nameof(Strings.ChatOpen), OpenButtonWidth, OpenButtonHeight);
-        ButtonSkin.CreateAndAttach(open, ButtonLookCatalog.Secondary);
-        open.Anchor(Gum.Wireframe.Anchor.Right);
-        open.X = -RowPaddingX;
-        open.Click += HandleOpenGlobalClick;
+        Button openButton = ViewFactory.CreateButton(nameof(Strings.ChatOpen), OpenButtonWidth, OpenButtonHeight);
+        ButtonSkin.CreateAndAttach(openButton, ButtonLookCatalog.Secondary);
+        openButton.Anchor(Gum.Wireframe.Anchor.Right);
+        openButton.X = -RowPaddingX;
+        openButton.Click += HandleOpenGlobalClick;
 
         var row = new Panel
         {
@@ -69,7 +69,7 @@ public sealed class ChatChannelListView : StackPanel
         ShapeFactory.InsertBehindContent(row.Visual, background);
         StackPanel globalText = CreateGlobalText();
         row.AddChild(globalText);
-        row.AddChild(open);
+        row.AddChild(openButton);
         return row;
     }
 

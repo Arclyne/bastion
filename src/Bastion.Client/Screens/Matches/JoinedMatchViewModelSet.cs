@@ -7,20 +7,20 @@ public sealed record JoinedMatchViewModelSet
     public JoinedMatchViewModelSet(
         MatchChatViewModel chat,
         MatchAbandonmentViewModel abandonment,
-        MatchPlayViewModel play)
+        MatchPlayViewModel matchPlayViewModel)
     {
         ArgumentNullException.ThrowIfNull(chat);
         ArgumentNullException.ThrowIfNull(abandonment);
-        ArgumentNullException.ThrowIfNull(play);
+        ArgumentNullException.ThrowIfNull(matchPlayViewModel);
 
         Chat = chat;
         Abandonment = abandonment;
-        Play = play;
+        MatchPlay = matchPlayViewModel;
     }
 
     public MatchChatViewModel Chat { get; }
 
     public MatchAbandonmentViewModel Abandonment { get; }
 
-    public MatchPlayViewModel Play { get; }
+    public MatchPlayViewModel MatchPlay { get; }
 }

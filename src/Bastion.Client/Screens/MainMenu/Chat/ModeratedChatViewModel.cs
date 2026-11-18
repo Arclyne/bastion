@@ -23,11 +23,11 @@ public abstract class ModeratedChatViewModel : ChatComposerViewModel
         private set => Set(value);
     }
 
-    protected void ShowMute(ChatMute mute)
+    protected void ShowMuteStatus(ChatMuteStatus muteStatus)
     {
-        ArgumentNullException.ThrowIfNull(mute);
+        ArgumentNullException.ThrowIfNull(muteStatus);
 
-        IsMuted = mute.IsMuted;
-        MuteText = ChatRejectionText.DescribeMute(mute, TimeProvider);
+        IsMuted = muteStatus.IsMuted;
+        MuteText = ChatRejectionText.DescribeMuteStatus(muteStatus, TimeProvider);
     }
 }

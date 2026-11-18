@@ -49,28 +49,28 @@ public sealed class FriendRequestToast : Panel
 
     private StackPanel CreateActions()
     {
-        Button reject = CreateActionButton(nameof(Strings.FriendsReject), ButtonLookCatalog.Secondary);
-        reject.Click += HandleRejectClick;
-        Button accept = CreateActionButton(nameof(Strings.FriendsAccept), ButtonLookCatalog.Primary);
-        accept.Click += HandleAcceptClick;
+        Button rejectButton = CreateActionButton(nameof(Strings.FriendsReject), ButtonLookCatalog.Secondary);
+        rejectButton.Click += HandleRejectClick;
+        Button acceptButton = CreateActionButton(nameof(Strings.FriendsAccept), ButtonLookCatalog.Primary);
+        acceptButton.Click += HandleAcceptClick;
 
         var actions = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = ButtonSpacing,
         };
-        actions.AddChild(reject);
-        actions.AddChild(accept);
+        actions.AddChild(rejectButton);
+        actions.AddChild(acceptButton);
         actions.Anchor(Gum.Wireframe.Anchor.Right);
         actions.X = -PaddingX;
         actions.SetBinding(nameof(IsVisible), nameof(FriendRequestsViewModel.AreToastActionsVisible));
         return actions;
     }
 
-    private static Button CreateActionButton(string textKey, ButtonLook look)
+    private static Button CreateActionButton(string textKey, ButtonLook buttonLook)
     {
         Button button = ViewFactory.CreateButton(textKey, ActionButtonWidth, ActionButtonHeight);
-        ButtonSkin.CreateAndAttach(button, look);
+        ButtonSkin.CreateAndAttach(button, buttonLook);
         return button;
     }
 

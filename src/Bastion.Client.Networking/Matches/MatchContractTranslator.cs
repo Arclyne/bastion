@@ -6,15 +6,15 @@ namespace Bastion.Client.Networking.Matches;
 
 public static class MatchContractTranslator
 {
-    public static PawnMove ToPawnMove(ChosenPawnMove move)
+    public static PawnMove ToPawnMove(ChosenPawnMove chosenMove)
     {
-        ArgumentNullException.ThrowIfNull(move);
+        ArgumentNullException.ThrowIfNull(chosenMove);
 
         return new PawnMove
         {
-            MatchId = move.MatchId,
-            MoveNumber = move.MoveNumber,
-            ToSquare = move.ToSquare,
+            MatchId = chosenMove.MatchId,
+            MoveNumber = chosenMove.MoveNumber,
+            ToSquare = chosenMove.ToSquare,
         };
     }
 

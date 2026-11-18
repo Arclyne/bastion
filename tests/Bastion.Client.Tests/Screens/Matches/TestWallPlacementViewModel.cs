@@ -203,10 +203,10 @@ public sealed class TestWallPlacementViewModel : IDisposable
             joinedMatch,
             _matchClient,
             _timeProvider);
-        MatchPlayViewModel play = InlineUiContext.CreateViewModel(createViewModel);
-        var viewModel = new WallPlacementViewModel(play);
+        MatchPlayViewModel matchPlayViewModel = InlineUiContext.CreateViewModel(createViewModel);
+        var viewModel = new WallPlacementViewModel(matchPlayViewModel);
         _viewModels.Add(viewModel);
-        _viewModels.Add(play);
+        _viewModels.Add(matchPlayViewModel);
         return viewModel;
     }
 }

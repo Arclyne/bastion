@@ -36,7 +36,7 @@ public sealed class MatchView : ScreenView
         _abandonmentViewModel = abandonmentViewModel;
         MatchPlayersPanel playersPanel = CreatePlayersPanel(matchViewModel);
         Panel turnPill = CreateTurnPill(matchViewModel);
-        Label moveNotice = CreateMoveNotice(matchViewModel.Play);
+        Label moveNotice = CreateMoveNotice(matchViewModel.MatchPlay);
         WallControlsPanel wallControls = CreateWallControls(matchViewModel.WallPlacement);
         MatchChatPanel chatPanel = CreateChatPanel(chatViewModel);
         Button abandonButton = CreateAbandonButton();

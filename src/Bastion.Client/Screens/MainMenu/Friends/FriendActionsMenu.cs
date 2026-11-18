@@ -39,14 +39,14 @@ public sealed class FriendActionsMenu : Panel
     {
         Label nickname = ViewFactory.CreateBoundUntranslatedLabel(nameof(FriendActionsViewModel.Nickname), TextStyleCatalog.IdentityName);
 
-        Button viewProfile = CreateItem(nameof(Strings.FriendsViewProfile), ButtonLookCatalog.Secondary);
-        viewProfile.IsEnabled = false;
-        Button sendMessage = CreateItem(nameof(Strings.FriendsSendMessage), ButtonLookCatalog.Secondary);
-        sendMessage.Click += HandleSendMessageClick;
-        Button remove = CreateItem(nameof(Strings.FriendsRemoveFriend), ButtonLookCatalog.Secondary);
-        remove.Click += HandleRemoveClick;
-        Button cancel = CreateItem(nameof(Strings.FriendsCancel), ButtonLookCatalog.Pill);
-        cancel.Click += HandleCancelClick;
+        Button viewProfileButton = CreateItem(nameof(Strings.FriendsViewProfile), ButtonLookCatalog.Secondary);
+        viewProfileButton.IsEnabled = false;
+        Button sendMessageButton = CreateItem(nameof(Strings.FriendsSendMessage), ButtonLookCatalog.Secondary);
+        sendMessageButton.Click += HandleSendMessageClick;
+        Button removeButton = CreateItem(nameof(Strings.FriendsRemoveFriend), ButtonLookCatalog.Secondary);
+        removeButton.Click += HandleRemoveClick;
+        Button cancelButton = CreateItem(nameof(Strings.FriendsCancel), ButtonLookCatalog.Pill);
+        cancelButton.Click += HandleCancelClick;
 
         var content = new StackPanel
         {
@@ -55,17 +55,17 @@ public sealed class FriendActionsMenu : Panel
             Spacing = ItemSpacing,
         };
         content.AddChild(nickname);
-        content.AddChild(viewProfile);
-        content.AddChild(sendMessage);
-        content.AddChild(remove);
-        content.AddChild(cancel);
+        content.AddChild(viewProfileButton);
+        content.AddChild(sendMessageButton);
+        content.AddChild(removeButton);
+        content.AddChild(cancelButton);
         return content;
     }
 
-    private static Button CreateItem(string textKey, ButtonLook look)
+    private static Button CreateItem(string textKey, ButtonLook buttonLook)
     {
         Button item = ViewFactory.CreateButton(textKey, ItemWidth, ItemHeight);
-        ButtonSkin.CreateAndAttach(item, look);
+        ButtonSkin.CreateAndAttach(item, buttonLook);
         return item;
     }
 

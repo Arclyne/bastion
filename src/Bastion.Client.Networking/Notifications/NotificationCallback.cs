@@ -151,8 +151,8 @@ public sealed class NotificationCallback : INotificationCallback
     {
         if (notification is PawnMovedNotification pawnMoved)
         {
-            PawnMovedEventArgs move = ToPawnMovedEventArgs(pawnMoved);
-            OnPawnMoved(move);
+            PawnMovedEventArgs pawnMove = ToPawnMovedEventArgs(pawnMoved);
+            OnPawnMoved(pawnMove);
             return true;
         }
 

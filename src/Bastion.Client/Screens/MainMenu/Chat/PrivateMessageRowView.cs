@@ -90,8 +90,8 @@ public sealed class PrivateMessageRowView : StackPanel
             Height = BubblePaddingY * VerticalSideCount,
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
-        Color fill = row.IsOwn ? Palette.WarningSoft : Palette.White;
-        RectangleRuntime background = ShapeFactory.CreateRounded(fill, BubbleRadius);
+        Color fillColor = row.IsOwn ? Palette.WarningSoft : Palette.White;
+        RectangleRuntime background = ShapeFactory.CreateRounded(fillColor, BubbleRadius);
         ShapeFactory.InsertBehindContent(bubble.Visual, background);
         bubble.AddChild(text);
         return bubble;

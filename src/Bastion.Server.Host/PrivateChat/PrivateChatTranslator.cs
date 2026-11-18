@@ -30,8 +30,8 @@ public static class PrivateChatTranslator
             PartnerFriendCode = conversation.Partner.Player.FriendCode,
             IsFriend = conversation.Partner.IsFriend,
             Messages = messages,
-            IsMuted = conversation.Mute.IsMuted,
-            MutedUntil = conversation.Mute.EndsAt,
+            IsMuted = conversation.MuteStatus.IsMuted,
+            MutedUntil = conversation.MuteStatus.EndsAt,
         };
     }
 

@@ -26,9 +26,9 @@ public static class ConversationPartFactory
         ArgumentNullException.ThrowIfNull(title);
         ArgumentNullException.ThrowIfNull(detail);
 
-        Button back = ViewFactory.CreateButton(nameof(Strings.ChatBack), BackButtonWidth, BackButtonHeight);
-        ButtonSkin.CreateAndAttach(back, ButtonLookCatalog.Pill);
-        back.Click += handleBackClick;
+        Button backButton = ViewFactory.CreateButton(nameof(Strings.ChatBack), BackButtonWidth, BackButtonHeight);
+        ButtonSkin.CreateAndAttach(backButton, ButtonLookCatalog.Pill);
+        backButton.Click += handleBackClick;
 
         var titleLines = new StackPanel
         {
@@ -42,7 +42,7 @@ public static class ConversationPartFactory
             Orientation = Orientation.Horizontal,
             Spacing = HeaderSpacing,
         };
-        header.AddChild(back);
+        header.AddChild(backButton);
         header.AddChild(titleLines);
         return header;
     }
@@ -137,10 +137,10 @@ public static class ConversationPartFactory
         input.SetBinding(nameof(TextField.Text), nameof(ChatComposerViewModel.Draft));
         input.SetBinding(nameof(FrameworkElement.IsEnabled), nameof(ChatComposerViewModel.CanWrite));
 
-        Button send = ViewFactory.CreateButton(nameof(Strings.ChatSend), SendButtonWidth, InputHeight);
-        ButtonSkin.CreateAndAttach(send, ButtonLookCatalog.Primary);
-        send.SetBinding(nameof(FrameworkElement.IsEnabled), nameof(ChatComposerViewModel.CanSend));
-        send.Click += handleSendClick;
+        Button sendButton = ViewFactory.CreateButton(nameof(Strings.ChatSend), SendButtonWidth, InputHeight);
+        ButtonSkin.CreateAndAttach(sendButton, ButtonLookCatalog.Primary);
+        sendButton.SetBinding(nameof(FrameworkElement.IsEnabled), nameof(ChatComposerViewModel.CanSend));
+        sendButton.Click += handleSendClick;
 
         var row = new StackPanel
         {
@@ -148,7 +148,7 @@ public static class ConversationPartFactory
             Spacing = InputSpacing,
         };
         row.AddChild(input);
-        row.AddChild(send);
+        row.AddChild(sendButton);
         return row;
     }
 

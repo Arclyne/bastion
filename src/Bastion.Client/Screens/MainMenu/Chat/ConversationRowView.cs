@@ -61,10 +61,10 @@ public sealed class ConversationRowView : Panel
 
     private StackPanel CreateSide()
     {
-        Button open = ViewFactory.CreateButton(nameof(Strings.ChatOpen), OpenButtonWidth, OpenButtonHeight);
-        ButtonSkin.CreateAndAttach(open, ButtonLookCatalog.Secondary);
-        ViewFactory.CenterVertically(open);
-        open.Click += HandleOpenClick;
+        Button openButton = ViewFactory.CreateButton(nameof(Strings.ChatOpen), OpenButtonWidth, OpenButtonHeight);
+        ButtonSkin.CreateAndAttach(openButton, ButtonLookCatalog.Secondary);
+        ViewFactory.CenterVertically(openButton);
+        openButton.Click += HandleOpenClick;
 
         var side = new StackPanel
         {
@@ -75,7 +75,7 @@ public sealed class ConversationRowView : Panel
         Panel badge = CreateBadge();
         side.AddChild(time);
         side.AddChild(badge);
-        side.AddChild(open);
+        side.AddChild(openButton);
         side.Anchor(Gum.Wireframe.Anchor.Right);
         side.X = -PaddingX;
         return side;

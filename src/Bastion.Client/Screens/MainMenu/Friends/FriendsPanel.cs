@@ -68,9 +68,12 @@ public sealed class FriendsPanel : Panel
 
     private StackPanel CreateTabRow()
     {
-        Button close = ViewFactory.CreateButton(nameof(Strings.FriendsCloseButton), CloseButtonSize, CloseButtonSize);
-        ButtonSkin.CreateAndAttach(close, ButtonLookCatalog.Pill);
-        close.Click += HandleCloseClick;
+        Button closeButton = ViewFactory.CreateButton(
+            nameof(Strings.FriendsCloseButton),
+            CloseButtonSize,
+            CloseButtonSize);
+        ButtonSkin.CreateAndAttach(closeButton, ButtonLookCatalog.Pill);
+        closeButton.Click += HandleCloseClick;
 
         var row = new StackPanel
         {
@@ -92,7 +95,7 @@ public sealed class FriendsPanel : Panel
         row.AddChild(friendsTab);
         row.AddChild(requestsTab);
         row.AddChild(chatTab);
-        row.AddChild(close);
+        row.AddChild(closeButton);
         return row;
     }
 

@@ -54,17 +54,17 @@ public sealed class FriendRequestRowView : Panel
 
     private StackPanel CreateReceivedActions()
     {
-        Button reject = CreateActionButton(nameof(Strings.FriendsReject), ButtonLookCatalog.Secondary);
-        reject.Click += HandleRejectClick;
-        Button accept = CreateActionButton(nameof(Strings.FriendsAccept), ButtonLookCatalog.Primary);
-        accept.Click += HandleAcceptClick;
-        return CreateActionRow(reject, accept);
+        Button rejectButton = CreateActionButton(nameof(Strings.FriendsReject), ButtonLookCatalog.Secondary);
+        rejectButton.Click += HandleRejectClick;
+        Button acceptButton = CreateActionButton(nameof(Strings.FriendsAccept), ButtonLookCatalog.Primary);
+        acceptButton.Click += HandleAcceptClick;
+        return CreateActionRow(rejectButton, acceptButton);
     }
 
-    private static Button CreateActionButton(string textKey, ButtonLook look)
+    private static Button CreateActionButton(string textKey, ButtonLook buttonLook)
     {
         Button button = ViewFactory.CreateButton(textKey, ActionButtonWidth, ActionButtonHeight);
-        ButtonSkin.CreateAndAttach(button, look);
+        ButtonSkin.CreateAndAttach(button, buttonLook);
         button.SetBinding(nameof(IsEnabled), nameof(FriendRequestRowViewModel.CanAct));
         return button;
     }
@@ -109,9 +109,9 @@ public sealed class FriendRequestRowView : Panel
 
     private StackPanel CreateSentActions()
     {
-        Button cancel = CreateActionButton(nameof(Strings.FriendsCancelRequest), ButtonLookCatalog.Secondary);
-        cancel.Click += HandleCancelClick;
-        return CreateActionRow(cancel);
+        Button cancelButton = CreateActionButton(nameof(Strings.FriendsCancelRequest), ButtonLookCatalog.Secondary);
+        cancelButton.Click += HandleCancelClick;
+        return CreateActionRow(cancelButton);
     }
 
     private void HandleCancelClick(object? sender, EventArgs e)

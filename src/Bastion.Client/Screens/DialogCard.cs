@@ -27,13 +27,13 @@ public abstract class DialogCard : Panel
 
     protected StackPanel Content { get; }
 
-    protected static Button CreateDialogButton(string textKey, ButtonLook look)
+    protected static Button CreateDialogButton(string textKey, ButtonLook buttonLook)
     {
         ArgumentNullException.ThrowIfNull(textKey);
-        ArgumentNullException.ThrowIfNull(look);
+        ArgumentNullException.ThrowIfNull(buttonLook);
 
         Button button = ViewFactory.CreateButton(textKey, DialogMetrics.ButtonWidth, DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(button, look);
+        ButtonSkin.CreateAndAttach(button, buttonLook);
         return button;
     }
 

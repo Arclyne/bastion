@@ -94,8 +94,8 @@ public sealed class PrivateChatService : IPrivateChatService
             .Select(message => ToMessageEntry(message, player.AccountId));
         var entries = new List<PrivateMessageEntry>(messageEntries);
         var conversationPartner = new ConversationPartner(partner, isFriend);
-        ChatMute mute = _chatModerator.FindMute(player.AccountId, now);
-        return new PrivateConversation(conversationPartner, entries, mute);
+        ChatMuteStatus muteStatus = _chatModerator.FindMuteStatus(player.AccountId, now);
+        return new PrivateConversation(conversationPartner, entries, muteStatus);
     }
 
     /// <inheritdoc/>

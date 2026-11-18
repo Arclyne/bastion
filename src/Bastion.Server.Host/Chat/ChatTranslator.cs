@@ -64,8 +64,8 @@ public static class ChatTranslator
         {
             Messages = messages,
             ConnectedPlayerCount = history.ConnectedPlayerCount,
-            IsMuted = history.Mute.IsMuted,
-            MutedUntil = history.Mute.EndsAt,
+            IsMuted = history.MuteStatus.IsMuted,
+            MutedUntil = history.MuteStatus.EndsAt,
         };
     }
 

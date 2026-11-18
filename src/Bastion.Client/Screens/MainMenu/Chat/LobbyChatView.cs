@@ -101,14 +101,14 @@ public sealed class LobbyChatView : StackPanel
 
     private Button CreateUnreadButton()
     {
-        Button unread = ViewFactory.CreateBoundUntranslatedButton(
+        Button unreadButton = ViewFactory.CreateBoundUntranslatedButton(
             nameof(LobbyChatViewModel.UnreadText),
             UnreadButtonWidth,
             UnreadButtonHeight);
-        ButtonSkin.CreateAndAttach(unread, ButtonLookCatalog.Pill);
-        unread.SetBinding(nameof(IsVisible), nameof(LobbyChatViewModel.HasUnread));
-        unread.Click += HandleUnreadClick;
-        return unread;
+        ButtonSkin.CreateAndAttach(unreadButton, ButtonLookCatalog.Pill);
+        unreadButton.SetBinding(nameof(IsVisible), nameof(LobbyChatViewModel.HasUnread));
+        unreadButton.Click += HandleUnreadClick;
+        return unreadButton;
     }
 
     private void HandleUnreadClick(object? sender, EventArgs e)

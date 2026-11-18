@@ -344,7 +344,7 @@ public sealed class TestPrivateChatService
 
         PrivateConversation conversation = _privateChatService.OpenConversation(Token, FriendFriendCode, _now);
 
-        Assert.True(conversation.Mute.IsMuted);
+        Assert.True(conversation.MuteStatus.IsMuted);
     }
 
     [Fact]

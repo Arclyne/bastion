@@ -47,10 +47,10 @@ public sealed class AddFriendView : StackPanel
 
     private Button CreateBackButton()
     {
-        Button back = ViewFactory.CreateButton(nameof(Strings.FriendsBack), BackButtonWidth, ControlHeight);
-        ButtonSkin.CreateAndAttach(back, ButtonLookCatalog.Pill);
-        back.Click += HandleBackClick;
-        return back;
+        Button backButton = ViewFactory.CreateButton(nameof(Strings.FriendsBack), BackButtonWidth, ControlHeight);
+        ButtonSkin.CreateAndAttach(backButton, ButtonLookCatalog.Pill);
+        backButton.Click += HandleBackClick;
+        return backButton;
     }
 
     private void HandleBackClick(object? sender, EventArgs e)
@@ -68,10 +68,10 @@ public sealed class AddFriendView : StackPanel
         };
         input.SetBinding(nameof(TextField.Text), nameof(AddFriendViewModel.SearchText));
 
-        Button search = ViewFactory.CreateButton(nameof(Strings.FriendsSearch), SearchButtonWidth, ControlHeight);
-        ButtonSkin.CreateAndAttach(search, ButtonLookCatalog.Secondary);
-        search.SetBinding(nameof(IsEnabled), nameof(AddFriendViewModel.CanSearch));
-        search.Click += HandleSearchClick;
+        Button searchButton = ViewFactory.CreateButton(nameof(Strings.FriendsSearch), SearchButtonWidth, ControlHeight);
+        ButtonSkin.CreateAndAttach(searchButton, ButtonLookCatalog.Secondary);
+        searchButton.SetBinding(nameof(IsEnabled), nameof(AddFriendViewModel.CanSearch));
+        searchButton.Click += HandleSearchClick;
 
         var row = new StackPanel
         {
@@ -79,7 +79,7 @@ public sealed class AddFriendView : StackPanel
             Spacing = PanelMetrics.SectionSpacing,
         };
         row.AddChild(input);
-        row.AddChild(search);
+        row.AddChild(searchButton);
         return row;
     }
 

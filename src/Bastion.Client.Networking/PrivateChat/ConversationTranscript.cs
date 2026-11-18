@@ -6,20 +6,23 @@ namespace Bastion.Client.Networking.PrivateChat;
 
 public sealed record ConversationTranscript
 {
-    public ConversationTranscript(ConversationContact contact, IReadOnlyList<PrivateMessage> messages, ChatMute mute)
+    public ConversationTranscript(
+        ConversationContact contact,
+        IReadOnlyList<PrivateMessage> messages,
+        ChatMuteStatus muteStatus)
     {
         ArgumentNullException.ThrowIfNull(contact);
         ArgumentNullException.ThrowIfNull(messages);
-        ArgumentNullException.ThrowIfNull(mute);
+        ArgumentNullException.ThrowIfNull(muteStatus);
 
         Contact = contact;
         Messages = messages;
-        Mute = mute;
+        MuteStatus = muteStatus;
     }
 
     public ConversationContact Contact { get; }
 
     public IReadOnlyList<PrivateMessage> Messages { get; }
 
-    public ChatMute Mute { get; }
+    public ChatMuteStatus MuteStatus { get; }
 }

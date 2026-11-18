@@ -10,12 +10,12 @@ public sealed class ChatMessageRejectedException : Exception
         Rejection = rejection;
     }
 
-    public ChatMessageRejectedException(ChatMute mute)
+    public ChatMessageRejectedException(ChatMuteStatus muteStatus)
         : this(ChatRejection.Muted)
     {
-        ArgumentNullException.ThrowIfNull(mute);
+        ArgumentNullException.ThrowIfNull(muteStatus);
 
-        MutedUntil = mute.EndsAt;
+        MutedUntil = muteStatus.EndsAt;
     }
 
     public ChatRejection Rejection { get; }

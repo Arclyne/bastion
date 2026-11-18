@@ -5,11 +5,11 @@ using Bastion.Domain.Moderation;
 
 namespace Bastion.Server.Application.Chat;
 
-public sealed record ChatMute(bool IsMuted, DateTime? EndsAt)
+public sealed record ChatMuteStatus(bool IsMuted, DateTime? EndsAt)
 {
-    public static ChatMute None { get; } = new ChatMute(IsMuted: false, EndsAt: null);
+    public static ChatMuteStatus None { get; } = new ChatMuteStatus(IsMuted: false, EndsAt: null);
 
-    public static ChatMute FromSanctionsInEffect(IReadOnlyCollection<Sanction> sanctions)
+    public static ChatMuteStatus FromSanctionsInEffect(IReadOnlyCollection<Sanction> sanctions)
     {
         ArgumentNullException.ThrowIfNull(sanctions);
 
@@ -20,10 +20,10 @@ public sealed record ChatMute(bool IsMuted, DateTime? EndsAt)
 
         if (sanctions.Any(sanction => sanction.IsPermanent()))
         {
-            return new ChatMute(IsMuted: true, EndsAt: null);
+            return new ChatMuteStatus(IsMuted: true, EndsAt: null);
         }
 
         DateTime? latestEnd = sanctions.Max(sanction => sanction.EndsAt);
-        return new ChatMute(IsMuted: true, latestEnd);
+        return new ChatMuteStatus(IsMuted: true, latestEnd);
     }
 }

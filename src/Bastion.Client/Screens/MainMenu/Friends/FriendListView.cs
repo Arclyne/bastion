@@ -63,12 +63,12 @@ public sealed class FriendListView : StackPanel
         };
         filter.SetBinding(nameof(TextField.Text), nameof(FriendsPanelViewModel.FilterText));
 
-        Button addFriend = ViewFactory.CreateButton(
+        Button addFriendButton = ViewFactory.CreateButton(
             nameof(Strings.FriendsAddFriend),
             AddFriendButtonWidth,
             FilterHeight);
-        ButtonSkin.CreateAndAttach(addFriend, ButtonLookCatalog.Secondary);
-        addFriend.Click += HandleAddFriendClick;
+        ButtonSkin.CreateAndAttach(addFriendButton, ButtonLookCatalog.Secondary);
+        addFriendButton.Click += HandleAddFriendClick;
 
         var row = new StackPanel
         {
@@ -76,7 +76,7 @@ public sealed class FriendListView : StackPanel
             Spacing = PanelMetrics.SectionSpacing,
         };
         row.AddChild(filter);
-        row.AddChild(addFriend);
+        row.AddChild(addFriendButton);
         return row;
     }
 

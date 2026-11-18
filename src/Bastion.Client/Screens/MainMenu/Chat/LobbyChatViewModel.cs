@@ -227,7 +227,7 @@ public sealed class LobbyChatViewModel : ModeratedChatViewModel, IDisposable
 
         IsEmpty = Messages.Count == 0;
         ChannelDetail = FormatText(Strings.ChatConnectedCountFormat, transcript.ConnectedPlayerCount);
-        ShowMute(transcript.Mute);
+        ShowMuteStatus(transcript.MuteStatus);
     }
 
     private void ReportLoadFailure(Exception cause)
@@ -241,8 +241,8 @@ public sealed class LobbyChatViewModel : ModeratedChatViewModel, IDisposable
         row.Fail(ChatRejectionText.Describe(rejection));
         if (rejection == ChatRejection.Muted)
         {
-            var mute = new ChatMute(IsMuted: true, mutedUntil);
-            ShowMute(mute);
+            var muteStatus = new ChatMuteStatus(IsMuted: true, mutedUntil);
+            ShowMuteStatus(muteStatus);
         }
     }
 

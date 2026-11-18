@@ -358,7 +358,7 @@ public sealed class PrivateConversationViewModel : ModeratedChatViewModel
             ApplyPresence(nonFriendPresence);
         }
 
-        ShowMute(transcript.Mute);
+        ShowMuteStatus(transcript.MuteStatus);
     }
 
     private void ReportLoadFailure(Exception cause)
@@ -382,8 +382,8 @@ public sealed class PrivateConversationViewModel : ModeratedChatViewModel
         row.Fail(ChatRejectionText.Describe(rejection));
         if (rejection == ChatRejection.Muted)
         {
-            var mute = new ChatMute(IsMuted: true, mutedUntil);
-            ShowMute(mute);
+            var muteStatus = new ChatMuteStatus(IsMuted: true, mutedUntil);
+            ShowMuteStatus(muteStatus);
         }
 
         if (rejection == ChatRejection.NotFriends)

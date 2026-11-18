@@ -29,7 +29,7 @@ public sealed class MatchConfiguration : IEntityTypeConfiguration<Match>
         builder.Navigation(match => match.Participations).UsePropertyAccessMode(PropertyAccessMode.Field);
         builder.HasMany(match => match.Moves)
             .WithOne()
-            .HasForeignKey(move => move.MatchId);
+            .HasForeignKey(playedMove => playedMove.MatchId);
         builder.Navigation(match => match.Moves).UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
