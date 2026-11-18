@@ -147,11 +147,12 @@ public sealed class MatchViewModel : ViewModel, IDisposable
 
     private string DescribeMatchEnd()
     {
-        string? winnerNickname = MatchPlay.WinnerNickname;
-        if (winnerNickname is null)
+        if (!MatchPlay.HasWinner)
         {
             return Strings.MatchOverTitle;
         }
+
+        string winnerNickname = MatchPlay.WinnerNickname;
 
         if (string.Equals(winnerNickname, _ownNickname, StringComparison.Ordinal))
         {
