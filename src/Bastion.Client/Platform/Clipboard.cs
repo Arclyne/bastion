@@ -13,16 +13,17 @@ public sealed class Clipboard : IClipboard
         _clipboard = clipboard;
     }
 
-    public bool TryCopyText(string text)
+    public bool CanCopyText => _clipboard is not null;
+
+    public void CopyText(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
 
         if (_clipboard is null)
         {
-            return false;
+            throw new InvalidOperationException("Text cannot be copied because there is no clipboard.");
         }
 
         _clipboard.SetText(text);
-        return true;
     }
 }

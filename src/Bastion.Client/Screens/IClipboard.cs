@@ -2,5 +2,7 @@ namespace Bastion.Client.Screens;
 
 public interface IClipboard
 {
-    bool TryCopyText(string text);
+    bool CanCopyText { get; }
+
+    void CopyText(string text);
 }
