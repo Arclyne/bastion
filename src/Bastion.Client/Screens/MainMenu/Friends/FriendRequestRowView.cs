@@ -33,23 +33,23 @@ public sealed class FriendRequestRowView : Panel
         WidthUnits = DimensionUnitType.Absolute;
         Height = RowHeight;
         HeightUnits = DimensionUnitType.Absolute;
-        StackPanel text = CreateText();
-        StackPanel actions = row.IsReceived ? CreateReceivedActions() : CreateSentActions();
-        AddChild(text);
-        AddChild(actions);
+        StackPanel textStackPanel = CreateText();
+        StackPanel actionsStackPanel = row.IsReceived ? CreateReceivedActions() : CreateSentActions();
+        AddChild(textStackPanel);
+        AddChild(actionsStackPanel);
     }
 
     private static StackPanel CreateText()
     {
-        Label nickname = ViewFactory.CreateBoundUntranslatedLabel(
+        Label nicknameLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(FriendRequestRowViewModel.Nickname),
             TextStyleCatalog.IdentityName);
-        Label detail = ViewFactory.CreateBoundUntranslatedLabel(
+        Label detailLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(FriendRequestRowViewModel.DetailText),
             TextStyleCatalog.Hint);
-        StackPanel text = ViewFactory.CreateCenteredLines(nickname, detail);
-        text.X = PanelMetrics.RowContentPaddingX;
-        return text;
+        StackPanel textStackPanel = ViewFactory.CreateCenteredLines(nicknameLabel, detailLabel);
+        textStackPanel.X = PanelMetrics.RowContentPaddingX;
+        return textStackPanel;
     }
 
     private StackPanel CreateReceivedActions()
@@ -93,18 +93,18 @@ public sealed class FriendRequestRowView : Panel
 
     private StackPanel CreateActionRow(params Button[] buttons)
     {
-        var actions = new StackPanel
+        var actionsStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = ButtonSpacing,
         };
         foreach (Button button in buttons)
         {
-            actions.AddChild(button);
+            actionsStackPanel.AddChild(button);
         }
 
-        actions.Anchor(Gum.Wireframe.Anchor.Right);
-        return actions;
+        actionsStackPanel.Anchor(Gum.Wireframe.Anchor.Right);
+        return actionsStackPanel;
     }
 
     private StackPanel CreateSentActions()

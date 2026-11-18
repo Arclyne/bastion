@@ -26,10 +26,10 @@ public sealed class ScreenHost : IScreenHost
 
         RemoveShownScreen();
         _shownScreen = screen;
-        foreach (ModalLayer dialog in screen.Dialogs)
+        foreach (ModalLayer dialogModalLayer in screen.Dialogs)
         {
-            dialog.IsOpenChanged += HandleDialogIsOpenChanged;
-            PlaceDialog(dialog);
+            dialogModalLayer.IsOpenChanged += HandleDialogIsOpenChanged;
+            PlaceDialog(dialogModalLayer);
         }
 
         _root.AddChild(screen);
@@ -42,9 +42,9 @@ public sealed class ScreenHost : IScreenHost
             return;
         }
 
-        foreach (ModalLayer dialog in _shownScreen.Dialogs)
+        foreach (ModalLayer dialogModalLayer in _shownScreen.Dialogs)
         {
-            dialog.IsOpenChanged -= HandleDialogIsOpenChanged;
+            dialogModalLayer.IsOpenChanged -= HandleDialogIsOpenChanged;
         }
 
         _root.Children.Remove(_shownScreen.Visual);
@@ -54,23 +54,23 @@ public sealed class ScreenHost : IScreenHost
 
     private void HandleDialogIsOpenChanged(object? sender, EventArgs e)
     {
-        if (sender is not ModalLayer dialog)
+        if (sender is not ModalLayer dialogModalLayer)
         {
             return;
         }
 
-        PlaceDialog(dialog);
+        PlaceDialog(dialogModalLayer);
     }
 
-    private void PlaceDialog(ModalLayer dialog)
+    private void PlaceDialog(ModalLayer dialogModalLayer)
     {
-        if (!dialog.IsOpen)
+        if (!dialogModalLayer.IsOpen)
         {
-            _modalRoot.Children.Remove(dialog.Visual);
+            _modalRoot.Children.Remove(dialogModalLayer.Visual);
             return;
         }
 
-        dialog.Visual.RefreshLocalization();
-        _modalRoot.AddChild(dialog);
+        dialogModalLayer.Visual.RefreshLocalization();
+        _modalRoot.AddChild(dialogModalLayer);
     }
 }

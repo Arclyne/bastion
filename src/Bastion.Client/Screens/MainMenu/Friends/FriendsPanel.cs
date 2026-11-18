@@ -38,7 +38,7 @@ public sealed class FriendsPanel : Panel
         HeightUnits = DimensionUnitType.Absolute;
         this.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsOpen));
 
-        var content = new StackPanel
+        var contentStackPanel = new StackPanel
         {
             X = PaddingX,
             Y = PaddingTop,
@@ -46,23 +46,23 @@ public sealed class FriendsPanel : Panel
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = ContentSpacing,
         };
-        StackPanel tabRow = CreateTabRow();
-        Label header = CreateHeader();
-        FriendListView friendList = CreateFriendList(viewModel);
-        Panel addFriend = CreateAddFriend(viewModel);
-        Panel requests = CreateRequests(viewModel);
-        Panel chat = CreateChat(viewModel);
-        content.AddChild(tabRow);
-        content.AddChild(header);
-        content.AddChild(friendList);
-        content.AddChild(addFriend);
-        content.AddChild(requests);
-        content.AddChild(chat);
-        FriendCodeFooter footer = CreateFooter(viewModel);
-        FriendActionsMenu actionsMenu = CreateActionsMenu(viewModel);
-        AddChild(content);
-        AddChild(footer);
-        AddChild(actionsMenu);
+        StackPanel tabRowStackPanel = CreateTabRow();
+        Label headerLabel = CreateHeader();
+        FriendListView friendListView = CreateFriendList(viewModel);
+        Panel addFriendPanel = CreateAddFriend(viewModel);
+        Panel requestsPanel = CreateRequests(viewModel);
+        Panel chatPanel = CreateChat(viewModel);
+        contentStackPanel.AddChild(tabRowStackPanel);
+        contentStackPanel.AddChild(headerLabel);
+        contentStackPanel.AddChild(friendListView);
+        contentStackPanel.AddChild(addFriendPanel);
+        contentStackPanel.AddChild(requestsPanel);
+        contentStackPanel.AddChild(chatPanel);
+        FriendCodeFooter friendCodeFooter = CreateFooter(viewModel);
+        FriendActionsMenu friendActionsMenu = CreateActionsMenu(viewModel);
+        AddChild(contentStackPanel);
+        AddChild(friendCodeFooter);
+        AddChild(friendActionsMenu);
         CardSkin.Apply(Visual);
     }
 
@@ -75,28 +75,28 @@ public sealed class FriendsPanel : Panel
         ButtonSkin.CreateAndAttach(closeButton, ButtonLookCatalog.Pill);
         closeButton.Click += HandleCloseClick;
 
-        var row = new StackPanel
+        var rowStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = TabSpacing,
         };
-        TabButton friendsTab = CreateTab(
+        TabButton friendsTabButton = CreateTab(
             nameof(Strings.FriendsTabFriends),
             nameof(FriendsPanelViewModel.IsFriendsTab),
             HandleFriendsTabClick);
-        TabButton requestsTab = CreateTab(
+        TabButton requestsTabButton = CreateTab(
             nameof(Strings.FriendsTabRequests),
             nameof(FriendsPanelViewModel.IsRequestsTab),
             HandleRequestsTabClick);
-        TabButton chatTab = CreateTab(
+        TabButton chatTabButton = CreateTab(
             nameof(Strings.FriendsTabChat),
             nameof(FriendsPanelViewModel.IsChatTab),
             HandleChatTabClick);
-        row.AddChild(friendsTab);
-        row.AddChild(requestsTab);
-        row.AddChild(chatTab);
-        row.AddChild(closeButton);
-        return row;
+        rowStackPanel.AddChild(friendsTabButton);
+        rowStackPanel.AddChild(requestsTabButton);
+        rowStackPanel.AddChild(chatTabButton);
+        rowStackPanel.AddChild(closeButton);
+        return rowStackPanel;
     }
 
     private void HandleCloseClick(object? sender, EventArgs e)
@@ -137,35 +137,35 @@ public sealed class FriendsPanel : Panel
 
     private static FriendListView CreateFriendList(FriendsPanelViewModel viewModel)
     {
-        var friendList = new FriendListView(viewModel);
-        friendList.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsFriendListVisible));
-        return friendList;
+        var friendListView = new FriendListView(viewModel);
+        friendListView.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsFriendListVisible));
+        return friendListView;
     }
 
     private static Panel CreateAddFriend(FriendsPanelViewModel viewModel)
     {
-        var addFriend = new AddFriendView(viewModel);
-        return ViewFactory.CreateToggledContainer(addFriend, nameof(FriendsPanelViewModel.IsAddFriendVisible));
+        var addFriendView = new AddFriendView(viewModel);
+        return ViewFactory.CreateToggledContainer(addFriendView, nameof(FriendsPanelViewModel.IsAddFriendVisible));
     }
 
     private static Panel CreateRequests(FriendsPanelViewModel viewModel)
     {
-        var requests = new FriendRequestsView(viewModel.Requests);
-        return ViewFactory.CreateToggledContainer(requests, nameof(FriendsPanelViewModel.IsRequestsTab));
+        var friendRequestsView = new FriendRequestsView(viewModel.Requests);
+        return ViewFactory.CreateToggledContainer(friendRequestsView, nameof(FriendsPanelViewModel.IsRequestsTab));
     }
 
     private static Panel CreateChat(FriendsPanelViewModel viewModel)
     {
-        var chatTab = new ChatTabView(viewModel.Chat);
-        return ViewFactory.CreateToggledContainer(chatTab, nameof(FriendsPanelViewModel.IsChatTab));
+        var chatTabView = new ChatTabView(viewModel.Chat);
+        return ViewFactory.CreateToggledContainer(chatTabView, nameof(FriendsPanelViewModel.IsChatTab));
     }
 
     private static FriendCodeFooter CreateFooter(FriendsPanelViewModel viewModel)
     {
-        var footer = new FriendCodeFooter(viewModel);
-        PlaceAtBottomLeft(footer);
-        footer.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsFriendCodeVisible));
-        return footer;
+        var friendCodeFooter = new FriendCodeFooter(viewModel);
+        PlaceAtBottomLeft(friendCodeFooter);
+        friendCodeFooter.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.IsFriendCodeVisible));
+        return friendCodeFooter;
     }
 
     private static void PlaceAtBottomLeft(FrameworkElement element)
@@ -177,8 +177,8 @@ public sealed class FriendsPanel : Panel
 
     private static FriendActionsMenu CreateActionsMenu(FriendsPanelViewModel viewModel)
     {
-        var menu = new FriendActionsMenu(viewModel.Actions);
-        PlaceAtBottomLeft(menu);
-        return menu;
+        var friendActionsMenu = new FriendActionsMenu(viewModel.Actions);
+        PlaceAtBottomLeft(friendActionsMenu);
+        return friendActionsMenu;
     }
 }

@@ -24,20 +24,20 @@ public sealed class WallControlsPanel : StackPanel
         _viewModel = viewModel;
         BindingContext = viewModel;
         Spacing = RowSpacing;
-        Label hint = CreateHint();
-        StackPanel buttonRow = CreateButtonRow();
-        AddChild(hint);
-        AddChild(buttonRow);
+        Label hintLabel = CreateHint();
+        StackPanel buttonRowStackPanel = CreateButtonRow();
+        AddChild(hintLabel);
+        AddChild(buttonRowStackPanel);
     }
 
     private static Label CreateHint()
     {
-        Label hint = ViewFactory.CreateBoundUntranslatedLabel(
+        Label hintLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(WallPlacementViewModel.HintText),
             TextStyleCatalog.IdentityDetail,
             HintWidth);
-        hint.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.HasHint));
-        return hint;
+        hintLabel.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.HasHint));
+        return hintLabel;
     }
 
     private StackPanel CreateButtonRow()
@@ -60,16 +60,16 @@ public sealed class WallControlsPanel : StackPanel
         cancelButton.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.IsActive));
         cancelButton.Click += HandleCancelClick;
 
-        var row = new StackPanel
+        var rowStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = ButtonSpacing,
         };
-        row.AddChild(placeWallButton);
-        row.AddChild(rotateButton);
-        row.AddChild(confirmButton);
-        row.AddChild(cancelButton);
-        return row;
+        rowStackPanel.AddChild(placeWallButton);
+        rowStackPanel.AddChild(rotateButton);
+        rowStackPanel.AddChild(confirmButton);
+        rowStackPanel.AddChild(cancelButton);
+        return rowStackPanel;
     }
 
     private static Button CreateWallButton(string textKey, ButtonLook buttonLook)

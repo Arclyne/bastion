@@ -36,27 +36,27 @@ public sealed class ConversationRowView : Panel
         Height = RowHeight;
         HeightUnits = DimensionUnitType.Absolute;
         RectangleRuntime background = ShapeFactory.CreateRounded(Palette.Selected, PanelMetrics.RowRadius);
-        StackPanel text = CreateText(row);
-        StackPanel side = CreateSide();
+        StackPanel textStackPanel = CreateText(row);
+        StackPanel sideStackPanel = CreateSide();
         ShapeFactory.InsertBehindContent(Visual, background);
-        AddChild(text);
-        AddChild(side);
+        AddChild(textStackPanel);
+        AddChild(sideStackPanel);
     }
 
     private static StackPanel CreateText(ConversationRowViewModel row)
     {
-        Label nickname = ViewFactory.CreateUntranslatedLabel(row.Partner.Nickname, TextStyleCatalog.IdentityName);
+        Label nicknameLabel = ViewFactory.CreateUntranslatedLabel(row.Partner.Nickname, TextStyleCatalog.IdentityName);
 
-        Label preview = ViewFactory.CreateBoundUntranslatedLabel(
+        Label previewLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(ConversationRowViewModel.PreviewText),
             TextStyleCatalog.Hint,
             TextWidth);
-        var previewVisual = (LabelVisual)preview.Visual;
+        var previewVisual = (LabelVisual)previewLabel.Visual;
         previewVisual.MaxNumberOfLines = PreviewLines;
 
-        StackPanel text = ViewFactory.CreateCenteredLines(nickname, preview);
-        text.X = PaddingX;
-        return text;
+        StackPanel textStackPanel = ViewFactory.CreateCenteredLines(nicknameLabel, previewLabel);
+        textStackPanel.X = PaddingX;
+        return textStackPanel;
     }
 
     private StackPanel CreateSide()
@@ -66,19 +66,19 @@ public sealed class ConversationRowView : Panel
         ViewFactory.CenterVertically(openButton);
         openButton.Click += HandleOpenClick;
 
-        var side = new StackPanel
+        var sideStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = SideSpacing,
         };
-        Label time = CreateTime();
-        Panel badge = CreateBadge();
-        side.AddChild(time);
-        side.AddChild(badge);
-        side.AddChild(openButton);
-        side.Anchor(Gum.Wireframe.Anchor.Right);
-        side.X = -PaddingX;
-        return side;
+        Label timeLabel = CreateTime();
+        Panel badgePanel = CreateBadge();
+        sideStackPanel.AddChild(timeLabel);
+        sideStackPanel.AddChild(badgePanel);
+        sideStackPanel.AddChild(openButton);
+        sideStackPanel.Anchor(Gum.Wireframe.Anchor.Right);
+        sideStackPanel.X = -PaddingX;
+        return sideStackPanel;
     }
 
     private void HandleOpenClick(object? sender, EventArgs e)
@@ -88,16 +88,18 @@ public sealed class ConversationRowView : Panel
 
     private static Label CreateTime()
     {
-        Label time = ViewFactory.CreateBoundUntranslatedLabel(nameof(ConversationRowViewModel.TimeText), TextStyleCatalog.Hint);
-        ViewFactory.CenterVertically(time);
-        return time;
+        Label timeLabel = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(ConversationRowViewModel.TimeText),
+            TextStyleCatalog.Hint);
+        ViewFactory.CenterVertically(timeLabel);
+        return timeLabel;
     }
 
     private static Panel CreateBadge()
     {
-        var badge = new CountBadge(nameof(ConversationRowViewModel.UnreadText));
-        ViewFactory.CenterVertically(badge);
-        badge.SetBinding(nameof(IsVisible), nameof(ConversationRowViewModel.HasUnread));
-        return badge;
+        var countBadge = new CountBadge(nameof(ConversationRowViewModel.UnreadText));
+        ViewFactory.CenterVertically(countBadge);
+        countBadge.SetBinding(nameof(IsVisible), nameof(ConversationRowViewModel.HasUnread));
+        return countBadge;
     }
 }

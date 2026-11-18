@@ -20,31 +20,31 @@ public static class ConversationPartFactory
     private const float MessageRowMarginX = 10;
     private const int HorizontalSideCount = 2;
 
-    public static StackPanel CreateHeader(EventHandler handleBackClick, Label title, Label detail)
+    public static StackPanel CreateHeader(EventHandler handleBackClick, Label titleLabel, Label detailLabel)
     {
         ArgumentNullException.ThrowIfNull(handleBackClick);
-        ArgumentNullException.ThrowIfNull(title);
-        ArgumentNullException.ThrowIfNull(detail);
+        ArgumentNullException.ThrowIfNull(titleLabel);
+        ArgumentNullException.ThrowIfNull(detailLabel);
 
         Button backButton = ViewFactory.CreateButton(nameof(Strings.ChatBack), BackButtonWidth, BackButtonHeight);
         ButtonSkin.CreateAndAttach(backButton, ButtonLookCatalog.Pill);
         backButton.Click += handleBackClick;
 
-        var titleLines = new StackPanel
+        var titleLinesStackPanel = new StackPanel
         {
             Spacing = PanelMetrics.TextSpacing,
         };
-        titleLines.AddChild(title);
-        titleLines.AddChild(detail);
+        titleLinesStackPanel.AddChild(titleLabel);
+        titleLinesStackPanel.AddChild(detailLabel);
 
-        var header = new StackPanel
+        var headerStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = HeaderSpacing,
         };
-        header.AddChild(backButton);
-        header.AddChild(titleLines);
-        return header;
+        headerStackPanel.AddChild(backButton);
+        headerStackPanel.AddChild(titleLinesStackPanel);
+        return headerStackPanel;
     }
 
     public static Label CreateWrappedLabel(string textKey, TextStyle style)
@@ -70,9 +70,9 @@ public static class ConversationPartFactory
 
     public static ItemsControl CreateMessageList(float height, float rowSpacing)
     {
-        ItemsControl messages = ViewFactory.CreateScrollList<ItemsControl>(ViewWidth, height);
-        messages.InnerPanel.StackSpacing = rowSpacing;
-        return messages;
+        ItemsControl messagesItemsControl = ViewFactory.CreateScrollList<ItemsControl>(ViewWidth, height);
+        messagesItemsControl.InnerPanel.StackSpacing = rowSpacing;
+        return messagesItemsControl;
     }
 
     public static Label CreateGlobalChannelTitle()
@@ -92,35 +92,35 @@ public static class ConversationPartFactory
         ArgumentNullException.ThrowIfNull(handleRetryClick);
         ArgumentNullException.ThrowIfNull(visibilityProperty);
 
-        StackPanel failure = ViewFactory.CreateLoadFailure(
+        StackPanel failureStackPanel = ViewFactory.CreateLoadFailure(
             nameof(Strings.ChatLoadFailed),
             nameof(Strings.ChatRetry),
             handleRetryClick);
-        failure.SetBinding(nameof(StackPanel.IsVisible), visibilityProperty);
-        return failure;
+        failureStackPanel.SetBinding(nameof(StackPanel.IsVisible), visibilityProperty);
+        return failureStackPanel;
     }
 
     public static StackPanel CreateComposer(EventHandler handleSendClick)
     {
         ArgumentNullException.ThrowIfNull(handleSendClick);
 
-        Label statusNotice = CreateNoticeLabel(
+        Label statusNoticeLabel = CreateNoticeLabel(
             nameof(ChatComposerViewModel.StatusText),
             nameof(ChatComposerViewModel.HasStatus),
             TextStyleCatalog.FieldError);
-        Label counterNotice = CreateNoticeLabel(
+        Label counterNoticeLabel = CreateNoticeLabel(
             nameof(ChatComposerViewModel.CounterText),
             nameof(ChatComposerViewModel.IsCounterVisible),
             TextStyleCatalog.Hint);
-        StackPanel inputRow = CreateInputRow(handleSendClick, ViewWidth);
-        var composer = new StackPanel
+        StackPanel inputRowStackPanel = CreateInputRow(handleSendClick, ViewWidth);
+        var composerStackPanel = new StackPanel
         {
             Spacing = PanelMetrics.SectionSpacing,
         };
-        composer.AddChild(statusNotice);
-        composer.AddChild(counterNotice);
-        composer.AddChild(inputRow);
-        return composer;
+        composerStackPanel.AddChild(statusNoticeLabel);
+        composerStackPanel.AddChild(counterNoticeLabel);
+        composerStackPanel.AddChild(inputRowStackPanel);
+        return composerStackPanel;
     }
 
     public static StackPanel CreateInputRow(EventHandler handleSendClick, float rowWidth)
@@ -128,34 +128,34 @@ public static class ConversationPartFactory
         ArgumentNullException.ThrowIfNull(handleSendClick);
 
         float inputWidth = rowWidth - SendButtonWidth - InputSpacing;
-        var input = new TextField
+        var inputTextField = new TextField
         {
             Placeholder = nameof(Strings.ChatPlaceholder),
             Width = inputWidth,
             Height = InputHeight,
         };
-        input.SetBinding(nameof(TextField.Text), nameof(ChatComposerViewModel.Draft));
-        input.SetBinding(nameof(FrameworkElement.IsEnabled), nameof(ChatComposerViewModel.CanWrite));
+        inputTextField.SetBinding(nameof(TextField.Text), nameof(ChatComposerViewModel.Draft));
+        inputTextField.SetBinding(nameof(FrameworkElement.IsEnabled), nameof(ChatComposerViewModel.CanWrite));
 
         Button sendButton = ViewFactory.CreateButton(nameof(Strings.ChatSend), SendButtonWidth, InputHeight);
         ButtonSkin.CreateAndAttach(sendButton, ButtonLookCatalog.Primary);
         sendButton.SetBinding(nameof(FrameworkElement.IsEnabled), nameof(ChatComposerViewModel.CanSend));
         sendButton.Click += handleSendClick;
 
-        var row = new StackPanel
+        var rowStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = InputSpacing,
         };
-        row.AddChild(input);
-        row.AddChild(sendButton);
-        return row;
+        rowStackPanel.AddChild(inputTextField);
+        rowStackPanel.AddChild(sendButton);
+        return rowStackPanel;
     }
 
-    public static void ScrollToLatest(ScrollViewer list)
+    public static void ScrollToLatest(ScrollViewer listScrollViewer)
     {
-        ArgumentNullException.ThrowIfNull(list);
+        ArgumentNullException.ThrowIfNull(listScrollViewer);
 
-        list.VerticalScrollBarValue = list.VerticalScrollBarMaximum;
+        listScrollViewer.VerticalScrollBarValue = listScrollViewer.VerticalScrollBarMaximum;
     }
 }

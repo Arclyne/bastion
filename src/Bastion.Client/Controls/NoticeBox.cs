@@ -20,8 +20,8 @@ public sealed class NoticeBox : Panel
     private const int HorizontalSideCount = 2;
 
     private readonly RectangleRuntime _surface;
-    private readonly Label _title;
-    private readonly Label _message;
+    private readonly Label _titleLabel;
+    private readonly Label _messageLabel;
     private NoticeTone _tone;
 
     public NoticeBox(float width)
@@ -32,17 +32,17 @@ public sealed class NoticeBox : Panel
         HeightUnits = DimensionUnitType.RelativeToChildren;
 
         float textWidth = width - (PaddingX * HorizontalSideCount);
-        _title = TextStyleCatalog.NoticeTitle.CreateFixedWidthLabel(textWidth);
-        _message = TextStyleCatalog.NoticeMessage.CreateFixedWidthLabel(textWidth);
-        var content = new StackPanel
+        _titleLabel = TextStyleCatalog.NoticeTitle.CreateFixedWidthLabel(textWidth);
+        _messageLabel = TextStyleCatalog.NoticeMessage.CreateFixedWidthLabel(textWidth);
+        var contentStackPanel = new StackPanel
         {
             X = PaddingX,
             Y = PaddingY,
             Spacing = TitleSpacing,
         };
-        content.AddChild(_title);
-        content.AddChild(_message);
-        AddChild(content);
+        contentStackPanel.AddChild(_titleLabel);
+        contentStackPanel.AddChild(_messageLabel);
+        AddChild(contentStackPanel);
 
         _surface = ShapeFactory.CreateRounded(Palette.Card, Radius);
         _surface.StrokeWidth = BorderWidth;
@@ -69,7 +69,7 @@ public sealed class NoticeBox : Panel
 
     public string? Title
     {
-        get => _title.Text ?? string.Empty;
+        get => _titleLabel.Text ?? string.Empty;
         set
         {
             string title = value ?? string.Empty;
@@ -84,7 +84,7 @@ public sealed class NoticeBox : Panel
 
     public string? Message
     {
-        get => _message.Text ?? string.Empty;
+        get => _messageLabel.Text ?? string.Empty;
         set
         {
             string message = value ?? string.Empty;
@@ -93,7 +93,7 @@ public sealed class NoticeBox : Panel
                 return;
             }
 
-            _message.SetTextNoTranslate(message);
+            _messageLabel.SetTextNoTranslate(message);
         }
     }
 
@@ -102,7 +102,7 @@ public sealed class NoticeBox : Panel
         Color accent = PickAccent(tone);
         _surface.FillColor = PickFill(tone);
         _surface.StrokeColor = new Color(accent.R, accent.G, accent.B, BorderAlpha);
-        var titleVisual = (LabelVisual)_title.Visual;
+        var titleVisual = (LabelVisual)_titleLabel.Visual;
         titleVisual.Color = accent;
     }
 
@@ -142,7 +142,7 @@ public sealed class NoticeBox : Panel
 
     private void ShowTitle(string title)
     {
-        _title.SetTextNoTranslate(title);
-        _title.IsVisible = title.Length > 0;
+        _titleLabel.SetTextNoTranslate(title);
+        _titleLabel.IsVisible = title.Length > 0;
     }
 }

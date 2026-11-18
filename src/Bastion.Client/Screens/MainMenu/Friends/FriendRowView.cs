@@ -32,25 +32,25 @@ public sealed class FriendRowView : Panel
         Height = PanelMetrics.PlayerRowHeight;
         HeightUnits = DimensionUnitType.Absolute;
 
-        var content = new StackPanel
+        var contentStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = ContentSpacing,
         };
-        Panel presenceDot = CreatePresenceDot(row.IsConnected);
-        StackPanel text = CreateText();
-        content.AddChild(presenceDot);
-        content.AddChild(text);
-        content.Anchor(Gum.Wireframe.Anchor.Left);
-        content.X = PanelMetrics.RowContentPaddingX;
+        Panel presenceDotPanel = CreatePresenceDot(row.IsConnected);
+        StackPanel textStackPanel = CreateText();
+        contentStackPanel.AddChild(presenceDotPanel);
+        contentStackPanel.AddChild(textStackPanel);
+        contentStackPanel.Anchor(Gum.Wireframe.Anchor.Left);
+        contentStackPanel.X = PanelMetrics.RowContentPaddingX;
         Button moreButton = CreateMoreButton();
-        AddChild(content);
+        AddChild(contentStackPanel);
         AddChild(moreButton);
     }
 
     private static Panel CreatePresenceDot(bool isConnected)
     {
-        var dot = new Panel
+        var dotPanel = new Panel
         {
             Width = DotSize,
             WidthUnits = DimensionUnitType.Absolute,
@@ -59,20 +59,20 @@ public sealed class FriendRowView : Panel
         };
         Color color = isConnected ? Palette.Success : Palette.Muted;
         RectangleRuntime circle = ShapeFactory.CreateCircle(color, DotSize);
-        ShapeFactory.InsertBehindContent(dot.Visual, circle);
-        ViewFactory.CenterVertically(dot);
-        return dot;
+        ShapeFactory.InsertBehindContent(dotPanel.Visual, circle);
+        ViewFactory.CenterVertically(dotPanel);
+        return dotPanel;
     }
 
     private static StackPanel CreateText()
     {
-        Label nickname = ViewFactory.CreateBoundUntranslatedLabel(
+        Label nicknameLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(FriendRowViewModel.Nickname),
             TextStyleCatalog.IdentityName);
-        Label status = ViewFactory.CreateBoundUntranslatedLabel(
+        Label statusLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(FriendRowViewModel.StatusText),
             TextStyleCatalog.Hint);
-        return ViewFactory.CreateCenteredLines(nickname, status);
+        return ViewFactory.CreateCenteredLines(nicknameLabel, statusLabel);
     }
 
     private Button CreateMoreButton()

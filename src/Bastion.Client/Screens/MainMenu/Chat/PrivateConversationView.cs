@@ -17,7 +17,7 @@ public sealed class PrivateConversationView : StackPanel
     private static readonly ILog _logger = LogManager.GetLogger(typeof(PrivateConversationView));
 
     private readonly PrivateConversationViewModel _conversation;
-    private readonly ItemsControl _messages;
+    private readonly ItemsControl _messagesItemsControl;
 
     public PrivateConversationView(PrivateConversationViewModel conversation)
     {
@@ -28,13 +28,13 @@ public sealed class PrivateConversationView : StackPanel
         Width = ConversationPartFactory.ViewWidth;
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = PanelMetrics.SectionSpacing;
-        _messages = CreateMessages();
-        StackPanel header = CreateHeader();
-        Label greeting = ConversationPartFactory.CreateNoticeLabel(
+        _messagesItemsControl = CreateMessages();
+        StackPanel headerStackPanel = CreateHeader();
+        Label greetingLabel = ConversationPartFactory.CreateNoticeLabel(
             nameof(PrivateConversationViewModel.GreetingText),
             nameof(PrivateConversationViewModel.IsGreetingVisible),
             TextStyleCatalog.NoticeTitle);
-        Label greetingHint = CreateToggledWrappedLabel(
+        Label greetingHintLabel = CreateToggledWrappedLabel(
             nameof(Strings.PrivateGreetingHint),
             nameof(PrivateConversationViewModel.IsGreetingVisible),
             TextStyleCatalog.Hint);
@@ -42,31 +42,31 @@ public sealed class PrivateConversationView : StackPanel
             nameof(Strings.ChatLoading),
             nameof(PrivateConversationViewModel.IsLoading),
             TextStyleCatalog.Hint);
-        StackPanel loadFailure = CreateLoadFailure();
-        Label offlineNotice = ConversationPartFactory.CreateNoticeLabel(
+        StackPanel loadFailureStackPanel = CreateLoadFailure();
+        Label offlineNoticeLabel = ConversationPartFactory.CreateNoticeLabel(
             nameof(PrivateConversationViewModel.OfflineText),
             nameof(PrivateConversationViewModel.IsOfflineNoticeVisible),
             TextStyleCatalog.Hint);
-        Label notFriendsNotice = CreateToggledWrappedLabel(
+        Label notFriendsNoticeLabel = CreateToggledWrappedLabel(
             nameof(Strings.PrivateNotFriends),
             nameof(PrivateConversationViewModel.IsNotFriendsNoticeVisible),
             TextStyleCatalog.FieldError);
-        Label muteNotice = ConversationPartFactory.CreateNoticeLabel(
+        Label muteNoticeLabel = ConversationPartFactory.CreateNoticeLabel(
             nameof(PrivateConversationViewModel.MuteText),
             nameof(PrivateConversationViewModel.IsMuteNoticeVisible),
             TextStyleCatalog.FieldError);
-        StackPanel composer = ConversationPartFactory.CreateComposer(HandleSendClick);
+        StackPanel composerStackPanel = ConversationPartFactory.CreateComposer(HandleSendClick);
 
-        AddChild(header);
-        AddChild(greeting);
-        AddChild(greetingHint);
+        AddChild(headerStackPanel);
+        AddChild(greetingLabel);
+        AddChild(greetingHintLabel);
         AddChild(loadingLabel);
-        AddChild(loadFailure);
-        AddChild(_messages);
-        AddChild(offlineNotice);
-        AddChild(notFriendsNotice);
-        AddChild(muteNotice);
-        AddChild(composer);
+        AddChild(loadFailureStackPanel);
+        AddChild(_messagesItemsControl);
+        AddChild(offlineNoticeLabel);
+        AddChild(notFriendsNoticeLabel);
+        AddChild(muteNoticeLabel);
+        AddChild(composerStackPanel);
 
         _conversation.Messages.CollectionChanged += HandleMessagesChanged;
         _conversation.PropertyChanged += HandleConversationPropertyChanged;
@@ -74,21 +74,22 @@ public sealed class PrivateConversationView : StackPanel
 
     private ItemsControl CreateMessages()
     {
-        ItemsControl messages = ConversationPartFactory.CreateMessageList(ScrollHeight, RowSpacing);
-        messages.VisualTemplate = PrivateMessageRowView.CreateTemplate(ConversationPartFactory.MessageRowWidth);
-        messages.Items = _conversation.Messages;
-        return messages;
+        ItemsControl messagesItemsControl = ConversationPartFactory.CreateMessageList(ScrollHeight, RowSpacing);
+        messagesItemsControl.VisualTemplate = PrivateMessageRowView.CreateTemplate(
+            ConversationPartFactory.MessageRowWidth);
+        messagesItemsControl.Items = _conversation.Messages;
+        return messagesItemsControl;
     }
 
     private StackPanel CreateHeader()
     {
-        Label title = ViewFactory.CreateBoundUntranslatedLabel(
+        Label titleLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(PrivateConversationViewModel.PartnerNickname),
             TextStyleCatalog.IdentityName);
-        Label detail = ViewFactory.CreateBoundUntranslatedLabel(
+        Label detailLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(PrivateConversationViewModel.PresenceText),
             TextStyleCatalog.Hint);
-        return ConversationPartFactory.CreateHeader(HandleBackClick, title, detail);
+        return ConversationPartFactory.CreateHeader(HandleBackClick, titleLabel, detailLabel);
     }
 
     private void HandleBackClick(object? sender, EventArgs e)
@@ -105,10 +106,10 @@ public sealed class PrivateConversationView : StackPanel
 
     private StackPanel CreateLoadFailure()
     {
-        StackPanel failure = ConversationPartFactory.CreateLoadFailure(
+        StackPanel failureStackPanel = ConversationPartFactory.CreateLoadFailure(
             HandleRetryClick,
             nameof(PrivateConversationViewModel.HasLoadFailed));
-        return failure;
+        return failureStackPanel;
     }
 
     private async void HandleRetryClick(object? sender, EventArgs e)
@@ -137,14 +138,14 @@ public sealed class PrivateConversationView : StackPanel
 
     private void HandleMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        ConversationPartFactory.ScrollToLatest(_messages);
+        ConversationPartFactory.ScrollToLatest(_messagesItemsControl);
     }
 
     private void HandleConversationPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(PrivateConversationViewModel.IsLoading) && !_conversation.IsLoading)
         {
-            ConversationPartFactory.ScrollToLatest(_messages);
+            ConversationPartFactory.ScrollToLatest(_messagesItemsControl);
         }
     }
 }

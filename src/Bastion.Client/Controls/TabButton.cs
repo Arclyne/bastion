@@ -18,23 +18,23 @@ public sealed class TabButton : StackPanel
         ArgumentNullException.ThrowIfNull(selectedProperty);
 
         Spacing = spacing;
-        Panel marker = CreateMarker(button.Width, selectedProperty);
+        Panel markerPanel = CreateMarker(button.Width, selectedProperty);
         AddChild(button);
-        AddChild(marker);
+        AddChild(markerPanel);
     }
 
     private static Panel CreateMarker(float width, string selectedProperty)
     {
         RectangleRuntime marker = ShapeFactory.CreateRounded(Palette.Accent, MarkerRadius);
-        var markerHolder = new Panel
+        var markerHolderPanel = new Panel
         {
             Width = width,
             WidthUnits = DimensionUnitType.Absolute,
             Height = MarkerHeight,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        markerHolder.AddChild(marker);
-        markerHolder.SetBinding(nameof(IsVisible), selectedProperty);
-        return markerHolder;
+        markerHolderPanel.AddChild(marker);
+        markerHolderPanel.SetBinding(nameof(IsVisible), selectedProperty);
+        return markerHolderPanel;
     }
 }

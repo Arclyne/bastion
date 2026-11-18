@@ -61,7 +61,7 @@ public static class ShapeFactory
 
     public static Panel CreateAvatar(float size, Color ringColor, float ringWidth)
     {
-        var avatar = new Panel
+        var avatarPanel = new Panel
         {
             Width = size,
             WidthUnits = DimensionUnitType.Absolute,
@@ -71,8 +71,8 @@ public static class ShapeFactory
         RectangleRuntime circle = CreateCircle(Palette.AvatarFill, size);
         circle.StrokeColor = ringColor;
         circle.StrokeWidth = ringWidth;
-        InsertBehindContent(avatar.Visual, circle);
-        return avatar;
+        InsertBehindContent(avatarPanel.Visual, circle);
+        return avatarPanel;
     }
 
     public static void InsertBehindContent(GraphicalUiElement visual, params GraphicalUiElement[] layers)

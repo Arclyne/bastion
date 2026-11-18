@@ -19,20 +19,20 @@ public sealed class ChatMessageRowView : StackPanel
         Width = rowWidth;
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = PanelMetrics.TextSpacing;
-        StackPanel header = CreateHeader(row);
-        Label text = CreateFixedLabel(row.Text, TextStyleCatalog.NoticeMessage, rowWidth);
-        Label pendingState = CreateStateLabel(
+        StackPanel headerStackPanel = CreateHeader(row);
+        Label textLabel = CreateFixedLabel(row.Text, TextStyleCatalog.NoticeMessage, rowWidth);
+        Label pendingStateLabel = CreateStateLabel(
             nameof(ChatMessageRowViewModel.IsPending),
             TextStyleCatalog.Hint,
             rowWidth);
-        Label failedState = CreateStateLabel(
+        Label failedStateLabel = CreateStateLabel(
             nameof(ChatMessageRowViewModel.HasFailed),
             TextStyleCatalog.FieldError,
             rowWidth);
-        AddChild(header);
-        AddChild(text);
-        AddChild(pendingState);
-        AddChild(failedState);
+        AddChild(headerStackPanel);
+        AddChild(textLabel);
+        AddChild(pendingStateLabel);
+        AddChild(failedStateLabel);
     }
 
     public static VisualTemplate CreateTemplate(float rowWidth)
@@ -43,17 +43,19 @@ public sealed class ChatMessageRowView : StackPanel
     private static StackPanel CreateHeader(ChatMessageRowViewModel row)
     {
         TextStyle authorStyle = row.IsOwn ? TextStyleCatalog.ChatOwnAuthor : TextStyleCatalog.ChatAuthor;
-        Label time = ViewFactory.CreateBoundUntranslatedLabel(nameof(ChatMessageRowViewModel.TimeText), TextStyleCatalog.Hint);
-        Label author = ViewFactory.CreateUntranslatedLabel(row.AuthorText, authorStyle);
+        Label timeLabel = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(ChatMessageRowViewModel.TimeText),
+            TextStyleCatalog.Hint);
+        Label authorLabel = ViewFactory.CreateUntranslatedLabel(row.AuthorText, authorStyle);
 
-        var header = new StackPanel
+        var headerStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = HeaderSpacing,
         };
-        header.AddChild(author);
-        header.AddChild(time);
-        return header;
+        headerStackPanel.AddChild(authorLabel);
+        headerStackPanel.AddChild(timeLabel);
+        return headerStackPanel;
     }
 
     private static Label CreateFixedLabel(string text, TextStyle style, float width)
@@ -76,7 +78,7 @@ public sealed class ChatMessageRowView : StackPanel
     private static GraphicalUiElement CreateVisual(object? item, float rowWidth)
     {
         ChatMessageRowViewModel row = ViewFactory.RequireRow<ChatMessageRowViewModel>(item);
-        var rowView = new ChatMessageRowView(row, rowWidth);
-        return rowView.Visual;
+        var chatMessageRowView = new ChatMessageRowView(row, rowWidth);
+        return chatMessageRowView.Visual;
     }
 }

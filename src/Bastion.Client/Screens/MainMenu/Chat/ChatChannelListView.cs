@@ -33,20 +33,20 @@ public sealed class ChatChannelListView : StackPanel
         Width = ListWidth;
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = ListSpacing;
-        Panel globalRow = CreateGlobalRow();
-        StackPanel lobbyLoadFailure = CreateLobbyLoadFailure();
-        Label friendsTitle = ViewFactory.CreateLabel(
+        Panel globalRowPanel = CreateGlobalRow();
+        StackPanel lobbyLoadFailureStackPanel = CreateLobbyLoadFailure();
+        Label friendsTitleLabel = ViewFactory.CreateLabel(
             nameof(Strings.ChatWithFriendsTitle),
             TextStyleCatalog.SectionLabel);
-        StackPanel noConversations = CreateNoConversations();
-        StackPanel conversationsLoadFailure = CreateConversationsLoadFailure();
-        ItemsControl conversations = CreateConversations();
-        AddChild(globalRow);
-        AddChild(lobbyLoadFailure);
-        AddChild(friendsTitle);
-        AddChild(noConversations);
-        AddChild(conversationsLoadFailure);
-        AddChild(conversations);
+        StackPanel noConversationsStackPanel = CreateNoConversations();
+        StackPanel conversationsLoadFailureStackPanel = CreateConversationsLoadFailure();
+        ItemsControl conversationsItemsControl = CreateConversations();
+        AddChild(globalRowPanel);
+        AddChild(lobbyLoadFailureStackPanel);
+        AddChild(friendsTitleLabel);
+        AddChild(noConversationsStackPanel);
+        AddChild(conversationsLoadFailureStackPanel);
+        AddChild(conversationsItemsControl);
     }
 
     private Panel CreateGlobalRow()
@@ -57,7 +57,7 @@ public sealed class ChatChannelListView : StackPanel
         openButton.X = -RowPaddingX;
         openButton.Click += HandleOpenGlobalClick;
 
-        var row = new Panel
+        var rowPanel = new Panel
         {
             Width = ListWidth,
             WidthUnits = DimensionUnitType.Absolute,
@@ -66,11 +66,11 @@ public sealed class ChatChannelListView : StackPanel
             BindingContext = _chatTab.LobbyChat,
         };
         RectangleRuntime background = ShapeFactory.CreateRounded(Palette.Selected, PanelMetrics.RowRadius);
-        ShapeFactory.InsertBehindContent(row.Visual, background);
-        StackPanel globalText = CreateGlobalText();
-        row.AddChild(globalText);
-        row.AddChild(openButton);
-        return row;
+        ShapeFactory.InsertBehindContent(rowPanel.Visual, background);
+        StackPanel globalTextStackPanel = CreateGlobalText();
+        rowPanel.AddChild(globalTextStackPanel);
+        rowPanel.AddChild(openButton);
+        return rowPanel;
     }
 
     private void HandleOpenGlobalClick(object? sender, EventArgs e)
@@ -80,20 +80,20 @@ public sealed class ChatChannelListView : StackPanel
 
     private static StackPanel CreateGlobalText()
     {
-        Label title = ConversationPartFactory.CreateGlobalChannelTitle();
-        Label detail = ConversationPartFactory.CreateGlobalChannelDetail();
-        StackPanel text = ViewFactory.CreateCenteredLines(title, detail);
-        text.X = RowPaddingX;
-        return text;
+        Label titleLabel = ConversationPartFactory.CreateGlobalChannelTitle();
+        Label detailLabel = ConversationPartFactory.CreateGlobalChannelDetail();
+        StackPanel textStackPanel = ViewFactory.CreateCenteredLines(titleLabel, detailLabel);
+        textStackPanel.X = RowPaddingX;
+        return textStackPanel;
     }
 
     private StackPanel CreateLobbyLoadFailure()
     {
-        StackPanel failure = ConversationPartFactory.CreateLoadFailure(
+        StackPanel failureStackPanel = ConversationPartFactory.CreateLoadFailure(
             HandleRetryLobbyClick,
             nameof(LobbyChatViewModel.HasLoadFailed));
-        failure.BindingContext = _chatTab.LobbyChat;
-        return failure;
+        failureStackPanel.BindingContext = _chatTab.LobbyChat;
+        return failureStackPanel;
     }
 
     private async void HandleRetryLobbyClick(object? sender, EventArgs e)
@@ -110,26 +110,28 @@ public sealed class ChatChannelListView : StackPanel
 
     private static StackPanel CreateNoConversations()
     {
-        var empty = new StackPanel
+        var emptyStackPanel = new StackPanel
         {
             Spacing = PanelMetrics.TextSpacing,
         };
-        Label title = ViewFactory.CreateLabel(nameof(Strings.ChatNoConversationsTitle), TextStyleCatalog.NoticeTitle);
-        empty.AddChild(title);
-        Label hint = ConversationPartFactory.CreateWrappedLabel(
+        Label titleLabel = ViewFactory.CreateLabel(
+            nameof(Strings.ChatNoConversationsTitle),
+            TextStyleCatalog.NoticeTitle);
+        emptyStackPanel.AddChild(titleLabel);
+        Label hintLabel = ConversationPartFactory.CreateWrappedLabel(
             nameof(Strings.ChatNoConversationsHint),
             TextStyleCatalog.Hint);
-        empty.AddChild(hint);
-        empty.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.HasNoConversations));
-        return empty;
+        emptyStackPanel.AddChild(hintLabel);
+        emptyStackPanel.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.HasNoConversations));
+        return emptyStackPanel;
     }
 
     private StackPanel CreateConversationsLoadFailure()
     {
-        StackPanel failure = ConversationPartFactory.CreateLoadFailure(
+        StackPanel failureStackPanel = ConversationPartFactory.CreateLoadFailure(
             HandleRetryConversationsClick,
             nameof(ChatTabViewModel.HasConversationsLoadFailed));
-        return failure;
+        return failureStackPanel;
     }
 
     private async void HandleRetryConversationsClick(object? sender, EventArgs e)
@@ -146,18 +148,20 @@ public sealed class ChatChannelListView : StackPanel
 
     private ItemsControl CreateConversations()
     {
-        ItemsControl conversations = ViewFactory.CreateScrollList<ItemsControl>(ListWidth, ConversationsHeight);
-        conversations.InnerPanel.StackSpacing = ConversationSpacing;
-        conversations.VisualTemplate = new VisualTemplate(CreateConversationRow);
-        conversations.Items = _chatTab.Conversations;
-        conversations.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.HasConversations));
-        return conversations;
+        ItemsControl conversationsItemsControl = ViewFactory.CreateScrollList<ItemsControl>(
+            ListWidth,
+            ConversationsHeight);
+        conversationsItemsControl.InnerPanel.StackSpacing = ConversationSpacing;
+        conversationsItemsControl.VisualTemplate = new VisualTemplate(CreateConversationRow);
+        conversationsItemsControl.Items = _chatTab.Conversations;
+        conversationsItemsControl.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.HasConversations));
+        return conversationsItemsControl;
     }
 
     private GraphicalUiElement CreateConversationRow(object? item)
     {
         ConversationRowViewModel row = ViewFactory.RequireRow<ConversationRowViewModel>(item);
-        var rowView = new ConversationRowView(row, _chatTab);
-        return rowView.Visual;
+        var conversationRowView = new ConversationRowView(row, _chatTab);
+        return conversationRowView.Visual;
     }
 }

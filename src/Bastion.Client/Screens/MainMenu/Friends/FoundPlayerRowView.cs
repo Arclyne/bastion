@@ -29,18 +29,20 @@ public sealed class FoundPlayerRowView : Panel
         WidthUnits = DimensionUnitType.Absolute;
         Height = PanelMetrics.PlayerRowHeight;
         HeightUnits = DimensionUnitType.Absolute;
-        Label nickname = CreateNickname();
+        Label nicknameLabel = CreateNickname();
         Button actionButton = CreateActionButton();
-        AddChild(nickname);
+        AddChild(nicknameLabel);
         AddChild(actionButton);
     }
 
     private static Label CreateNickname()
     {
-        Label nickname = ViewFactory.CreateBoundUntranslatedLabel(nameof(FoundPlayerRowViewModel.Nickname), TextStyleCatalog.IdentityName);
-        nickname.X = PanelMetrics.RowContentPaddingX;
-        ViewFactory.CenterVertically(nickname);
-        return nickname;
+        Label nicknameLabel = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(FoundPlayerRowViewModel.Nickname),
+            TextStyleCatalog.IdentityName);
+        nicknameLabel.X = PanelMetrics.RowContentPaddingX;
+        ViewFactory.CenterVertically(nicknameLabel);
+        return nicknameLabel;
     }
 
     private Button CreateActionButton()

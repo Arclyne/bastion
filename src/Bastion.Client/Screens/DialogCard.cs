@@ -14,14 +14,14 @@ public abstract class DialogCard : Panel
         Height = DialogMetrics.PaddingBottom;
         HeightUnits = DimensionUnitType.RelativeToChildren;
 
-        var content = new StackPanel
+        var contentStackPanel = new StackPanel
         {
             X = DialogMetrics.PaddingX,
             Y = DialogMetrics.PaddingTop,
             Spacing = DialogMetrics.SectionSpacing,
         };
-        AddChild(content);
-        Content = content;
+        AddChild(contentStackPanel);
+        Content = contentStackPanel;
         CardSkin.Apply(Visual);
     }
 

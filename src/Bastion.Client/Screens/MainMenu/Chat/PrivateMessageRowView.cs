@@ -32,16 +32,16 @@ public sealed class PrivateMessageRowView : StackPanel
         Spacing = RowSpacing;
         if (row.HasDayLabel())
         {
-            Panel day = CreateDayLabel(row.DayLabel, rowWidth);
-            AddChild(day);
+            Panel dayPanel = CreateDayLabel(row.DayLabel, rowWidth);
+            AddChild(dayPanel);
         }
 
-        Panel bubble = CreateBubble(row);
-        Panel alignedBubble = CreateAligned(bubble, row.IsOwn, rowWidth);
-        StackPanel meta = CreateMeta();
-        Panel alignedMeta = CreateAligned(meta, row.IsOwn, rowWidth);
-        AddChild(alignedBubble);
-        AddChild(alignedMeta);
+        Panel bubblePanel = CreateBubble(row);
+        Panel alignedBubblePanel = CreateAligned(bubblePanel, row.IsOwn, rowWidth);
+        StackPanel metaStackPanel = CreateMeta();
+        Panel alignedMetaPanel = CreateAligned(metaStackPanel, row.IsOwn, rowWidth);
+        AddChild(alignedBubblePanel);
+        AddChild(alignedMetaPanel);
     }
 
     public static VisualTemplate CreateTemplate(float rowWidth)
@@ -49,11 +49,11 @@ public sealed class PrivateMessageRowView : StackPanel
         return new VisualTemplate(item => CreateVisual(item, rowWidth));
     }
 
-    private static Panel CreateDayLabel(string dayLabel, float rowWidth)
+    private static Panel CreateDayLabel(string dayText, float rowWidth)
     {
-        Label day = ViewFactory.CreateUntranslatedLabel(dayLabel, TextStyleCatalog.SectionLabel);
-        ViewFactory.CenterHorizontally(day);
-        return CreateAligned(day, shouldAlignRight: false, rowWidth);
+        Label dayLabel = ViewFactory.CreateUntranslatedLabel(dayText, TextStyleCatalog.SectionLabel);
+        ViewFactory.CenterHorizontally(dayLabel);
+        return CreateAligned(dayLabel, shouldAlignRight: false, rowWidth);
     }
 
     private static Panel CreateAligned(FrameworkElement content, bool shouldAlignRight, float rowWidth)
@@ -65,25 +65,25 @@ public sealed class PrivateMessageRowView : StackPanel
             content.X = 0;
         }
 
-        var holder = new Panel
+        var holderPanel = new Panel
         {
             Width = rowWidth,
             WidthUnits = DimensionUnitType.Absolute,
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
-        holder.AddChild(content);
-        return holder;
+        holderPanel.AddChild(content);
+        return holderPanel;
     }
 
     private static Panel CreateBubble(PrivateMessageRowViewModel row)
     {
-        Label text = ViewFactory.CreateUntranslatedLabel(row.Text, TextStyleCatalog.NoticeMessage);
-        text.WidthUnits = DimensionUnitType.RelativeToChildren;
-        text.Visual.MaxWidth = BubbleTextMaxWidth;
-        text.X = BubblePaddingX;
-        text.Y = BubblePaddingY;
+        Label textLabel = ViewFactory.CreateUntranslatedLabel(row.Text, TextStyleCatalog.NoticeMessage);
+        textLabel.WidthUnits = DimensionUnitType.RelativeToChildren;
+        textLabel.Visual.MaxWidth = BubbleTextMaxWidth;
+        textLabel.X = BubblePaddingX;
+        textLabel.Y = BubblePaddingY;
 
-        var bubble = new Panel
+        var bubblePanel = new Panel
         {
             Width = BubblePaddingX * HorizontalSideCount,
             WidthUnits = DimensionUnitType.RelativeToChildren,
@@ -92,38 +92,40 @@ public sealed class PrivateMessageRowView : StackPanel
         };
         Color fillColor = row.IsOwn ? Palette.WarningSoft : Palette.White;
         RectangleRuntime background = ShapeFactory.CreateRounded(fillColor, BubbleRadius);
-        ShapeFactory.InsertBehindContent(bubble.Visual, background);
-        bubble.AddChild(text);
-        return bubble;
+        ShapeFactory.InsertBehindContent(bubblePanel.Visual, background);
+        bubblePanel.AddChild(textLabel);
+        return bubblePanel;
     }
 
     private static StackPanel CreateMeta()
     {
-        Label time = ViewFactory.CreateBoundUntranslatedLabel(nameof(PrivateMessageRowViewModel.TimeText), TextStyleCatalog.Hint);
-        Label pending = ViewFactory.CreateBoundNotice(
+        Label timeLabel = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(PrivateMessageRowViewModel.TimeText),
+            TextStyleCatalog.Hint);
+        Label pendingLabel = ViewFactory.CreateBoundNotice(
             nameof(PrivateMessageRowViewModel.StateText),
             nameof(PrivateMessageRowViewModel.IsPending),
             TextStyleCatalog.Hint);
-        Label failed = ViewFactory.CreateBoundNotice(
+        Label failedLabel = ViewFactory.CreateBoundNotice(
             nameof(PrivateMessageRowViewModel.StateText),
             nameof(PrivateMessageRowViewModel.HasFailed),
             TextStyleCatalog.FieldError);
 
-        var meta = new StackPanel
+        var metaStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = MetaSpacing,
         };
-        meta.AddChild(time);
-        meta.AddChild(pending);
-        meta.AddChild(failed);
-        return meta;
+        metaStackPanel.AddChild(timeLabel);
+        metaStackPanel.AddChild(pendingLabel);
+        metaStackPanel.AddChild(failedLabel);
+        return metaStackPanel;
     }
 
     private static GraphicalUiElement CreateVisual(object? item, float rowWidth)
     {
         PrivateMessageRowViewModel row = ViewFactory.RequireRow<PrivateMessageRowViewModel>(item);
-        var rowView = new PrivateMessageRowView(row, rowWidth);
-        return rowView.Visual;
+        var privateMessageRowView = new PrivateMessageRowView(row, rowWidth);
+        return privateMessageRowView.Visual;
     }
 }

@@ -30,14 +30,16 @@ public sealed class FriendActionsMenu : Panel
         Height = PaddingBottom;
         HeightUnits = DimensionUnitType.RelativeToChildren;
         this.SetBinding(nameof(IsVisible), nameof(FriendActionsViewModel.IsMenuOpen));
-        StackPanel content = CreateContent();
-        AddChild(content);
+        StackPanel contentStackPanel = CreateContent();
+        AddChild(contentStackPanel);
         CardSkin.Apply(Visual);
     }
 
     private StackPanel CreateContent()
     {
-        Label nickname = ViewFactory.CreateBoundUntranslatedLabel(nameof(FriendActionsViewModel.Nickname), TextStyleCatalog.IdentityName);
+        Label nicknameLabel = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(FriendActionsViewModel.Nickname),
+            TextStyleCatalog.IdentityName);
 
         Button viewProfileButton = CreateItem(nameof(Strings.FriendsViewProfile), ButtonLookCatalog.Secondary);
         viewProfileButton.IsEnabled = false;
@@ -48,25 +50,25 @@ public sealed class FriendActionsMenu : Panel
         Button cancelButton = CreateItem(nameof(Strings.FriendsCancel), ButtonLookCatalog.Pill);
         cancelButton.Click += HandleCancelClick;
 
-        var content = new StackPanel
+        var contentStackPanel = new StackPanel
         {
             X = PaddingX,
             Y = PaddingTop,
             Spacing = ItemSpacing,
         };
-        content.AddChild(nickname);
-        content.AddChild(viewProfileButton);
-        content.AddChild(sendMessageButton);
-        content.AddChild(removeButton);
-        content.AddChild(cancelButton);
-        return content;
+        contentStackPanel.AddChild(nicknameLabel);
+        contentStackPanel.AddChild(viewProfileButton);
+        contentStackPanel.AddChild(sendMessageButton);
+        contentStackPanel.AddChild(removeButton);
+        contentStackPanel.AddChild(cancelButton);
+        return contentStackPanel;
     }
 
     private static Button CreateItem(string textKey, ButtonLook buttonLook)
     {
-        Button item = ViewFactory.CreateButton(textKey, ItemWidth, ItemHeight);
-        ButtonSkin.CreateAndAttach(item, buttonLook);
-        return item;
+        Button itemButton = ViewFactory.CreateButton(textKey, ItemWidth, ItemHeight);
+        ButtonSkin.CreateAndAttach(itemButton, buttonLook);
+        return itemButton;
     }
 
     private void HandleSendMessageClick(object? sender, EventArgs e)

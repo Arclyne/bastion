@@ -23,12 +23,12 @@ public abstract class ScreenView : Panel
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(isOpenProperty);
 
-        var dialog = new ModalLayer
+        var dialogModalLayer = new ModalLayer
         {
             BindingContext = viewModel,
         };
-        dialog.SetBinding(nameof(ModalLayer.IsOpen), isOpenProperty);
-        dialog.AddChild(content);
-        _dialogs.Add(dialog);
+        dialogModalLayer.SetBinding(nameof(ModalLayer.IsOpen), isOpenProperty);
+        dialogModalLayer.AddChild(content);
+        _dialogs.Add(dialogModalLayer);
     }
 }

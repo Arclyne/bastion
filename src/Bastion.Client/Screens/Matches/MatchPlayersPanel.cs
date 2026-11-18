@@ -31,7 +31,7 @@ public sealed class MatchPlayersPanel : Panel
         Height = PaddingBottom;
         HeightUnits = DimensionUnitType.RelativeToChildren;
 
-        var rows = new StackPanel
+        var rowsStackPanel = new StackPanel
         {
             X = PaddingX,
             Y = PaddingTop,
@@ -39,61 +39,61 @@ public sealed class MatchPlayersPanel : Panel
         };
         foreach (MatchPlayerViewModel player in viewModel.Players)
         {
-            Panel playerRow = CreatePlayerRow(player);
-            rows.AddChild(playerRow);
+            Panel playerRowPanel = CreatePlayerRow(player);
+            rowsStackPanel.AddChild(playerRowPanel);
         }
 
-        AddChild(rows);
+        AddChild(rowsStackPanel);
         CardSkin.Apply(Visual);
     }
 
     private static Panel CreatePlayerRow(MatchPlayerViewModel player)
     {
-        var nameColumn = new StackPanel
+        var nameColumnStackPanel = new StackPanel
         {
             Width = NameWidth,
             WidthUnits = DimensionUnitType.Absolute,
         };
-        Label nickname = ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyleCatalog.IdentityName);
-        nameColumn.AddChild(nickname);
-        Label detail = ViewFactory.CreateBoundUntranslatedLabel(
+        Label nicknameLabel = ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyleCatalog.IdentityName);
+        nameColumnStackPanel.AddChild(nicknameLabel);
+        Label detailLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchPlayerViewModel.DetailText),
             TextStyleCatalog.IdentityDetail,
             NameWidth);
-        detail.BindingContext = player;
-        nameColumn.AddChild(detail);
+        detailLabel.BindingContext = player;
+        nameColumnStackPanel.AddChild(detailLabel);
 
-        var content = new StackPanel
+        var contentStackPanel = new StackPanel
         {
             X = RowContentX,
             Orientation = Orientation.Horizontal,
             Spacing = RowContentSpacing,
         };
-        Panel pawn = CreatePawn(player);
-        Label walls = CreateWallsLabel(player);
-        Label clock = ViewFactory.CreateUntranslatedLabel(player.ClockText, TextStyleCatalog.IdentityName);
-        content.AddChild(pawn);
-        content.AddChild(nameColumn);
-        content.AddChild(walls);
-        content.AddChild(clock);
-        ViewFactory.CenterVertically(content);
+        Panel pawnPanel = CreatePawn(player);
+        Label wallsLabel = CreateWallsLabel(player);
+        Label clockLabel = ViewFactory.CreateUntranslatedLabel(player.ClockText, TextStyleCatalog.IdentityName);
+        contentStackPanel.AddChild(pawnPanel);
+        contentStackPanel.AddChild(nameColumnStackPanel);
+        contentStackPanel.AddChild(wallsLabel);
+        contentStackPanel.AddChild(clockLabel);
+        ViewFactory.CenterVertically(contentStackPanel);
 
-        var row = new Panel
+        var rowPanel = new Panel
         {
             Width = RowWidth,
             WidthUnits = DimensionUnitType.Absolute,
             Height = RowHeight,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        Panel turnHighlight = CreateTurnHighlight(player);
-        row.AddChild(turnHighlight);
-        row.AddChild(content);
-        return row;
+        Panel turnHighlightPanel = CreateTurnHighlight(player);
+        rowPanel.AddChild(turnHighlightPanel);
+        rowPanel.AddChild(contentStackPanel);
+        return rowPanel;
     }
 
     private static Panel CreatePawn(MatchPlayerViewModel player)
     {
-        var pawn = new Panel
+        var pawnPanel = new Panel
         {
             Width = PawnSize,
             WidthUnits = DimensionUnitType.Absolute,
@@ -101,30 +101,30 @@ public sealed class MatchPlayersPanel : Panel
             HeightUnits = DimensionUnitType.Absolute,
         };
         RectangleRuntime circle = ShapeFactory.CreateCircle(Palette.GetPawnColor(player.PawnSymbol), PawnSize);
-        ShapeFactory.InsertBehindContent(pawn.Visual, circle);
-        ViewFactory.CenterVertically(pawn);
-        return pawn;
+        ShapeFactory.InsertBehindContent(pawnPanel.Visual, circle);
+        ViewFactory.CenterVertically(pawnPanel);
+        return pawnPanel;
     }
 
     private static Label CreateWallsLabel(MatchPlayerViewModel player)
     {
-        Label walls = ViewFactory.CreateBoundUntranslatedLabel(
+        Label wallsLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchPlayerViewModel.WallsText),
             TextStyleCatalog.IdentityDetail);
-        walls.BindingContext = player;
-        return walls;
+        wallsLabel.BindingContext = player;
+        return wallsLabel;
     }
 
     private static Panel CreateTurnHighlight(MatchPlayerViewModel player)
     {
-        var highlight = new Panel
+        var highlightPanel = new Panel
         {
             BindingContext = player,
         };
-        highlight.Dock(Gum.Wireframe.Dock.Fill);
-        highlight.SetBinding(nameof(IsVisible), nameof(MatchPlayerViewModel.HasTurn));
+        highlightPanel.Dock(Gum.Wireframe.Dock.Fill);
+        highlightPanel.SetBinding(nameof(IsVisible), nameof(MatchPlayerViewModel.HasTurn));
         RectangleRuntime background = ShapeFactory.CreateRounded(Palette.Selected, RowRadius);
-        ShapeFactory.InsertBehindContent(highlight.Visual, background);
-        return highlight;
+        ShapeFactory.InsertBehindContent(highlightPanel.Visual, background);
+        return highlightPanel;
     }
 }

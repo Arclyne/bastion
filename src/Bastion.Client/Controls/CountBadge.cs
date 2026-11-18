@@ -20,16 +20,16 @@ public sealed class CountBadge : Panel
         Height = Size;
         HeightUnits = DimensionUnitType.Absolute;
         RectangleRuntime circle = ShapeFactory.CreateCircle(Palette.IdentityAccent, Size);
-        Label count = CreateCount(countProperty);
+        Label countLabel = CreateCount(countProperty);
         ShapeFactory.InsertBehindContent(Visual, circle);
-        AddChild(count);
+        AddChild(countLabel);
     }
 
     private static Label CreateCount(string countProperty)
     {
-        Label count = ViewFactory.CreateBoundUntranslatedLabel(countProperty, TextStyleCatalog.PrimaryButton);
-        ViewFactory.CenterHorizontally(count);
-        ViewFactory.CenterVertically(count);
-        return count;
+        Label countLabel = ViewFactory.CreateBoundUntranslatedLabel(countProperty, TextStyleCatalog.PrimaryButton);
+        ViewFactory.CenterHorizontally(countLabel);
+        ViewFactory.CenterVertically(countLabel);
+        return countLabel;
     }
 }
