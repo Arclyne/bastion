@@ -57,6 +57,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         CurrentTurnOrder = Match.FirstTurnOrder;
         NextMoveNumber = Match.FirstMoveNumber;
         NoticeText = string.Empty;
+        WinnerNickname = string.Empty;
         PlacePawnsAtStart(participants, joinedMatch.FoundMatch.Format.WallsPerPlayer);
         _matches.PawnMoved += HandlePawnMoved;
         _matches.WallPlaced += HandleWallPlaced;
@@ -69,7 +70,9 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
     public bool IsMatchOver { get; private set; }
 
-    public string? WinnerNickname { get; private set; }
+    public string WinnerNickname { get; private set; }
+
+    public bool HasWinner => WinnerNickname.Length > 0;
 
     public bool IsSending { get; private set; }
 
@@ -268,7 +271,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         IsSending = false;
     }
 
-    private void EndMatch(string? winnerNickname)
+    private void EndMatch(string winnerNickname)
     {
         IsMatchOver = true;
         WinnerNickname = winnerNickname;
@@ -415,7 +418,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         catch (MatchNotJoinedException ex)
         {
             _logger.Warn("The server says the player is not in that match.", ex);
-            EndMatch(winnerNickname: null);
+            EndMatch(winnerNickname: string.Empty);
         }
         catch (InvalidSessionException ex)
         {

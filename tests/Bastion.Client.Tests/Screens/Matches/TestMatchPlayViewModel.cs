@@ -169,6 +169,17 @@ public sealed class TestMatchPlayViewModel : IDisposable
     }
 
     [Fact]
+    public async Task SelectSquare_MatchAlreadyOver_NamesNoWinner()
+    {
+        MatchPlayViewModel viewModel = await CreateViewModelWithSelectedPawn();
+        _matchClient.MoveFailure = new MatchNotJoinedException();
+
+        await viewModel.SelectSquare(_forward);
+
+        Assert.False(viewModel.HasWinner);
+    }
+
+    [Fact]
     public void PawnMoved_RivalMoved_MovesRivalPawn()
     {
         MatchPlayViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);

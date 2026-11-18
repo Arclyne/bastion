@@ -23,9 +23,9 @@ public sealed class ConversationClient : IConversationClient
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
 
-        Func<IConversationService, ConversationEntry[]?> listConversations = service => service.ListConversations(
+        Func<IConversationService, ConversationEntry[]> listConversations = service => service.ListConversations(
             sessionToken);
-        ConversationEntry[]? entries = Call(listConversations);
+        ConversationEntry[] entries = Call(listConversations);
         return ConversationContractTranslator.ToPreviews(entries);
     }
 
