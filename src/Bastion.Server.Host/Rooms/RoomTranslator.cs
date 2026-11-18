@@ -112,7 +112,8 @@ public static class RoomTranslator
 
     private static RoomRejectionReason ToReason(RoomRejection rejection)
     {
-        if (!_reasonsByRejection.TryGetValue(rejection, out RoomRejectionReason reason))
+        bool isKnownRejection = _reasonsByRejection.TryGetValue(rejection, out RoomRejectionReason reason);
+        if (!isKnownRejection)
         {
             throw new ArgumentOutOfRangeException(nameof(rejection), rejection, "Unsupported room rejection.");
         }

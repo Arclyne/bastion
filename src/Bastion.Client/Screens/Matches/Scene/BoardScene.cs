@@ -191,7 +191,8 @@ public sealed class BoardScene : IDisposable
                 continue;
             }
 
-            if (_goalColorsByMeshName.TryGetValue(mesh.Name, out Color goalColor))
+            bool hasGoalColor = _goalColorsByMeshName.TryGetValue(mesh.Name, out Color goalColor);
+            if (hasGoalColor)
             {
                 SceneModel.TintMesh(mesh, goalColor);
                 boardModel.DrawMesh(mesh, Matrix.Identity, camera);
