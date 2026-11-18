@@ -31,10 +31,10 @@ public sealed class FriendClient : IFriendClient
         ArgumentNullException.ThrowIfNull(sessionToken);
         ArgumentNullException.ThrowIfNull(text);
 
-        Func<IFriendshipService, PlayerSearchEntry[]?> searchPlayers = service => service.SearchPlayers(
+        Func<IFriendshipService, PlayerSearchEntry[]> searchPlayers = service => service.SearchPlayers(
             sessionToken,
             text);
-        PlayerSearchEntry[]? entries = Call(searchPlayers);
+        PlayerSearchEntry[] entries = Call(searchPlayers);
         return FriendContractTranslator.ToFoundPlayers(entries);
     }
 
