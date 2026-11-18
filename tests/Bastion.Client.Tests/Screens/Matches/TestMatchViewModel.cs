@@ -51,7 +51,7 @@ public sealed class TestMatchViewModel : IDisposable
         MatchViewModelParts parts = CreateParts(Match.FirstTurnOrder);
         byte[] expectedTurnOrders = { Match.FirstTurnOrder, Match.SecondTurnOrder };
 
-        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
         IEnumerable<byte> turnOrders = viewModel.Players.Select(player => player.TurnOrder);
         Assert.Equal(expectedTurnOrders, turnOrders);
@@ -62,7 +62,7 @@ public sealed class TestMatchViewModel : IDisposable
     {
         MatchViewModelParts parts = CreateParts(Match.FirstTurnOrder);
 
-        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
         MatchPlayerViewModel ownPlayer = viewModel.Players.Single(player => player.IsOwn);
         Assert.Equal(JoinedMatchSampleFactory.OwnNickname, ownPlayer.Nickname);
@@ -73,7 +73,7 @@ public sealed class TestMatchViewModel : IDisposable
     {
         MatchViewModelParts parts = CreateParts(Match.SecondTurnOrder);
 
-        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
         Assert.Equal(Match.SecondTurnOrder, viewModel.OwnTurnOrder);
     }
@@ -83,7 +83,7 @@ public sealed class TestMatchViewModel : IDisposable
     {
         MatchViewModelParts parts = CreateParts(Match.FirstTurnOrder);
 
-        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
         Assert.Equal(Strings.MatchYourTurn, viewModel.TurnText);
     }
@@ -93,7 +93,7 @@ public sealed class TestMatchViewModel : IDisposable
     {
         MatchViewModelParts parts = CreateParts(Match.SecondTurnOrder);
 
-        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
         Assert.Equal(Strings.MatchRivalTurn, viewModel.TurnText);
     }
@@ -103,7 +103,7 @@ public sealed class TestMatchViewModel : IDisposable
     {
         MatchViewModelParts parts = CreateParts(Match.SecondTurnOrder);
 
-        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
         MatchPlayerViewModel firstPlayer = viewModel.Players[FirstPlayerIndex];
         Assert.True(firstPlayer.HasTurn);
@@ -150,7 +150,7 @@ public sealed class TestMatchViewModel : IDisposable
         PawnMovedEventArgs rivalMove = CreateRivalFirstMove();
         _matchClient.RaisePawnMoved(rivalMove);
 
-        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
         Assert.Contains(_movedRivalPawn, viewModel.Pawns);
     }
@@ -213,7 +213,7 @@ public sealed class TestMatchViewModel : IDisposable
         BoardPawn[] expectedPawns = { bluePawn, redPawn };
         MatchViewModelParts parts = CreateParts(Match.FirstTurnOrder);
 
-        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
         Assert.Equal(expectedPawns, viewModel.Pawns);
     }
@@ -227,7 +227,7 @@ public sealed class TestMatchViewModel : IDisposable
             JoinedMatchSampleFactory.WallsPerPlayer);
         MatchViewModelParts parts = CreateParts(Match.FirstTurnOrder);
 
-        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
         MatchPlayerViewModel firstPlayer = viewModel.Players[FirstPlayerIndex];
         Assert.Equal(expectedText, firstPlayer.WallsText);
@@ -238,7 +238,7 @@ public sealed class TestMatchViewModel : IDisposable
     {
         MatchViewModelParts parts = CreateParts(Match.FirstTurnOrder);
 
-        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
         MatchPlayerViewModel firstPlayer = viewModel.Players[FirstPlayerIndex];
         Assert.Equal(FiveMinuteClockText, firstPlayer.ClockText);
@@ -253,7 +253,7 @@ public sealed class TestMatchViewModel : IDisposable
             JoinedMatchSampleFactory.RivalNickname);
         MatchViewModelParts parts = CreateFourPlayerParts();
 
-        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
         Assert.Equal(expectedText, viewModel.TurnText);
     }
@@ -263,7 +263,7 @@ public sealed class TestMatchViewModel : IDisposable
     {
         MatchViewModelParts parts = CreateFourPlayerParts();
 
-        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
         Assert.Equal(FourPlayers, viewModel.Pawns.Count);
     }
@@ -305,7 +305,7 @@ public sealed class TestMatchViewModel : IDisposable
             JoinedMatchSampleFactory.ThirdRivalNickname,
             isMatchOver: false);
 
-        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
         IEnumerable<PawnSymbol> symbols = viewModel.Pawns.Select(pawn => pawn.Symbol);
         Assert.Equal(_symbolsWithoutFourthPlayer, symbols);
@@ -331,8 +331,8 @@ public sealed class TestMatchViewModel : IDisposable
     private MatchViewModelParts CreateParts(JoinedMatch joinedMatch)
     {
         MatchAbandonmentViewModel abandonment = CreateAbandonmentViewModel(joinedMatch);
-        MatchPlayViewModel play = CreatePlayViewModel(joinedMatch);
-        return new MatchViewModelParts(joinedMatch, abandonment, play);
+        MatchPlayViewModel matchPlayViewModel = CreatePlayViewModel(joinedMatch);
+        return new MatchViewModelParts(joinedMatch, abandonment, matchPlayViewModel);
     }
 
     private MatchAbandonmentViewModel CreateAbandonmentViewModel(JoinedMatch joinedMatch)
@@ -358,7 +358,7 @@ public sealed class TestMatchViewModel : IDisposable
 
     private MatchViewModel CreateRegisteredViewModel(MatchViewModelParts parts)
     {
-        var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.Play);
+        var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
         _createdViewModels.Add(viewModel);
         return viewModel;
     }
@@ -386,5 +386,5 @@ public sealed class TestMatchViewModel : IDisposable
     private sealed record MatchViewModelParts(
         JoinedMatch JoinedMatch,
         MatchAbandonmentViewModel Abandonment,
-        MatchPlayViewModel Play);
+        MatchPlayViewModel MatchPlay);
 }

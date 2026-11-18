@@ -25,8 +25,8 @@ public static class ConversationContractTranslator
         PrivateChatMessage[] logMessages = log.Messages ?? Array.Empty<PrivateChatMessage>();
         IEnumerable<PrivateMessage> privateMessages = logMessages.Select(ToPrivateMessage);
         var messages = new List<PrivateMessage>(privateMessages);
-        var mute = new ChatMute(log.IsMuted, log.MutedUntil);
-        return new ConversationTranscript(contact, messages, mute);
+        var muteStatus = new ChatMuteStatus(log.IsMuted, log.MutedUntil);
+        return new ConversationTranscript(contact, messages, muteStatus);
     }
 
     public static PlayerTag ToSender(PrivateMessageNotification notification)

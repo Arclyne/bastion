@@ -45,36 +45,36 @@ public sealed class LoginView : ScreenView
         _viewModel = viewModel;
         _languages = languages;
         BindingContext = viewModel;
-        Panel card = CreateCard();
+        Panel cardPanel = CreateCard();
         Button exitButton = CreateExitButton();
-        Label version = ViewFactory.CreateVersionLabel();
-        AddChild(card);
+        Label versionLabel = ViewFactory.CreateVersionLabel();
+        AddChild(cardPanel);
         AddChild(exitButton);
-        AddChild(version);
-        var failureDialog = new ServerFailureDialogView(viewModel);
-        AddDialog(failureDialog, viewModel, nameof(LoginViewModel.IsDialogOpen));
+        AddChild(versionLabel);
+        var serverFailureDialogView = new ServerFailureDialogView(viewModel);
+        AddDialog(serverFailureDialogView, viewModel, nameof(LoginViewModel.IsDialogOpen));
     }
 
     private Panel CreateCard()
     {
-        var card = new Panel
+        var cardPanel = new Panel
         {
             Width = CardWidth,
             WidthUnits = DimensionUnitType.Absolute,
             Height = CardPaddingBottom,
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
-        card.Anchor(Gum.Wireframe.Anchor.Left);
-        card.X = CardX;
-        StackPanel content = CreateCardContent();
-        card.AddChild(content);
-        CardSkin.Apply(card.Visual);
-        return card;
+        cardPanel.Anchor(Gum.Wireframe.Anchor.Left);
+        cardPanel.X = CardX;
+        StackPanel contentStackPanel = CreateCardContent();
+        cardPanel.AddChild(contentStackPanel);
+        CardSkin.Apply(cardPanel.Visual);
+        return cardPanel;
     }
 
     private StackPanel CreateCardContent()
     {
-        var content = new StackPanel
+        var contentStackPanel = new StackPanel
         {
             X = CardPaddingX,
             Y = CardPaddingTop,
@@ -82,57 +82,57 @@ public sealed class LoginView : ScreenView
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = SectionSpacing,
         };
-        Panel header = CreateHeader();
-        StackPanel identifierField = CreateIdentifierField();
-        StackPanel passwordField = CreatePasswordField();
-        NoticeBox notice = CreateNotice();
+        Panel headerPanel = CreateHeader();
+        StackPanel identifierFieldStackPanel = CreateIdentifierField();
+        StackPanel passwordFieldStackPanel = CreatePasswordField();
+        NoticeBox noticeBox = CreateNotice();
         Button logInButton = CreateLogInButton();
         Label noAccountLabel = ViewFactory.CreateLabel(nameof(Strings.LoginNoAccount), TextStyleCatalog.Divider);
         Button createAccountButton = CreateCreateAccountButton();
-        Label twoFactorHint = CreateTwoFactorHint();
-        content.AddChild(header);
-        content.AddChild(identifierField);
-        content.AddChild(passwordField);
-        content.AddChild(notice);
-        content.AddChild(logInButton);
-        content.AddChild(noAccountLabel);
-        content.AddChild(createAccountButton);
-        content.AddChild(twoFactorHint);
-        return content;
+        Label twoFactorHintLabel = CreateTwoFactorHint();
+        contentStackPanel.AddChild(headerPanel);
+        contentStackPanel.AddChild(identifierFieldStackPanel);
+        contentStackPanel.AddChild(passwordFieldStackPanel);
+        contentStackPanel.AddChild(noticeBox);
+        contentStackPanel.AddChild(logInButton);
+        contentStackPanel.AddChild(noAccountLabel);
+        contentStackPanel.AddChild(createAccountButton);
+        contentStackPanel.AddChild(twoFactorHintLabel);
+        return contentStackPanel;
     }
 
     private Panel CreateHeader()
     {
-        var brand = new StackPanel
+        var brandStackPanel = new StackPanel
         {
             Spacing = HeaderSpacing,
         };
-        Label appName = ViewFactory.CreateLabel(nameof(Strings.AppName), TextStyleCatalog.Title);
-        Label tagline = ViewFactory.CreateLabel(nameof(Strings.LoginTagline), TextStyleCatalog.Tagline);
-        brand.AddChild(appName);
-        brand.AddChild(tagline);
+        Label appNameLabel = ViewFactory.CreateLabel(nameof(Strings.AppName), TextStyleCatalog.Title);
+        Label taglineLabel = ViewFactory.CreateLabel(nameof(Strings.LoginTagline), TextStyleCatalog.Tagline);
+        brandStackPanel.AddChild(appNameLabel);
+        brandStackPanel.AddChild(taglineLabel);
 
-        var header = new Panel
+        var headerPanel = new Panel
         {
             Width = ContentWidth,
             WidthUnits = DimensionUnitType.Absolute,
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
         LanguagePicker languagePicker = CreateLanguagePicker();
-        header.AddChild(brand);
-        header.AddChild(languagePicker);
-        return header;
+        headerPanel.AddChild(brandStackPanel);
+        headerPanel.AddChild(languagePicker);
+        return headerPanel;
     }
 
     private LanguagePicker CreateLanguagePicker()
     {
-        var picker = new LanguagePicker(_languages, LanguagePickerWidth, LanguagePickerHeight);
-        picker.SetBinding(nameof(LanguagePicker.Items), nameof(LoginViewModel.Languages));
-        picker.SetBinding(nameof(LanguagePicker.SelectedObject), nameof(LoginViewModel.SelectedLanguage));
-        BindEnabledToIdle(picker);
-        picker.Anchor(Gum.Wireframe.Anchor.TopRight);
-        picker.Y = LanguagePickerMarginY;
-        return picker;
+        var languagePicker = new LanguagePicker(_languages, LanguagePickerWidth, LanguagePickerHeight);
+        languagePicker.SetBinding(nameof(LanguagePicker.Items), nameof(LoginViewModel.Languages));
+        languagePicker.SetBinding(nameof(LanguagePicker.SelectedObject), nameof(LoginViewModel.SelectedLanguage));
+        BindEnabledToIdle(languagePicker);
+        languagePicker.Anchor(Gum.Wireframe.Anchor.TopRight);
+        languagePicker.Y = LanguagePickerMarginY;
+        return languagePicker;
     }
 
     private static void BindEnabledToIdle(FrameworkElement control)
@@ -142,108 +142,112 @@ public sealed class LoginView : ScreenView
 
     private static StackPanel CreateIdentifierField()
     {
-        var input = new TextField
+        var inputTextField = new TextField
         {
             Placeholder = nameof(Strings.LoginIdentifierPlaceholder),
             Width = ContentWidth,
             Height = FieldHeight,
         };
-        input.SetBinding(nameof(TextField.Text), nameof(LoginViewModel.Identifier));
-        input.SetBinding(nameof(TextField.HasError), nameof(LoginViewModel.HasIdentifierError));
-        BindEnabledToIdle(input);
+        inputTextField.SetBinding(nameof(TextField.Text), nameof(LoginViewModel.Identifier));
+        inputTextField.SetBinding(nameof(TextField.HasError), nameof(LoginViewModel.HasIdentifierError));
+        BindEnabledToIdle(inputTextField);
 
-        Label missingWarning = ViewFactory.CreateToggledLabel(
+        Label missingWarningLabel = ViewFactory.CreateToggledLabel(
             nameof(Strings.LoginIdentifierRequired),
             nameof(LoginViewModel.IsIdentifierMissing),
             TextStyleCatalog.FieldError);
-        Label malformedWarning = ViewFactory.CreateToggledLabel(
+        Label malformedWarningLabel = ViewFactory.CreateToggledLabel(
             nameof(Strings.LoginIdentifierMalformed),
             nameof(LoginViewModel.IsIdentifierMalformed),
             TextStyleCatalog.FieldError);
-        return CreateFieldGroup(nameof(Strings.LoginIdentifierLabel), input, missingWarning, malformedWarning);
+        return CreateFieldGroup(
+            nameof(Strings.LoginIdentifierLabel),
+            inputTextField,
+            missingWarningLabel,
+            malformedWarningLabel);
     }
 
     private static StackPanel CreateFieldGroup(string captionKey, FrameworkElement input, params Label[] warnings)
     {
-        var group = new StackPanel
+        var groupStackPanel = new StackPanel
         {
             Spacing = FieldSpacing,
         };
-        Label caption = ViewFactory.CreateLabel(captionKey, TextStyleCatalog.FieldLabel);
-        group.AddChild(caption);
-        group.AddChild(input);
-        foreach (Label warning in warnings)
+        Label captionLabel = ViewFactory.CreateLabel(captionKey, TextStyleCatalog.FieldLabel);
+        groupStackPanel.AddChild(captionLabel);
+        groupStackPanel.AddChild(input);
+        foreach (Label warningLabel in warnings)
         {
-            group.AddChild(warning);
+            groupStackPanel.AddChild(warningLabel);
         }
 
-        return group;
+        return groupStackPanel;
     }
 
     private static StackPanel CreatePasswordField()
     {
-        StackPanel inputs = CreatePasswordInputs();
-        Label warning = ViewFactory.CreateToggledLabel(
+        StackPanel inputsStackPanel = CreatePasswordInputs();
+        Label warningLabel = ViewFactory.CreateToggledLabel(
             nameof(Strings.LoginPasswordRequired),
             nameof(LoginViewModel.IsPasswordMissing),
             TextStyleCatalog.FieldError);
-        return CreateFieldGroup(nameof(Strings.LoginPasswordLabel), inputs, warning);
+        return CreateFieldGroup(nameof(Strings.LoginPasswordLabel), inputsStackPanel, warningLabel);
     }
 
     private static StackPanel CreatePasswordInputs()
     {
-        var maskedInput = new PasswordField
+        var maskedInputPasswordField = new PasswordField
         {
             Placeholder = string.Empty,
             Width = PasswordInputWidth,
             Height = FieldHeight,
         };
-        maskedInput.SetBinding(nameof(PasswordField.Password), nameof(LoginViewModel.Password));
-        maskedInput.SetBinding(nameof(PasswordField.HasError), nameof(LoginViewModel.IsPasswordMissing));
-        maskedInput.SetBinding(nameof(IsVisible), nameof(LoginViewModel.IsPasswordMasked));
-        BindEnabledToIdle(maskedInput);
+        maskedInputPasswordField.SetBinding(nameof(PasswordField.Password), nameof(LoginViewModel.Password));
+        maskedInputPasswordField.SetBinding(nameof(PasswordField.HasError), nameof(LoginViewModel.IsPasswordMissing));
+        maskedInputPasswordField.SetBinding(nameof(IsVisible), nameof(LoginViewModel.IsPasswordMasked));
+        BindEnabledToIdle(maskedInputPasswordField);
 
-        var revealedInput = new TextField
+        var revealedInputTextField = new TextField
         {
             Placeholder = string.Empty,
             Width = PasswordInputWidth,
             Height = FieldHeight,
         };
-        revealedInput.SetBinding(nameof(TextField.Text), nameof(LoginViewModel.Password));
-        revealedInput.SetBinding(nameof(TextField.HasError), nameof(LoginViewModel.IsPasswordMissing));
-        revealedInput.SetBinding(nameof(IsVisible), nameof(LoginViewModel.IsPasswordRevealed));
-        BindEnabledToIdle(revealedInput);
+        revealedInputTextField.SetBinding(nameof(TextField.Text), nameof(LoginViewModel.Password));
+        revealedInputTextField.SetBinding(nameof(TextField.HasError), nameof(LoginViewModel.IsPasswordMissing));
+        revealedInputTextField.SetBinding(nameof(IsVisible), nameof(LoginViewModel.IsPasswordRevealed));
+        BindEnabledToIdle(revealedInputTextField);
 
-        var revealButton = new ToggleButton
+        var revealToggleButton = new ToggleButton
         {
             Text = nameof(Strings.LoginShowPasswordButton),
             Width = RevealButtonWidth,
             Height = FieldHeight,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        revealButton.SetBinding(nameof(ToggleButton.IsChecked), nameof(LoginViewModel.IsPasswordRevealed));
-        ButtonSkin.CreateAndAttach(revealButton, ButtonLookCatalog.Secondary);
-        BindEnabledToIdle(revealButton);
+        revealToggleButton.SetBinding(nameof(ToggleButton.IsChecked), nameof(LoginViewModel.IsPasswordRevealed));
+        ButtonSkin.CreateAndAttach(revealToggleButton, ButtonLookCatalog.Secondary);
+        BindEnabledToIdle(revealToggleButton);
 
-        var row = new StackPanel
+        var rowStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = RevealButtonSpacing,
         };
-        row.AddChild(maskedInput);
-        row.AddChild(revealedInput);
-        row.AddChild(revealButton);
-        return row;
+        rowStackPanel.AddChild(maskedInputPasswordField);
+        rowStackPanel.AddChild(revealedInputTextField);
+        rowStackPanel.AddChild(revealToggleButton);
+        return rowStackPanel;
     }
 
     private static NoticeBox CreateNotice()
     {
-        var notice = new NoticeBox(ContentWidth);
-        notice.SetBinding(nameof(NoticeBox.Tone), nameof(LoginViewModel.NoticeTone));
-        notice.SetBinding(nameof(NoticeBox.Title), nameof(LoginViewModel.NoticeTitle));
-        notice.SetBinding(nameof(NoticeBox.Message), nameof(LoginViewModel.NoticeMessage));
-        notice.SetBinding(nameof(IsVisible), nameof(LoginViewModel.HasNotice));
-        return notice;
+        var noticeBox = new NoticeBox(ContentWidth);
+        noticeBox.SetBinding(nameof(NoticeBox.Tone), nameof(LoginViewModel.NoticeTone));
+        noticeBox.SetBinding(nameof(NoticeBox.Title), nameof(LoginViewModel.NoticeTitle));
+        noticeBox.SetBinding(nameof(NoticeBox.Message), nameof(LoginViewModel.NoticeMessage));
+        noticeBox.SetBinding(nameof(IsVisible), nameof(LoginViewModel.HasNotice));
+        return noticeBox;
     }
 
     private Button CreateLogInButton()
@@ -280,9 +284,9 @@ public sealed class LoginView : ScreenView
 
     private static Label CreateTwoFactorHint()
     {
-        Label hint = ViewFactory.CreateLabel(nameof(Strings.LoginTwoFactorHint), TextStyleCatalog.Hint);
-        ViewFactory.SetFixedWidth(hint, ContentWidth);
-        return hint;
+        Label hintLabel = ViewFactory.CreateLabel(nameof(Strings.LoginTwoFactorHint), TextStyleCatalog.Hint);
+        ViewFactory.SetFixedWidth(hintLabel, ContentWidth);
+        return hintLabel;
     }
 
     private static Button CreateExitButton()

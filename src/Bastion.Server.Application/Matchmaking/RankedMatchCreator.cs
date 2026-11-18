@@ -78,9 +78,9 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
 
     private void NotifyMatchCreationFailed(MatchPairing pairing)
     {
-        foreach (MatchSearch search in pairing.Players)
+        foreach (MatchSearch matchSearch in pairing.Players)
         {
-            _matchmakingNotifier.NotifySearchEnded(search.AccountId, SearchEndReason.MatchCreationFailed);
+            _matchmakingNotifier.NotifySearchEnded(matchSearch.AccountId, SearchEndReason.MatchCreationFailed);
         }
     }
 
@@ -118,8 +118,8 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
         var participants = new List<CreatedMatchParticipant>();
         foreach (Participation participation in match.Participations)
         {
-            MatchSearch search = players.First(player => player.AccountId == participation.AccountId);
-            var connectedPlayer = new ConnectedPlayer(search.AccountId, search.Nickname);
+            MatchSearch matchSearch = players.First(player => player.AccountId == participation.AccountId);
+            var connectedPlayer = new ConnectedPlayer(matchSearch.AccountId, matchSearch.Nickname);
             var participant = new CreatedMatchParticipant(
                 connectedPlayer,
                 participation.InitialElo,

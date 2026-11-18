@@ -21,33 +21,33 @@ public sealed class FriendListView : StackPanel
     private static readonly ILog _logger = LogManager.GetLogger(typeof(FriendListView));
 
     private readonly FriendsPanelViewModel _friendsPanelViewModel;
-    private readonly StackPanel _connectedRows;
-    private readonly StackPanel _offlineRows;
+    private readonly StackPanel _connectedRowsStackPanel;
+    private readonly StackPanel _offlineRowsStackPanel;
 
     public FriendListView(FriendsPanelViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
 
         _friendsPanelViewModel = viewModel;
-        _connectedRows = new StackPanel();
-        _offlineRows = new StackPanel();
+        _connectedRowsStackPanel = new StackPanel();
+        _offlineRowsStackPanel = new StackPanel();
         Width = ListWidth;
         WidthUnits = DimensionUnitType.Absolute;
         Spacing = PanelMetrics.SectionSpacing;
 
-        StackPanel filterRow = CreateFilterRow();
-        ScrollViewer groups = CreateGroups();
+        StackPanel filterRowStackPanel = CreateFilterRow();
+        ScrollViewer groupsScrollViewer = CreateGroups();
         Label emptyLabel = ViewFactory.CreateToggledLabel(
             nameof(Strings.FriendsEmptyTitle),
             nameof(FriendsPanelViewModel.IsEmpty),
             TextStyleCatalog.NoticeTitle);
         Label noMatchLabel = CreateNoMatchLabel();
-        StackPanel loadFailure = CreateLoadFailure();
-        AddChild(filterRow);
-        AddChild(groups);
+        StackPanel loadFailureStackPanel = CreateLoadFailure();
+        AddChild(filterRowStackPanel);
+        AddChild(groupsScrollViewer);
         AddChild(emptyLabel);
         AddChild(noMatchLabel);
-        AddChild(loadFailure);
+        AddChild(loadFailureStackPanel);
 
         _friendsPanelViewModel.ConnectedFriends.CollectionChanged += HandleConnectedFriendsChanged;
         _friendsPanelViewModel.OfflineFriends.CollectionChanged += HandleOfflineFriendsChanged;
@@ -55,29 +55,29 @@ public sealed class FriendListView : StackPanel
 
     private StackPanel CreateFilterRow()
     {
-        var filter = new TextField
+        var filterTextField = new TextField
         {
             Placeholder = nameof(Strings.FriendsFilterPlaceholder),
             Width = FilterFieldWidth,
             Height = FilterHeight,
         };
-        filter.SetBinding(nameof(TextField.Text), nameof(FriendsPanelViewModel.FilterText));
+        filterTextField.SetBinding(nameof(TextField.Text), nameof(FriendsPanelViewModel.FilterText));
 
-        Button addFriend = ViewFactory.CreateButton(
+        Button addFriendButton = ViewFactory.CreateButton(
             nameof(Strings.FriendsAddFriend),
             AddFriendButtonWidth,
             FilterHeight);
-        ButtonSkin.CreateAndAttach(addFriend, ButtonLookCatalog.Secondary);
-        addFriend.Click += HandleAddFriendClick;
+        ButtonSkin.CreateAndAttach(addFriendButton, ButtonLookCatalog.Secondary);
+        addFriendButton.Click += HandleAddFriendClick;
 
-        var row = new StackPanel
+        var rowStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = PanelMetrics.SectionSpacing,
         };
-        row.AddChild(filter);
-        row.AddChild(addFriend);
-        return row;
+        rowStackPanel.AddChild(filterTextField);
+        rowStackPanel.AddChild(addFriendButton);
+        return rowStackPanel;
     }
 
     private void HandleAddFriendClick(object? sender, EventArgs e)
@@ -87,20 +87,20 @@ public sealed class FriendListView : StackPanel
 
     private ScrollViewer CreateGroups()
     {
-        ScrollViewer groups = ViewFactory.CreateScrollList<ScrollViewer>(ListWidth, ScrollHeight);
-        Label connectedTitle = ViewFactory.CreateBoundNotice(
+        ScrollViewer groupsScrollViewer = ViewFactory.CreateScrollList<ScrollViewer>(ListWidth, ScrollHeight);
+        Label connectedTitleLabel = ViewFactory.CreateBoundNotice(
             nameof(FriendsPanelViewModel.ConnectedGroupTitle),
             nameof(FriendsPanelViewModel.HasConnectedFriends),
             TextStyleCatalog.SectionLabel);
-        Label offlineTitle = ViewFactory.CreateBoundNotice(
+        Label offlineTitleLabel = ViewFactory.CreateBoundNotice(
             nameof(FriendsPanelViewModel.OfflineGroupTitle),
             nameof(FriendsPanelViewModel.HasOfflineFriends),
             TextStyleCatalog.SectionLabel);
-        groups.InnerPanel.AddChild(connectedTitle.Visual);
-        groups.InnerPanel.AddChild(_connectedRows.Visual);
-        groups.InnerPanel.AddChild(offlineTitle.Visual);
-        groups.InnerPanel.AddChild(_offlineRows.Visual);
-        return groups;
+        groupsScrollViewer.InnerPanel.AddChild(connectedTitleLabel.Visual);
+        groupsScrollViewer.InnerPanel.AddChild(_connectedRowsStackPanel.Visual);
+        groupsScrollViewer.InnerPanel.AddChild(offlineTitleLabel.Visual);
+        groupsScrollViewer.InnerPanel.AddChild(_offlineRowsStackPanel.Visual);
+        return groupsScrollViewer;
     }
 
     private static Label CreateNoMatchLabel()
@@ -113,12 +113,12 @@ public sealed class FriendListView : StackPanel
 
     private StackPanel CreateLoadFailure()
     {
-        StackPanel failure = ViewFactory.CreateLoadFailure(
+        StackPanel failureStackPanel = ViewFactory.CreateLoadFailure(
             nameof(Strings.FriendsLoadFailed),
             nameof(Strings.FriendsRetry),
             HandleRetryClick);
-        failure.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.HasLoadFailed));
-        return failure;
+        failureStackPanel.SetBinding(nameof(IsVisible), nameof(FriendsPanelViewModel.HasLoadFailed));
+        return failureStackPanel;
     }
 
     private async void HandleRetryClick(object? sender, EventArgs e)
@@ -135,21 +135,21 @@ public sealed class FriendListView : StackPanel
 
     private void HandleConnectedFriendsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        RebuildRows(_connectedRows, _friendsPanelViewModel.ConnectedFriends);
+        RebuildRows(_connectedRowsStackPanel, _friendsPanelViewModel.ConnectedFriends);
     }
 
-    private void RebuildRows(StackPanel rows, IEnumerable<FriendRowViewModel> friends)
+    private void RebuildRows(StackPanel rowsStackPanel, IEnumerable<FriendRowViewModel> friends)
     {
-        ViewFactory.ClearRows(rows.Visual);
+        ViewFactory.ClearRows(rowsStackPanel.Visual);
         foreach (FriendRowViewModel friend in friends)
         {
-            var friendRow = new FriendRowView(friend, _friendsPanelViewModel.Actions);
-            rows.AddChild(friendRow);
+            var friendRowView = new FriendRowView(friend, _friendsPanelViewModel.Actions);
+            rowsStackPanel.AddChild(friendRowView);
         }
     }
 
     private void HandleOfflineFriendsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        RebuildRows(_offlineRows, _friendsPanelViewModel.OfflineFriends);
+        RebuildRows(_offlineRowsStackPanel, _friendsPanelViewModel.OfflineFriends);
     }
 }

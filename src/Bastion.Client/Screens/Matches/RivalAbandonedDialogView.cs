@@ -15,14 +15,14 @@ public sealed class RivalAbandonedDialogView : DialogCard
 
         _viewModel = viewModel;
         Anchor(Gum.Wireframe.Anchor.Center);
-        Label title = ViewFactory.CreateLabel(nameof(Strings.MatchOverTitle), TextStyleCatalog.DialogTitle);
-        Label message = ViewFactory.CreateBoundUntranslatedLabel(
+        Label titleLabel = ViewFactory.CreateLabel(nameof(Strings.MatchOverTitle), TextStyleCatalog.DialogTitle);
+        Label messageLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchAbandonmentViewModel.RivalAbandonedText),
             TextStyleCatalog.DialogMessage,
             DialogMetrics.ContentWidth);
         Button menuButton = CreateWideButton(nameof(Strings.MatchBackToMenuButton), HandleMenuClick);
-        Content.AddChild(title);
-        Content.AddChild(message);
+        Content.AddChild(titleLabel);
+        Content.AddChild(messageLabel);
         Content.AddChild(menuButton);
     }
 

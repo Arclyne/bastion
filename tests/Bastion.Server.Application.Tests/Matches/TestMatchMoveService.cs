@@ -63,9 +63,9 @@ public sealed class TestMatchMoveService
     public void MovePawn_ValidMove_SavesMatchWithMove()
     {
         AddFirstPlayerWithClassicMatch();
-        ChosenPawnMove move = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, ForwardSquare);
 
-        _matchMoveService.MovePawn(FirstToken, move, _now);
+        _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
 
         Match savedMatch = _matchRepository.MatchesSavedWithMove.Single();
         Assert.Single(savedMatch.Moves);
@@ -75,10 +75,10 @@ public sealed class TestMatchMoveService
     public void MovePawn_ValidMove_NotifiesBothPlayers()
     {
         AddFirstPlayerWithClassicMatch();
-        ChosenPawnMove move = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, ForwardSquare);
         int[] expectedRecipients = { FirstAccountId, SecondAccountId };
 
-        _matchMoveService.MovePawn(FirstToken, move, _now);
+        _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
 
         NotifiedPawnMove notified = _matchMoveNotifier.NotifiedPawnMoves.Single();
         Assert.Equal(expectedRecipients, notified.RecipientAccountIds);
@@ -88,9 +88,9 @@ public sealed class TestMatchMoveService
     public void MovePawn_ValidMove_NotifiesSquareThePawnLeft()
     {
         AddFirstPlayerWithClassicMatch();
-        ChosenPawnMove move = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, ForwardSquare);
 
-        _matchMoveService.MovePawn(FirstToken, move, _now);
+        _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
 
         NotifiedPawnMove notified = _matchMoveNotifier.NotifiedPawnMoves.Single();
         Assert.Equal(StartingSquare, notified.Notice.FromSquare);
@@ -100,9 +100,9 @@ public sealed class TestMatchMoveService
     public void MovePawn_ValidMove_NotifiesSecondPlayerTurn()
     {
         AddFirstPlayerWithClassicMatch();
-        ChosenPawnMove move = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, ForwardSquare);
 
-        _matchMoveService.MovePawn(FirstToken, move, _now);
+        _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
 
         NotifiedPawnMove notified = _matchMoveNotifier.NotifiedPawnMoves.Single();
         Assert.Equal(Match.SecondTurnOrder, notified.Notice.NextTurnOrder);
@@ -116,9 +116,9 @@ public sealed class TestMatchMoveService
         var mover = new ConnectedPlayer(FirstAccountId, nickname);
         _sessionVerifier.Add(FirstToken, mover);
         AddClassicMatch();
-        ChosenPawnMove move = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, ForwardSquare);
 
-        _matchMoveService.MovePawn(FirstToken, move, _now);
+        _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
 
         NotifiedPawnMove notified = _matchMoveNotifier.NotifiedPawnMoves.Single();
         Assert.Equal(nickname, notified.Notice.MoverNickname);
@@ -129,9 +129,9 @@ public sealed class TestMatchMoveService
     {
         _sessionVerifier.Add(SecondToken, _secondPlayer);
         AddClassicMatch();
-        ChosenPawnMove move = CreateMove(Match.FirstMoveNumber, SecondPlayerForwardSquare);
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, SecondPlayerForwardSquare);
 
-        Action movePawn = () => _matchMoveService.MovePawn(SecondToken, move, _now);
+        Action movePawn = () => _matchMoveService.MovePawn(SecondToken, chosenMove, _now);
 
         Assert.Throws<NotYourTurnException>(movePawn);
     }
@@ -140,9 +140,9 @@ public sealed class TestMatchMoveService
     public void MovePawn_MoveNumberAhead_ThrowsNotYourTurnException()
     {
         AddFirstPlayerWithClassicMatch();
-        ChosenPawnMove move = CreateMove(SecondMoveNumber, ForwardSquare);
+        ChosenPawnMove chosenMove = CreateMove(SecondMoveNumber, ForwardSquare);
 
-        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, move, _now);
+        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
 
         Assert.Throws<NotYourTurnException>(movePawn);
     }
@@ -151,8 +151,8 @@ public sealed class TestMatchMoveService
     public void MovePawn_MoveNumberAhead_ReportsExpectedMoveNumber()
     {
         AddFirstPlayerWithClassicMatch();
-        ChosenPawnMove move = CreateMove(SecondMoveNumber, ForwardSquare);
-        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, move, _now);
+        ChosenPawnMove chosenMove = CreateMove(SecondMoveNumber, ForwardSquare);
+        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
 
         Exception? exception = Record.Exception(movePawn);
 
@@ -164,9 +164,9 @@ public sealed class TestMatchMoveService
     public void MovePawn_UnreachableSquare_ThrowsIllegalMoveException()
     {
         AddFirstPlayerWithClassicMatch();
-        ChosenPawnMove move = CreateMove(Match.FirstMoveNumber, TwoAheadSquare);
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, TwoAheadSquare);
 
-        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, move, _now);
+        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
 
         Assert.Throws<IllegalMoveException>(movePawn);
     }
@@ -175,9 +175,9 @@ public sealed class TestMatchMoveService
     public void MovePawn_MalformedSquare_ThrowsIllegalMoveException()
     {
         AddFirstPlayerWithClassicMatch();
-        ChosenPawnMove move = CreateMove(Match.FirstMoveNumber, MalformedSquare);
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, MalformedSquare);
 
-        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, move, _now);
+        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
 
         Assert.Throws<IllegalMoveException>(movePawn);
     }
@@ -186,8 +186,8 @@ public sealed class TestMatchMoveService
     public void MovePawn_UnreachableSquare_SavesNothing()
     {
         AddFirstPlayerWithClassicMatch();
-        ChosenPawnMove move = CreateMove(Match.FirstMoveNumber, TwoAheadSquare);
-        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, move, _now);
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, TwoAheadSquare);
+        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
 
         Record.Exception(movePawn);
 
@@ -199,9 +199,9 @@ public sealed class TestMatchMoveService
     {
         _sessionVerifier.Add(OutsiderToken, _outsider);
         AddClassicMatch();
-        ChosenPawnMove move = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, ForwardSquare);
 
-        Action movePawn = () => _matchMoveService.MovePawn(OutsiderToken, move, _now);
+        Action movePawn = () => _matchMoveService.MovePawn(OutsiderToken, chosenMove, _now);
 
         Assert.Throws<MatchNotJoinedException>(movePawn);
     }
@@ -210,9 +210,9 @@ public sealed class TestMatchMoveService
     public void MovePawn_UnknownMatch_ThrowsMatchNotJoinedException()
     {
         _sessionVerifier.Add(FirstToken, _firstPlayer);
-        var move = new ChosenPawnMove(UnknownMatchId, Match.FirstMoveNumber, ForwardSquare);
+        var chosenMove = new ChosenPawnMove(UnknownMatchId, Match.FirstMoveNumber, ForwardSquare);
 
-        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, move, _now);
+        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
 
         Assert.Throws<MatchNotJoinedException>(movePawn);
     }
@@ -220,9 +220,9 @@ public sealed class TestMatchMoveService
     [Fact]
     public void MovePawn_UnknownSession_ThrowsInvalidSessionException()
     {
-        ChosenPawnMove move = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, ForwardSquare);
 
-        Action movePawn = () => _matchMoveService.MovePawn(UnknownToken, move, _now);
+        Action movePawn = () => _matchMoveService.MovePawn(UnknownToken, chosenMove, _now);
 
         Assert.Throws<InvalidSessionException>(movePawn);
     }

@@ -18,18 +18,18 @@ public sealed class ServerFailureDialogView : DialogCard
 
         _viewModel = viewModel;
         Anchor(Gum.Wireframe.Anchor.Center);
-        Label title = ViewFactory.CreateBoundLabel(
+        Label titleLabel = ViewFactory.CreateBoundLabel(
             nameof(LoginViewModel.DialogTitleKey),
             TextStyleCatalog.DialogTitle,
             DialogMetrics.ContentWidth);
-        Label message = ViewFactory.CreateBoundLabel(
+        Label messageLabel = ViewFactory.CreateBoundLabel(
             nameof(LoginViewModel.DialogMessageKey),
             TextStyleCatalog.DialogMessage,
             DialogMetrics.ContentWidth);
-        StackPanel buttons = CreateButtons();
-        Content.AddChild(title);
-        Content.AddChild(message);
-        Content.AddChild(buttons);
+        StackPanel buttonsStackPanel = CreateButtons();
+        Content.AddChild(titleLabel);
+        Content.AddChild(messageLabel);
+        Content.AddChild(buttonsStackPanel);
     }
 
     private StackPanel CreateButtons()
@@ -41,14 +41,14 @@ public sealed class ServerFailureDialogView : DialogCard
         Button acceptButton = CreateDialogButton(nameof(Strings.CommonAcceptButton), ButtonLookCatalog.Secondary);
         acceptButton.Click += HandleAcceptClick;
 
-        var row = new StackPanel
+        var rowStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = DialogMetrics.ButtonSpacing,
         };
-        row.AddChild(retryButton);
-        row.AddChild(acceptButton);
-        return row;
+        rowStackPanel.AddChild(retryButton);
+        rowStackPanel.AddChild(acceptButton);
+        return rowStackPanel;
     }
 
     private async void HandleRetryClick(object? sender, EventArgs e)

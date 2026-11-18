@@ -105,7 +105,7 @@ public sealed class RoomRepository : IRoomRepository
         return room.RoomId;
     }
 
-    private static int UpdateOpenRoom(BastionDbContext context, int roomId, Action<Room> change)
+    private static int UpdateOpenRoom(BastionDbContext context, int roomId, Action<Room> roomChange)
     {
         Room? room = context.Rooms.FirstOrDefault(candidate => candidate.RoomId == roomId);
         if (room is null || room.Status != RoomStatus.Open)
@@ -113,7 +113,7 @@ public sealed class RoomRepository : IRoomRepository
             return 0;
         }
 
-        change(room);
+        roomChange(room);
         return context.SaveChanges();
     }
 

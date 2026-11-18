@@ -27,10 +27,10 @@ public sealed class ChatModerator : IChatModerator
             throw new ChatMessageRejectedException(ChatRejection.InvalidMessage);
         }
 
-        ChatMute mute = FindMute(accountId, now);
-        if (mute.IsMuted)
+        ChatMuteStatus muteStatus = FindMuteStatus(accountId, now);
+        if (muteStatus.IsMuted)
         {
-            throw new ChatMessageRejectedException(mute);
+            throw new ChatMessageRejectedException(muteStatus);
         }
 
         string trimmedText = text.Trim();
@@ -42,11 +42,11 @@ public sealed class ChatModerator : IChatModerator
         return trimmedText;
     }
 
-    public ChatMute FindMute(int accountId, DateTime now)
+    public ChatMuteStatus FindMuteStatus(int accountId, DateTime now)
     {
         IReadOnlyList<Sanction> chatSanctions = _unitOfWork.Sanctions.ListChatSanctions(accountId);
         IEnumerable<Sanction> currentSanctions = chatSanctions.Where(sanction => sanction.IsInEffectAt(now));
         var sanctionsInEffect = new List<Sanction>(currentSanctions);
-        return ChatMute.FromSanctionsInEffect(sanctionsInEffect);
+        return ChatMuteStatus.FromSanctionsInEffect(sanctionsInEffect);
     }
 }

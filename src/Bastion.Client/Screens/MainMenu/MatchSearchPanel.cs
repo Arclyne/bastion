@@ -21,14 +21,16 @@ public sealed class MatchSearchPanel : DialogCard
         _viewModel = viewModel;
         BindingContext = viewModel;
         SetBinding(nameof(IsVisible), nameof(MatchSearchViewModel.IsSearching));
-        Label title = ViewFactory.CreateLabel(nameof(Strings.MatchSearchSearchingTitle), TextStyleCatalog.DialogTitle);
-        Label detail = ViewFactory.CreateBoundUntranslatedLabel(
+        Label titleLabel = ViewFactory.CreateLabel(
+            nameof(Strings.MatchSearchSearchingTitle),
+            TextStyleCatalog.DialogTitle);
+        Label detailLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchSearchViewModel.SearchDetail),
             TextStyleCatalog.DialogMessage,
             DialogMetrics.ContentWidth);
         Button cancelButton = CreateCancelButton();
-        Content.AddChild(title);
-        Content.AddChild(detail);
+        Content.AddChild(titleLabel);
+        Content.AddChild(detailLabel);
         Content.AddChild(cancelButton);
     }
 

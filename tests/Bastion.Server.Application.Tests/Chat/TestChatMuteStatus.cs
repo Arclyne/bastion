@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Bastion.Server.Application.Tests.Chat;
 
-public sealed class TestChatMute
+public sealed class TestChatMuteStatus
 {
     private const int AccountId = 5;
     private const int EarlierEndDays = 2;
@@ -19,9 +19,9 @@ public sealed class TestChatMute
     {
         Sanction[] noSanctions = Array.Empty<Sanction>();
 
-        var mute = ChatMute.FromSanctionsInEffect(noSanctions);
+        var muteStatus = ChatMuteStatus.FromSanctionsInEffect(noSanctions);
 
-        Assert.Equal(ChatMute.None, mute);
+        Assert.Equal(ChatMuteStatus.None, muteStatus);
     }
 
     [Fact]
@@ -32,9 +32,9 @@ public sealed class TestChatMute
         var latestSanction = new Sanction(AccountId, SanctionScope.Chat, latestEnd);
         Sanction[] sanctions = { earlierSanction, latestSanction };
 
-        var mute = ChatMute.FromSanctionsInEffect(sanctions);
+        var muteStatus = ChatMuteStatus.FromSanctionsInEffect(sanctions);
 
-        Assert.Equal(latestEnd, mute.EndsAt);
+        Assert.Equal(latestEnd, muteStatus.EndsAt);
     }
 
     [Fact]
@@ -43,10 +43,10 @@ public sealed class TestChatMute
         var temporarySanction = new Sanction(AccountId, SanctionScope.Chat, _earlierEnd);
         var permanentSanction = new Sanction(AccountId, SanctionScope.Chat, endsAt: null);
         Sanction[] sanctions = { temporarySanction, permanentSanction };
-        var expectedMute = new ChatMute(IsMuted: true, EndsAt: null);
+        var expectedMuteStatus = new ChatMuteStatus(IsMuted: true, EndsAt: null);
 
-        var mute = ChatMute.FromSanctionsInEffect(sanctions);
+        var muteStatus = ChatMuteStatus.FromSanctionsInEffect(sanctions);
 
-        Assert.Equal(expectedMute, mute);
+        Assert.Equal(expectedMuteStatus, muteStatus);
     }
 }

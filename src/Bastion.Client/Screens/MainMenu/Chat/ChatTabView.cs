@@ -14,16 +14,18 @@ public sealed class ChatTabView : Panel
         WidthUnits = DimensionUnitType.RelativeToChildren;
         HeightUnits = DimensionUnitType.RelativeToChildren;
 
-        var channels = new ChatChannelListView(chatTab);
-        channels.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.IsListVisible));
-        var lobbyChat = new LobbyChatView(chatTab.LobbyChat);
-        var privateConversation = new PrivateConversationView(chatTab.PrivateConversation);
-        Panel globalPane = ViewFactory.CreateToggledContainer(lobbyChat, nameof(ChatTabViewModel.IsGlobalOpen));
-        Panel privatePane = ViewFactory.CreateToggledContainer(
-            privateConversation,
+        var chatChannelListView = new ChatChannelListView(chatTab);
+        chatChannelListView.SetBinding(nameof(IsVisible), nameof(ChatTabViewModel.IsListVisible));
+        var lobbyChatView = new LobbyChatView(chatTab.LobbyChat);
+        var privateConversationView = new PrivateConversationView(chatTab.PrivateConversation);
+        Panel globalPanePanel = ViewFactory.CreateToggledContainer(
+            lobbyChatView,
+            nameof(ChatTabViewModel.IsGlobalOpen));
+        Panel privatePanePanel = ViewFactory.CreateToggledContainer(
+            privateConversationView,
             nameof(ChatTabViewModel.IsPrivateOpen));
-        AddChild(channels);
-        AddChild(globalPane);
-        AddChild(privatePane);
+        AddChild(chatChannelListView);
+        AddChild(globalPanePanel);
+        AddChild(privatePanePanel);
     }
 }

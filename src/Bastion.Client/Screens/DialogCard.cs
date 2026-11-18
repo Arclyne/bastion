@@ -14,26 +14,26 @@ public abstract class DialogCard : Panel
         Height = DialogMetrics.PaddingBottom;
         HeightUnits = DimensionUnitType.RelativeToChildren;
 
-        var content = new StackPanel
+        var contentStackPanel = new StackPanel
         {
             X = DialogMetrics.PaddingX,
             Y = DialogMetrics.PaddingTop,
             Spacing = DialogMetrics.SectionSpacing,
         };
-        AddChild(content);
-        Content = content;
+        AddChild(contentStackPanel);
+        Content = contentStackPanel;
         CardSkin.Apply(Visual);
     }
 
     protected StackPanel Content { get; }
 
-    protected static Button CreateDialogButton(string textKey, ButtonLook look)
+    protected static Button CreateDialogButton(string textKey, ButtonLook buttonLook)
     {
         ArgumentNullException.ThrowIfNull(textKey);
-        ArgumentNullException.ThrowIfNull(look);
+        ArgumentNullException.ThrowIfNull(buttonLook);
 
         Button button = ViewFactory.CreateButton(textKey, DialogMetrics.ButtonWidth, DialogMetrics.ButtonHeight);
-        ButtonSkin.CreateAndAttach(button, look);
+        ButtonSkin.CreateAndAttach(button, buttonLook);
         return button;
     }
 

@@ -23,7 +23,7 @@ public sealed class MatchChatPanel : Panel
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchChatPanel));
 
     private readonly MatchChatViewModel _viewModel;
-    private readonly ItemsControl _messageScroller;
+    private readonly ItemsControl _messageScrollerItemsControl;
 
     public MatchChatPanel(MatchChatViewModel viewModel)
     {
@@ -36,9 +36,9 @@ public sealed class MatchChatPanel : Panel
         Height = PanelHeight;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _messageScroller = CreateMessages();
+        _messageScrollerItemsControl = CreateMessages();
 
-        var content = new StackPanel
+        var contentStackPanel = new StackPanel
         {
             X = PaddingX,
             Y = PaddingTop,
@@ -46,14 +46,14 @@ public sealed class MatchChatPanel : Panel
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = ContentSpacing,
         };
-        Label title = ViewFactory.CreateLabel(nameof(Strings.MatchChatTitle), TextStyleCatalog.SectionLabel);
-        Label status = CreateStatus();
-        StackPanel inputRow = ConversationPartFactory.CreateInputRow(HandleSendClick, ContentWidth);
-        content.AddChild(title);
-        content.AddChild(_messageScroller);
-        content.AddChild(status);
-        content.AddChild(inputRow);
-        AddChild(content);
+        Label titleLabel = ViewFactory.CreateLabel(nameof(Strings.MatchChatTitle), TextStyleCatalog.SectionLabel);
+        Label statusLabel = CreateStatus();
+        StackPanel inputRowStackPanel = ConversationPartFactory.CreateInputRow(HandleSendClick, ContentWidth);
+        contentStackPanel.AddChild(titleLabel);
+        contentStackPanel.AddChild(_messageScrollerItemsControl);
+        contentStackPanel.AddChild(statusLabel);
+        contentStackPanel.AddChild(inputRowStackPanel);
+        AddChild(contentStackPanel);
         CardSkin.Apply(Visual);
 
         _viewModel.Messages.CollectionChanged += HandleMessagesChanged;
@@ -61,20 +61,20 @@ public sealed class MatchChatPanel : Panel
 
     private ItemsControl CreateMessages()
     {
-        ItemsControl messages = ViewFactory.CreateScrollList<ItemsControl>(ContentWidth, MessagesHeight);
-        messages.VisualTemplate = ChatMessageRowView.CreateTemplate(ContentWidth);
-        messages.Items = _viewModel.Messages;
-        return messages;
+        ItemsControl messagesItemsControl = ViewFactory.CreateScrollList<ItemsControl>(ContentWidth, MessagesHeight);
+        messagesItemsControl.VisualTemplate = ChatMessageRowView.CreateTemplate(ContentWidth);
+        messagesItemsControl.Items = _viewModel.Messages;
+        return messagesItemsControl;
     }
 
     private static Label CreateStatus()
     {
-        Label status = ViewFactory.CreateBoundNotice(
+        Label statusLabel = ViewFactory.CreateBoundNotice(
             nameof(MatchChatViewModel.StatusText),
             nameof(MatchChatViewModel.HasStatus),
             TextStyleCatalog.FieldError);
-        ViewFactory.SetFixedWidth(status, ContentWidth);
-        return status;
+        ViewFactory.SetFixedWidth(statusLabel, ContentWidth);
+        return statusLabel;
     }
 
     private async void HandleSendClick(object? sender, EventArgs e)
@@ -91,6 +91,6 @@ public sealed class MatchChatPanel : Panel
 
     private void HandleMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        ConversationPartFactory.ScrollToLatest(_messageScroller);
+        ConversationPartFactory.ScrollToLatest(_messageScrollerItemsControl);
     }
 }

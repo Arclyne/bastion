@@ -11,13 +11,13 @@ public sealed class NewContextRunner<TFailure>
 
     public NewContextRunner(
         IDbContextFactory<BastionDbContext> contextFactory,
-        Func<Exception, TFailure> createFailure)
+        Func<Exception, TFailure> failureFactory)
     {
         ArgumentNullException.ThrowIfNull(contextFactory);
-        ArgumentNullException.ThrowIfNull(createFailure);
+        ArgumentNullException.ThrowIfNull(failureFactory);
 
         _contextFactory = contextFactory;
-        _failureTranslator = new DatabaseFailureTranslator<TFailure>(createFailure);
+        _failureTranslator = new DatabaseFailureTranslator<TFailure>(failureFactory);
     }
 
     public TResult Run<TResult>(Func<BastionDbContext, TResult> operation)

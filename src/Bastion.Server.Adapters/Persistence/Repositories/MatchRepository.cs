@@ -218,11 +218,11 @@ public sealed class MatchRepository : IMatchRepository
     private static int UpdateMatchWithNewestMove(BastionDbContext context, Match match)
     {
         context.Matches.Update(match);
-        short newestMoveNumber = match.Moves.Max(move => move.MoveNumber);
-        foreach (Move move in match.Moves)
+        short newestMoveNumber = match.Moves.Max(playedMove => playedMove.MoveNumber);
+        foreach (Move playedMove in match.Moves)
         {
-            bool isNewest = move.MoveNumber == newestMoveNumber;
-            context.Entry(move).State = isNewest ? EntityState.Added : EntityState.Unchanged;
+            bool isNewest = playedMove.MoveNumber == newestMoveNumber;
+            context.Entry(playedMove).State = isNewest ? EntityState.Added : EntityState.Unchanged;
         }
 
         int savedRowCount = SaveMatchAndRoom(context, match);

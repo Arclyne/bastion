@@ -6,7 +6,7 @@ namespace Bastion.Server.Application.Matchmaking;
 
 public interface IMatchmakingQueue
 {
-    bool TryAdd(MatchSearch search);
+    bool TryAdd(MatchSearch matchSearch);
 
     bool TryRemove(int accountId);
 

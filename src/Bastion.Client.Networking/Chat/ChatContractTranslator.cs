@@ -16,8 +16,8 @@ public static class ChatContractTranslator
         LobbyChatMessage[] logMessages = log.Messages ?? Array.Empty<LobbyChatMessage>();
         IEnumerable<ChatMessage> chatMessages = logMessages.Select(ToChatMessage);
         var messages = new List<ChatMessage>(chatMessages);
-        var mute = new ChatMute(log.IsMuted, log.MutedUntil);
-        return new LobbyChatTranscript(messages, log.ConnectedPlayerCount, mute);
+        var muteStatus = new ChatMuteStatus(log.IsMuted, log.MutedUntil);
+        return new LobbyChatTranscript(messages, log.ConnectedPlayerCount, muteStatus);
     }
 
     public static ChatMessage ToChatMessage(ChatMessageNotification notification)

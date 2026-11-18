@@ -24,58 +24,58 @@ public sealed class WallControlsPanel : StackPanel
         _viewModel = viewModel;
         BindingContext = viewModel;
         Spacing = RowSpacing;
-        Label hint = CreateHint();
-        StackPanel buttonRow = CreateButtonRow();
-        AddChild(hint);
-        AddChild(buttonRow);
+        Label hintLabel = CreateHint();
+        StackPanel buttonRowStackPanel = CreateButtonRow();
+        AddChild(hintLabel);
+        AddChild(buttonRowStackPanel);
     }
 
     private static Label CreateHint()
     {
-        Label hint = ViewFactory.CreateBoundUntranslatedLabel(
+        Label hintLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(WallPlacementViewModel.HintText),
             TextStyleCatalog.IdentityDetail,
             HintWidth);
-        hint.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.HasHint));
-        return hint;
+        hintLabel.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.HasHint));
+        return hintLabel;
     }
 
     private StackPanel CreateButtonRow()
     {
-        Button start = CreateWallButton(nameof(Strings.MatchPlaceWallButton), ButtonLookCatalog.Pill);
-        start.SetBinding(nameof(IsEnabled), nameof(WallPlacementViewModel.CanStart));
-        start.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.IsIdle));
-        start.Click += HandleStartClick;
+        Button placeWallButton = CreateWallButton(nameof(Strings.MatchPlaceWallButton), ButtonLookCatalog.Pill);
+        placeWallButton.SetBinding(nameof(IsEnabled), nameof(WallPlacementViewModel.CanStart));
+        placeWallButton.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.IsIdle));
+        placeWallButton.Click += HandleStartClick;
 
-        Button rotate = CreateWallButton(nameof(Strings.MatchRotateWallButton), ButtonLookCatalog.Secondary);
-        rotate.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.IsActive));
-        rotate.Click += HandleRotateClick;
+        Button rotateButton = CreateWallButton(nameof(Strings.MatchRotateWallButton), ButtonLookCatalog.Secondary);
+        rotateButton.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.IsActive));
+        rotateButton.Click += HandleRotateClick;
 
-        Button confirm = CreateWallButton(nameof(Strings.MatchConfirmWallButton), ButtonLookCatalog.Primary);
-        confirm.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.IsActive));
-        confirm.SetBinding(nameof(IsEnabled), nameof(WallPlacementViewModel.HasPendingWall));
-        confirm.Click += HandleConfirmClick;
+        Button confirmButton = CreateWallButton(nameof(Strings.MatchConfirmWallButton), ButtonLookCatalog.Primary);
+        confirmButton.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.IsActive));
+        confirmButton.SetBinding(nameof(IsEnabled), nameof(WallPlacementViewModel.HasPendingWall));
+        confirmButton.Click += HandleConfirmClick;
 
-        Button cancel = CreateWallButton(nameof(Strings.MatchCancelWallButton), ButtonLookCatalog.Secondary);
-        cancel.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.IsActive));
-        cancel.Click += HandleCancelClick;
+        Button cancelButton = CreateWallButton(nameof(Strings.MatchCancelWallButton), ButtonLookCatalog.Secondary);
+        cancelButton.SetBinding(nameof(IsVisible), nameof(WallPlacementViewModel.IsActive));
+        cancelButton.Click += HandleCancelClick;
 
-        var row = new StackPanel
+        var rowStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = ButtonSpacing,
         };
-        row.AddChild(start);
-        row.AddChild(rotate);
-        row.AddChild(confirm);
-        row.AddChild(cancel);
-        return row;
+        rowStackPanel.AddChild(placeWallButton);
+        rowStackPanel.AddChild(rotateButton);
+        rowStackPanel.AddChild(confirmButton);
+        rowStackPanel.AddChild(cancelButton);
+        return rowStackPanel;
     }
 
-    private static Button CreateWallButton(string textKey, ButtonLook look)
+    private static Button CreateWallButton(string textKey, ButtonLook buttonLook)
     {
         Button button = ViewFactory.CreateButton(textKey, ButtonWidth, ScreenMetrics.MenuPillHeight);
-        ButtonSkin.CreateAndAttach(button, look);
+        ButtonSkin.CreateAndAttach(button, buttonLook);
         return button;
     }
 

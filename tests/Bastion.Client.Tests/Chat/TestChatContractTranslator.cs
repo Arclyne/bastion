@@ -43,11 +43,11 @@ public sealed class TestChatContractTranslator
             IsMuted = true,
             MutedUntil = _sentAt,
         };
-        var expectedMute = new ChatMute(IsMuted: true, EndsAt: _sentAt);
+        var expectedMuteStatus = new ChatMuteStatus(IsMuted: true, EndsAt: _sentAt);
 
         LobbyChatTranscript transcript = ChatContractTranslator.ToTranscript(log);
 
-        Assert.Equal(expectedMute, transcript.Mute);
+        Assert.Equal(expectedMuteStatus, transcript.MuteStatus);
     }
 
     [Fact]

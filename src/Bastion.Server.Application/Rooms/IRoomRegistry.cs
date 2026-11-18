@@ -24,5 +24,5 @@ public interface IRoomRegistry
 
     Lookup<RoomSnapshot> FindRoomOf(int accountId);
 
-    TResult StartMatch<TResult>(int hostAccountId, Func<RoomSnapshot, TResult> startMatch);
+    TResult StartMatch<TResult>(int hostAccountId, Func<RoomSnapshot, TResult> matchStarter);
 }

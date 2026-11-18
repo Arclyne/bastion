@@ -32,45 +32,47 @@ public sealed class FriendRequestToast : Panel
         Height = ToastHeight;
         HeightUnits = DimensionUnitType.Absolute;
         this.SetBinding(nameof(IsVisible), nameof(FriendRequestsViewModel.IsToastVisible));
-        Label message = CreateMessage();
-        StackPanel actions = CreateActions();
-        AddChild(message);
-        AddChild(actions);
+        Label messageLabel = CreateMessage();
+        StackPanel actionsStackPanel = CreateActions();
+        AddChild(messageLabel);
+        AddChild(actionsStackPanel);
         CardSkin.Apply(Visual);
     }
 
     private static Label CreateMessage()
     {
-        Label message = ViewFactory.CreateBoundUntranslatedLabel(nameof(FriendRequestsViewModel.ToastText), TextStyleCatalog.NoticeTitle);
-        message.X = PaddingX;
-        ViewFactory.CenterVertically(message);
-        return message;
+        Label messageLabel = ViewFactory.CreateBoundUntranslatedLabel(
+            nameof(FriendRequestsViewModel.ToastText),
+            TextStyleCatalog.NoticeTitle);
+        messageLabel.X = PaddingX;
+        ViewFactory.CenterVertically(messageLabel);
+        return messageLabel;
     }
 
     private StackPanel CreateActions()
     {
-        Button reject = CreateActionButton(nameof(Strings.FriendsReject), ButtonLookCatalog.Secondary);
-        reject.Click += HandleRejectClick;
-        Button accept = CreateActionButton(nameof(Strings.FriendsAccept), ButtonLookCatalog.Primary);
-        accept.Click += HandleAcceptClick;
+        Button rejectButton = CreateActionButton(nameof(Strings.FriendsReject), ButtonLookCatalog.Secondary);
+        rejectButton.Click += HandleRejectClick;
+        Button acceptButton = CreateActionButton(nameof(Strings.FriendsAccept), ButtonLookCatalog.Primary);
+        acceptButton.Click += HandleAcceptClick;
 
-        var actions = new StackPanel
+        var actionsStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = ButtonSpacing,
         };
-        actions.AddChild(reject);
-        actions.AddChild(accept);
-        actions.Anchor(Gum.Wireframe.Anchor.Right);
-        actions.X = -PaddingX;
-        actions.SetBinding(nameof(IsVisible), nameof(FriendRequestsViewModel.AreToastActionsVisible));
-        return actions;
+        actionsStackPanel.AddChild(rejectButton);
+        actionsStackPanel.AddChild(acceptButton);
+        actionsStackPanel.Anchor(Gum.Wireframe.Anchor.Right);
+        actionsStackPanel.X = -PaddingX;
+        actionsStackPanel.SetBinding(nameof(IsVisible), nameof(FriendRequestsViewModel.AreToastActionsVisible));
+        return actionsStackPanel;
     }
 
-    private static Button CreateActionButton(string textKey, ButtonLook look)
+    private static Button CreateActionButton(string textKey, ButtonLook buttonLook)
     {
         Button button = ViewFactory.CreateButton(textKey, ActionButtonWidth, ActionButtonHeight);
-        ButtonSkin.CreateAndAttach(button, look);
+        ButtonSkin.CreateAndAttach(button, buttonLook);
         return button;
     }
 

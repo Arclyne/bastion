@@ -34,23 +34,23 @@ public sealed class AddFriendView : StackPanel
         Spacing = PanelMetrics.SectionSpacing;
 
         Button backButton = CreateBackButton();
-        StackPanel searchRow = CreateSearchRow();
-        Label searchHint = ViewFactory.CreateLabel(nameof(Strings.FriendsSearchHint), TextStyleCatalog.Hint);
-        Label status = CreateStatus();
-        ItemsControl results = CreateResults();
+        StackPanel searchRowStackPanel = CreateSearchRow();
+        Label searchHintLabel = ViewFactory.CreateLabel(nameof(Strings.FriendsSearchHint), TextStyleCatalog.Hint);
+        Label statusLabel = CreateStatus();
+        ItemsControl resultsItemsControl = CreateResults();
         AddChild(backButton);
-        AddChild(searchRow);
-        AddChild(searchHint);
-        AddChild(status);
-        AddChild(results);
+        AddChild(searchRowStackPanel);
+        AddChild(searchHintLabel);
+        AddChild(statusLabel);
+        AddChild(resultsItemsControl);
     }
 
     private Button CreateBackButton()
     {
-        Button back = ViewFactory.CreateButton(nameof(Strings.FriendsBack), BackButtonWidth, ControlHeight);
-        ButtonSkin.CreateAndAttach(back, ButtonLookCatalog.Pill);
-        back.Click += HandleBackClick;
-        return back;
+        Button backButton = ViewFactory.CreateButton(nameof(Strings.FriendsBack), BackButtonWidth, ControlHeight);
+        ButtonSkin.CreateAndAttach(backButton, ButtonLookCatalog.Pill);
+        backButton.Click += HandleBackClick;
+        return backButton;
     }
 
     private void HandleBackClick(object? sender, EventArgs e)
@@ -60,27 +60,27 @@ public sealed class AddFriendView : StackPanel
 
     private StackPanel CreateSearchRow()
     {
-        var input = new TextField
+        var inputTextField = new TextField
         {
             Placeholder = nameof(Strings.FriendsSearchPlaceholder),
             Width = SearchFieldWidth,
             Height = ControlHeight,
         };
-        input.SetBinding(nameof(TextField.Text), nameof(AddFriendViewModel.SearchText));
+        inputTextField.SetBinding(nameof(TextField.Text), nameof(AddFriendViewModel.SearchText));
 
-        Button search = ViewFactory.CreateButton(nameof(Strings.FriendsSearch), SearchButtonWidth, ControlHeight);
-        ButtonSkin.CreateAndAttach(search, ButtonLookCatalog.Secondary);
-        search.SetBinding(nameof(IsEnabled), nameof(AddFriendViewModel.CanSearch));
-        search.Click += HandleSearchClick;
+        Button searchButton = ViewFactory.CreateButton(nameof(Strings.FriendsSearch), SearchButtonWidth, ControlHeight);
+        ButtonSkin.CreateAndAttach(searchButton, ButtonLookCatalog.Secondary);
+        searchButton.SetBinding(nameof(IsEnabled), nameof(AddFriendViewModel.CanSearch));
+        searchButton.Click += HandleSearchClick;
 
-        var row = new StackPanel
+        var rowStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = PanelMetrics.SectionSpacing,
         };
-        row.AddChild(input);
-        row.AddChild(search);
-        return row;
+        rowStackPanel.AddChild(inputTextField);
+        rowStackPanel.AddChild(searchButton);
+        return rowStackPanel;
     }
 
     private async void HandleSearchClick(object? sender, EventArgs e)
@@ -105,16 +105,16 @@ public sealed class AddFriendView : StackPanel
 
     private ItemsControl CreateResults()
     {
-        ItemsControl results = ViewFactory.CreateScrollList<ItemsControl>(ViewWidth, ResultsHeight);
-        results.VisualTemplate = new VisualTemplate(CreateResultRow);
-        results.Items = _friendsPanelViewModel.AddFriend.Results;
-        return results;
+        ItemsControl resultsItemsControl = ViewFactory.CreateScrollList<ItemsControl>(ViewWidth, ResultsHeight);
+        resultsItemsControl.VisualTemplate = new VisualTemplate(CreateResultRow);
+        resultsItemsControl.Items = _friendsPanelViewModel.AddFriend.Results;
+        return resultsItemsControl;
     }
 
     private GraphicalUiElement CreateResultRow(object? item)
     {
         FoundPlayerRowViewModel row = ViewFactory.RequireRow<FoundPlayerRowViewModel>(item);
-        var rowView = new FoundPlayerRowView(_friendsPanelViewModel.AddFriend, row);
-        return rowView.Visual;
+        var foundPlayerRowView = new FoundPlayerRowView(_friendsPanelViewModel.AddFriend, row);
+        return foundPlayerRowView.Visual;
     }
 }

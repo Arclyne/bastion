@@ -37,17 +37,17 @@ public static class ChatRejectionText
         }
     }
 
-    public static string DescribeMute(ChatMute mute, TimeProvider timeProvider)
+    public static string DescribeMuteStatus(ChatMuteStatus muteStatus, TimeProvider timeProvider)
     {
-        ArgumentNullException.ThrowIfNull(mute);
+        ArgumentNullException.ThrowIfNull(muteStatus);
         ArgumentNullException.ThrowIfNull(timeProvider);
 
-        if (!mute.IsMuted)
+        if (!muteStatus.IsMuted)
         {
             return string.Empty;
         }
 
-        if (mute.EndsAt is not DateTime endsAt)
+        if (muteStatus.EndsAt is not DateTime endsAt)
         {
             return Strings.ChatMutedPermanently;
         }

@@ -28,7 +28,7 @@ public sealed class VersusView : ScreenView
         BindingContext = viewModel;
         float contentWidth = ((OwnPlayerCount + viewModel.Rivals.Count) * PlayerWidth) + VersusWidth;
 
-        var content = new StackPanel
+        var contentStackPanel = new StackPanel
         {
             X = CardPaddingX,
             Y = CardPaddingTop,
@@ -36,68 +36,68 @@ public sealed class VersusView : ScreenView
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = SectionSpacing,
         };
-        Label mode = ViewFactory.CreateUntranslatedLabel(viewModel.ModeText, TextStyleCatalog.SectionLabel);
-        StackPanel playersRow = CreatePlayersRow(viewModel);
-        Label countdown = ViewFactory.CreateBoundUntranslatedLabel(
+        Label modeLabel = ViewFactory.CreateUntranslatedLabel(viewModel.ModeText, TextStyleCatalog.SectionLabel);
+        StackPanel playersRowStackPanel = CreatePlayersRow(viewModel);
+        Label countdownLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(VersusViewModel.CountdownText),
             TextStyleCatalog.DialogTitle,
             contentWidth);
-        content.AddChild(mode);
-        content.AddChild(playersRow);
-        content.AddChild(countdown);
+        contentStackPanel.AddChild(modeLabel);
+        contentStackPanel.AddChild(playersRowStackPanel);
+        contentStackPanel.AddChild(countdownLabel);
 
         float cardWidth = contentWidth + (CardPaddingX * HorizontalSideCount);
-        var card = new Panel
+        var cardPanel = new Panel
         {
             Width = cardWidth,
             WidthUnits = DimensionUnitType.Absolute,
             Height = CardPaddingBottom,
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
-        card.Anchor(Gum.Wireframe.Anchor.Center);
-        card.AddChild(content);
-        CardSkin.Apply(card.Visual);
-        AddChild(card);
+        cardPanel.Anchor(Gum.Wireframe.Anchor.Center);
+        cardPanel.AddChild(contentStackPanel);
+        CardSkin.Apply(cardPanel.Visual);
+        AddChild(cardPanel);
     }
 
     private static StackPanel CreatePlayersRow(VersusViewModel viewModel)
     {
-        Label versus = ViewFactory.CreateLabel(nameof(Strings.VersusLabel), TextStyleCatalog.MenuTitle);
-        ViewFactory.SetFixedWidth(versus, VersusWidth);
-        ViewFactory.CenterVertically(versus);
+        Label versusLabel = ViewFactory.CreateLabel(nameof(Strings.VersusLabel), TextStyleCatalog.MenuTitle);
+        ViewFactory.SetFixedWidth(versusLabel, VersusWidth);
+        ViewFactory.CenterVertically(versusLabel);
 
-        var row = new StackPanel
+        var rowStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
         };
-        StackPanel ownCard = CreatePlayerCard(viewModel.Own);
-        row.AddChild(ownCard);
-        row.AddChild(versus);
+        StackPanel ownCardStackPanel = CreatePlayerCard(viewModel.Own);
+        rowStackPanel.AddChild(ownCardStackPanel);
+        rowStackPanel.AddChild(versusLabel);
         foreach (VersusPlayer rival in viewModel.Rivals)
         {
-            StackPanel rivalCard = CreatePlayerCard(rival);
-            row.AddChild(rivalCard);
+            StackPanel rivalCardStackPanel = CreatePlayerCard(rival);
+            rowStackPanel.AddChild(rivalCardStackPanel);
         }
 
-        return row;
+        return rowStackPanel;
     }
 
     private static StackPanel CreatePlayerCard(VersusPlayer player)
     {
         Color ringColor = Palette.GetPawnColor(player.PawnSymbol);
-        Panel avatar = ShapeFactory.CreateAvatar(AvatarSize, ringColor, AvatarRingWidth);
+        Panel avatarPanel = ShapeFactory.CreateAvatar(AvatarSize, ringColor, AvatarRingWidth);
 
-        var card = new StackPanel
+        var cardStackPanel = new StackPanel
         {
             Width = PlayerWidth,
             WidthUnits = DimensionUnitType.Absolute,
             Spacing = PlayerSpacing,
         };
-        Label nickname = ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyleCatalog.IdentityName);
-        Label elo = ViewFactory.CreateUntranslatedLabel(player.EloText, TextStyleCatalog.IdentityDetail);
-        card.AddChild(avatar);
-        card.AddChild(nickname);
-        card.AddChild(elo);
-        return card;
+        Label nicknameLabel = ViewFactory.CreateUntranslatedLabel(player.Nickname, TextStyleCatalog.IdentityName);
+        Label eloLabel = ViewFactory.CreateUntranslatedLabel(player.EloText, TextStyleCatalog.IdentityDetail);
+        cardStackPanel.AddChild(avatarPanel);
+        cardStackPanel.AddChild(nicknameLabel);
+        cardStackPanel.AddChild(eloLabel);
+        return cardStackPanel;
     }
 }

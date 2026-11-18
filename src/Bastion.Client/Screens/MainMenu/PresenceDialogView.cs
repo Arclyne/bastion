@@ -18,14 +18,16 @@ public sealed class PresenceDialogView : DialogCard
 
         _viewModel = viewModel;
         Anchor(Gum.Wireframe.Anchor.Center);
-        Label title = ViewFactory.CreateLabel(nameof(Strings.MatchSearchPresenceTitle), TextStyleCatalog.DialogTitle);
-        Label message = ViewFactory.CreateBoundUntranslatedLabel(
+        Label titleLabel = ViewFactory.CreateLabel(
+            nameof(Strings.MatchSearchPresenceTitle),
+            TextStyleCatalog.DialogTitle);
+        Label messageLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchSearchViewModel.PresenceMessage),
             TextStyleCatalog.DialogMessage,
             DialogMetrics.ContentWidth);
         Button confirmButton = CreateWideButton(nameof(Strings.MatchSearchPresenceConfirmButton), HandleConfirmClick);
-        Content.AddChild(title);
-        Content.AddChild(message);
+        Content.AddChild(titleLabel);
+        Content.AddChild(messageLabel);
         Content.AddChild(confirmButton);
     }
 

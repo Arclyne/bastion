@@ -58,12 +58,12 @@ public static class MatchTranslator
         return ToFault(rejection);
     }
 
-    public static ChosenPawnMove ToChosenPawnMove(PawnMove move)
+    public static ChosenPawnMove ToChosenPawnMove(PawnMove pawnMove)
     {
-        ArgumentNullException.ThrowIfNull(move);
+        ArgumentNullException.ThrowIfNull(pawnMove);
 
-        string destinationSquare = move.ToSquare ?? string.Empty;
-        return new ChosenPawnMove(move.MatchId, move.MoveNumber, destinationSquare);
+        string destinationSquare = pawnMove.ToSquare ?? string.Empty;
+        return new ChosenPawnMove(pawnMove.MatchId, pawnMove.MoveNumber, destinationSquare);
     }
 
     public static ChosenWall ToChosenWall(WallPlacement wall)

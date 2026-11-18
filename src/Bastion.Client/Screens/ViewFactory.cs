@@ -135,18 +135,18 @@ public static class ViewFactory
         ArgumentNullException.ThrowIfNull(retryKey);
         ArgumentNullException.ThrowIfNull(handleRetryClick);
 
-        Button retry = CreateButton(retryKey, RetryButtonWidth, RetryButtonHeight);
-        ButtonSkin.CreateAndAttach(retry, ButtonLookCatalog.Secondary);
-        retry.Click += handleRetryClick;
+        Button retryButton = CreateButton(retryKey, RetryButtonWidth, RetryButtonHeight);
+        ButtonSkin.CreateAndAttach(retryButton, ButtonLookCatalog.Secondary);
+        retryButton.Click += handleRetryClick;
 
-        var failure = new StackPanel
+        var failureStackPanel = new StackPanel
         {
             Spacing = LoadFailureSpacing,
         };
-        Label message = CreateLabel(messageKey, TextStyleCatalog.FieldError);
-        failure.AddChild(message);
-        failure.AddChild(retry);
-        return failure;
+        Label messageLabel = CreateLabel(messageKey, TextStyleCatalog.FieldError);
+        failureStackPanel.AddChild(messageLabel);
+        failureStackPanel.AddChild(retryButton);
+        return failureStackPanel;
     }
 
     public static Panel CreateToggledContainer(FrameworkElement content, string visibilityProperty)
@@ -154,29 +154,29 @@ public static class ViewFactory
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(visibilityProperty);
 
-        var container = new Panel
+        var containerPanel = new Panel
         {
             WidthUnits = DimensionUnitType.RelativeToChildren,
             HeightUnits = DimensionUnitType.RelativeToChildren,
         };
-        container.AddChild(content);
-        container.SetBinding(nameof(Panel.IsVisible), visibilityProperty);
-        return container;
+        containerPanel.AddChild(content);
+        containerPanel.SetBinding(nameof(Panel.IsVisible), visibilityProperty);
+        return containerPanel;
     }
 
-    public static StackPanel CreateCenteredLines(Label first, Label second)
+    public static StackPanel CreateCenteredLines(Label firstLabel, Label secondLabel)
     {
-        ArgumentNullException.ThrowIfNull(first);
-        ArgumentNullException.ThrowIfNull(second);
+        ArgumentNullException.ThrowIfNull(firstLabel);
+        ArgumentNullException.ThrowIfNull(secondLabel);
 
-        var lines = new StackPanel
+        var linesStackPanel = new StackPanel
         {
             Spacing = PanelMetrics.TextSpacing,
         };
-        lines.AddChild(first);
-        lines.AddChild(second);
-        CenterVertically(lines);
-        return lines;
+        linesStackPanel.AddChild(firstLabel);
+        linesStackPanel.AddChild(secondLabel);
+        CenterVertically(linesStackPanel);
+        return linesStackPanel;
     }
 
     public static void CenterVertically(FrameworkElement element)

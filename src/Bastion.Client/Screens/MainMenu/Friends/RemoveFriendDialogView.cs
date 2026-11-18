@@ -19,18 +19,20 @@ public sealed class RemoveFriendDialogView : DialogCard
         _actions = actions;
         BindingContext = actions;
         Anchor(Gum.Wireframe.Anchor.Center);
-        Label title = CreateBoundDialogLabel(nameof(FriendActionsViewModel.DialogTitle), TextStyleCatalog.DialogTitle);
-        Label message = CreateBoundDialogLabel(
+        Label titleLabel = CreateBoundDialogLabel(
+            nameof(FriendActionsViewModel.DialogTitle),
+            TextStyleCatalog.DialogTitle);
+        Label messageLabel = CreateBoundDialogLabel(
             nameof(FriendActionsViewModel.DialogMessage),
             TextStyleCatalog.DialogMessage);
-        Label keepsHistoryNotice = CreateKeepsHistoryNotice();
-        Label error = CreateError();
-        StackPanel buttons = CreateButtons();
-        Content.AddChild(title);
-        Content.AddChild(message);
-        Content.AddChild(keepsHistoryNotice);
-        Content.AddChild(error);
-        Content.AddChild(buttons);
+        Label keepsHistoryNoticeLabel = CreateKeepsHistoryNotice();
+        Label errorLabel = CreateError();
+        StackPanel buttonsStackPanel = CreateButtons();
+        Content.AddChild(titleLabel);
+        Content.AddChild(messageLabel);
+        Content.AddChild(keepsHistoryNoticeLabel);
+        Content.AddChild(errorLabel);
+        Content.AddChild(buttonsStackPanel);
     }
 
     private static Label CreateBoundDialogLabel(string textProperty, TextStyle style)
@@ -40,35 +42,39 @@ public sealed class RemoveFriendDialogView : DialogCard
 
     private static Label CreateKeepsHistoryNotice()
     {
-        Label keepsHistory = ViewFactory.CreateLabel(nameof(Strings.FriendsRemoveKeepsHistory), TextStyleCatalog.DialogMessage);
-        ViewFactory.SetFixedWidth(keepsHistory, DialogMetrics.ContentWidth);
-        return keepsHistory;
+        Label keepsHistoryLabel = ViewFactory.CreateLabel(
+            nameof(Strings.FriendsRemoveKeepsHistory),
+            TextStyleCatalog.DialogMessage);
+        ViewFactory.SetFixedWidth(keepsHistoryLabel, DialogMetrics.ContentWidth);
+        return keepsHistoryLabel;
     }
 
     private static Label CreateError()
     {
-        Label error = CreateBoundDialogLabel(nameof(FriendActionsViewModel.ErrorText), TextStyleCatalog.FieldError);
-        error.SetBinding(nameof(IsVisible), nameof(FriendActionsViewModel.HasError));
-        return error;
+        Label errorLabel = CreateBoundDialogLabel(
+            nameof(FriendActionsViewModel.ErrorText),
+            TextStyleCatalog.FieldError);
+        errorLabel.SetBinding(nameof(IsVisible), nameof(FriendActionsViewModel.HasError));
+        return errorLabel;
     }
 
     private StackPanel CreateButtons()
     {
-        Button cancel = CreateDialogButton(nameof(Strings.FriendsCancel), ButtonLookCatalog.Secondary);
-        cancel.Click += HandleCancelClick;
+        Button cancelButton = CreateDialogButton(nameof(Strings.FriendsCancel), ButtonLookCatalog.Secondary);
+        cancelButton.Click += HandleCancelClick;
 
-        Button remove = CreateDialogButton(nameof(Strings.FriendsRemove), ButtonLookCatalog.Primary);
-        remove.SetBinding(nameof(IsEnabled), nameof(FriendActionsViewModel.CanConfirm));
-        remove.Click += HandleRemoveClick;
+        Button removeButton = CreateDialogButton(nameof(Strings.FriendsRemove), ButtonLookCatalog.Primary);
+        removeButton.SetBinding(nameof(IsEnabled), nameof(FriendActionsViewModel.CanConfirm));
+        removeButton.Click += HandleRemoveClick;
 
-        var row = new StackPanel
+        var rowStackPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = DialogMetrics.ButtonSpacing,
         };
-        row.AddChild(cancel);
-        row.AddChild(remove);
-        return row;
+        rowStackPanel.AddChild(cancelButton);
+        rowStackPanel.AddChild(removeButton);
+        return rowStackPanel;
     }
 
     private void HandleCancelClick(object? sender, EventArgs e)

@@ -201,7 +201,7 @@ public sealed class BoardScene : IDisposable
 
     private void DrawReachableSquares(MatchViewModel match, SceneCamera camera)
     {
-        IReadOnlyList<BoardCoordinates> reachableSquares = match.Play.ReachableSquares;
+        IReadOnlyList<BoardCoordinates> reachableSquares = match.MatchPlay.ReachableSquares;
         if (reachableSquares.Count == 0)
         {
             return;
@@ -239,7 +239,7 @@ public sealed class BoardScene : IDisposable
         _wallEffect.View = camera.View;
         _wallEffect.Projection = camera.Projection;
         _wallEffect.Alpha = OpaqueAlpha;
-        foreach (Wall wall in match.Play.Walls)
+        foreach (Wall wall in match.MatchPlay.Walls)
         {
             DrawWall(match.BoardSize, wall, Palette.Wall);
         }
@@ -278,7 +278,7 @@ public sealed class BoardScene : IDisposable
     {
         Vector3 pawnCenter = BoardSceneLayout.GetCellCenter(match.BoardSize, pawn.Coordinates);
         var world = Matrix.CreateTranslation(pawnCenter);
-        Color pawnColor = GetPawnColor(match.Play, pawn);
+        Color pawnColor = GetPawnColor(match.MatchPlay, pawn);
         foreach (ModelMesh mesh in _pawnModel.Model.Meshes)
         {
             SceneModel.TintMesh(mesh, pawnColor);
@@ -286,10 +286,10 @@ public sealed class BoardScene : IDisposable
         }
     }
 
-    private static Color GetPawnColor(MatchPlayViewModel play, BoardPawn pawn)
+    private static Color GetPawnColor(MatchPlayViewModel matchPlayViewModel, BoardPawn pawn)
     {
         Color pawnColor = Palette.GetPawnColor(pawn.Symbol);
-        if (pawn.Coordinates != play.SelectedPawn)
+        if (pawn.Coordinates != matchPlayViewModel.SelectedPawn)
         {
             return pawnColor;
         }

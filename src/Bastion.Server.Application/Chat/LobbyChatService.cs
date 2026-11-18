@@ -51,7 +51,7 @@ public sealed class LobbyChatService : ILobbyChatService
             postedLine => new ChatHistoryEntry(postedLine, postedLine.Line.Sender.AccountId == player.AccountId));
         var entries = new List<ChatHistoryEntry>(historyEntries);
         int connectedPlayerCount = _chatRoom.CountListeners();
-        ChatMute mute = _chatModerator.FindMute(player.AccountId, now);
-        return new LobbyChatHistory(entries, connectedPlayerCount, mute);
+        ChatMuteStatus muteStatus = _chatModerator.FindMuteStatus(player.AccountId, now);
+        return new LobbyChatHistory(entries, connectedPlayerCount, muteStatus);
     }
 }

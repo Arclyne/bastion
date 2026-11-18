@@ -9,20 +9,20 @@ public sealed record PrivateConversation
     public PrivateConversation(
         ConversationPartner partner,
         IReadOnlyList<PrivateMessageEntry> messages,
-        ChatMute mute)
+        ChatMuteStatus muteStatus)
     {
         ArgumentNullException.ThrowIfNull(partner);
         ArgumentNullException.ThrowIfNull(messages);
-        ArgumentNullException.ThrowIfNull(mute);
+        ArgumentNullException.ThrowIfNull(muteStatus);
 
         Partner = partner;
         Messages = messages;
-        Mute = mute;
+        MuteStatus = muteStatus;
     }
 
     public ConversationPartner Partner { get; }
 
     public IReadOnlyList<PrivateMessageEntry> Messages { get; }
 
-    public ChatMute Mute { get; }
+    public ChatMuteStatus MuteStatus { get; }
 }

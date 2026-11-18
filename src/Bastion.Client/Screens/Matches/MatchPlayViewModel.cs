@@ -182,7 +182,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
             Orientation = orientation,
         };
         Action placeWall = () => PlaceInJoinedMatch(chosenWall);
-        bool isSent = await TrySendToServer(placeWall);
+        bool isSent = await TrySubmitTurn(placeWall);
         if (isSent)
         {
             WaitForMoveNotification(chosenWall.MoveNumber);
@@ -374,27 +374,27 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     private async Task SendMove(BoardCoordinates destination)
     {
         string toSquare = BoardLayout.ToSquare(destination);
-        var move = new ChosenPawnMove(_joinedMatch.FoundMatch.MatchId, NextMoveNumber, toSquare);
-        Action moveInJoinedMatch = () => MoveInJoinedMatch(move);
-        bool isSent = await TrySendToServer(moveInJoinedMatch);
+        var chosenMove = new ChosenPawnMove(_joinedMatch.FoundMatch.MatchId, NextMoveNumber, toSquare);
+        Action moveInJoinedMatch = () => MoveInJoinedMatch(chosenMove);
+        bool isSent = await TrySubmitTurn(moveInJoinedMatch);
         if (isSent)
         {
             ClearSelection();
-            WaitForMoveNotification(move.MoveNumber);
+            WaitForMoveNotification(chosenMove.MoveNumber);
         }
     }
 
-    private void MoveInJoinedMatch(ChosenPawnMove move)
+    private void MoveInJoinedMatch(ChosenPawnMove chosenMove)
     {
-        _matches.MovePawn(_joinedMatch.Session.Token, move);
+        _matches.MovePawn(_joinedMatch.Session.Token, chosenMove);
     }
 
-    private async Task<bool> TrySendToServer(Action sendToServer)
+    private async Task<bool> TrySubmitTurn(Action turnSubmission)
     {
         IsSending = true;
         try
         {
-            await Task.Run(sendToServer);
+            await Task.Run(turnSubmission);
             return true;
         }
         catch (NotYourTurnException ex)

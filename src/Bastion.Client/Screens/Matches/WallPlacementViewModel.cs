@@ -8,18 +8,18 @@ namespace Bastion.Client.Screens.Matches;
 
 public sealed class WallPlacementViewModel : ViewModel, IDisposable
 {
-    private readonly MatchPlayViewModel _play;
+    private readonly MatchPlayViewModel _matchPlayViewModel;
     private WallOrientation _orientation;
 
-    public WallPlacementViewModel(MatchPlayViewModel play)
+    public WallPlacementViewModel(MatchPlayViewModel matchPlayViewModel)
     {
-        ArgumentNullException.ThrowIfNull(play);
+        ArgumentNullException.ThrowIfNull(matchPlayViewModel);
 
-        _play = play;
+        _matchPlayViewModel = matchPlayViewModel;
         _orientation = WallOrientation.Horizontal;
         HintText = string.Empty;
-        CanStart = play.CanPlaceWall();
-        _play.StateChanged += HandlePlayStateChanged;
+        CanStart = matchPlayViewModel.CanPlaceWall();
+        _matchPlayViewModel.StateChanged += HandleMatchPlayStateChanged;
     }
 
     public bool IsActive
@@ -61,12 +61,12 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
 
     public void Start()
     {
-        if (!_play.CanPlaceWall())
+        if (!_matchPlayViewModel.CanPlaceWall())
         {
             return;
         }
 
-        _play.ClearSelection();
+        _matchPlayViewModel.ClearSelection();
         PendingWall = null;
         HoveredWall = null;
         HintText = Strings.MatchWallChooseHint;
@@ -151,8 +151,8 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
             return;
         }
 
-        await _play.PlaceWall(wall);
-        if (!_play.HasNotice)
+        await _matchPlayViewModel.PlaceWall(wall);
+        if (!_matchPlayViewModel.HasNotice)
         {
             return;
         }
@@ -163,13 +163,13 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
 
     public void Dispose()
     {
-        _play.StateChanged -= HandlePlayStateChanged;
+        _matchPlayViewModel.StateChanged -= HandleMatchPlayStateChanged;
     }
 
-    private void HandlePlayStateChanged(object? sender, EventArgs e)
+    private void HandleMatchPlayStateChanged(object? sender, EventArgs e)
     {
-        CanStart = _play.CanPlaceWall();
-        if (IsActive && !_play.IsWallTurn())
+        CanStart = _matchPlayViewModel.CanPlaceWall();
+        if (IsActive && !_matchPlayViewModel.IsWallTurn())
         {
             Cancel();
         }
@@ -184,7 +184,7 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
 
     private WallRejection FindRejection(Wall wall)
     {
-        Board board = _play.BuildBoard();
+        Board board = _matchPlayViewModel.BuildBoard();
         WallRejection rejection = WallPolicy.FindRejection(board, wall);
         return rejection;
     }
@@ -196,6 +196,6 @@ public sealed class WallPlacementViewModel : ViewModel, IDisposable
         IsHoveredWallValid = isWallValid;
         HintText = isWallValid
             ? Strings.MatchWallChooseHint
-            : _play.DescribeWallRejection(rejection.Reason, rejection.BlockedTurnOrder);
+            : _matchPlayViewModel.DescribeWallRejection(rejection.Reason, rejection.BlockedTurnOrder);
     }
 }

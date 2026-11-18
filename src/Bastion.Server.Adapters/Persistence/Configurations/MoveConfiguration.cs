@@ -18,13 +18,13 @@ public sealed class MoveConfiguration : IEntityTypeConfiguration<Move>
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.ToTable(nameof(Move));
-        builder.HasKey(move => new { move.MatchId, move.MoveNumber });
-        builder.Property(move => move.MoveNumber).ValueGeneratedNever();
-        builder.Property(move => move.MoveType).HasUpperSnakeCaseConversion(MoveTypeLength);
-        builder.Property(move => move.FromSquare).HasMaxLength(SquareLength).IsUnicode(false);
-        builder.Property(move => move.ToSquare).HasMaxLength(SquareLength).IsUnicode(false);
-        builder.Property(move => move.Groove).HasMaxLength(SquareLength).IsUnicode(false);
-        builder.Property(move => move.Orientation).HasUpperSnakeCaseConversion(OrientationLength);
-        builder.Property(move => move.TimeSpentMilliseconds).HasColumnName(TimeSpentColumn);
+        builder.HasKey(playedMove => new { playedMove.MatchId, playedMove.MoveNumber });
+        builder.Property(playedMove => playedMove.MoveNumber).ValueGeneratedNever();
+        builder.Property(playedMove => playedMove.MoveType).HasUpperSnakeCaseConversion(MoveTypeLength);
+        builder.Property(playedMove => playedMove.FromSquare).HasMaxLength(SquareLength).IsUnicode(false);
+        builder.Property(playedMove => playedMove.ToSquare).HasMaxLength(SquareLength).IsUnicode(false);
+        builder.Property(playedMove => playedMove.Groove).HasMaxLength(SquareLength).IsUnicode(false);
+        builder.Property(playedMove => playedMove.Orientation).HasUpperSnakeCaseConversion(OrientationLength);
+        builder.Property(playedMove => playedMove.TimeSpentMilliseconds).HasColumnName(TimeSpentColumn);
     }
 }

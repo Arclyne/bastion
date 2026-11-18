@@ -19,15 +19,15 @@ public sealed class MatchViewModel : ViewModel, IDisposable
     public MatchViewModel(
         JoinedMatch joinedMatch,
         MatchAbandonmentViewModel abandonmentViewModel,
-        MatchPlayViewModel play)
+        MatchPlayViewModel matchPlayViewModel)
     {
         ArgumentNullException.ThrowIfNull(joinedMatch);
         ArgumentNullException.ThrowIfNull(abandonmentViewModel);
-        ArgumentNullException.ThrowIfNull(play);
+        ArgumentNullException.ThrowIfNull(matchPlayViewModel);
 
         _abandonmentViewModel = abandonmentViewModel;
-        Play = play;
-        WallPlacement = new WallPlacementViewModel(play);
+        MatchPlay = matchPlayViewModel;
+        WallPlacement = new WallPlacementViewModel(matchPlayViewModel);
         FoundMatchFormat format = joinedMatch.FoundMatch.Format;
         IEnumerable<MatchPlayerViewModel> orderedPlayers = joinedMatch.FoundMatch.Participants
             .OrderBy(participant => participant.TurnOrder)
@@ -44,14 +44,14 @@ public sealed class MatchViewModel : ViewModel, IDisposable
 
         RefreshPlay();
         _abandonmentViewModel.PlayerLeft += HandlePlayerLeft;
-        Play.StateChanged += HandlePlayStateChanged;
+        MatchPlay.StateChanged += HandleMatchPlayStateChanged;
     }
 
     public IReadOnlyList<MatchPlayerViewModel> Players { get; }
 
     public IReadOnlyList<BoardPawn> Pawns => _pawns;
 
-    public MatchPlayViewModel Play { get; }
+    public MatchPlayViewModel MatchPlay { get; }
 
     public WallPlacementViewModel WallPlacement { get; }
 
@@ -68,7 +68,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
     public void Dispose()
     {
         _abandonmentViewModel.PlayerLeft -= HandlePlayerLeft;
-        Play.StateChanged -= HandlePlayStateChanged;
+        MatchPlay.StateChanged -= HandleMatchPlayStateChanged;
         WallPlacement.Dispose();
     }
 
@@ -100,7 +100,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         var pawns = new List<BoardPawn>(Players.Count);
         foreach (MatchPlayerViewModel player in Players)
         {
-            if (!player.HasLeft && Play.Pawns.TryGetValue(player.TurnOrder, out BoardCoordinates? coordinates))
+            if (!player.HasLeft && MatchPlay.Pawns.TryGetValue(player.TurnOrder, out BoardCoordinates? coordinates))
             {
                 var pawn = new BoardPawn(coordinates, player.PawnSymbol);
                 pawns.Add(pawn);
@@ -114,14 +114,14 @@ public sealed class MatchViewModel : ViewModel, IDisposable
     {
         foreach (MatchPlayerViewModel player in Players)
         {
-            byte remainingWalls = Play.GetRemainingWalls(player.TurnOrder);
+            byte remainingWalls = MatchPlay.GetRemainingWalls(player.TurnOrder);
             player.ShowWalls(remainingWalls);
         }
     }
 
     private void ShowTurn()
     {
-        if (Play.IsMatchOver)
+        if (MatchPlay.IsMatchOver)
         {
             HideTurns();
             TurnText = DescribeMatchEnd();
@@ -130,10 +130,10 @@ public sealed class MatchViewModel : ViewModel, IDisposable
 
         foreach (MatchPlayerViewModel player in Players)
         {
-            player.ShowTurn(Play.CurrentTurnOrder);
+            player.ShowTurn(MatchPlay.CurrentTurnOrder);
         }
 
-        MatchPlayerViewModel turnPlayer = Players.First(player => player.TurnOrder == Play.CurrentTurnOrder);
+        MatchPlayerViewModel turnPlayer = Players.First(player => player.TurnOrder == MatchPlay.CurrentTurnOrder);
         TurnText = FormatTurn(turnPlayer, Players.Count);
     }
 
@@ -147,7 +147,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
 
     private string DescribeMatchEnd()
     {
-        string? winnerNickname = Play.WinnerNickname;
+        string? winnerNickname = MatchPlay.WinnerNickname;
         if (winnerNickname is null)
         {
             return Strings.MatchOverTitle;
@@ -182,7 +182,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         _pawns = RebuildPawns();
     }
 
-    private void HandlePlayStateChanged(object? sender, EventArgs e)
+    private void HandleMatchPlayStateChanged(object? sender, EventArgs e)
     {
         RefreshPlay();
     }

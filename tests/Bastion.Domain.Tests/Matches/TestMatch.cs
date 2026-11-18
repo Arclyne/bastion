@@ -447,8 +447,8 @@ public sealed class TestMatch
 
         match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
 
-        Move move = match.Moves.Single();
-        Assert.Equal(ClassicFirstSquare, move.FromSquare);
+        Move playedMove = match.Moves.Single();
+        Assert.Equal(ClassicFirstSquare, playedMove.FromSquare);
     }
 
     [Fact]
@@ -605,8 +605,8 @@ public sealed class TestMatch
 
         match.PlaceWall(placement, GameModeSampleFactory.ClassicBoardSize, _startedAt);
 
-        Move move = match.Moves.Single();
-        Wall recordedWall = move.GetWall();
+        Move playedMove = match.Moves.Single();
+        Wall recordedWall = playedMove.GetWall();
         Assert.Equal(_centerWall, recordedWall);
     }
 
@@ -618,8 +618,8 @@ public sealed class TestMatch
 
         match.PlaceWall(placement, GameModeSampleFactory.ClassicBoardSize, _startedAt);
 
-        Move move = match.Moves.Single();
-        Assert.Equal(CenterGrooveSquare, move.Groove);
+        Move playedMove = match.Moves.Single();
+        Assert.Equal(CenterGrooveSquare, playedMove.Groove);
     }
 
     [Fact]

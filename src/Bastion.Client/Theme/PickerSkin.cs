@@ -21,17 +21,17 @@ public sealed class PickerSkin : InteractiveSkin
     private readonly RectangleRuntime _halo;
     private readonly RectangleRuntime _surface;
 
-    private PickerSkin(ComboBox picker)
+    private PickerSkin(ComboBox pickerComboBox)
     {
-        float radius = picker.Height / RadiiPerHeight;
+        float radius = pickerComboBox.Height / RadiiPerHeight;
         _halo = ShapeFactory.CreateHalo(radius);
         _surface = ShapeFactory.CreateRounded(Palette.Card, radius);
         _surface.StrokeWidth = BorderWidth;
 
-        ShapeFactory.HideDefaultParts(picker);
-        ShapeFactory.InsertBehindContent(picker.Visual, _halo, _surface);
+        ShapeFactory.HideDefaultParts(pickerComboBox);
+        ShapeFactory.InsertBehindContent(pickerComboBox.Visual, _halo, _surface);
 
-        var visual = (ComboBoxVisual)picker.Visual;
+        var visual = (ComboBoxVisual)pickerComboBox.Visual;
         TextStyleCatalog.Picker.ApplyTo(visual.TextInstance);
         visual.TextInstance.LocalizeText = false;
         visual.TextInstance.X = PaddingX;
@@ -40,15 +40,15 @@ public sealed class PickerSkin : InteractiveSkin
         visual.DropdownIndicator.YUnits = GeneralUnitType.PixelsFromMiddle;
         visual.DropdownIndicator.Y = 0;
 
-        StyleList(picker.ListBox);
+        StyleList(pickerComboBox.ListBox);
     }
 
-    public static PickerSkin CreateAndAttach(ComboBox picker)
+    public static PickerSkin CreateAndAttach(ComboBox pickerComboBox)
     {
-        ArgumentNullException.ThrowIfNull(picker);
+        ArgumentNullException.ThrowIfNull(pickerComboBox);
 
-        var skin = new PickerSkin(picker);
-        skin.Attach(picker);
+        var skin = new PickerSkin(pickerComboBox);
+        skin.Attach(pickerComboBox);
         return skin;
     }
 
@@ -61,28 +61,28 @@ public sealed class PickerSkin : InteractiveSkin
         _halo.Visible = flags.HasFlag(InteractionStates.Focused);
     }
 
-    private static void StyleList(ListBox list)
+    private static void StyleList(ListBox listBox)
     {
-        list.VerticalSizeMode = SizeMode.Auto;
-        list.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
-        list.ItemsCollectionChanged += HandleListItemsChanged;
+        listBox.VerticalSizeMode = SizeMode.Auto;
+        listBox.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+        listBox.ItemsCollectionChanged += HandleListItemsChanged;
 
         RectangleRuntime surface = ShapeFactory.CreateRaisedSurface(ListRadius, ListShadowOffsetY, ListShadowBlur);
 
-        ShapeFactory.HideDefaultParts(list);
-        ShapeFactory.InsertBehindContent(list.Visual, surface);
+        ShapeFactory.HideDefaultParts(listBox);
+        ShapeFactory.InsertBehindContent(listBox.Visual, surface);
     }
 
     private static void HandleListItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (sender is not ListBox list)
+        if (sender is not ListBox listBox)
         {
             return;
         }
 
-        foreach (ListBoxItem item in list.ListBoxItems)
+        foreach (ListBoxItem listBoxItem in listBox.ListBoxItems)
         {
-            var itemVisual = (ListBoxItemVisual)item.Visual;
+            var itemVisual = (ListBoxItemVisual)listBoxItem.Visual;
             StyleListItem(itemVisual);
         }
     }

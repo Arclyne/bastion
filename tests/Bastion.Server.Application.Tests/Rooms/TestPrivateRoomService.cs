@@ -89,8 +89,8 @@ public sealed class TestPrivateRoomService
     public void CreateRoom_PlayerSearchingMatch_RejectsSearchingMatch()
     {
         AddPlayer(HostToken, _host);
-        var search = new MatchSearch(HostAccountId, HostNickname, _now);
-        _matchmakingQueue.TryAdd(search);
+        var matchSearch = new MatchSearch(HostAccountId, HostNickname, _now);
+        _matchmakingQueue.TryAdd(matchSearch);
         RequestedRoomSettings settings = CreateClassicSettings();
         Action create = () => _privateRoomService.CreateRoom(HostToken, settings, _now);
 

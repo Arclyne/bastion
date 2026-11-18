@@ -34,7 +34,7 @@ public interface IMatchService
     /// reaches its goal row ends the match.
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
-    /// <param name="move">The match, the expected move number and the destination square in board notation.</param>
+    /// <param name="pawnMove">The match, the expected move number and the destination square in board notation.</param>
     /// <exception cref="FaultException{TDetail}">
     /// With <see cref="InvalidSessionFault"/>: the session is not open.
     /// </exception>
@@ -54,7 +54,7 @@ public interface IMatchService
     [FaultContract(typeof(MatchNotJoinedFault))]
     [FaultContract(typeof(NotYourTurnFault))]
     [FaultContract(typeof(IllegalMoveFault))]
-    void MovePawn(string? sessionToken, PawnMove? move);
+    void MovePawn(string? sessionToken, PawnMove? pawnMove);
 
     /// <summary>
     /// Places one wall of the player of the session in a groove of the board and passes the turn. Every player of the

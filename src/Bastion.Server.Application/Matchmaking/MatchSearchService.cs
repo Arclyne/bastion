@@ -31,8 +31,8 @@ public sealed class MatchSearchService : IMatchSearchService
         ArgumentNullException.ThrowIfNull(sessionToken);
 
         ConnectedPlayer player = _playerVerifier.VerifyPlayerCanSearch(sessionToken, now);
-        var search = new MatchSearch(player.AccountId, player.Nickname, now);
-        _matchmakingQueue.TryAdd(search);
+        var matchSearch = new MatchSearch(player.AccountId, player.Nickname, now);
+        _matchmakingQueue.TryAdd(matchSearch);
     }
 
     /// <inheritdoc/>

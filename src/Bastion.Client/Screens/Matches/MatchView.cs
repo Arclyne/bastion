@@ -34,89 +34,89 @@ public sealed class MatchView : ScreenView
         ArgumentNullException.ThrowIfNull(abandonmentViewModel);
 
         _abandonmentViewModel = abandonmentViewModel;
-        MatchPlayersPanel playersPanel = CreatePlayersPanel(matchViewModel);
-        Panel turnPill = CreateTurnPill(matchViewModel);
-        Label moveNotice = CreateMoveNotice(matchViewModel.Play);
-        WallControlsPanel wallControls = CreateWallControls(matchViewModel.WallPlacement);
-        MatchChatPanel chatPanel = CreateChatPanel(chatViewModel);
+        MatchPlayersPanel matchPlayersPanel = CreatePlayersPanel(matchViewModel);
+        Panel turnPillPanel = CreateTurnPill(matchViewModel);
+        Label moveNoticeLabel = CreateMoveNotice(matchViewModel.MatchPlay);
+        WallControlsPanel wallControlsPanel = CreateWallControls(matchViewModel.WallPlacement);
+        MatchChatPanel matchChatPanel = CreateChatPanel(chatViewModel);
         Button abandonButton = CreateAbandonButton();
-        Label abandonStatus = CreateAbandonStatus();
-        Label playerLeftNotice = CreatePlayerLeftNotice();
-        AddChild(playersPanel);
-        AddChild(turnPill);
-        AddChild(moveNotice);
-        AddChild(wallControls);
-        AddChild(chatPanel);
+        Label abandonStatusLabel = CreateAbandonStatus();
+        Label playerLeftNoticeLabel = CreatePlayerLeftNotice();
+        AddChild(matchPlayersPanel);
+        AddChild(turnPillPanel);
+        AddChild(moveNoticeLabel);
+        AddChild(wallControlsPanel);
+        AddChild(matchChatPanel);
         AddChild(abandonButton);
-        AddChild(abandonStatus);
-        AddChild(playerLeftNotice);
-        var rivalAbandonedDialog = new RivalAbandonedDialogView(abandonmentViewModel);
+        AddChild(abandonStatusLabel);
+        AddChild(playerLeftNoticeLabel);
+        var rivalAbandonedDialogView = new RivalAbandonedDialogView(abandonmentViewModel);
         AddDialog(
-            rivalAbandonedDialog,
+            rivalAbandonedDialogView,
             abandonmentViewModel,
             nameof(MatchAbandonmentViewModel.HasRivalAbandoned));
     }
 
     private static MatchPlayersPanel CreatePlayersPanel(MatchViewModel matchViewModel)
     {
-        var panel = new MatchPlayersPanel(matchViewModel);
-        panel.Anchor(Gum.Wireframe.Anchor.TopLeft);
-        panel.X = ScreenMetrics.MarginX;
-        panel.Y = ScreenMetrics.MarginY;
-        return panel;
+        var matchPlayersPanel = new MatchPlayersPanel(matchViewModel);
+        matchPlayersPanel.Anchor(Gum.Wireframe.Anchor.TopLeft);
+        matchPlayersPanel.X = ScreenMetrics.MarginX;
+        matchPlayersPanel.Y = ScreenMetrics.MarginY;
+        return matchPlayersPanel;
     }
 
     private static Panel CreateTurnPill(MatchViewModel matchViewModel)
     {
-        var pill = new Panel
+        var pillPanel = new Panel
         {
             Width = TurnPillPaddingX * HorizontalSideCount,
             WidthUnits = DimensionUnitType.RelativeToChildren,
             Height = ScreenMetrics.MenuPillHeight,
             HeightUnits = DimensionUnitType.Absolute,
         };
-        pill.Anchor(Gum.Wireframe.Anchor.TopRight);
-        pill.X = -ScreenMetrics.MarginX;
-        pill.Y = ScreenMetrics.MarginY;
+        pillPanel.Anchor(Gum.Wireframe.Anchor.TopRight);
+        pillPanel.X = -ScreenMetrics.MarginX;
+        pillPanel.Y = ScreenMetrics.MarginY;
         Label turnLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchViewModel.TurnText),
             TextStyleCatalog.IdentityName);
         turnLabel.BindingContext = matchViewModel;
         turnLabel.X = TurnPillPaddingX;
         ViewFactory.CenterVertically(turnLabel);
-        pill.AddChild(turnLabel);
-        CardSkin.Apply(pill.Visual);
-        return pill;
+        pillPanel.AddChild(turnLabel);
+        CardSkin.Apply(pillPanel.Visual);
+        return pillPanel;
     }
 
     private static Label CreateMoveNotice(MatchPlayViewModel playViewModel)
     {
-        Label notice = ViewFactory.CreateBoundUntranslatedLabel(
+        Label noticeLabel = ViewFactory.CreateBoundUntranslatedLabel(
             nameof(MatchPlayViewModel.NoticeText),
             TextStyleCatalog.FieldError,
             MoveNoticeWidth);
-        notice.BindingContext = playViewModel;
-        notice.SetBinding(nameof(IsVisible), nameof(MatchPlayViewModel.HasNotice));
-        notice.Anchor(Gum.Wireframe.Anchor.Bottom);
-        notice.Y = -ScreenMetrics.MarginY;
-        return notice;
+        noticeLabel.BindingContext = playViewModel;
+        noticeLabel.SetBinding(nameof(IsVisible), nameof(MatchPlayViewModel.HasNotice));
+        noticeLabel.Anchor(Gum.Wireframe.Anchor.Bottom);
+        noticeLabel.Y = -ScreenMetrics.MarginY;
+        return noticeLabel;
     }
 
     private static WallControlsPanel CreateWallControls(WallPlacementViewModel wallPlacement)
     {
-        var panel = new WallControlsPanel(wallPlacement);
-        panel.Anchor(Gum.Wireframe.Anchor.Bottom);
-        panel.Y = WallControlsOffsetY;
-        return panel;
+        var wallControlsPanel = new WallControlsPanel(wallPlacement);
+        wallControlsPanel.Anchor(Gum.Wireframe.Anchor.Bottom);
+        wallControlsPanel.Y = WallControlsOffsetY;
+        return wallControlsPanel;
     }
 
     private static MatchChatPanel CreateChatPanel(MatchChatViewModel chatViewModel)
     {
-        var panel = new MatchChatPanel(chatViewModel);
-        panel.Anchor(Gum.Wireframe.Anchor.BottomRight);
-        panel.X = -ScreenMetrics.MarginX;
-        panel.Y = -ScreenMetrics.MarginY;
-        return panel;
+        var matchChatPanel = new MatchChatPanel(chatViewModel);
+        matchChatPanel.Anchor(Gum.Wireframe.Anchor.BottomRight);
+        matchChatPanel.X = -ScreenMetrics.MarginX;
+        matchChatPanel.Y = -ScreenMetrics.MarginY;
+        return matchChatPanel;
     }
 
     private Button CreateAbandonButton()
@@ -149,28 +149,28 @@ public sealed class MatchView : ScreenView
 
     private Label CreateAbandonStatus()
     {
-        Label status = ViewFactory.CreateBoundNotice(
+        Label statusLabel = ViewFactory.CreateBoundNotice(
             nameof(MatchAbandonmentViewModel.StatusText),
             nameof(MatchAbandonmentViewModel.HasStatus),
             TextStyleCatalog.FieldError);
-        ViewFactory.SetFixedWidth(status, AbandonButtonWidth);
-        status.BindingContext = _abandonmentViewModel;
-        status.Anchor(Gum.Wireframe.Anchor.BottomLeft);
-        status.X = ScreenMetrics.MarginX;
-        status.Y = AbandonStatusOffsetY;
-        return status;
+        ViewFactory.SetFixedWidth(statusLabel, AbandonButtonWidth);
+        statusLabel.BindingContext = _abandonmentViewModel;
+        statusLabel.Anchor(Gum.Wireframe.Anchor.BottomLeft);
+        statusLabel.X = ScreenMetrics.MarginX;
+        statusLabel.Y = AbandonStatusOffsetY;
+        return statusLabel;
     }
 
     private Label CreatePlayerLeftNotice()
     {
-        Label notice = ViewFactory.CreateBoundNotice(
+        Label noticeLabel = ViewFactory.CreateBoundNotice(
             nameof(MatchAbandonmentViewModel.PlayerLeftText),
             nameof(MatchAbandonmentViewModel.HasPlayerLeft),
             TextStyleCatalog.IdentityName);
-        ViewFactory.SetFixedWidth(notice, PlayerLeftNoticeWidth);
-        notice.BindingContext = _abandonmentViewModel;
-        notice.Anchor(Gum.Wireframe.Anchor.Top);
-        notice.Y = ScreenMetrics.MarginY;
-        return notice;
+        ViewFactory.SetFixedWidth(noticeLabel, PlayerLeftNoticeWidth);
+        noticeLabel.BindingContext = _abandonmentViewModel;
+        noticeLabel.Anchor(Gum.Wireframe.Anchor.Top);
+        noticeLabel.Y = ScreenMetrics.MarginY;
+        return noticeLabel;
     }
 }

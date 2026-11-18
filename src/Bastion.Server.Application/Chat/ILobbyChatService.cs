@@ -32,7 +32,9 @@ public interface ILobbyChatService
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
     /// <param name="now">The current UTC time, used to decide whether a mute is still in effect.</param>
-    /// <returns>The recent messages, marked as own or not, the number of listeners and the player's mute.</returns>
+    /// <returns>
+    /// The recent messages, marked as own or not, the number of listeners and the player's mute status.
+    /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="sessionToken"/> is null.</exception>
     /// <exception cref="InvalidSessionException">The session is not open.</exception>
     LobbyChatHistory OpenLobbyChat(string sessionToken, DateTime now);

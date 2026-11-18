@@ -13,7 +13,7 @@ public interface IMatchClient
 
     void AbandonMatch(string sessionToken, int matchId);
 
-    void MovePawn(string sessionToken, ChosenPawnMove move);
+    void MovePawn(string sessionToken, ChosenPawnMove chosenMove);
 
     void PlaceWall(string sessionToken, ChosenWall wall);
 }
