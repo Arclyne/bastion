@@ -8,7 +8,9 @@ public interface INotificationClient
 
     event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
 
-    event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
+    event EventHandler<ParticipationEndedEventArgs>? ParticipationEnded;
+
+    event EventHandler<MatchEndedEventArgs>? MatchEnded;
 
     event EventHandler<PawnMovedEventArgs>? PawnMoved;
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
@@ -17,9 +18,11 @@ namespace Bastion.Client.Screens.Matches;
 public sealed class MatchPlayViewModel : ViewModel, IDisposable
 {
     public const int MoveNotificationWaitSeconds = 5;
+    public const int ClockTickMilliseconds = 250;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchPlayViewModel));
     private static readonly TimeSpan _moveNotificationWait = TimeSpan.FromSeconds(MoveNotificationWaitSeconds);
+    private static readonly TimeSpan _clockTick = TimeSpan.FromMilliseconds(ClockTickMilliseconds);
 
     private readonly JoinedMatch _joinedMatch;
     private readonly IMatchClient _matches;
@@ -29,11 +32,15 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     private readonly Dictionary<string, byte> _turnOrdersByNickname;
     private readonly Dictionary<byte, string> _nicknamesByTurnOrder;
     private readonly Dictionary<byte, byte> _remainingWallsByTurnOrder;
+    private readonly Dictionary<byte, TimeSpan> _remainingClocksByTurnOrder;
     private readonly byte _boardSize;
     private readonly byte _ownTurnOrder;
     private readonly List<Wall> _walls;
     private List<BoardCoordinates> _reachableSquares;
     private ITimer? _moveNotificationTimer;
+    private ITimer? _clockTimer;
+    private DateTimeOffset _turnStartedAt;
+    private bool _areClocksStopped;
 
     public MatchPlayViewModel(JoinedMatch joinedMatch, IMatchClient matches, TimeProvider timeProvider)
     {
@@ -50,6 +57,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         _turnOrdersByNickname = new Dictionary<string, byte>(participants.Count, StringComparer.Ordinal);
         _nicknamesByTurnOrder = new Dictionary<byte, string>(participants.Count);
         _remainingWallsByTurnOrder = new Dictionary<byte, byte>(participants.Count);
+        _remainingClocksByTurnOrder = new Dictionary<byte, TimeSpan>(participants.Count);
         _walls = [];
         _reachableSquares = [];
         _boardSize = joinedMatch.GetBoardSize();
@@ -58,10 +66,13 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         NextMoveNumber = Match.FirstMoveNumber;
         NoticeText = string.Empty;
         WinnerNickname = string.Empty;
-        PlacePawnsAtStart(participants, joinedMatch.FoundMatch.Format.WallsPerPlayer);
+        PlacePawnsAtStart(participants, joinedMatch.FoundMatch.Format);
+        _turnStartedAt = timeProvider.GetUtcNow() + MatchClockPolicy.OpeningDelay;
+        _clockTimer = timeProvider.CreateTimer(HandleClockTick, state: null, _clockTick, _clockTick);
         _matches.PawnMoved += HandlePawnMoved;
         _matches.WallPlaced += HandleWallPlaced;
-        _matches.MatchAbandoned += HandleMatchAbandoned;
+        _matches.ParticipationEnded += HandleParticipationEnded;
+        _matches.MatchEnded += HandleMatchEnded;
     }
 
     public byte CurrentTurnOrder { get; private set; }
@@ -94,6 +105,12 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     public bool HasNotice => NoticeText.Length > 0;
 
     public event EventHandler? StateChanged;
+
+    public event EventHandler? ClockTicked;
+
+    public event EventHandler<ParticipationEndedEventArgs>? OwnParticipationEnded;
+
+    public event EventHandler<MatchEndedEventArgs>? MatchEndReceived;
 
     public async Task SelectSquare(BoardCoordinates square)
     {
@@ -148,6 +165,29 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         return _remainingWallsByTurnOrder.GetValueOrDefault(turnOrder);
     }
 
+    public TimeSpan GetRemainingClock(byte turnOrder)
+    {
+        TimeSpan remainingClock = _remainingClocksByTurnOrder.GetValueOrDefault(turnOrder);
+        if (_areClocksStopped || turnOrder != CurrentTurnOrder)
+        {
+            return remainingClock;
+        }
+
+        TimeSpan turnTime = _timeProvider.GetUtcNow() - _turnStartedAt;
+        if (turnTime <= TimeSpan.Zero)
+        {
+            return remainingClock;
+        }
+
+        TimeSpan clockLeft = remainingClock - turnTime;
+        if (clockLeft <= TimeSpan.Zero)
+        {
+            return TimeSpan.Zero;
+        }
+
+        return clockLeft;
+    }
+
     public string DescribeWallRejection(WallRejectionReason reason, byte? blockedTurnOrder)
     {
         string blockedNickname = blockedTurnOrder is byte turnOrder ? FindNickname(turnOrder) : string.Empty;
@@ -194,22 +234,36 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
     public void Dispose()
     {
+        StopClocks();
         StopWaitingForMoveNotification();
         _matches.PawnMoved -= HandlePawnMoved;
         _matches.WallPlaced -= HandleWallPlaced;
-        _matches.MatchAbandoned -= HandleMatchAbandoned;
+        _matches.ParticipationEnded -= HandleParticipationEnded;
+        _matches.MatchEnded -= HandleMatchEnded;
     }
 
-    private void PlacePawnsAtStart(IReadOnlyList<FoundMatchParticipant> participants, byte wallsPerPlayer)
+    private void PlacePawnsAtStart(IReadOnlyList<FoundMatchParticipant> participants, FoundMatchFormat format)
     {
+        var startingClock = TimeSpan.FromMinutes(format.ClockMinutes);
         foreach (FoundMatchParticipant participant in participants)
         {
             BoardCoordinates start = BoardLayout.GetStartingCoordinates(_boardSize, participant.TurnOrder);
             _pawnsByTurnOrder[participant.TurnOrder] = start;
             _turnOrdersByNickname[participant.Nickname] = participant.TurnOrder;
             _nicknamesByTurnOrder[participant.TurnOrder] = participant.Nickname;
-            _remainingWallsByTurnOrder[participant.TurnOrder] = wallsPerPlayer;
+            _remainingWallsByTurnOrder[participant.TurnOrder] = format.WallsPerPlayer;
+            _remainingClocksByTurnOrder[participant.TurnOrder] = startingClock;
         }
+    }
+
+    private void HandleClockTick(object? state)
+    {
+        UiThread.Run(_uiContext, OnClockTicked);
+    }
+
+    private void OnClockTicked()
+    {
+        ClockTicked?.Invoke(this, EventArgs.Empty);
     }
 
     private void HandlePawnMoved(object? sender, PawnMovedEventArgs e)
@@ -237,13 +291,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
         _pawnsByTurnOrder[moverTurnOrder] = destination;
         TakeServerTurn(pawnMove.NextTurnOrder, pawnMove.NextMoveNumber);
+        SettleClock(moverTurnOrder, pawnMove.RemainingClockMilliseconds);
         ClearSelection();
-        if (pawnMove.IsMatchOver)
-        {
-            EndMatch(pawnMove.MoverNickname);
-            return;
-        }
-
         OnStateChanged();
     }
 
@@ -254,9 +303,24 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
             return;
         }
 
+        if (turnOrder != CurrentTurnOrder || nextMoveNumber > NextMoveNumber)
+        {
+            StartTurnClock();
+        }
+
         CurrentTurnOrder = turnOrder;
         NextMoveNumber = nextMoveNumber;
         StopWaitingForMoveNotification();
+    }
+
+    private void StartTurnClock()
+    {
+        _remainingClocksByTurnOrder[CurrentTurnOrder] = GetRemainingClock(CurrentTurnOrder);
+        DateTimeOffset now = _timeProvider.GetUtcNow();
+        if (now > _turnStartedAt)
+        {
+            _turnStartedAt = now;
+        }
     }
 
     private void StopWaitingForMoveNotification()
@@ -271,12 +335,34 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         IsSending = false;
     }
 
+    private void SettleClock(byte turnOrder, int? remainingClockMilliseconds)
+    {
+        if (remainingClockMilliseconds is not int remainingMilliseconds)
+        {
+            return;
+        }
+
+        _remainingClocksByTurnOrder[turnOrder] = TimeSpan.FromMilliseconds(remainingMilliseconds);
+    }
+
     private void EndMatch(string winnerNickname)
     {
+        StopClocks();
         IsMatchOver = true;
         WinnerNickname = winnerNickname;
         ClearSelection();
         OnStateChanged();
+    }
+
+    private void StopClocks()
+    {
+        if (!_areClocksStopped)
+        {
+            _remainingClocksByTurnOrder[CurrentTurnOrder] = GetRemainingClock(CurrentTurnOrder);
+            _areClocksStopped = true;
+        }
+
+        Interlocked.Exchange(ref _clockTimer, value: null)?.Dispose();
     }
 
     private void OnStateChanged()
@@ -311,43 +397,64 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         var wall = new Wall(groove, orientation);
         _walls.Add(wall);
         _remainingWallsByTurnOrder[placerTurnOrder] = wallPlacement.RemainingWalls;
-        SyncServerTurn(wallPlacement.NextTurnOrder, wallPlacement.NextMoveNumber);
-    }
-
-    private void SyncServerTurn(byte turnOrder, short nextMoveNumber)
-    {
-        TakeServerTurn(turnOrder, nextMoveNumber);
+        TakeServerTurn(wallPlacement.NextTurnOrder, wallPlacement.NextMoveNumber);
+        SettleClock(placerTurnOrder, wallPlacement.RemainingClockMilliseconds);
         ClearSelection();
         OnStateChanged();
     }
 
-    private void HandleMatchAbandoned(object? sender, MatchAbandonedEventArgs e)
+    private void HandleParticipationEnded(object? sender, ParticipationEndedEventArgs e)
     {
         if (!_joinedMatch.IsJoinedMatch(e.MatchId))
         {
             return;
         }
 
-        Action receiveAbandonment = () => ReceiveAbandonment(e.AbandoningNickname, e.IsMatchOver);
-        UiThread.Run(_uiContext, receiveAbandonment);
+        Action receiveParticipationEnd = () => ReceiveParticipationEnd(e);
+        UiThread.Run(_uiContext, receiveParticipationEnd);
     }
 
-    private void ReceiveAbandonment(string abandoningNickname, bool isMatchOver)
+    private void ReceiveParticipationEnd(ParticipationEndedEventArgs participationEnd)
     {
-        if (isMatchOver)
+        _pawnsByTurnOrder.Remove(participationEnd.DepartingTurnOrder);
+        TakeServerTurn(participationEnd.NextTurnOrder, participationEnd.NextMoveNumber);
+        ClearSelection();
+        if (participationEnd.DepartingTurnOrder == _ownTurnOrder)
         {
-            EndMatch(_joinedMatch.Session.Nickname);
-            return;
+            IsMatchOver = true;
+            OwnParticipationEnded?.Invoke(this, participationEnd);
         }
 
-        bool isKnownAbandoningPlayer = _turnOrdersByNickname.TryGetValue(abandoningNickname, out byte leftTurnOrder);
-        if (!isKnownAbandoningPlayer)
-        {
-            return;
-        }
-
-        _pawnsByTurnOrder.Remove(leftTurnOrder);
         OnStateChanged();
+    }
+
+    private void HandleMatchEnded(object? sender, MatchEndedEventArgs e)
+    {
+        if (!_joinedMatch.IsJoinedMatch(e.MatchId))
+        {
+            return;
+        }
+
+        Action receiveMatchEnd = () => ReceiveMatchEnd(e);
+        UiThread.Run(_uiContext, receiveMatchEnd);
+    }
+
+    private void ReceiveMatchEnd(MatchEndedEventArgs matchEnd)
+    {
+        string winnerNickname = FindWinnerNickname(matchEnd.Standings);
+        EndMatch(winnerNickname);
+        MatchEndReceived?.Invoke(this, matchEnd);
+    }
+
+    private string FindWinnerNickname(IReadOnlyList<PlayerStanding> standings)
+    {
+        PlayerStanding? winner = standings.FirstOrDefault(standing => standing.Result == StandingResult.Won);
+        if (winner is null)
+        {
+            return string.Empty;
+        }
+
+        return FindNickname(winner.TurnOrder);
     }
 
     private bool CanChooseMove()
@@ -448,6 +555,13 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         }
 
         return false;
+    }
+
+    private void SyncServerTurn(byte turnOrder, short nextMoveNumber)
+    {
+        TakeServerTurn(turnOrder, nextMoveNumber);
+        ClearSelection();
+        OnStateChanged();
     }
 
     private void ShowWallRejection(WallPlacementRejection rejection, byte? blockedTurnOrder)

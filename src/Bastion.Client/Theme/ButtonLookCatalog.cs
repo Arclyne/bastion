@@ -58,4 +58,9 @@ public static class ButtonLookCatalog
         Radius = PillRadius,
         Text = TextStyleCatalog.SmallButton,
     };
+
+    public static ButtonLook Danger { get; } = Secondary with
+    {
+        Text = TextStyleCatalog.DangerButton,
+    };
 }

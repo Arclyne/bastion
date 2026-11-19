@@ -38,9 +38,19 @@ public sealed class TestMatch
     private const string FirstRowCenterGroove = "e1";
     private const byte SingleWallPerPlayer = 1;
     private const byte ClassicWallsAfterOne = GameModeSampleFactory.ClassicWallsPerPlayer - 1;
+    private const byte SecondPlacement = 2;
+    private const short RankedWinnerFinalElo = 1019;
+    private const short RankedLeaverFinalElo = 1036;
+    private const int ThreeActivePlayers = 3;
+    private const string FourPlayerGoalSquare = "e9";
+    private const int NoActivePlayers = 0;
+    private const int NoClockLeft = 0;
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _endedAt = new DateTime(2026, 11, 5, 18, 7, 0, DateTimeKind.Utc);
+    private static readonly DateTime _goalReachedAt = new DateTime(2026, 11, 5, 18, 1, 0, DateTimeKind.Utc);
+    private static readonly DateTime _turnOpensAt = _startedAt + MatchClockPolicy.OpeningDelay;
+    private static readonly DateTime _clockRunsOutAt = _turnOpensAt.AddMilliseconds(FiveMinutesInMilliseconds);
     private static readonly MatchEntrant _firstEntrant = new MatchEntrant(FirstAccountId, FirstEloRating);
     private static readonly MatchEntrant _secondEntrant = new MatchEntrant(SecondAccountId, SecondEloRating);
     private static readonly MatchEntrant[] _entrants = { _firstEntrant, _secondEntrant };
@@ -48,6 +58,12 @@ public sealed class TestMatch
     private static readonly BoardCoordinates _firstRowCenterGroove = BoardLayout.ParseSquare(FirstRowCenterGroove);
     private static readonly Wall _centerWall = new Wall(_centerGroove, WallOrientation.Horizontal);
     private static readonly Wall _wallAheadOfFirstPawn = new Wall(_firstRowCenterGroove, WallOrientation.Horizontal);
+    private static readonly string[] _fourPlayerMovesBeforeFirstGoal =
+    {
+        "e2", "f9", "a4", "i4", "e3", "e9", "a5", "i5", "e4", "f9", "a4", "i4", "e5", "e9",
+        "a5", "i5", "e6", "f9", "a4", "i4", "e7", "e9", "a5", "i5", "e8", "f9", "a4", "i4",
+    };
+
     private static readonly string[] _quickMovesBeforeFirstPlayerGoal =
     {
         "d2", "c7", "d3", "c6", "d4", "c5", "d5", "c4", "d6", "c3",
@@ -452,11 +468,11 @@ public sealed class TestMatch
     }
 
     [Fact]
-    public void MovePawn_ThirtySecondsAfterStart_SpendsThoseSecondsFromClock()
+    public void MovePawn_ThirtySecondsAfterOpening_SpendsThoseSecondsFromClock()
     {
         Match match = StartClassicMatch();
         PawnMove forwardMove = CreateFirstPlayerForwardMove();
-        DateTime playedAt = _startedAt.AddMilliseconds(ThirtySecondsInMilliseconds);
+        DateTime playedAt = _turnOpensAt.AddMilliseconds(ThirtySecondsInMilliseconds);
         int expectedClock = FiveMinutesInMilliseconds - ThirtySecondsInMilliseconds;
 
         match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, playedAt);
@@ -534,7 +550,7 @@ public sealed class TestMatch
         Match match = PlayQuickMatchBeforeFirstPlayerGoal();
         PawnMove goalMove = CreateFirstPlayerGoalMove(match);
 
-        match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _endedAt);
+        match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _goalReachedAt);
 
         Assert.Equal(MatchStatus.Finished, match.Status);
     }
@@ -545,7 +561,7 @@ public sealed class TestMatch
         Match match = PlayQuickMatchBeforeFirstPlayerGoal();
         PawnMove goalMove = CreateFirstPlayerGoalMove(match);
 
-        match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _endedAt);
+        match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _goalReachedAt);
 
         Assert.Equal(MatchEndReason.Goal, match.EndReason);
     }
@@ -556,7 +572,7 @@ public sealed class TestMatch
         Match match = PlayQuickMatchBeforeFirstPlayerGoal();
         PawnMove goalMove = CreateFirstPlayerGoalMove(match);
 
-        match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _endedAt);
+        match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _goalReachedAt);
 
         Participation first = match.GetParticipation(FirstAccountId);
         Assert.Equal(ParticipationResult.Won, first.Result);
@@ -568,7 +584,7 @@ public sealed class TestMatch
         Match match = PlayQuickMatchBeforeFirstPlayerGoal();
         PawnMove goalMove = CreateFirstPlayerGoalMove(match);
 
-        match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _endedAt);
+        match.MovePawn(goalMove, GameModeSampleFactory.QuickBoardSize, _goalReachedAt);
 
         Participation second = match.GetParticipation(SecondAccountId);
         Assert.Equal(ParticipationResult.Lost, second.Result);
@@ -684,6 +700,387 @@ public sealed class TestMatch
         Action place = () => match.PlaceWall(placement, GameModeSampleFactory.ClassicBoardSize, _startedAt);
 
         Assert.Throws<InvalidOperationException>(place);
+    }
+
+    [Fact]
+    public void MovePawn_FourPlayersFirstReachesGoal_KeepsMatchGoing()
+    {
+        Match match = PlayFourPlayerMatchUntilFirstGoal();
+
+        Assert.False(match.IsFinished());
+    }
+
+    [Fact]
+    public void MovePawn_FourPlayersFirstReachesGoal_GivesFirstPlace()
+    {
+        Match match = PlayFourPlayerMatchUntilFirstGoal();
+
+        Participation arriving = match.GetParticipation(FirstAccountId);
+        Assert.Equal(FirstPlacement, arriving.Placement);
+    }
+
+    [Fact]
+    public void MovePawn_FourPlayersFirstReachesGoal_RecordsGoalAsEndReason()
+    {
+        Match match = PlayFourPlayerMatchUntilFirstGoal();
+
+        Participation arriving = match.GetParticipation(FirstAccountId);
+        Assert.Equal(MatchEndReason.Goal, arriving.EndReason);
+    }
+
+    [Fact]
+    public void MovePawn_FourPlayersFirstReachesGoal_PassesTurnToSecondPlayer()
+    {
+        Match match = PlayFourPlayerMatchUntilFirstGoal();
+
+        Assert.True(match.IsTurnOf(SecondAccountId));
+    }
+
+    [Fact]
+    public void MovePawn_FourPlayersFirstReachesGoal_LeavesThreeActivePlayers()
+    {
+        Match match = PlayFourPlayerMatchUntilFirstGoal();
+
+        Assert.Equal(ThreeActivePlayers, match.CountActivePlayers());
+    }
+
+    [Fact]
+    public void Abandon_FourPlayersAfterFirstGoal_GivesLeaverLastPlace()
+    {
+        Match match = PlayFourPlayerMatchUntilFirstGoal();
+
+        match.Abandon(SecondAccountId, _endedAt);
+
+        Participation leaver = match.GetParticipation(SecondAccountId);
+        Assert.Equal(LastOfFourPlacement, leaver.Placement);
+    }
+
+    [Fact]
+    public void Abandon_FourPlayersAfterFirstGoalTwoLeave_GivesLastStandingSecondPlace()
+    {
+        Match match = PlayFourPlayerMatchUntilFirstGoal();
+        match.Abandon(SecondAccountId, _endedAt);
+        (ParticipationResult? Result, byte? Placement) expectedOutcome = (ParticipationResult.Lost, SecondPlacement);
+
+        match.Abandon(ThirdAccountId, _endedAt);
+
+        Participation lastStanding = match.GetParticipation(FourthAccountId);
+        Assert.Equal(expectedOutcome, (lastStanding.Result, lastStanding.Placement));
+    }
+
+    [Fact]
+    public void CanBeRated_RankedMatchAbandoned_ReturnsTrue()
+    {
+        Match match = StartClassicMatch();
+        match.Abandon(FirstAccountId, _endedAt);
+
+        Assert.True(match.CanBeRated());
+    }
+
+    [Fact]
+    public void CanBeRated_MatchInProgress_ReturnsFalse()
+    {
+        Match match = StartClassicMatch();
+
+        Assert.False(match.CanBeRated());
+    }
+
+    [Fact]
+    public void CanBeRated_PrivateMatchAbandoned_ReturnsFalse()
+    {
+        MatchFormat format = CreateClassicFormat();
+        MatchEntrant[] entrants = CreatePrivateEntrants();
+        var match = Match.StartPrivate(format, entrants, _startedAt);
+        match.Abandon(FirstAccountId, _endedAt);
+
+        Assert.False(match.CanBeRated());
+    }
+
+    [Fact]
+    public void Rate_RankedMatchAbandoned_RaisesWinnerElo()
+    {
+        Match match = StartClassicMatch();
+        match.Abandon(FirstAccountId, _endedAt);
+
+        match.Rate();
+
+        Participation winner = match.GetParticipation(SecondAccountId);
+        Assert.Equal(RankedWinnerFinalElo, winner.FinalElo);
+    }
+
+    [Fact]
+    public void Rate_RankedMatchAbandoned_LowersLeaverElo()
+    {
+        Match match = StartClassicMatch();
+        match.Abandon(FirstAccountId, _endedAt);
+
+        match.Rate();
+
+        Participation leaver = match.GetParticipation(FirstAccountId);
+        Assert.Equal(RankedLeaverFinalElo, leaver.FinalElo);
+    }
+
+    [Fact]
+    public void Rate_MatchInProgress_ThrowsInvalidOperationException()
+    {
+        Match match = StartClassicMatch();
+
+        Action rate = match.Rate;
+
+        Assert.Throws<InvalidOperationException>(rate);
+    }
+
+    [Fact]
+    public void HasAbandoned_TwoPlayerLeaver_ReturnsTrue()
+    {
+        Match match = StartClassicMatch();
+        match.Abandon(FirstAccountId, _endedAt);
+
+        Assert.True(match.HasAbandoned(FirstAccountId));
+    }
+
+    [Fact]
+    public void HasAbandoned_TwoPlayerWinnerByAbandonment_ReturnsFalse()
+    {
+        Match match = StartClassicMatch();
+        match.Abandon(FirstAccountId, _endedAt);
+
+        Assert.False(match.HasAbandoned(SecondAccountId));
+    }
+
+    [Fact]
+    public void HasAbandoned_FourPlayerLeaver_ReturnsTrue()
+    {
+        Match match = StartFourPlayerMatchAfterFirstLeaver();
+
+        Assert.True(match.HasAbandoned(FirstAccountId));
+    }
+
+    [Fact]
+    public void PreviewAbandonment_RankedMatch_PredictsLeaverFinalElo()
+    {
+        Match match = StartClassicMatch();
+
+        AbandonmentPreview preview = match.PreviewAbandonment(FirstAccountId, _endedAt);
+
+        Assert.Equal(RankedLeaverFinalElo, preview.FinalElo);
+    }
+
+    [Fact]
+    public void PreviewAbandonment_RankedMatch_KeepsMatchInProgress()
+    {
+        Match match = StartClassicMatch();
+
+        match.PreviewAbandonment(FirstAccountId, _endedAt);
+
+        Assert.Equal(MatchStatus.InProgress, match.Status);
+    }
+
+    [Fact]
+    public void PreviewAbandonment_RankedMatch_KeepsLeaverParticipationOpen()
+    {
+        Match match = StartClassicMatch();
+
+        match.PreviewAbandonment(FirstAccountId, _endedAt);
+
+        Participation leaver = match.GetParticipation(FirstAccountId);
+        Assert.Null(leaver.Result);
+    }
+
+    [Fact]
+    public void PreviewAbandonment_TwoPlayers_PredictsNoActivePlayers()
+    {
+        Match match = StartClassicMatch();
+
+        AbandonmentPreview preview = match.PreviewAbandonment(FirstAccountId, _endedAt);
+
+        Assert.Equal(NoActivePlayers, preview.ActivePlayerCount);
+    }
+
+    [Fact]
+    public void PreviewAbandonment_PrivateMatch_PredictsNoFinalElo()
+    {
+        MatchFormat format = CreateClassicFormat();
+        MatchEntrant[] entrants = CreatePrivateEntrants();
+        var match = Match.StartPrivate(format, entrants, _startedAt);
+
+        AbandonmentPreview preview = match.PreviewAbandonment(FirstAccountId, _endedAt);
+
+        Assert.Null(preview.FinalElo);
+    }
+
+    [Fact]
+    public void PreviewAbandonment_FourPlayers_PredictsLastPlace()
+    {
+        Match match = StartFourPlayerMatch();
+
+        AbandonmentPreview preview = match.PreviewAbandonment(FirstAccountId, _endedAt);
+
+        Assert.Equal(LastOfFourPlacement, preview.Placement);
+    }
+
+    [Fact]
+    public void PreviewAbandonment_FourPlayers_PredictsThreeActivePlayers()
+    {
+        Match match = StartFourPlayerMatch();
+
+        AbandonmentPreview preview = match.PreviewAbandonment(FirstAccountId, _endedAt);
+
+        Assert.Equal(ThreeActivePlayers, preview.ActivePlayerCount);
+    }
+
+    [Fact]
+    public void PreviewAbandonment_Outsider_ThrowsInvalidOperationException()
+    {
+        Match match = StartClassicMatch();
+
+        Func<AbandonmentPreview> preview = () => match.PreviewAbandonment(OutsiderAccountId, _endedAt);
+
+        Assert.Throws<InvalidOperationException>(preview);
+    }
+
+    [Fact]
+    public void StartRanked_NewMatch_OpensFirstTurnAfterOpeningDelay()
+    {
+        Match match = StartClassicMatch();
+
+        Assert.Equal(_turnOpensAt, match.TurnStartedAt);
+    }
+
+    [Fact]
+    public void MovePawn_FirstPlayerMoves_OpensNextTurnAtMoveTime()
+    {
+        Match match = StartClassicMatch();
+        PawnMove forwardMove = CreateFirstPlayerForwardMove();
+        DateTime playedAt = _turnOpensAt.AddMilliseconds(TenSecondsInMilliseconds);
+
+        match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, playedAt);
+
+        Assert.Equal(playedAt, match.TurnStartedAt);
+    }
+
+    [Fact]
+    public void HasClockRunOut_BeforeClockEnds_ReturnsFalse()
+    {
+        Match match = StartClassicMatch();
+        DateTime beforeEnd = _clockRunsOutAt.AddMilliseconds(-TenSecondsInMilliseconds);
+
+        Assert.False(match.HasClockRunOut(beforeEnd));
+    }
+
+    [Fact]
+    public void HasClockRunOut_WhenClockEnds_ReturnsTrue()
+    {
+        Match match = StartClassicMatch();
+
+        Assert.True(match.HasClockRunOut(_clockRunsOutAt));
+    }
+
+    [Fact]
+    public void ExpireClock_TwoPlayers_RivalWins()
+    {
+        Match match = StartClassicMatch();
+
+        match.ExpireClock(_clockRunsOutAt);
+
+        Participation rival = match.GetParticipation(SecondAccountId);
+        Assert.Equal(ParticipationResult.Won, rival.Result);
+    }
+
+    [Fact]
+    public void ExpireClock_TwoPlayers_EndsByTimeout()
+    {
+        Match match = StartClassicMatch();
+
+        match.ExpireClock(_clockRunsOutAt);
+
+        Assert.Equal(MatchEndReason.Timeout, match.EndReason);
+    }
+
+    [Fact]
+    public void ExpireClock_LateCheck_EndsWhenTheClockRanOut()
+    {
+        Match match = StartClassicMatch();
+        DateTime checkedAt = _clockRunsOutAt.AddMilliseconds(TenSecondsInMilliseconds);
+
+        match.ExpireClock(checkedAt);
+
+        Assert.Equal(_clockRunsOutAt, match.EndedAt);
+    }
+
+    [Fact]
+    public void ExpireClock_TwoPlayers_LeavesTimedOutClockAtZero()
+    {
+        Match match = StartClassicMatch();
+
+        match.ExpireClock(_clockRunsOutAt);
+
+        Participation timedOut = match.GetParticipation(FirstAccountId);
+        Assert.Equal(NoClockLeft, timedOut.RemainingClockMilliseconds);
+    }
+
+    [Fact]
+    public void ExpireClock_ClockLeft_ThrowsInvalidOperationException()
+    {
+        Match match = StartClassicMatch();
+
+        Action expire = () => match.ExpireClock(_turnOpensAt);
+
+        Assert.Throws<InvalidOperationException>(expire);
+    }
+
+    [Fact]
+    public void ExpireClock_FourPlayers_GivesTimedOutPlayerLastPlace()
+    {
+        Match match = StartFourPlayerMatch();
+
+        match.ExpireClock(_clockRunsOutAt);
+
+        Participation timedOut = match.GetParticipation(FirstAccountId);
+        Assert.Equal(LastOfFourPlacement, timedOut.Placement);
+    }
+
+    [Fact]
+    public void ExpireClock_FourPlayers_OpensNextTurnWhenTheClockRanOut()
+    {
+        Match match = StartFourPlayerMatch();
+
+        match.ExpireClock(_clockRunsOutAt);
+
+        Assert.Equal((Match.SecondTurnOrder, _clockRunsOutAt), (match.CurrentTurnOrder, match.TurnStartedAt));
+    }
+
+    [Fact]
+    public void MovePawn_ClockRanOut_ThrowsInvalidOperationException()
+    {
+        Match match = StartClassicMatch();
+        PawnMove forwardMove = CreateFirstPlayerForwardMove();
+
+        Action movePawn = () => match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, _clockRunsOutAt);
+
+        Assert.Throws<InvalidOperationException>(movePawn);
+    }
+
+    private static Match PlayFourPlayerMatchUntilFirstGoal()
+    {
+        Match match = StartFourPlayerMatch();
+        int[] accountIdsInTurnOrder = { FirstAccountId, SecondAccountId, ThirdAccountId, FourthAccountId };
+        for (int moveIndex = 0; moveIndex < _fourPlayerMovesBeforeFirstGoal.Length; moveIndex++)
+        {
+            int accountId = accountIdsInTurnOrder[moveIndex % accountIdsInTurnOrder.Length];
+            PlaySquare(match, accountId, _fourPlayerMovesBeforeFirstGoal[moveIndex]);
+        }
+
+        PlaySquare(match, FirstAccountId, FourPlayerGoalSquare);
+        return match;
+    }
+
+    private static void PlaySquare(Match match, int accountId, string square)
+    {
+        short moveNumber = match.GetNextMoveNumber();
+        BoardCoordinates destination = BoardLayout.ParseSquare(square);
+        var pawnMove = new PawnMove(accountId, moveNumber, destination);
+        match.MovePawn(pawnMove, GameModeSampleFactory.ClassicBoardSize, _startedAt);
     }
 
     private static MatchEntrant[] CreatePrivateEntrants()

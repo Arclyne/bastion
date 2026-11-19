@@ -2,13 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bastion.Client.Networking.Friends;
+using Bastion.Client.Networking.Matches;
 using Bastion.Client.Networking.Matchmaking;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.Rooms;
 using Bastion.Contracts.Friends;
 using Bastion.Contracts.Notifications;
 using Bastion.Contracts.Rooms;
+using Bastion.Domain.Matches;
 using Xunit;
+using ContractMatchEndReason = Bastion.Contracts.Matches.MatchEndReason;
 
 namespace Bastion.Client.Tests.Notifications;
 
@@ -23,6 +26,7 @@ public sealed class TestNotificationCallback
     private const int FoundMatchId = 12;
     private const int ChatMatchId = 21;
     private const int AbandonedMatchId = 30;
+    private const int NoStandings = 0;
     private const byte ClassicBoardSize = 9;
     private const byte ClassicWallsPerPlayer = 10;
     private const byte ClockMinutes = 5;
@@ -44,7 +48,8 @@ public sealed class TestNotificationCallback
     private readonly NotificationCallback _notificationCallback = new NotificationCallback();
     private ChatMessageReceivedEventArgs? _chatMessage;
     private MatchChatMessageReceivedEventArgs? _matchChatMessage;
-    private MatchAbandonedEventArgs? _matchAbandoned;
+    private ParticipationEndedEventArgs? _participationEnded;
+    private MatchEndedEventArgs? _matchEnded;
     private MatchFoundEventArgs? _matchFound;
     private PresenceRequestedEventArgs? _presenceRequested;
     private SearchEndedEventArgs? _searchEnded;
@@ -181,19 +186,70 @@ public sealed class TestNotificationCallback
     }
 
     [Fact]
-    public void ReceiveNotification_MatchAbandoned_RaisesAbandoningNickname()
+    public void ReceiveNotification_ParticipationEnded_RaisesDepartingTurnOrder()
     {
-        _notificationCallback.MatchAbandoned += HandleMatchAbandoned;
-        var notification = new MatchAbandonedNotification
+        _notificationCallback.ParticipationEnded += HandleParticipationEnded;
+        var notification = new ParticipationEndedNotification
         {
             MatchId = AbandonedMatchId,
-            AbandoningNickname = FirstNickname,
+            EndReason = ContractMatchEndReason.Abandonment,
+            DepartingTurnOrder = Match.SecondTurnOrder,
             OccurredAt = _sentAt,
         };
 
         _notificationCallback.ReceiveNotification(notification);
 
-        Assert.Equal(FirstNickname, _matchAbandoned?.AbandoningNickname);
+        Assert.Equal(Match.SecondTurnOrder, _participationEnded?.DepartingTurnOrder);
+    }
+
+    [Fact]
+    public void ReceiveNotification_MatchEnded_RaisesEndReason()
+    {
+        _notificationCallback.MatchEnded += HandleMatchEnded;
+        var notification = new MatchEndedNotification
+        {
+            MatchId = AbandonedMatchId,
+            EndReason = ContractMatchEndReason.Goal,
+            OccurredAt = _sentAt,
+        };
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(EndedMatchReason.Goal, _matchEnded?.EndReason);
+    }
+
+    [Fact]
+    public void ReceiveNotification_MatchEndedWithoutStandings_RaisesEmptyStandings()
+    {
+        _notificationCallback.MatchEnded += HandleMatchEnded;
+        var notification = new MatchEndedNotification
+        {
+            MatchId = AbandonedMatchId,
+            EndReason = ContractMatchEndReason.Goal,
+            OccurredAt = _sentAt,
+        };
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(NoStandings, _matchEnded?.Standings.Count);
+    }
+
+    [Fact]
+    public void ReceiveNotification_MatchEndedStandingStillPlaying_RaisesStillPlaying()
+    {
+        _notificationCallback.MatchEnded += HandleMatchEnded;
+        MatchStanding[] standings = [new MatchStanding { TurnOrder = Match.SecondTurnOrder }];
+        var notification = new MatchEndedNotification
+        {
+            MatchId = AbandonedMatchId,
+            EndReason = ContractMatchEndReason.Goal,
+            Standings = standings,
+            OccurredAt = _sentAt,
+        };
+
+        _notificationCallback.ReceiveNotification(notification);
+
+        Assert.Equal(StandingResult.StillPlaying, _matchEnded?.Standings[0].Result);
     }
 
     [Fact]
@@ -370,9 +426,14 @@ public sealed class TestNotificationCallback
         _matchChatMessage = e;
     }
 
-    private void HandleMatchAbandoned(object? sender, MatchAbandonedEventArgs e)
+    private void HandleParticipationEnded(object? sender, ParticipationEndedEventArgs e)
     {
-        _matchAbandoned = e;
+        _participationEnded = e;
+    }
+
+    private void HandleMatchEnded(object? sender, MatchEndedEventArgs e)
+    {
+        _matchEnded = e;
     }
 
     private void HandleMatchFound(object? sender, MatchFoundEventArgs e)

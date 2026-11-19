@@ -3,7 +3,7 @@ using Bastion.Server.Application.Matches;
 
 namespace Bastion.Server.Application.Tests.Fakes;
 
-public sealed record NotifiedMatchAbandonment(
+public sealed record NotifiedParticipationEnd(
     int MatchId,
     IReadOnlyCollection<int> RecipientAccountIds,
-    AbandonmentNotice Notice);
+    ParticipationEndNotice Notice);

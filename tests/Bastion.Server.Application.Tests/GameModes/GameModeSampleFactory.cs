@@ -12,6 +12,9 @@ public static class GameModeSampleFactory
     private const byte TwoPlayers = 2;
     private const byte FourPlayers = 4;
     private const byte FourPlayersWallsPerPlayer = 5;
+    private const byte QuickGameModeId = 3;
+    private const byte QuickBoardSize = 7;
+    private const byte QuickWallsPerPlayer = 6;
 
     public static GameMode CreateClassic()
     {
@@ -32,6 +35,19 @@ public static class GameModeSampleFactory
             BoardSize = BoardSize,
             PlayerCount = FourPlayers,
             WallsPerPlayer = FourPlayersWallsPerPlayer,
+            IsActive = true,
+        };
+    }
+
+    public static GameMode CreateQuick()
+    {
+        return new GameMode
+        {
+            GameModeId = QuickGameModeId,
+            Code = GameModeCode.Quick,
+            BoardSize = QuickBoardSize,
+            PlayerCount = TwoPlayers,
+            WallsPerPlayer = QuickWallsPerPlayer,
             IsActive = true,
         };
     }

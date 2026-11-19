@@ -4,6 +4,8 @@ namespace Bastion.Domain.Matches;
 
 public class Participation
 {
+    public const byte FirstPlacement = 1;
+
     private static readonly PawnSymbol[] _pawnSymbolsInTurnOrder = new PawnSymbol[]
     {
         PawnSymbol.Blue,
@@ -46,6 +48,8 @@ public class Participation
     public int? RemainingClockMilliseconds { get; private set; }
 
     public short? InitialElo { get; private set; }
+
+    public short? FinalElo { get; private set; }
 
     public ParticipationResult? Result { get; private set; }
 
@@ -91,10 +95,33 @@ public class Participation
         Placement = placement;
     }
 
-    internal void Win(byte placement)
+    internal Participation CopyForPreview()
     {
-        Finish(ParticipationResult.Won);
+        var copy = (Participation)MemberwiseClone();
+        return copy;
+    }
+
+    internal void TakePlacement(byte placement)
+    {
+        ParticipationResult result = placement == FirstPlacement ? ParticipationResult.Won : ParticipationResult.Lost;
+        Finish(result);
         Placement = placement;
+    }
+
+    internal void ReachGoal(byte placement)
+    {
+        TakePlacement(placement);
+        EndReason = MatchEndReason.Goal;
+    }
+
+    internal void RecordFinalElo(short finalElo)
+    {
+        if (!HasEnded())
+        {
+            throw new InvalidOperationException("Only an ended participation gets a final elo.");
+        }
+
+        FinalElo = finalElo;
     }
 
     internal void MoveTo(string square)
@@ -113,6 +140,11 @@ public class Participation
 
         int leftMilliseconds = remainingMilliseconds - spentMilliseconds;
         RemainingClockMilliseconds = Math.Max(leftMilliseconds, 0);
+    }
+
+    internal void RunOutOfClock()
+    {
+        RemainingClockMilliseconds = 0;
     }
 
     internal void SpendWall()

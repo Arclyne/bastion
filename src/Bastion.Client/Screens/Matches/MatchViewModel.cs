@@ -28,6 +28,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         _abandonmentViewModel = abandonmentViewModel;
         MatchPlay = matchPlayViewModel;
         WallPlacement = new WallPlacementViewModel(matchPlayViewModel);
+        MatchEnd = new MatchEndViewModel(joinedMatch, matchPlayViewModel);
         FoundMatchFormat format = joinedMatch.FoundMatch.Format;
         IEnumerable<MatchPlayerViewModel> orderedPlayers = joinedMatch.FoundMatch.Participants
             .OrderBy(participant => participant.TurnOrder)
@@ -37,14 +38,15 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         OwnTurnOrder = joinedMatch.GetOwnTurnOrder();
         _ownNickname = joinedMatch.Session.Nickname;
         TurnText = string.Empty;
-        foreach (string nickname in abandonmentViewModel.LeftNicknames)
+        foreach (PlayerLeftEventArgs departure in abandonmentViewModel.Departures)
         {
-            MarkPlayerLeft(nickname);
+            MarkPlayerLeft(departure);
         }
 
         RefreshPlay();
         _abandonmentViewModel.PlayerLeft += HandlePlayerLeft;
         MatchPlay.StateChanged += HandleMatchPlayStateChanged;
+        MatchPlay.ClockTicked += HandleClockTicked;
     }
 
     public IReadOnlyList<MatchPlayerViewModel> Players { get; }
@@ -54,6 +56,8 @@ public sealed class MatchViewModel : ViewModel, IDisposable
     public MatchPlayViewModel MatchPlay { get; }
 
     public WallPlacementViewModel WallPlacement { get; }
+
+    public MatchEndViewModel MatchEnd { get; }
 
     public byte BoardSize { get; }
 
@@ -69,7 +73,9 @@ public sealed class MatchViewModel : ViewModel, IDisposable
     {
         _abandonmentViewModel.PlayerLeft -= HandlePlayerLeft;
         MatchPlay.StateChanged -= HandleMatchPlayStateChanged;
+        MatchPlay.ClockTicked -= HandleClockTicked;
         WallPlacement.Dispose();
+        MatchEnd.Dispose();
     }
 
     private static MatchPlayerViewModel CreatePlayerViewModel(
@@ -81,10 +87,10 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         return new MatchPlayerViewModel(participant, format, isOwn);
     }
 
-    private void MarkPlayerLeft(string nickname)
+    private void MarkPlayerLeft(PlayerLeftEventArgs departure)
     {
-        MatchPlayerViewModel? player = Players.FirstOrDefault(candidate => candidate.Nickname == nickname);
-        player?.MarkLeft();
+        MatchPlayerViewModel? player = Players.FirstOrDefault(candidate => candidate.Nickname == departure.Nickname);
+        player?.MarkLeft(departure.EndReason);
     }
 
     [MemberNotNull(nameof(_pawns))]
@@ -93,6 +99,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         _pawns = RebuildPawns();
         ShowWalls();
         ShowTurn();
+        ShowClocks();
     }
 
     private List<BoardPawn> RebuildPawns()
@@ -178,14 +185,28 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         return string.Format(CultureInfo.CurrentCulture, Strings.MatchPlayerTurnFormat, turnPlayer.Nickname);
     }
 
+    private void ShowClocks()
+    {
+        foreach (MatchPlayerViewModel player in Players)
+        {
+            TimeSpan remainingClock = MatchPlay.GetRemainingClock(player.TurnOrder);
+            player.ShowClock(remainingClock);
+        }
+    }
+
     private void HandlePlayerLeft(object? sender, PlayerLeftEventArgs e)
     {
-        MarkPlayerLeft(e.Nickname);
+        MarkPlayerLeft(e);
         _pawns = RebuildPawns();
     }
 
     private void HandleMatchPlayStateChanged(object? sender, EventArgs e)
     {
         RefreshPlay();
+    }
+
+    private void HandleClockTicked(object? sender, EventArgs e)
+    {
+        ShowClocks();
     }
 }

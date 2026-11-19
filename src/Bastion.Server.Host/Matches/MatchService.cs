@@ -7,6 +7,7 @@ using Bastion.Server.Host.Sessions;
 using CoreWCF;
 using log4net;
 using Microsoft.Extensions.DependencyInjection;
+using DomainAbandonmentPreview = Bastion.Domain.Matches.AbandonmentPreview;
 
 namespace Bastion.Server.Host.Matches;
 
@@ -20,14 +21,17 @@ public sealed class MatchService : IMatchService
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly TimeProvider _timeProvider;
+    private readonly IMatchGate _matchGate;
 
-    public MatchService(IServiceScopeFactory scopeFactory, TimeProvider timeProvider)
+    public MatchService(IServiceScopeFactory scopeFactory, TimeProvider timeProvider, IMatchGate matchGate)
     {
         ArgumentNullException.ThrowIfNull(scopeFactory);
         ArgumentNullException.ThrowIfNull(timeProvider);
+        ArgumentNullException.ThrowIfNull(matchGate);
 
         _scopeFactory = scopeFactory;
         _timeProvider = timeProvider;
+        _matchGate = matchGate;
     }
 
     /// <inheritdoc/>
@@ -36,6 +40,14 @@ public sealed class MatchService : IMatchService
         string token = SessionTranslator.RequireSessionToken(sessionToken);
         Action abandonMatch = () => AbandonMatchInRequestScope(token, matchId);
         TranslateMatchFailures(nameof(AbandonMatch), matchId, abandonMatch);
+    }
+
+    /// <inheritdoc/>
+    public AbandonmentPreview PreviewAbandonment(string? sessionToken, int matchId)
+    {
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
+        Func<AbandonmentPreview> previewAbandonment = () => PreviewAbandonmentInRequestScope(token, matchId);
+        return TranslateMatchFailures(nameof(PreviewAbandonment), matchId, previewAbandonment);
     }
 
     /// <inheritdoc/>
@@ -77,6 +89,15 @@ public sealed class MatchService : IMatchService
         abandonmentService.AbandonMatch(token, matchId, GetUtcNow());
     }
 
+    private AbandonmentPreview PreviewAbandonmentInRequestScope(string token, int matchId)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchAbandonmentService abandonmentService =
+            scope.ServiceProvider.GetRequiredService<IMatchAbandonmentService>();
+        DomainAbandonmentPreview preview = abandonmentService.PreviewAbandonment(token, matchId, GetUtcNow());
+        return MatchTranslator.ToContractPreview(preview);
+    }
+
     private void MovePawnInRequestScope(string token, ChosenPawnMove chosenMove)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
@@ -91,11 +112,11 @@ public sealed class MatchService : IMatchService
         matchMoveService.PlaceWall(token, chosenWall, GetUtcNow());
     }
 
-    private static void TranslateMatchFailures(string operationName, int matchId, Action operation)
+    private TResult TranslateMatchFailures<TResult>(string operationName, int matchId, Func<TResult> operation)
     {
         try
         {
-            operation();
+            return _matchGate.Run(matchId, operation);
         }
         catch (InvalidSessionException ex)
         {
@@ -127,6 +148,18 @@ public sealed class MatchService : IMatchService
             _logger.Error($"A database command failed. Operation={operationName}; MatchId={matchId}", ex);
             throw new FaultException(ServerFailureReason);
         }
+    }
+
+    private void TranslateMatchFailures(string operationName, int matchId, Action operation)
+    {
+        Func<bool> completeOperation = () => CompleteOperation(operation);
+        TranslateMatchFailures(operationName, matchId, completeOperation);
+    }
+
+    private static bool CompleteOperation(Action operation)
+    {
+        operation();
+        return true;
     }
 
     private DateTime GetUtcNow()

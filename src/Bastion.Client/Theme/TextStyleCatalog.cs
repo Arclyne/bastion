@@ -56,4 +56,26 @@ public static class TextStyleCatalog
     public static TextStyle ChatOwnAuthor { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 13, Palette.Accent);
 
     public static TextStyle Version { get; } = new TextStyle(FontCatalog.Bold, fontSize: 12, Palette.Muted);
+
+    public static TextStyle MatchEndKind { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 12, Palette.Accent);
+
+    public static TextStyle MatchEndTitle { get; } = new TextStyle(FontCatalog.Display, fontSize: 40, Palette.Ink);
+
+    public static TextStyle MatchEndReason { get; } = new TextStyle(FontCatalog.Bold, fontSize: 16, Palette.Body);
+
+    public static TextStyle MatchEndElo { get; } = new TextStyle(FontCatalog.Display, fontSize: 28, Palette.Ink);
+
+    public static TextStyle EloGain { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 16, Palette.Success);
+
+    public static TextStyle EloLoss { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 16, Palette.Error);
+
+    public static TextStyle MatchEndSummary { get; } = new TextStyle(FontCatalog.Bold, fontSize: 13, Palette.Body);
+
+    public static TextStyle DangerButton { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 16, Palette.Error);
+
+    public static TextStyle RunningClock { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 17, Palette.Ink);
+
+    public static TextStyle WaitingClock { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 17, Palette.Muted);
+
+    public static TextStyle LowClock { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 17, Palette.Error);
 }

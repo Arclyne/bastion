@@ -4,5 +4,10 @@ namespace Bastion.Server.Application.Matches;
 
 public interface IMatchEndNotifier
 {
-    void NotifyMatchAbandoned(int matchId, IReadOnlyCollection<int> recipientAccountIds, AbandonmentNotice notice);
+    void NotifyParticipationEnded(
+        int matchId,
+        IReadOnlyCollection<int> recipientAccountIds,
+        ParticipationEndNotice notice);
+
+    void NotifyMatchEnded(int matchId, IReadOnlyCollection<int> recipientAccountIds, MatchEndNotice notice);
 }

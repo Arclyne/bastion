@@ -492,9 +492,6 @@
   <data name="MatchOverTitle" xml:space="preserve">
     <value>Partida terminada</value>
   </data>
-  <data name="MatchRivalAbandonedFormat" xml:space="preserve">
-    <value>{0} salió de la partida. Ganaste.</value>
-  </data>
   <data name="MatchBackToMenuButton" xml:space="preserve">
     <value>Volver al menú</value>
   </data>
@@ -548,5 +545,125 @@
   </data>
   <data name="MatchWallWouldBlockFormat" xml:space="preserve">
     <value>Ese muro encerraría a {0}.</value>
+  </data>
+  <data name="MatchEndRankedKind" xml:space="preserve">
+    <value>PARTIDA TERMINADA · CLASIFICATORIA</value>
+  </data>
+  <data name="MatchEndPrivateKind" xml:space="preserve">
+    <value>PARTIDA TERMINADA · PRIVADA</value>
+  </data>
+  <data name="MatchEndOwnPartKind" xml:space="preserve">
+    <value>TU PARTIDA TERMINÓ · PRIVADA</value>
+  </data>
+  <data name="MatchEndVictoryTitle" xml:space="preserve">
+    <value>¡Victoria!</value>
+  </data>
+  <data name="MatchEndDefeatTitle" xml:space="preserve">
+    <value>Derrota</value>
+  </data>
+  <data name="MatchEndDrawTitle" xml:space="preserve">
+    <value>Tablas</value>
+  </data>
+  <data name="MatchEndPlacementFormat" xml:space="preserve">
+    <value>{0}.º lugar</value>
+  </data>
+  <data name="MatchEndOwnGoal" xml:space="preserve">
+    <value>Llegaste a la meta.</value>
+  </data>
+  <data name="MatchEndRivalGoalFormat" xml:space="preserve">
+    <value>{0} llegó a la meta.</value>
+  </data>
+  <data name="MatchEndOwnTimeout" xml:space="preserve">
+    <value>Se agotó tu reloj.</value>
+  </data>
+  <data name="MatchEndRivalTimeoutFormat" xml:space="preserve">
+    <value>Se agotó el reloj de {0}.</value>
+  </data>
+  <data name="MatchEndOwnResignation" xml:space="preserve">
+    <value>Te rendiste.</value>
+  </data>
+  <data name="MatchEndRivalResignationFormat" xml:space="preserve">
+    <value>{0} se rindió.</value>
+  </data>
+  <data name="MatchEndAgreedDraw" xml:space="preserve">
+    <value>Aceptaron tablas de común acuerdo.</value>
+  </data>
+  <data name="MatchEndOwnAbandonment" xml:space="preserve">
+    <value>Abandonaste la partida.</value>
+  </data>
+  <data name="MatchEndRivalAbandonmentFormat" xml:space="preserve">
+    <value>{0} abandonó la partida.</value>
+  </data>
+  <data name="MatchEndGoesOnFormat" xml:space="preserve">
+    <value>La partida sigue para {0} jugadores.</value>
+  </data>
+  <data name="MatchEndOwnTag" xml:space="preserve">
+    <value>(tú)</value>
+  </data>
+  <data name="MatchEndResultWon" xml:space="preserve">
+    <value>Ganó</value>
+  </data>
+  <data name="MatchEndResultLost" xml:space="preserve">
+    <value>Perdió</value>
+  </data>
+  <data name="MatchEndResultDraw" xml:space="preserve">
+    <value>Tablas</value>
+  </data>
+  <data name="MatchEndResultGoal" xml:space="preserve">
+    <value>Meta</value>
+  </data>
+  <data name="MatchEndResultLeft" xml:space="preserve">
+    <value>Abandonó</value>
+  </data>
+  <data name="MatchEndResultPlaying" xml:space="preserve">
+    <value>Sigue jugando</value>
+  </data>
+  <data name="MatchEndEloLabel" xml:space="preserve">
+    <value>Elo</value>
+  </data>
+  <data name="MatchEndPrivateNotice" xml:space="preserve">
+    <value>Partida privada: no cambia el elo ni las estadísticas de nadie.</value>
+  </data>
+  <data name="MatchEndSummaryFormat" xml:space="preserve">
+    <value>{0} jugadas · {1} de partida · te sobraron {2} muros</value>
+  </data>
+  <data name="MatchEndSummaryOneWallFormat" xml:space="preserve">
+    <value>{0} jugadas · {1} de partida · te sobró 1 muro</value>
+  </data>
+  <data name="MatchEndSearchAgainButton" xml:space="preserve">
+    <value>Buscar otra</value>
+  </data>
+  <data name="MatchPlayerAtGoal" xml:space="preserve">
+    <value>En la meta</value>
+  </data>
+  <data name="MatchPlayerReachedGoalFormat" xml:space="preserve">
+    <value>{0} llegó a la meta.</value>
+  </data>
+  <data name="MatchAbandonConfirmTitle" xml:space="preserve">
+    <value>¿Abandonar la partida?</value>
+  </data>
+  <data name="MatchAbandonConfirmDuelFormat" xml:space="preserve">
+    <value>Cuenta como derrota y {0} gana la partida. Tu reloj sigue corriendo mientras decides.</value>
+  </data>
+  <data name="MatchAbandonConfirmGroupFormat" xml:space="preserve">
+    <value>Quedas en el {0}.º lugar y tu peón sale del tablero; tus muros se quedan. La partida sigue para los otros {1} jugadores.</value>
+  </data>
+  <data name="MatchAbandonConfirmPending" xml:space="preserve">
+    <value>Cuenta como derrota. Tu reloj sigue corriendo mientras decides.</value>
+  </data>
+  <data name="MatchAbandonEloLossFormat" xml:space="preserve">
+    <value>Perderás {0} de elo: de {1} a {2}.</value>
+  </data>
+  <data name="MatchAbandonEloCalculating" xml:space="preserve">
+    <value>Calculando cuánto elo perderías...</value>
+  </data>
+  <data name="MatchAbandonEloUnknown" xml:space="preserve">
+    <value>Perderás elo. No pudimos calcular cuánto; lo verás al salir.</value>
+  </data>
+  <data name="MatchAbandonBackButton" xml:space="preserve">
+    <value>Volver a la partida</value>
+  </data>
+  <data name="MatchAbandonConfirmButton" xml:space="preserve">
+    <value>Abandonar</value>
   </data>
 </root>

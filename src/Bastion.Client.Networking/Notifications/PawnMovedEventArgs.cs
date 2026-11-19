@@ -15,6 +15,4 @@ public sealed class PawnMovedEventArgs : EventArgs
     public required short NextMoveNumber { get; init; }
 
     public required int? RemainingClockMilliseconds { get; init; }
-
-    public required bool IsMatchOver { get; init; }
 }

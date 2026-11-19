@@ -12,7 +12,7 @@ namespace Bastion.Client.Screens.Matches;
 
 public sealed class VersusViewModel : ViewModel, IDisposable
 {
-    public const int CountdownSeconds = 3;
+    public const int CountdownSeconds = MatchClockPolicy.OpeningDelaySeconds;
 
     private const int CountdownTickSeconds = 1;
 

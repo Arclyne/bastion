@@ -124,15 +124,24 @@ public sealed class NotificationChannelRegistry
         NotifyPlayers(recipientAccountIds, notification);
     }
 
-    public void NotifyMatchAbandoned(
+    public void NotifyParticipationEnded(
         int matchId,
         IReadOnlyCollection<int> recipientAccountIds,
-        AbandonmentNotice notice)
+        ParticipationEndNotice notice)
     {
         ArgumentNullException.ThrowIfNull(recipientAccountIds);
         ArgumentNullException.ThrowIfNull(notice);
 
-        MatchAbandonedNotification notification = MatchTranslator.ToAbandonedNotification(matchId, notice, GetUtcNow());
+        var notification = MatchTranslator.ToParticipationEndedNotification(matchId, notice, GetUtcNow());
+        NotifyPlayers(recipientAccountIds, notification);
+    }
+
+    public void NotifyMatchEnded(int matchId, IReadOnlyCollection<int> recipientAccountIds, MatchEndNotice notice)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+        ArgumentNullException.ThrowIfNull(notice);
+
+        var notification = MatchTranslator.ToMatchEndedNotification(matchId, notice, GetUtcNow());
         NotifyPlayers(recipientAccountIds, notification);
     }
 

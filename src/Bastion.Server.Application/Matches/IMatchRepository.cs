@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using Bastion.Domain.Chat;
 using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
+using Bastion.Domain.Statistics;
 
 namespace Bastion.Server.Application.Matches;
 
@@ -22,9 +24,17 @@ public interface IMatchRepository
 
     Lookup<Match> FindMatch(int matchId);
 
-    void SaveAbandonment(Match match);
+    void SaveDeparture(Match match);
 
     Lookup<GameMode> FindGameMode(byte gameModeId);
 
     void SaveMove(Match match);
+
+    IReadOnlyList<ModeStatistic> FindModeStatistics(byte gameModeId, IReadOnlyCollection<int> accountIds);
+
+    void SaveFinalMove(MatchClosure closure);
+
+    void SaveClosureWithoutMove(MatchClosure closure);
+
+    IReadOnlyList<int> FindMatchIdsWithRunOutClock(DateTime now);
 }

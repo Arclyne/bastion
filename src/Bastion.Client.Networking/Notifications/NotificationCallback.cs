@@ -27,7 +27,8 @@ public sealed class NotificationCallback : INotificationCallback
         var dispatchersByNotificationType = new Dictionary<Type, Action<Notification>>();
         AddDispatcher<ChatMessageNotification>(dispatchersByNotificationType, DispatchChatMessage);
         AddDispatcher<MatchChatMessageNotification>(dispatchersByNotificationType, DispatchMatchChatMessage);
-        AddDispatcher<MatchAbandonedNotification>(dispatchersByNotificationType, DispatchMatchAbandoned);
+        AddDispatcher<ParticipationEndedNotification>(dispatchersByNotificationType, DispatchParticipationEnded);
+        AddDispatcher<MatchEndedNotification>(dispatchersByNotificationType, DispatchMatchEnded);
         AddDispatcher<PawnMovedNotification>(dispatchersByNotificationType, DispatchPawnMoved);
         AddDispatcher<WallPlacedNotification>(dispatchersByNotificationType, DispatchWallPlaced);
         AddDispatcher<FriendPresenceNotification>(dispatchersByNotificationType, DispatchFriendPresence);
@@ -46,7 +47,9 @@ public sealed class NotificationCallback : INotificationCallback
 
     public event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
 
-    public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
+    public event EventHandler<ParticipationEndedEventArgs>? ParticipationEnded;
+
+    public event EventHandler<MatchEndedEventArgs>? MatchEnded;
 
     public event EventHandler<PawnMovedEventArgs>? PawnMoved;
 
@@ -142,21 +145,61 @@ public sealed class NotificationCallback : INotificationCallback
         MatchChatMessageReceived?.Invoke(this, e);
     }
 
-    private void DispatchMatchAbandoned(MatchAbandonedNotification matchAbandoned)
+    private void DispatchParticipationEnded(ParticipationEndedNotification participationEnded)
     {
-        MatchAbandonedEventArgs abandonment = ToMatchAbandonedEventArgs(matchAbandoned);
-        OnMatchAbandoned(abandonment);
+        ParticipationEndedEventArgs participationEnd = ToParticipationEndedEventArgs(participationEnded);
+        OnParticipationEnded(participationEnd);
     }
 
-    private static MatchAbandonedEventArgs ToMatchAbandonedEventArgs(MatchAbandonedNotification notification)
+    private static ParticipationEndedEventArgs ToParticipationEndedEventArgs(
+        ParticipationEndedNotification notification)
     {
-        string abandoningNickname = notification.AbandoningNickname ?? string.Empty;
-        return new MatchAbandonedEventArgs(notification.MatchId, abandoningNickname, notification.IsMatchOver);
+        var endReason = MatchContractTranslator.ToEndedMatchReason(notification.EndReason);
+        IReadOnlyList<PlayerStanding> standings = MatchContractTranslator.ToPlayerStandings(notification.Standings);
+        return new ParticipationEndedEventArgs
+        {
+            MatchId = notification.MatchId,
+            EndReason = endReason,
+            DepartingTurnOrder = notification.DepartingTurnOrder,
+            ActivePlayerCount = notification.ActivePlayerCount,
+            NextTurnOrder = notification.NextTurnOrder,
+            NextMoveNumber = notification.NextMoveNumber,
+            MoveCount = notification.MoveCount,
+            PlayedSeconds = notification.PlayedSeconds,
+            Standings = standings,
+        };
     }
 
-    private void OnMatchAbandoned(MatchAbandonedEventArgs e)
+    private void OnParticipationEnded(ParticipationEndedEventArgs e)
     {
-        MatchAbandoned?.Invoke(this, e);
+        ParticipationEnded?.Invoke(this, e);
+    }
+
+    private void DispatchMatchEnded(MatchEndedNotification matchEnded)
+    {
+        MatchEndedEventArgs matchEnd = ToMatchEndedEventArgs(matchEnded);
+        OnMatchEnded(matchEnd);
+    }
+
+    private static MatchEndedEventArgs ToMatchEndedEventArgs(MatchEndedNotification notification)
+    {
+        var endReason = MatchContractTranslator.ToEndedMatchReason(notification.EndReason);
+        IReadOnlyList<PlayerStanding> standings = MatchContractTranslator.ToPlayerStandings(notification.Standings);
+        return new MatchEndedEventArgs
+        {
+            MatchId = notification.MatchId,
+            EndReason = endReason,
+            DecidingTurnOrder = notification.DecidingTurnOrder,
+            IsRanked = notification.IsRanked,
+            MoveCount = notification.MoveCount,
+            PlayedSeconds = notification.PlayedSeconds,
+            Standings = standings,
+        };
+    }
+
+    private void OnMatchEnded(MatchEndedEventArgs e)
+    {
+        MatchEnded?.Invoke(this, e);
     }
 
     private void DispatchPawnMoved(PawnMovedNotification pawnMoved)
@@ -177,7 +220,6 @@ public sealed class NotificationCallback : INotificationCallback
             NextTurnOrder = notification.NextTurnOrder,
             NextMoveNumber = notification.NextMoveNumber,
             RemainingClockMilliseconds = notification.RemainingClockMilliseconds,
-            IsMatchOver = notification.IsMatchOver,
         };
     }
 

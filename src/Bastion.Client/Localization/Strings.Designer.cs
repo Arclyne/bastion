@@ -1381,15 +1381,6 @@ namespace Bastion.Client.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} left the match. You win..
-        /// </summary>
-        internal static string MatchRivalAbandonedFormat {
-            get {
-                return ResourceManager.GetString("MatchRivalAbandonedFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Rival's turn.
         /// </summary>
         internal static string MatchRivalTurn {
@@ -1701,6 +1692,366 @@ namespace Bastion.Client.Localization {
         internal static string MatchPlayerLeft {
             get {
                 return ResourceManager.GetString("MatchPlayerLeft", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MATCH OVER · RANKED.
+        /// </summary>
+        internal static string MatchEndRankedKind {
+            get {
+                return ResourceManager.GetString("MatchEndRankedKind", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MATCH OVER · PRIVATE.
+        /// </summary>
+        internal static string MatchEndPrivateKind {
+            get {
+                return ResourceManager.GetString("MatchEndPrivateKind", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to YOUR MATCH IS OVER · PRIVATE.
+        /// </summary>
+        internal static string MatchEndOwnPartKind {
+            get {
+                return ResourceManager.GetString("MatchEndOwnPartKind", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Victory!.
+        /// </summary>
+        internal static string MatchEndVictoryTitle {
+            get {
+                return ResourceManager.GetString("MatchEndVictoryTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Defeat.
+        /// </summary>
+        internal static string MatchEndDefeatTitle {
+            get {
+                return ResourceManager.GetString("MatchEndDefeatTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Draw.
+        /// </summary>
+        internal static string MatchEndDrawTitle {
+            get {
+                return ResourceManager.GetString("MatchEndDrawTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Place {0}.
+        /// </summary>
+        internal static string MatchEndPlacementFormat {
+            get {
+                return ResourceManager.GetString("MatchEndPlacementFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You reached the goal..
+        /// </summary>
+        internal static string MatchEndOwnGoal {
+            get {
+                return ResourceManager.GetString("MatchEndOwnGoal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} reached the goal..
+        /// </summary>
+        internal static string MatchEndRivalGoalFormat {
+            get {
+                return ResourceManager.GetString("MatchEndRivalGoalFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your clock ran out..
+        /// </summary>
+        internal static string MatchEndOwnTimeout {
+            get {
+                return ResourceManager.GetString("MatchEndOwnTimeout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}'s clock ran out..
+        /// </summary>
+        internal static string MatchEndRivalTimeoutFormat {
+            get {
+                return ResourceManager.GetString("MatchEndRivalTimeoutFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You resigned..
+        /// </summary>
+        internal static string MatchEndOwnResignation {
+            get {
+                return ResourceManager.GetString("MatchEndOwnResignation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} resigned..
+        /// </summary>
+        internal static string MatchEndRivalResignationFormat {
+            get {
+                return ResourceManager.GetString("MatchEndRivalResignationFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You agreed to a draw..
+        /// </summary>
+        internal static string MatchEndAgreedDraw {
+            get {
+                return ResourceManager.GetString("MatchEndAgreedDraw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You left the match..
+        /// </summary>
+        internal static string MatchEndOwnAbandonment {
+            get {
+                return ResourceManager.GetString("MatchEndOwnAbandonment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} left the match..
+        /// </summary>
+        internal static string MatchEndRivalAbandonmentFormat {
+            get {
+                return ResourceManager.GetString("MatchEndRivalAbandonmentFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The match goes on for {0} players..
+        /// </summary>
+        internal static string MatchEndGoesOnFormat {
+            get {
+                return ResourceManager.GetString("MatchEndGoesOnFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (you).
+        /// </summary>
+        internal static string MatchEndOwnTag {
+            get {
+                return ResourceManager.GetString("MatchEndOwnTag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Won.
+        /// </summary>
+        internal static string MatchEndResultWon {
+            get {
+                return ResourceManager.GetString("MatchEndResultWon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lost.
+        /// </summary>
+        internal static string MatchEndResultLost {
+            get {
+                return ResourceManager.GetString("MatchEndResultLost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Draw.
+        /// </summary>
+        internal static string MatchEndResultDraw {
+            get {
+                return ResourceManager.GetString("MatchEndResultDraw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Goal.
+        /// </summary>
+        internal static string MatchEndResultGoal {
+            get {
+                return ResourceManager.GetString("MatchEndResultGoal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Left.
+        /// </summary>
+        internal static string MatchEndResultLeft {
+            get {
+                return ResourceManager.GetString("MatchEndResultLeft", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Still playing.
+        /// </summary>
+        internal static string MatchEndResultPlaying {
+            get {
+                return ResourceManager.GetString("MatchEndResultPlaying", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Elo.
+        /// </summary>
+        internal static string MatchEndEloLabel {
+            get {
+                return ResourceManager.GetString("MatchEndEloLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Private match: nobody's elo or statistics change..
+        /// </summary>
+        internal static string MatchEndPrivateNotice {
+            get {
+                return ResourceManager.GetString("MatchEndPrivateNotice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} moves · {1} played · {2} walls left.
+        /// </summary>
+        internal static string MatchEndSummaryFormat {
+            get {
+                return ResourceManager.GetString("MatchEndSummaryFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} moves · {1} played · 1 wall left.
+        /// </summary>
+        internal static string MatchEndSummaryOneWallFormat {
+            get {
+                return ResourceManager.GetString("MatchEndSummaryOneWallFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find another.
+        /// </summary>
+        internal static string MatchEndSearchAgainButton {
+            get {
+                return ResourceManager.GetString("MatchEndSearchAgainButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At the goal.
+        /// </summary>
+        internal static string MatchPlayerAtGoal {
+            get {
+                return ResourceManager.GetString("MatchPlayerAtGoal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} reached the goal..
+        /// </summary>
+        internal static string MatchPlayerReachedGoalFormat {
+            get {
+                return ResourceManager.GetString("MatchPlayerReachedGoalFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Leave the match?.
+        /// </summary>
+        internal static string MatchAbandonConfirmTitle {
+            get {
+                return ResourceManager.GetString("MatchAbandonConfirmTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to It counts as a loss and {0} wins the match. Your clock keeps running while you decide..
+        /// </summary>
+        internal static string MatchAbandonConfirmDuelFormat {
+            get {
+                return ResourceManager.GetString("MatchAbandonConfirmDuelFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You take place {0} and your pawn leaves the board; your walls stay. The match goes on for the other {1} players..
+        /// </summary>
+        internal static string MatchAbandonConfirmGroupFormat {
+            get {
+                return ResourceManager.GetString("MatchAbandonConfirmGroupFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to It counts as a loss. Your clock keeps running while you decide..
+        /// </summary>
+        internal static string MatchAbandonConfirmPending {
+            get {
+                return ResourceManager.GetString("MatchAbandonConfirmPending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You will lose {0} elo: from {1} to {2}..
+        /// </summary>
+        internal static string MatchAbandonEloLossFormat {
+            get {
+                return ResourceManager.GetString("MatchAbandonEloLossFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Working out how much elo you would lose....
+        /// </summary>
+        internal static string MatchAbandonEloCalculating {
+            get {
+                return ResourceManager.GetString("MatchAbandonEloCalculating", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You will lose elo. We could not work out how much; you will see it when you leave..
+        /// </summary>
+        internal static string MatchAbandonEloUnknown {
+            get {
+                return ResourceManager.GetString("MatchAbandonEloUnknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Back to the match.
+        /// </summary>
+        internal static string MatchAbandonBackButton {
+            get {
+                return ResourceManager.GetString("MatchAbandonBackButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Leave.
+        /// </summary>
+        internal static string MatchAbandonConfirmButton {
+            get {
+                return ResourceManager.GetString("MatchAbandonConfirmButton", resourceCulture);
             }
         }
     }

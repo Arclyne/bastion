@@ -70,6 +70,8 @@ public static class Palette
 
     public static Color WarningSoft { get; } = new Color(0xFF, 0xF4, 0xDC);
 
+    public static Color InfoSoft { get; } = new Color(0xEA, 0xF2, 0xFA);
+
     public static Color Success { get; } = new Color(0x11, 0x70, 0x4F);
 
     public static Color SuccessSoft { get; } = new Color(0xE6, 0xF4, 0xEE);

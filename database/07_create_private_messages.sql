@@ -1,5 +1,5 @@
 /*=====================================================================
-  Bastion - Private messages between friends (7 of 7)
+  Bastion - Private messages between friends (7 of 8)
   Engine: SQL Server 2019 or later (CON-04).
 
   Run order:
@@ -10,6 +10,7 @@
      5. 05_create_friends.sql
      6. 06_insert_chat_test_data.sql
      7. 07_create_private_messages.sql   <- this file
+     8. 08_add_turn_clock.sql
 
   Additive script: the FRIENDS channel of Message had no recipient, so a
   private message could not say who it was for. This script adds the

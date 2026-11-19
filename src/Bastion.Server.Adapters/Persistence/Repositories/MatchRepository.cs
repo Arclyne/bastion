@@ -6,6 +6,7 @@ using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
 using Bastion.Domain.Rooms;
+using Bastion.Domain.Statistics;
 using Bastion.Server.Application.Matches;
 using Microsoft.EntityFrameworkCore;
 
@@ -81,12 +82,12 @@ public sealed class MatchRepository : IMatchRepository
         return _newContextRunner.Run(findMatch);
     }
 
-    public void SaveAbandonment(Match match)
+    public void SaveDeparture(Match match)
     {
         ArgumentNullException.ThrowIfNull(match);
 
-        Func<BastionDbContext, int> saveAbandonment = context => UpdateMatchAndRoom(context, match);
-        _newContextRunner.Run(saveAbandonment);
+        Func<BastionDbContext, int> saveDeparture = context => UpdateMatchAndRoom(context, match);
+        _newContextRunner.Run(saveDeparture);
     }
 
     public Lookup<GameMode> FindGameMode(byte gameModeId)
@@ -101,6 +102,39 @@ public sealed class MatchRepository : IMatchRepository
 
         Func<BastionDbContext, int> saveMove = context => UpdateMatchWithNewestMove(context, match);
         _newContextRunner.Run(saveMove);
+    }
+
+    public IReadOnlyList<ModeStatistic> FindModeStatistics(byte gameModeId, IReadOnlyCollection<int> accountIds)
+    {
+        ArgumentNullException.ThrowIfNull(accountIds);
+
+        Func<BastionDbContext, List<ModeStatistic>> findModeStatistics = context => LoadModeStatistics(
+            context,
+            gameModeId,
+            accountIds);
+        return _newContextRunner.Run(findModeStatistics);
+    }
+
+    public void SaveFinalMove(MatchClosure closure)
+    {
+        ArgumentNullException.ThrowIfNull(closure);
+
+        Func<BastionDbContext, int> saveFinalMove = context => UpdateClosureWithNewestMove(context, closure);
+        _newContextRunner.Run(saveFinalMove);
+    }
+
+    public void SaveClosureWithoutMove(MatchClosure closure)
+    {
+        ArgumentNullException.ThrowIfNull(closure);
+
+        Func<BastionDbContext, int> saveClosureWithoutMove = context => UpdateClosure(context, closure);
+        _newContextRunner.Run(saveClosureWithoutMove);
+    }
+
+    public IReadOnlyList<int> FindMatchIdsWithRunOutClock(DateTime now)
+    {
+        Func<BastionDbContext, List<int>> findMatchIds = context => LoadMatchIdsWithRunOutClock(context, now);
+        return _newContextRunner.Run(findMatchIds);
     }
 
     private static bool HasUnfinishedParticipationInContext(BastionDbContext context, int accountId)
@@ -226,6 +260,51 @@ public sealed class MatchRepository : IMatchRepository
         }
 
         int savedRowCount = SaveMatchAndRoom(context, match);
+        return savedRowCount;
+    }
+
+    private static List<int> LoadMatchIdsWithRunOutClock(BastionDbContext context, DateTime now)
+    {
+        IQueryable<int> matchIds = context.Matches
+            .AsNoTracking()
+            .Where(match => match.Status == MatchStatus.InProgress)
+            .Where(match => match.Participations.Any(
+                participation => participation.TurnOrder == match.CurrentTurnOrder
+                    && participation.RemainingClockMilliseconds != null
+                    && match.TurnStartedAt.AddMilliseconds(participation.RemainingClockMilliseconds.Value) <= now))
+            .Select(match => match.MatchId);
+        return [.. matchIds];
+    }
+
+    private static List<ModeStatistic> LoadModeStatistics(
+        BastionDbContext context,
+        byte gameModeId,
+        IReadOnlyCollection<int> accountIds)
+    {
+        IQueryable<ModeStatistic> modeStatistics = context.ModeStatistics
+            .AsNoTracking()
+            .Where(statistic => statistic.GameModeId == gameModeId)
+            .Where(statistic => accountIds.Contains(statistic.AccountId));
+        return [.. modeStatistics];
+    }
+
+    private static int UpdateClosureWithNewestMove(BastionDbContext context, MatchClosure closure)
+    {
+        TrackStatistics(context, closure);
+        int savedRowCount = UpdateMatchWithNewestMove(context, closure.Match);
+        return savedRowCount;
+    }
+
+    private static void TrackStatistics(BastionDbContext context, MatchClosure closure)
+    {
+        context.ModeStatistics.UpdateRange(closure.UpdatedStatistics);
+        context.ModeStatistics.AddRange(closure.StartedStatistics);
+    }
+
+    private static int UpdateClosure(BastionDbContext context, MatchClosure closure)
+    {
+        TrackStatistics(context, closure);
+        int savedRowCount = UpdateMatchAndRoom(context, closure.Match);
         return savedRowCount;
     }
 }

@@ -20,10 +20,16 @@ public sealed class MatchClient : IMatchClient
         _notificationClient = notificationClient;
     }
 
-    public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned
+    public event EventHandler<ParticipationEndedEventArgs>? ParticipationEnded
     {
-        add => _notificationClient.MatchAbandoned += value;
-        remove => _notificationClient.MatchAbandoned -= value;
+        add => _notificationClient.ParticipationEnded += value;
+        remove => _notificationClient.ParticipationEnded -= value;
+    }
+
+    public event EventHandler<MatchEndedEventArgs>? MatchEnded
+    {
+        add => _notificationClient.MatchEnded += value;
+        remove => _notificationClient.MatchEnded -= value;
     }
 
     public event EventHandler<PawnMovedEventArgs>? PawnMoved
@@ -44,6 +50,17 @@ public sealed class MatchClient : IMatchClient
 
         Action<IMatchService> abandonMatch = service => service.AbandonMatch(sessionToken, matchId);
         Call(abandonMatch);
+    }
+
+    public PreviewedAbandonment PreviewAbandonment(string sessionToken, int matchId)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
+        Func<IMatchService, AbandonmentPreview> previewAbandonment = service => service.PreviewAbandonment(
+            sessionToken,
+            matchId);
+        AbandonmentPreview preview = Call(previewAbandonment);
+        return MatchContractTranslator.ToPreviewedAbandonment(preview);
     }
 
     public void MovePawn(string sessionToken, ChosenPawnMove chosenMove)
@@ -68,9 +85,21 @@ public sealed class MatchClient : IMatchClient
 
     private void Call(Action<IMatchService> operation)
     {
+        Func<IMatchService, bool> completeOperation = service => CompleteOperation(operation, service);
+        Call(completeOperation);
+    }
+
+    private static bool CompleteOperation(Action<IMatchService> operation, IMatchService service)
+    {
+        operation(service);
+        return true;
+    }
+
+    private TResult Call<TResult>(Func<IMatchService, TResult> operation)
+    {
         try
         {
-            _channel.Call(operation);
+            return _channel.Call(operation);
         }
         catch (CommunicationException ex)
         {

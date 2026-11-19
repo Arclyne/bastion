@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.ServiceModel;
 using Bastion.Contracts.Matches;
+using Bastion.Contracts.Notifications;
 
 namespace Bastion.Client.Networking.Matches;
 
@@ -86,6 +89,85 @@ public static class MatchContractTranslator
                 return WallPlacementRejection.WouldBlockPlayer;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported wall rejection reason.");
+        }
+    }
+
+    public static PreviewedAbandonment ToPreviewedAbandonment(AbandonmentPreview preview)
+    {
+        ArgumentNullException.ThrowIfNull(preview);
+
+        return new PreviewedAbandonment
+        {
+            IsRanked = preview.IsRanked,
+            InitialElo = preview.InitialElo,
+            FinalElo = preview.FinalElo,
+            Placement = preview.Placement,
+            ActivePlayerCount = preview.ActivePlayerCount,
+        };
+    }
+
+    public static EndedMatchReason ToEndedMatchReason(MatchEndReason endReason)
+    {
+        switch (endReason)
+        {
+            case MatchEndReason.Goal:
+                return EndedMatchReason.Goal;
+            case MatchEndReason.Timeout:
+                return EndedMatchReason.Timeout;
+            case MatchEndReason.Resignation:
+                return EndedMatchReason.Resignation;
+            case MatchEndReason.Draw:
+                return EndedMatchReason.Draw;
+            case MatchEndReason.Abandonment:
+                return EndedMatchReason.Abandonment;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(endReason), endReason, "Unsupported match end reason.");
+        }
+    }
+
+    public static IReadOnlyList<PlayerStanding> ToPlayerStandings(MatchStanding[]? standings)
+    {
+        MatchStanding[] notifiedStandings = standings ?? Array.Empty<MatchStanding>();
+        IEnumerable<PlayerStanding> playerStandings = notifiedStandings.Select(ToPlayerStanding);
+        return [.. playerStandings];
+    }
+
+    private static PlayerStanding ToPlayerStanding(MatchStanding standing)
+    {
+        StandingResult result = ToStandingResult(standing.Result);
+        var playerStanding = new PlayerStanding
+        {
+            TurnOrder = standing.TurnOrder,
+            Result = result,
+            Placement = standing.Placement,
+            EndReason = null,
+            InitialElo = standing.InitialElo,
+            FinalElo = standing.FinalElo,
+            RemainingWalls = standing.RemainingWalls,
+        };
+        if (standing.EndReason is not MatchEndReason notifiedReason)
+        {
+            return playerStanding;
+        }
+
+        EndedMatchReason endReason = ToEndedMatchReason(notifiedReason);
+        return playerStanding with { EndReason = endReason };
+    }
+
+    private static StandingResult ToStandingResult(ParticipationResult? result)
+    {
+        switch (result)
+        {
+            case null:
+                return StandingResult.StillPlaying;
+            case ParticipationResult.Won:
+                return StandingResult.Won;
+            case ParticipationResult.Lost:
+                return StandingResult.Lost;
+            case ParticipationResult.Draw:
+                return StandingResult.Draw;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(result), result, "Unsupported participation result.");
         }
     }
 }
