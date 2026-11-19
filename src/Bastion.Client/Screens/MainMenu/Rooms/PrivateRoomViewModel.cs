@@ -569,7 +569,7 @@ public sealed class PrivateRoomViewModel : ViewModel, IDisposable
         _rooms.Disconnected -= HandleDisconnected;
     }
 
-    private async Task<Lookup<PrivateRoom>> SendRoomRequest(Func<PrivateRoom> request, Action<string> reportError)
+    private static async Task<Lookup<PrivateRoom>> SendRoomRequest(Func<PrivateRoom> request, Action<string> reportError)
     {
         try
         {
@@ -673,7 +673,7 @@ public sealed class PrivateRoomViewModel : ViewModel, IDisposable
         FooterText = IsHost ? DescribeHostWait(freeSeatCount, waitingMembers) : DescribeGuestWait();
     }
 
-    private string DescribeHostWait(int freeSeatCount, List<PrivateRoomMember> waitingMembers)
+    private static string DescribeHostWait(int freeSeatCount, List<PrivateRoomMember> waitingMembers)
     {
         if (freeSeatCount == 1)
         {
