@@ -115,7 +115,7 @@ public sealed class ConversationService : IConversationService
         privateChat.MarkConversationRead(token, partnerCode, GetUtcNow());
     }
 
-    private TResult TranslateConversationFailures<TResult>(string operationName, Func<TResult> operation)
+    private static TResult TranslateConversationFailures<TResult>(string operationName, Func<TResult> operation)
     {
         try
         {
@@ -141,7 +141,7 @@ public sealed class ConversationService : IConversationService
         }
     }
 
-    private void TranslateConversationFailures(string operationName, Action operation)
+    private static void TranslateConversationFailures(string operationName, Action operation)
     {
         Func<bool> completeOperation = () => CompleteOperation(operation);
         TranslateConversationFailures(operationName, completeOperation);

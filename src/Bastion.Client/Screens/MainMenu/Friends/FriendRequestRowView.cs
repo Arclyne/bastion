@@ -91,7 +91,7 @@ public sealed class FriendRequestRowView : Panel
         _ = RunSafely(_requests.Accept(_row));
     }
 
-    private StackPanel CreateActionRow(params Button[] buttons)
+    private static StackPanel CreateActionRow(params Button[] buttons)
     {
         var actionsStackPanel = new StackPanel
         {

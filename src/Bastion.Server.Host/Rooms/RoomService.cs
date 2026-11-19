@@ -184,7 +184,7 @@ public sealed class RoomService : IRoomService
         return RoomTranslator.ToOwnRoomResult(foundRoom);
     }
 
-    private TResult TranslateRoomFailures<TResult>(string operationName, Func<TResult> operation)
+    private static TResult TranslateRoomFailures<TResult>(string operationName, Func<TResult> operation)
     {
         try
         {
@@ -220,7 +220,7 @@ public sealed class RoomService : IRoomService
         }
     }
 
-    private void TranslateRoomFailures(string operationName, Action operation)
+    private static void TranslateRoomFailures(string operationName, Action operation)
     {
         Func<bool> completeOperation = () => CompleteOperation(operation);
         TranslateRoomFailures(operationName, completeOperation);

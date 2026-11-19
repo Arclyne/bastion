@@ -83,7 +83,7 @@ public sealed class ChatService : IChatService
         return ChatTranslator.ToReceipt(postedLine);
     }
 
-    private TResult TranslateChatFailures<TResult>(string operationName, Func<TResult> operation)
+    private static TResult TranslateChatFailures<TResult>(string operationName, Func<TResult> operation)
     {
         try
         {
