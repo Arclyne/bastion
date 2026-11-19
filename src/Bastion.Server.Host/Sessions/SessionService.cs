@@ -58,7 +58,7 @@ public sealed class SessionService : ISessionService
         _channelRegistry.RegisterChannel(player, callback);
     }
 
-    private void TranslateSessionFailures(string operationName, Action operation)
+    private static void TranslateSessionFailures(string operationName, Action operation)
     {
         try
         {

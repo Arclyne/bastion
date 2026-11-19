@@ -91,7 +91,7 @@ public sealed class MatchService : IMatchService
         matchMoveService.PlaceWall(token, chosenWall, GetUtcNow());
     }
 
-    private void TranslateMatchFailures(string operationName, int matchId, Action operation)
+    private static void TranslateMatchFailures(string operationName, int matchId, Action operation)
     {
         try
         {

@@ -57,7 +57,7 @@ public sealed class AccountService : IAccountService
         return LoginTranslator.ToSession(player);
     }
 
-    private PlayerSession TranslateLoginFailures(string operationName, string ipAddress, Func<PlayerSession> operation)
+    private static PlayerSession TranslateLoginFailures(string operationName, string ipAddress, Func<PlayerSession> operation)
     {
         try
         {

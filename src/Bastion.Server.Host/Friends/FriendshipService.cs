@@ -173,7 +173,7 @@ public sealed class FriendshipService : IFriendshipService
         friendList.RemoveFriend(token, removedFriendCode, GetUtcNow());
     }
 
-    private TResult TranslateFriendshipFailures<TResult>(string operationName, Func<TResult> operation)
+    private static TResult TranslateFriendshipFailures<TResult>(string operationName, Func<TResult> operation)
     {
         try
         {
@@ -199,7 +199,7 @@ public sealed class FriendshipService : IFriendshipService
         }
     }
 
-    private void TranslateFriendshipFailures(string operationName, Action operation)
+    private static void TranslateFriendshipFailures(string operationName, Action operation)
     {
         Func<bool> completeOperation = () => CompleteOperation(operation);
         TranslateFriendshipFailures(operationName, completeOperation);

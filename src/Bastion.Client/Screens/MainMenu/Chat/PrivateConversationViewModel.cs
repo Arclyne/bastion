@@ -304,7 +304,7 @@ public sealed class PrivateConversationViewModel : ModeratedChatViewModel
         }
     }
 
-    private void ReportMarkReadFailure(Exception cause)
+    private static void ReportMarkReadFailure(Exception cause)
     {
         _logger.Error("The private conversation could not be marked as read.", cause);
     }

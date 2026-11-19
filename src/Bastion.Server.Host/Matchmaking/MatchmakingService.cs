@@ -60,7 +60,7 @@ public sealed class MatchmakingService : IMatchmakingService
         matchSearch.StartSearch(token, GetUtcNow());
     }
 
-    private void TranslateMatchmakingFailures(string operationName, Action operation)
+    private static void TranslateMatchmakingFailures(string operationName, Action operation)
     {
         try
         {

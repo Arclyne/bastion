@@ -37,7 +37,7 @@ public sealed class TestFriendRequest
     [Fact]
     public void Constructor_SameAccount_ThrowsArgumentException()
     {
-        Action requestSelf = () => new FriendRequest(RequesterId, RequesterId, _requestedAt);
+        Func<FriendRequest> requestSelf = () => new FriendRequest(RequesterId, RequesterId, _requestedAt);
 
         Assert.Throws<ArgumentException>(requestSelf);
     }
