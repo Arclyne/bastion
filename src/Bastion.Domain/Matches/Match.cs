@@ -19,6 +19,7 @@ public class Match
 
     private readonly List<Participation> _participations;
     private readonly List<Move> _moves;
+    private readonly List<DrawOffer> _drawOffers;
 
     private Match(MatchType matchType, MatchFormat format, DateTime startedAt)
         : this()
@@ -36,6 +37,7 @@ public class Match
     {
         _participations = [];
         _moves = [];
+        _drawOffers = [];
     }
 
     private Match(Match source)
@@ -55,6 +57,7 @@ public class Match
             .Select(participation => participation.CopyForPreview());
         _participations.AddRange(copiedParticipations);
         _moves.AddRange(source._moves);
+        _drawOffers.AddRange(source._drawOffers);
     }
 
     public int MatchId { get; private set; }
@@ -80,6 +83,8 @@ public class Match
     public IReadOnlyCollection<Participation> Participations => _participations;
 
     public IReadOnlyCollection<Move> Moves => _moves;
+
+    public IReadOnlyCollection<DrawOffer> DrawOffers => _drawOffers;
 
     public static Match StartRanked(
         MatchFormat format,
@@ -151,6 +156,156 @@ public class Match
         }
 
         LeaveFourPlayerMatch(abandoningAccountId, abandonedAt);
+    }
+
+    public void Disconnect(int accountId, DateTime disconnectedAt)
+    {
+        Participation disconnecting = GetActiveParticipation(accountId);
+        disconnecting.Disconnect(disconnectedAt);
+    }
+
+    public void Reconnect(int accountId)
+    {
+        Participation reconnecting = GetActiveParticipation(accountId);
+        reconnecting.Reconnect();
+    }
+
+    public bool HasAbsentPlayerToTakeOut(DateTime now)
+    {
+        if (Status != MatchStatus.InProgress)
+        {
+            return false;
+        }
+
+        List<Participation> activeParticipations = ListActiveParticipations();
+        bool hasConnectedPlayer = activeParticipations.Exists(participation => participation.IsConnected);
+        bool hasStayedAwayPlayer = activeParticipations.Exists(participation => participation.HasStayedAway(now));
+        return hasConnectedPlayer && hasStayedAwayPlayer;
+    }
+
+    public int TakeOutAbsentPlayer(DateTime now)
+    {
+        if (!HasAbsentPlayerToTakeOut(now))
+        {
+            throw new InvalidOperationException("Only a player away for the whole return delay can be taken out.");
+        }
+
+        Participation absent = ListActiveParticipations()
+            .Where(participation => participation.HasStayedAway(now))
+            .OrderBy(participation => participation.DisconnectedAt)
+            .First();
+        DateTime disconnectedAt = absent.DisconnectedAt.GetValueOrDefault();
+        DateTime takenOutAt = disconnectedAt + MatchConnectionPolicy.ReturnDelay;
+        Abandon(absent.AccountId, takenOutAt);
+        return absent.AccountId;
+    }
+
+    public void RecoverAfterRestart(DateTime restartedAt)
+    {
+        if (Status != MatchStatus.InProgress)
+        {
+            return;
+        }
+
+        foreach (Participation participation in ListActiveParticipations())
+        {
+            participation.Disconnect(restartedAt);
+        }
+
+        if (restartedAt > TurnStartedAt)
+        {
+            TurnStartedAt = restartedAt;
+        }
+    }
+
+    public DrawOfferRejection FindDrawOfferRejection(int accountId)
+    {
+        if (!IsPlayedBy(accountId))
+        {
+            throw new InvalidOperationException("Only a player of a match in progress can offer a draw.");
+        }
+
+        if (!IsTwoPlayerMatch())
+        {
+            return new DrawOfferRejection(DrawOfferRejectionReason.NotTwoPlayers, 0);
+        }
+
+        if (HasPendingDrawOfferFrom(accountId))
+        {
+            return new DrawOfferRejection(DrawOfferRejectionReason.AlreadyOffered, 0);
+        }
+
+        int movesLeft = CountMovesBeforeNextDrawOffer(accountId);
+        if (movesLeft > 0 && !HasPendingDrawOfferFor(accountId))
+        {
+            return new DrawOfferRejection(DrawOfferRejectionReason.TooSoon, movesLeft);
+        }
+
+        return DrawOfferRejection.None;
+    }
+
+    public DrawOfferOutcome OfferDraw(int accountId, DateTime offeredAt)
+    {
+        DrawOfferRejection rejection = FindDrawOfferRejection(accountId);
+        if (rejection.Reason != DrawOfferRejectionReason.None)
+        {
+            throw new InvalidOperationException($"The draw cannot be offered. Reason={rejection.Reason}");
+        }
+
+        if (HasPendingDrawOfferFor(accountId))
+        {
+            AcceptDraw(accountId, offeredAt);
+            return DrawOfferOutcome.Agreed;
+        }
+
+        short nextMoveNumber = GetNextMoveNumber();
+        var drawOffer = new DrawOffer(accountId, nextMoveNumber, offeredAt);
+        _drawOffers.Add(drawOffer);
+        return DrawOfferOutcome.Offered;
+    }
+
+    public bool HasPendingDrawOfferFrom(int accountId)
+    {
+        return _drawOffers.Exists(drawOffer => drawOffer.IsPending() && drawOffer.OffererId == accountId);
+    }
+
+    public bool HasPendingDrawOfferFor(int accountId)
+    {
+        return _drawOffers.Exists(drawOffer => drawOffer.IsPending() && drawOffer.OffererId != accountId);
+    }
+
+    public int CountMovesBeforeNextDrawOffer(int accountId)
+    {
+        DrawOffer? lastOffer = _drawOffers
+            .Where(drawOffer => drawOffer.OffererId == accountId)
+            .OrderByDescending(drawOffer => drawOffer.MoveNumber)
+            .FirstOrDefault();
+        if (lastOffer is null)
+        {
+            return 0;
+        }
+
+        int ownMovesSinceOffer = _moves.Count(
+            playedMove => playedMove.AccountId == accountId && playedMove.MoveNumber >= lastOffer.MoveNumber);
+        return Math.Max(MatchDrawPolicy.OwnMovesBetweenOffers - ownMovesSinceOffer, 0);
+    }
+
+    public void AcceptDraw(int accountId, DateTime acceptedAt)
+    {
+        DrawOffer pendingOffer = GetPendingDrawOfferFor(accountId);
+        pendingOffer.Accept(acceptedAt);
+        foreach (Participation participation in _participations)
+        {
+            participation.Finish(ParticipationResult.Draw);
+        }
+
+        Finish(MatchEndReason.Draw, acceptedAt);
+    }
+
+    public void RejectDraw(int accountId, DateTime rejectedAt)
+    {
+        DrawOffer pendingOffer = GetPendingDrawOfferFor(accountId);
+        pendingOffer.Reject(rejectedAt);
     }
 
     public AbandonmentPreview PreviewAbandonment(int abandoningAccountId, DateTime abandonedAt)
@@ -422,6 +577,17 @@ public class Match
         return participationIndex;
     }
 
+    private Participation GetActiveParticipation(int accountId)
+    {
+        int participationIndex = FindActiveParticipationIndex(accountId);
+        if (participationIndex == NotFoundIndex)
+        {
+            throw new InvalidOperationException("Only a player of a match in progress can change connection.");
+        }
+
+        return _participations[participationIndex];
+    }
+
     private int FindParticipationIndex(int accountId)
     {
         return _participations.FindIndex(participation => participation.AccountId == accountId);
@@ -451,6 +617,7 @@ public class Match
 
     private void Finish(MatchEndReason endReason, DateTime endedAt)
     {
+        ExpirePendingDrawOffers(endedAt);
         Status = MatchStatus.Finished;
         EndedAt = endedAt;
         EndReason = endReason;
@@ -626,5 +793,32 @@ public class Match
     {
         _moves.Add(playedMove);
         player.SpendClock(playedMove.TimeSpentMilliseconds);
+        IEnumerable<DrawOffer> offersToPlayer = _drawOffers.Where(
+            drawOffer => drawOffer.IsPending() && drawOffer.OffererId != player.AccountId);
+        foreach (DrawOffer offerToPlayer in offersToPlayer)
+        {
+            offerToPlayer.Expire(playedMove.PlayedAt);
+        }
+    }
+
+    private DrawOffer GetPendingDrawOfferFor(int accountId)
+    {
+        if (!IsPlayedBy(accountId))
+        {
+            throw new InvalidOperationException("Only a player of a match in progress can answer a draw offer.");
+        }
+
+        DrawOffer? pendingOffer = _drawOffers.Find(
+            drawOffer => drawOffer.IsPending() && drawOffer.OffererId != accountId);
+        return pendingOffer ?? throw new InvalidOperationException("There is no draw offer to answer.");
+    }
+
+    private void ExpirePendingDrawOffers(DateTime expiredAt)
+    {
+        IEnumerable<DrawOffer> pendingOffers = _drawOffers.Where(drawOffer => drawOffer.IsPending());
+        foreach (DrawOffer pendingOffer in pendingOffers)
+        {
+            pendingOffer.Expire(expiredAt);
+        }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
@@ -12,6 +13,8 @@ public sealed class MatchView : ScreenView, IEscapeKeyReceiver
     private const float TurnPillPaddingX = 24;
     private const int HorizontalSideCount = 2;
     private const float AbandonButtonWidth = 210;
+    private const float DrawButtonWidth = 260;
+    private const float BottomButtonSpacing = 10;
     private const float AbandonStatusGap = 8;
     private const float AbandonStatusOffsetY = -(ScreenMetrics.MarginY + ScreenMetrics.MenuPillHeight
         + AbandonStatusGap);
@@ -19,21 +22,21 @@ public sealed class MatchView : ScreenView, IEscapeKeyReceiver
     private const float MoveNoticeWidth = 360;
     private const float MoveNoticeHeight = 28;
     private const float WallControlsOffsetY = -(ScreenMetrics.MarginY + MoveNoticeHeight);
+    private const float ConnectionStackWidth = 560;
+    private const float ConnectionStackSpacing = 10;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchView));
 
     private readonly MatchAbandonmentViewModel _abandonmentViewModel;
 
-    public MatchView(
-        MatchViewModel matchViewModel,
-        MatchChatViewModel chatViewModel,
-        MatchAbandonmentViewModel abandonmentViewModel)
+    public MatchView(MatchViewModel matchViewModel, JoinedMatchViewModelSet joinedMatchViewModels)
     {
         ArgumentNullException.ThrowIfNull(matchViewModel);
-        ArgumentNullException.ThrowIfNull(chatViewModel);
-        ArgumentNullException.ThrowIfNull(abandonmentViewModel);
+        ArgumentNullException.ThrowIfNull(joinedMatchViewModels);
 
-        _abandonmentViewModel = abandonmentViewModel;
+        MatchChatViewModel chatViewModel = joinedMatchViewModels.Chat;
+        MatchConnectionViewModel connectionViewModel = joinedMatchViewModels.Connection;
+        _abandonmentViewModel = joinedMatchViewModels.Abandonment;
         MatchPlayersPanel matchPlayersPanel = CreatePlayersPanel(matchViewModel);
         Panel turnPillPanel = CreateTurnPill(matchViewModel);
         Label moveNoticeLabel = CreateMoveNotice(matchViewModel.MatchPlay);
@@ -42,18 +45,27 @@ public sealed class MatchView : ScreenView, IEscapeKeyReceiver
         Button abandonButton = CreateAbandonButton();
         Label abandonStatusLabel = CreateAbandonStatus();
         Label playerLeftNoticeLabel = CreatePlayerLeftNotice();
+        MatchDrawViewModel drawViewModel = joinedMatchViewModels.Draw;
+        StackPanel connectionStackPanel = CreateConnectionStack(connectionViewModel, drawViewModel);
+        Button drawButton = CreateDrawButton(drawViewModel);
+        var lostConnectionOverlay = new LostConnectionOverlay(connectionViewModel);
         AddChild(matchPlayersPanel);
         AddChild(turnPillPanel);
         AddChild(moveNoticeLabel);
         AddChild(wallControlsPanel);
         AddChild(matchChatPanel);
         AddChild(abandonButton);
+        AddChild(drawButton);
         AddChild(abandonStatusLabel);
         AddChild(playerLeftNoticeLabel);
-        var abandonConfirmDialogView = new AbandonConfirmDialogView(abandonmentViewModel);
-        AddDialog(abandonConfirmDialogView, abandonmentViewModel, nameof(MatchAbandonmentViewModel.IsConfirming));
+        AddChild(connectionStackPanel);
+        AddChild(lostConnectionOverlay);
+        var abandonConfirmDialogView = new AbandonConfirmDialogView(_abandonmentViewModel);
+        AddDialog(abandonConfirmDialogView, _abandonmentViewModel, nameof(MatchAbandonmentViewModel.IsConfirming));
         var matchEndDialogView = new MatchEndDialogView(matchViewModel.MatchEnd);
         AddDialog(matchEndDialogView, matchViewModel.MatchEnd, nameof(MatchEndViewModel.IsShown));
+        var takenOverDialogView = new MatchTakenOverDialogView(connectionViewModel);
+        AddDialog(takenOverDialogView, connectionViewModel, nameof(MatchConnectionViewModel.IsTakenOver));
     }
 
     public void ReceiveEscapeKey()
@@ -176,5 +188,61 @@ public sealed class MatchView : ScreenView, IEscapeKeyReceiver
         noticeLabel.Anchor(Gum.Wireframe.Anchor.Top);
         noticeLabel.Y = ScreenMetrics.MarginY;
         return noticeLabel;
+    }
+
+    private static StackPanel CreateConnectionStack(
+        MatchConnectionViewModel connectionViewModel,
+        MatchDrawViewModel drawViewModel)
+    {
+        var connectionStackPanel = new StackPanel
+        {
+            Width = ConnectionStackWidth,
+            WidthUnits = DimensionUnitType.Absolute,
+            Spacing = ConnectionStackSpacing,
+        };
+        connectionStackPanel.Anchor(Gum.Wireframe.Anchor.Top);
+        connectionStackPanel.Y = ScreenMetrics.MarginY;
+        var connectionToast = new ConnectionToast(connectionViewModel);
+        var rivalAwayCard = new RivalAwayCard(connectionViewModel);
+        var drawToast = new DrawToast(drawViewModel);
+        var drawOfferCard = new DrawOfferCard(drawViewModel);
+        ViewFactory.CenterHorizontally(connectionToast);
+        ViewFactory.CenterHorizontally(rivalAwayCard);
+        ViewFactory.CenterHorizontally(drawToast);
+        ViewFactory.CenterHorizontally(drawOfferCard);
+        connectionStackPanel.AddChild(connectionToast);
+        connectionStackPanel.AddChild(drawToast);
+        connectionStackPanel.AddChild(rivalAwayCard);
+        connectionStackPanel.AddChild(drawOfferCard);
+        return connectionStackPanel;
+    }
+
+    private static Button CreateDrawButton(MatchDrawViewModel drawViewModel)
+    {
+        Button button = ViewFactory.CreateBoundUntranslatedButton(
+            nameof(MatchDrawViewModel.OfferButtonText),
+            DrawButtonWidth,
+            ScreenMetrics.MenuPillHeight);
+        ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Pill);
+        button.BindingContext = drawViewModel;
+        button.SetBinding(nameof(IsVisible), nameof(MatchDrawViewModel.IsOfferButtonShown));
+        button.SetBinding(nameof(IsEnabled), nameof(MatchDrawViewModel.CanOfferDraw));
+        button.Anchor(Gum.Wireframe.Anchor.BottomLeft);
+        button.X = ScreenMetrics.MarginX + AbandonButtonWidth + BottomButtonSpacing;
+        button.Y = -ScreenMetrics.MarginY;
+        button.Click += async (_, _) => await OfferDrawSafely(drawViewModel);
+        return button;
+    }
+
+    private static async Task OfferDrawSafely(MatchDrawViewModel drawViewModel)
+    {
+        try
+        {
+            await drawViewModel.OfferDraw();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _logger.Warn("The draw could not be offered because the connection is closed.", ex);
+        }
     }
 }

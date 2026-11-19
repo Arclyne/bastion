@@ -16,6 +16,18 @@ public interface INotificationClient
 
     event EventHandler<WallPlacedEventArgs>? WallPlaced;
 
+    event EventHandler<OpponentConnectionEventArgs>? OpponentDisconnected;
+
+    event EventHandler<OpponentConnectionEventArgs>? OpponentReconnected;
+
+    event EventHandler? MatchTakenOver;
+
+    event EventHandler<DrawEventArgs>? DrawOffered;
+
+    event EventHandler<DrawEventArgs>? DrawRejected;
+
+    event EventHandler<DrawEventArgs>? DrawOfferExpired;
+
     event EventHandler<MatchFoundEventArgs>? MatchFound;
 
     event EventHandler<PresenceRequestedEventArgs>? PresenceRequested;

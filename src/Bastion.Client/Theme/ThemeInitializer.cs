@@ -35,5 +35,6 @@ public static class ThemeInitializer
 
         CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(game.GraphicsDevice);
         ShapeRenderer.Self.Initialize(game.GraphicsDevice, game.Content);
+        IconCatalog.Initialize(game);
     }
 }

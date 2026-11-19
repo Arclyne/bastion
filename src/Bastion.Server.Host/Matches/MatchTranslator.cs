@@ -5,6 +5,7 @@ using Bastion.Server.Application.Matches;
 using Bastion.Server.Host.Common;
 using CoreWCF;
 using DomainAbandonmentPreview = Bastion.Domain.Matches.AbandonmentPreview;
+using DomainDrawOfferRejectionReason = Bastion.Domain.Matches.DrawOfferRejectionReason;
 using DomainMatchEndReason = Bastion.Domain.Matches.MatchEndReason;
 using DomainParticipationResult = Bastion.Domain.Matches.ParticipationResult;
 using DomainWallOrientation = Bastion.Domain.Matches.WallOrientation;
@@ -52,6 +53,27 @@ public static class MatchTranslator
             Reason = reason,
             BlockedTurnOrder = rejection.BlockedTurnOrder,
         };
+        return FaultExceptionFactory.Create(fault, rejection);
+    }
+
+    public static FaultException<DrawOfferRejectedFault> ToFault(DrawOfferRejectedException rejection)
+    {
+        ArgumentNullException.ThrowIfNull(rejection);
+
+        DrawOfferRejectionReason reason = ToContractReason(rejection.Reason);
+        var fault = new DrawOfferRejectedFault
+        {
+            Reason = reason,
+            MovesLeft = rejection.MovesLeft,
+        };
+        return FaultExceptionFactory.Create(fault, rejection);
+    }
+
+    public static FaultException<DrawNotPendingFault> ToFault(DrawNotPendingException rejection)
+    {
+        ArgumentNullException.ThrowIfNull(rejection);
+
+        var fault = new DrawNotPendingFault();
         return FaultExceptionFactory.Create(fault, rejection);
     }
 
@@ -183,6 +205,21 @@ public static class MatchTranslator
         };
     }
 
+    private static DrawOfferRejectionReason ToContractReason(DomainDrawOfferRejectionReason reason)
+    {
+        switch (reason)
+        {
+            case DomainDrawOfferRejectionReason.NotTwoPlayers:
+                return DrawOfferRejectionReason.NotTwoPlayers;
+            case DomainDrawOfferRejectionReason.AlreadyOffered:
+                return DrawOfferRejectionReason.AlreadyOffered;
+            case DomainDrawOfferRejectionReason.TooSoon:
+                return DrawOfferRejectionReason.TooSoon;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported draw offer rejection.");
+        }
+    }
+
     private static WallRejectionReason ToContractReason(DomainWallRejectionReason reason)
     {
         switch (reason)
@@ -216,7 +253,7 @@ public static class MatchTranslator
         }
     }
 
-    private static WallOrientation ToContractOrientation(DomainWallOrientation orientation)
+    public static WallOrientation ToContractOrientation(DomainWallOrientation orientation)
     {
         switch (orientation)
         {

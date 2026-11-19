@@ -678,4 +678,97 @@
   <data name="MatchAbandonConfirmButton" xml:space="preserve">
     <value>Leave</value>
   </data>
+  <data name="MatchBackNoMoves" xml:space="preserve">
+    <value>You are back in the match.</value>
+  </data>
+  <data name="MatchBackOneMove" xml:space="preserve">
+    <value>You are back in the match. While you were away, 1 move was played.</value>
+  </data>
+  <data name="MatchBackMovesFormat" xml:space="preserve">
+    <value>You are back in the match. While you were away, {0} moves were played.</value>
+  </data>
+  <data name="MatchGoToMenuButton" xml:space="preserve">
+    <value>Go to the menu</value>
+  </data>
+  <data name="MatchTakenOverTitle" xml:space="preserve">
+    <value>You are on another device</value>
+  </data>
+  <data name="MatchTakenOverMessage" xml:space="preserve">
+    <value>You opened this match on another computer with your account. Your session stays open here.</value>
+  </data>
+  <data name="RivalAwayTitleFormat" xml:space="preserve">
+    <value>{0} lost the connection</value>
+  </data>
+  <data name="RivalBackFormat" xml:space="preserve">
+    <value>{0} is back in the match.</value>
+  </data>
+  <data name="PlayerAwayFormat" xml:space="preserve">
+    <value>Offline · {0}</value>
+  </data>
+  <data name="MatchEndRivalLostConnectionFormat" xml:space="preserve">
+    <value>{0} lost the connection and did not come back.</value>
+  </data>
+  <data name="MatchEndOwnLostConnection" xml:space="preserve">
+    <value>You lost the connection and did not come back in time.</value>
+  </data>
+  <data name="RivalAwayDetail" xml:space="preserve">
+    <value>Waiting for them to come back. If they do not come back in time, you win the match.</value>
+  </data>
+  <data name="RivalAwayFourPlayersDetail" xml:space="preserve">
+    <value>If they do not come back in time, they take the worst free place and the match goes on.</value>
+  </data>
+  <data name="LostConnectionTitle" xml:space="preserve">
+    <value>Connection lost</value>
+  </data>
+  <data name="LostConnectionDetail" xml:space="preserve">
+    <value>Reconnecting…</value>
+  </data>
+  <data name="LostConnectionClock" xml:space="preserve">
+    <value>Your clock keeps running.</value>
+  </data>
+  <data name="ReturningToMatchTitle" xml:space="preserve">
+    <value>Back to your match</value>
+  </data>
+  <data name="ReturningToMatchDetailFormat" xml:space="preserve">
+    <value>Against {0}…</value>
+  </data>
+  <data name="DrawOfferButton" xml:space="preserve">
+    <value>Offer a draw</value>
+  </data>
+  <data name="DrawOfferedButton" xml:space="preserve">
+    <value>Draw offered</value>
+  </data>
+  <data name="DrawOfferInOneMove" xml:space="preserve">
+    <value>Offer a draw · in 1 move</value>
+  </data>
+  <data name="DrawOfferInMovesFormat" xml:space="preserve">
+    <value>Offer a draw · in {0} moves</value>
+  </data>
+  <data name="DrawOfferTitleFormat" xml:space="preserve">
+    <value>{0} offers a draw</value>
+  </data>
+  <data name="DrawOfferDetail" xml:space="preserve">
+    <value>If you play without answering, the offer is withdrawn. Your clock keeps running.</value>
+  </data>
+  <data name="DrawAcceptButton" xml:space="preserve">
+    <value>Accept the draw</value>
+  </data>
+  <data name="DrawRejectButton" xml:space="preserve">
+    <value>Decline</value>
+  </data>
+  <data name="DrawRejectedFormat" xml:space="preserve">
+    <value>{0} declined the draw.</value>
+  </data>
+  <data name="DrawExpiredFormat" xml:space="preserve">
+    <value>The draw offer was withdrawn: {0} played.</value>
+  </data>
+  <data name="PlayerOfferedDraw" xml:space="preserve">
+    <value>You offered a draw</value>
+  </data>
+  <data name="DrawOfferFailed" xml:space="preserve">
+    <value>We could not send the draw offer.</value>
+  </data>
+  <data name="DrawAnswerFailed" xml:space="preserve">
+    <value>We could not answer the draw offer.</value>
+  </data>
 </root>

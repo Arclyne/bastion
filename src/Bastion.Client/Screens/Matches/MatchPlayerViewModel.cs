@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Matches;
 using Bastion.Client.Networking.Matchmaking;
@@ -24,6 +25,7 @@ public sealed class MatchPlayerViewModel : ViewModel
         Nickname = participant.Nickname;
         _eloText = MatchScreenText.FormatElo(participant.EloRating);
         _departureText = string.Empty;
+        AwayText = string.Empty;
         WallsText = MatchScreenText.FormatWallCount(format.WallsPerPlayer);
         ClockText = MatchScreenText.FormatClock(format.ClockMinutes);
         PawnSymbol = Participation.GetPawnSymbol(participant.TurnOrder);
@@ -74,6 +76,38 @@ public sealed class MatchPlayerViewModel : ViewModel
     [DependsOn(nameof(HasLeft))]
     public string DetailText => HasLeft ? _departureText : _eloText;
 
+    public bool IsAway
+    {
+        get => Get<bool>();
+        private set => Set(value);
+    }
+
+    public string AwayText
+    {
+        get => Get<string>();
+        private set => Set(value);
+    }
+
+    public bool HasOfferedDraw
+    {
+        get => Get<bool>();
+        private set => Set(value);
+    }
+
+    [DependsOn(nameof(HasLeft))]
+    [DependsOn(nameof(IsAway))]
+    public bool IsAwayShown => IsAway && !HasLeft;
+
+    [DependsOn(nameof(HasLeft))]
+    [DependsOn(nameof(IsAway))]
+    [DependsOn(nameof(HasOfferedDraw))]
+    public bool IsDrawOfferShown => HasOfferedDraw && !IsAway && !HasLeft;
+
+    [DependsOn(nameof(HasLeft))]
+    [DependsOn(nameof(IsAway))]
+    [DependsOn(nameof(HasOfferedDraw))]
+    public bool IsDetailShown => HasLeft || (!IsAway && !HasOfferedDraw);
+
     public bool HasTurn
     {
         get => Get<bool>();
@@ -100,6 +134,24 @@ public sealed class MatchPlayerViewModel : ViewModel
     {
         ClockText = MatchScreenText.FormatClock(remainingClock);
         IsClockLow = remainingClock <= _lowClockThreshold;
+    }
+
+    public void ShowConnection(bool isAway, TimeSpan timeAway)
+    {
+        IsAway = isAway;
+        if (!isAway)
+        {
+            AwayText = string.Empty;
+            return;
+        }
+
+        string timeAwayText = MatchScreenText.FormatElapsed(timeAway);
+        AwayText = string.Format(CultureInfo.CurrentCulture, Strings.PlayerAwayFormat, timeAwayText);
+    }
+
+    public void ShowDrawOffer(bool hasOfferedDraw)
+    {
+        HasOfferedDraw = hasOfferedDraw;
     }
 
     public void ShowWalls(byte remainingWalls)

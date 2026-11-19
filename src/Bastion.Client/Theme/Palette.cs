@@ -72,6 +72,12 @@ public static class Palette
 
     public static Color InfoSoft { get; } = new Color(0xEA, 0xF2, 0xFA);
 
+    public static Color RejoinSoft { get; } = new Color(0xFF, 0xF4, 0xE6);
+
+    public static Color Info { get; } = new Color(0x2F, 0x5E, 0x8A);
+
+    public static Color ProgressTrack { get; } = new Color(0xF1, 0xE7, 0xDA);
+
     public static Color Success { get; } = new Color(0x11, 0x70, 0x4F);
 
     public static Color SuccessSoft { get; } = new Color(0xE6, 0xF4, 0xEE);

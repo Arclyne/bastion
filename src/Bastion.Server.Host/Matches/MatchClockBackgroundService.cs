@@ -53,6 +53,8 @@ public sealed class MatchClockBackgroundService : BackgroundService
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         IMatchClockService clockService = scope.ServiceProvider.GetRequiredService<IMatchClockService>();
-        clockService.ExpireRunOutClocks(_timeProvider.GetUtcNow().UtcDateTime);
+        DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
+        clockService.ExpireRunOutClocks(now);
+        clockService.TakeOutAbsentPlayers(now);
     }
 }

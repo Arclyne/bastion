@@ -13,6 +13,8 @@ namespace Bastion.Client.Screens.Matches;
 public sealed class MatchViewModel : ViewModel, IDisposable
 {
     private readonly MatchAbandonmentViewModel _abandonmentViewModel;
+    private MatchConnectionViewModel? _connection;
+    private MatchDrawViewModel? _draw;
     private readonly string _ownNickname;
     private List<BoardPawn> _pawns;
 
@@ -69,8 +71,37 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         private set => Set(value);
     }
 
+    public void FollowConnection(MatchConnectionViewModel connection)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+
+        _connection = connection;
+        MatchEnd.FollowConnection(connection);
+        _connection.AwayPlayersChanged += HandleAwayPlayersChanged;
+        ShowConnections();
+    }
+
+    public void FollowDraw(MatchDrawViewModel draw)
+    {
+        ArgumentNullException.ThrowIfNull(draw);
+
+        _draw = draw;
+        _draw.OwnOfferChanged += HandleOwnOfferChanged;
+        ShowOwnDrawOffer();
+    }
+
     public void Dispose()
     {
+        if (_draw is not null)
+        {
+            _draw.OwnOfferChanged -= HandleOwnOfferChanged;
+        }
+
+        if (_connection is not null)
+        {
+            _connection.AwayPlayersChanged -= HandleAwayPlayersChanged;
+        }
+
         _abandonmentViewModel.PlayerLeft -= HandlePlayerLeft;
         MatchPlay.StateChanged -= HandleMatchPlayStateChanged;
         MatchPlay.ClockTicked -= HandleClockTicked;
@@ -203,6 +234,42 @@ public sealed class MatchViewModel : ViewModel, IDisposable
     private void HandleMatchPlayStateChanged(object? sender, EventArgs e)
     {
         RefreshPlay();
+    }
+
+    private void HandleAwayPlayersChanged(object? sender, EventArgs e)
+    {
+        ShowConnections();
+    }
+
+    private void ShowConnections()
+    {
+        if (_connection is null)
+        {
+            return;
+        }
+
+        foreach (MatchPlayerViewModel player in Players)
+        {
+            bool isAway = _connection.IsAway(player.TurnOrder);
+            TimeSpan timeAway = _connection.GetTimeAway(player.TurnOrder);
+            player.ShowConnection(isAway, timeAway);
+        }
+    }
+
+    private void HandleOwnOfferChanged(object? sender, EventArgs e)
+    {
+        ShowOwnDrawOffer();
+    }
+
+    private void ShowOwnDrawOffer()
+    {
+        if (_draw is null)
+        {
+            return;
+        }
+
+        MatchPlayerViewModel ownPlayer = Players.First(player => player.IsOwn);
+        ownPlayer.ShowDrawOffer(_draw.IsOwnOfferPending);
     }
 
     private void HandleClockTicked(object? sender, EventArgs e)

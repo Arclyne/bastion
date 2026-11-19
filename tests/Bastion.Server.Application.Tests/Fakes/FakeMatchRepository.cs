@@ -27,6 +27,13 @@ public sealed class FakeMatchRepository : IMatchRepository
         ClosuresSavedWithMove = [];
         ClosuresSavedWithoutMove = [];
         MatchIdsWithRunOutClock = [];
+        MatchIdsWithAbsentPlayer = [];
+        UnfinishedMatchIdsByAccountId = [];
+        NicknamesByAccountId = [];
+        MatchesSavedWithConnection = [];
+        MatchesInProgress = [];
+        RecoveredMatches = [];
+        MatchesSavedWithDrawOffer = [];
     }
 
     public HashSet<int> AccountIdsWithUnfinishedParticipation { get; }
@@ -63,7 +70,21 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public List<int> MatchIdsWithRunOutClock { get; }
 
+    public List<int> MatchIdsWithAbsentPlayer { get; }
+
     public MatchRepositoryException? MatchReadFailure { get; set; }
+
+    public Dictionary<int, int> UnfinishedMatchIdsByAccountId { get; }
+
+    public Dictionary<int, string> NicknamesByAccountId { get; }
+
+    public List<Match> MatchesSavedWithConnection { get; }
+
+    public List<Match> MatchesInProgress { get; }
+
+    public List<Match> RecoveredMatches { get; }
+
+    public List<Match> MatchesSavedWithDrawOffer { get; }
 
     public bool HasUnfinishedParticipation(int accountId)
     {
@@ -174,5 +195,45 @@ public sealed class FakeMatchRepository : IMatchRepository
     public IReadOnlyList<int> FindMatchIdsWithRunOutClock(DateTime now)
     {
         return MatchIdsWithRunOutClock;
+    }
+
+    public IReadOnlyList<int> FindMatchIdsWithAbsentPlayer(DateTime now)
+    {
+        return MatchIdsWithAbsentPlayer;
+    }
+
+    public Lookup<int> FindUnfinishedMatchId(int accountId)
+    {
+        if (!UnfinishedMatchIdsByAccountId.TryGetValue(accountId, out int matchId))
+        {
+            return Lookup.Missing<int>($"AccountId={accountId}");
+        }
+
+        return Lookup.Found(matchId);
+    }
+
+    public IReadOnlyDictionary<int, string> FindNicknames(IReadOnlyCollection<int> accountIds)
+    {
+        return NicknamesByAccountId;
+    }
+
+    public void SaveConnection(Match match)
+    {
+        MatchesSavedWithConnection.Add(match);
+    }
+
+    public void SaveDrawOffer(Match match)
+    {
+        MatchesSavedWithDrawOffer.Add(match);
+    }
+
+    public IReadOnlyList<Match> FindMatchesInProgress()
+    {
+        return MatchesInProgress;
+    }
+
+    public void SaveRecoveredMatches(IReadOnlyList<Match> matches)
+    {
+        RecoveredMatches.AddRange(matches);
     }
 }

@@ -19,6 +19,12 @@ namespace Bastion.Contracts.Notifications;
 [KnownType(typeof(PrivateMessageNotification))]
 [KnownType(typeof(RoomUpdatedNotification))]
 [KnownType(typeof(RoomClosedNotification))]
+[KnownType(typeof(OpponentDisconnectedNotification))]
+[KnownType(typeof(OpponentReconnectedNotification))]
+[KnownType(typeof(MatchTakenOverNotification))]
+[KnownType(typeof(DrawOfferedNotification))]
+[KnownType(typeof(DrawRejectedNotification))]
+[KnownType(typeof(DrawOfferExpiredNotification))]
 public abstract class Notification
 {
     [DataMember]

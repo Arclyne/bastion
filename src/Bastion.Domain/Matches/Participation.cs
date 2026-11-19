@@ -59,6 +59,8 @@ public class Participation
 
     public bool IsConnected { get; private set; }
 
+    public DateTime? DisconnectedAt { get; private set; }
+
     public static PawnSymbol GetPawnSymbol(byte turnOrder)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(turnOrder, Match.FirstTurnOrder);
@@ -76,6 +78,17 @@ public class Participation
     public bool HasEnded()
     {
         return Result is not null;
+    }
+
+    public bool HasStayedAway(DateTime now)
+    {
+        if (IsConnected || HasEnded() || DisconnectedAt is not DateTime disconnectedAt)
+        {
+            return false;
+        }
+
+        TimeSpan timeAway = now - disconnectedAt;
+        return timeAway >= MatchConnectionPolicy.ReturnDelay;
     }
 
     internal void Finish(ParticipationResult result)
@@ -145,6 +158,17 @@ public class Participation
     internal void RunOutOfClock()
     {
         RemainingClockMilliseconds = 0;
+    }
+
+    internal void Disconnect(DateTime disconnectedAt)
+    {
+        IsConnected = false;
+        DisconnectedAt = disconnectedAt;
+    }
+
+    internal void Reconnect()
+    {
+        IsConnected = true;
     }
 
     internal void SpendWall()

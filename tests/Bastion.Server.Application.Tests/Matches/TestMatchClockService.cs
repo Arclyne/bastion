@@ -85,7 +85,45 @@ public sealed class TestMatchClockService
         Assert.Null(failure);
     }
 
-    private void AddRankedMatch()
+    [Fact]
+    public void TakeOutAbsentPlayers_AwayTheWholeDelay_SavesTheClosure()
+    {
+        Match match = AddRankedMatch();
+        match.Disconnect(SecondAccountId, _beforeClockRanOut);
+        _matchRepository.MatchIdsWithAbsentPlayer.Add(MatchId);
+
+        _matchClockService.TakeOutAbsentPlayers(_beforeClockRanOut + MatchConnectionPolicy.ReturnDelay);
+
+        Assert.Single(_matchRepository.ClosuresSavedWithoutMove);
+    }
+
+    [Fact]
+    public void TakeOutAbsentPlayers_AwayTheWholeDelay_AnnouncesTheAbsentPlayerAsDeciding()
+    {
+        Match match = AddRankedMatch();
+        match.Disconnect(SecondAccountId, _beforeClockRanOut);
+        _matchRepository.MatchIdsWithAbsentPlayer.Add(MatchId);
+
+        _matchClockService.TakeOutAbsentPlayers(_beforeClockRanOut + MatchConnectionPolicy.ReturnDelay);
+
+        NotifiedMatchEnd notified = _matchEndNotifier.NotifiedMatchEnds.Single();
+        Assert.Equal(Match.SecondTurnOrder, notified.Notice.DecidingTurnOrder);
+    }
+
+    [Fact]
+    public void TakeOutAbsentPlayers_CameBack_SavesNothing()
+    {
+        Match match = AddRankedMatch();
+        match.Disconnect(SecondAccountId, _beforeClockRanOut);
+        match.Reconnect(SecondAccountId);
+        _matchRepository.MatchIdsWithAbsentPlayer.Add(MatchId);
+
+        _matchClockService.TakeOutAbsentPlayers(_beforeClockRanOut + MatchConnectionPolicy.ReturnDelay);
+
+        Assert.Empty(_matchRepository.ClosuresSavedWithoutMove);
+    }
+
+    private Match AddRankedMatch()
     {
         GameMode classicMode = GameModeSampleFactory.CreateClassic();
         var format = new MatchFormat(classicMode, ClockMinutes);
@@ -97,5 +135,6 @@ public sealed class TestMatchClockService
         var match = Match.StartRanked(format, entrants, _startedAt);
         _matchRepository.MatchesById[MatchId] = match;
         _matchRepository.MatchIdsWithRunOutClock.Add(MatchId);
+        return match;
     }
 }

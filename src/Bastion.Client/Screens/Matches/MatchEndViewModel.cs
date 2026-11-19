@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Matches;
@@ -19,6 +20,7 @@ public sealed class MatchEndViewModel : ViewModel, IDisposable
     private readonly MatchPlayViewModel _matchPlay;
     private readonly byte _ownTurnOrder;
     private List<MatchEndRow> _rows;
+    private MatchConnectionViewModel? _connection;
 
     public MatchEndViewModel(JoinedMatch joinedMatch, MatchPlayViewModel matchPlayViewModel)
     {
@@ -115,6 +117,13 @@ public sealed class MatchEndViewModel : ViewModel, IDisposable
 
     public event EventHandler? SearchAgainRequested;
 
+    public void FollowConnection(MatchConnectionViewModel connection)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+
+        _connection = connection;
+    }
+
     public void RequestReturnToMenu()
     {
         ReturnToMenuRequested?.Invoke(this, EventArgs.Empty);
@@ -152,6 +161,11 @@ public sealed class MatchEndViewModel : ViewModel, IDisposable
 
     private string DescribeReason(EndedMatchReason endReason, byte decidingTurnOrder)
     {
+        if (endReason == EndedMatchReason.Abandonment && WasAwayAtEnd(decidingTurnOrder))
+        {
+            return DescribeLostConnection(decidingTurnOrder);
+        }
+
         if (decidingTurnOrder == _ownTurnOrder)
         {
             return MatchEndText.DescribeOwnReason(endReason);
@@ -159,6 +173,22 @@ public sealed class MatchEndViewModel : ViewModel, IDisposable
 
         string decidingNickname = FindNickname(decidingTurnOrder);
         return MatchEndText.DescribeRivalReason(endReason, decidingNickname);
+    }
+
+    private bool WasAwayAtEnd(byte turnOrder)
+    {
+        return _connection is not null && _connection.WasAwayAtEnd(turnOrder);
+    }
+
+    private string DescribeLostConnection(byte decidingTurnOrder)
+    {
+        if (decidingTurnOrder == _ownTurnOrder)
+        {
+            return Strings.MatchEndOwnLostConnection;
+        }
+
+        string decidingNickname = FindNickname(decidingTurnOrder);
+        return string.Format(CultureInfo.CurrentCulture, Strings.MatchEndRivalLostConnectionFormat, decidingNickname);
     }
 
     private string FindNickname(byte turnOrder)

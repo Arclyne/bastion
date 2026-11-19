@@ -39,48 +39,14 @@ public sealed class MatchCloser : IMatchCloser
 
     public void AnnounceEnd(Match finishedMatch, int decidingAccountId)
     {
-        ArgumentNullException.ThrowIfNull(finishedMatch);
-
-        Participation deciding = finishedMatch.GetParticipation(decidingAccountId);
-        MatchEndReason endReason = finishedMatch.EndReason.GetValueOrDefault();
-        DateTime endedAt = finishedMatch.EndedAt.GetValueOrDefault();
-        bool isRanked = finishedMatch.MatchType == MatchType.Ranked;
-        int playedSeconds = CountPlayedSeconds(finishedMatch, endedAt);
-        List<PlayerStanding> standings = ListStandings(finishedMatch);
-        var notice = new MatchEndNotice
-        {
-            EndReason = endReason,
-            DecidingTurnOrder = deciding.TurnOrder,
-            IsRanked = isRanked,
-            MoveCount = finishedMatch.Moves.Count,
-            PlayedSeconds = playedSeconds,
-            Standings = standings,
-        };
+        MatchEndNotice notice = DescribeEnd(finishedMatch, decidingAccountId);
         List<int> recipientAccountIds = ListRecipientAccountIds(finishedMatch, decidingAccountId);
         _matchEndNotifier.NotifyMatchEnded(finishedMatch.MatchId, recipientAccountIds, notice);
     }
 
     public void AnnounceDeparture(Match match, int departingAccountId, DateTime now)
     {
-        ArgumentNullException.ThrowIfNull(match);
-
-        Participation departing = match.GetParticipation(departingAccountId);
-        MatchEndReason endReason = departing.EndReason.GetValueOrDefault();
-        int activePlayerCount = match.CountActivePlayers();
-        short nextMoveNumber = match.GetNextMoveNumber();
-        int playedSeconds = CountPlayedSeconds(match, now);
-        List<PlayerStanding> standings = ListStandings(match);
-        var notice = new ParticipationEndNotice
-        {
-            EndReason = endReason,
-            DepartingTurnOrder = departing.TurnOrder,
-            ActivePlayerCount = activePlayerCount,
-            NextTurnOrder = match.CurrentTurnOrder,
-            NextMoveNumber = nextMoveNumber,
-            MoveCount = match.Moves.Count,
-            PlayedSeconds = playedSeconds,
-            Standings = standings,
-        };
+        ParticipationEndNotice notice = DescribeDeparture(match, departingAccountId, now);
         List<int> recipientAccountIds = ListRecipientAccountIds(match, departingAccountId);
         _matchEndNotifier.NotifyParticipationEnded(match.MatchId, recipientAccountIds, notice);
     }
@@ -101,6 +67,68 @@ public sealed class MatchCloser : IMatchCloser
 
         _matchRepository.SaveDeparture(match);
         AnnounceDeparture(match, timedOut.AccountId, now);
+    }
+
+    public void TakeOutAbsentPlayer(Match match, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+
+        int absentAccountId = match.TakeOutAbsentPlayer(now);
+        _logger.Info(
+            $"A player who did not come back was taken out. AccountId={absentAccountId}; MatchId={match.MatchId}");
+        if (match.IsFinished())
+        {
+            CloseWithoutMove(match);
+            AnnounceEnd(match, absentAccountId);
+            return;
+        }
+
+        _matchRepository.SaveDeparture(match);
+        AnnounceDeparture(match, absentAccountId, now);
+    }
+
+    public MatchEndNotice DescribeEnd(Match finishedMatch, int decidingAccountId)
+    {
+        ArgumentNullException.ThrowIfNull(finishedMatch);
+
+        Participation deciding = finishedMatch.GetParticipation(decidingAccountId);
+        MatchEndReason endReason = finishedMatch.EndReason.GetValueOrDefault();
+        DateTime endedAt = finishedMatch.EndedAt.GetValueOrDefault();
+        bool isRanked = finishedMatch.MatchType == MatchType.Ranked;
+        int playedSeconds = CountPlayedSeconds(finishedMatch, endedAt);
+        List<PlayerStanding> standings = ListStandings(finishedMatch);
+        return new MatchEndNotice
+        {
+            EndReason = endReason,
+            DecidingTurnOrder = deciding.TurnOrder,
+            IsRanked = isRanked,
+            MoveCount = finishedMatch.Moves.Count,
+            PlayedSeconds = playedSeconds,
+            Standings = standings,
+        };
+    }
+
+    public ParticipationEndNotice DescribeDeparture(Match match, int departingAccountId, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+
+        Participation departing = match.GetParticipation(departingAccountId);
+        MatchEndReason endReason = departing.EndReason.GetValueOrDefault();
+        int activePlayerCount = match.CountActivePlayers();
+        short nextMoveNumber = match.GetNextMoveNumber();
+        int playedSeconds = CountPlayedSeconds(match, now);
+        List<PlayerStanding> standings = ListStandings(match);
+        return new ParticipationEndNotice
+        {
+            EndReason = endReason,
+            DepartingTurnOrder = departing.TurnOrder,
+            ActivePlayerCount = activePlayerCount,
+            NextTurnOrder = match.CurrentTurnOrder,
+            NextMoveNumber = nextMoveNumber,
+            MoveCount = match.Moves.Count,
+            PlayedSeconds = playedSeconds,
+            Standings = standings,
+        };
     }
 
     private MatchClosure PrepareClosure(Match finishedMatch)

@@ -1,4 +1,5 @@
 using System;
+using Bastion.Client.Localization;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
@@ -64,7 +65,21 @@ public sealed class MatchPlayersPanel : Panel
             TextStyleCatalog.IdentityDetail,
             NameWidth);
         detailLabel.BindingContext = player;
+        detailLabel.SetBinding(nameof(IsVisible), nameof(MatchPlayerViewModel.IsDetailShown));
         nameColumnStackPanel.AddChild(detailLabel);
+        Label awayLabel = ViewFactory.CreateBoundNotice(
+            nameof(MatchPlayerViewModel.AwayText),
+            nameof(MatchPlayerViewModel.IsAwayShown),
+            TextStyleCatalog.PlayerAway);
+        ViewFactory.SetFixedWidth(awayLabel, NameWidth);
+        awayLabel.BindingContext = player;
+        nameColumnStackPanel.AddChild(awayLabel);
+        Label drawOfferLabel = ViewFactory.CreateToggledLabel(
+            nameof(Strings.PlayerOfferedDraw),
+            nameof(MatchPlayerViewModel.IsDrawOfferShown),
+            TextStyleCatalog.PlayerDrawOffer);
+        drawOfferLabel.BindingContext = player;
+        nameColumnStackPanel.AddChild(drawOfferLabel);
 
         var contentStackPanel = new StackPanel
         {
