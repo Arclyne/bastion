@@ -23,4 +23,8 @@ public sealed record JoinedMatchViewModelSet
     public MatchAbandonmentViewModel Abandonment { get; }
 
     public MatchPlayViewModel MatchPlay { get; }
+
+    public required MatchConnectionViewModel Connection { get; init; }
+
+    public required MatchDrawViewModel Draw { get; init; }
 }

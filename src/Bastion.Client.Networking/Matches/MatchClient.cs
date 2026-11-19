@@ -44,6 +44,42 @@ public sealed class MatchClient : IMatchClient
         remove => _notificationClient.WallPlaced -= value;
     }
 
+    public event EventHandler<OpponentConnectionEventArgs>? OpponentDisconnected
+    {
+        add => _notificationClient.OpponentDisconnected += value;
+        remove => _notificationClient.OpponentDisconnected -= value;
+    }
+
+    public event EventHandler<OpponentConnectionEventArgs>? OpponentReconnected
+    {
+        add => _notificationClient.OpponentReconnected += value;
+        remove => _notificationClient.OpponentReconnected -= value;
+    }
+
+    public event EventHandler? MatchTakenOver
+    {
+        add => _notificationClient.MatchTakenOver += value;
+        remove => _notificationClient.MatchTakenOver -= value;
+    }
+
+    public event EventHandler<DrawEventArgs>? DrawOffered
+    {
+        add => _notificationClient.DrawOffered += value;
+        remove => _notificationClient.DrawOffered -= value;
+    }
+
+    public event EventHandler<DrawEventArgs>? DrawRejected
+    {
+        add => _notificationClient.DrawRejected += value;
+        remove => _notificationClient.DrawRejected -= value;
+    }
+
+    public event EventHandler<DrawEventArgs>? DrawOfferExpired
+    {
+        add => _notificationClient.DrawOfferExpired += value;
+        remove => _notificationClient.DrawOfferExpired -= value;
+    }
+
     public void AbandonMatch(string sessionToken, int matchId)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);
@@ -81,6 +117,40 @@ public sealed class MatchClient : IMatchClient
         var contractWall = MatchContractTranslator.ToWallPlacement(wall);
         Action<IMatchService> placeWall = service => service.PlaceWall(sessionToken, contractWall);
         Call(placeWall);
+    }
+
+    public FoundOngoingMatch FindOngoingMatch(string sessionToken)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
+        Func<IMatchService, OngoingMatch> findOngoingMatch = service => service.FindOngoingMatch(sessionToken);
+        OngoingMatch ongoingMatch = Call(findOngoingMatch);
+        return MatchSnapshotTranslator.ToOngoingMatch(ongoingMatch);
+    }
+
+    public RejoinedMatch RejoinMatch(string sessionToken, int matchId)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
+        Func<IMatchService, MatchSnapshot> rejoinMatch = service => service.RejoinMatch(sessionToken, matchId);
+        MatchSnapshot snapshot = Call(rejoinMatch);
+        return MatchSnapshotTranslator.ToRejoinedMatch(snapshot);
+    }
+
+    public void OfferDraw(string sessionToken, int matchId)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
+        Action<IMatchService> offerDraw = service => service.OfferDraw(sessionToken, matchId);
+        Call(offerDraw);
+    }
+
+    public void RespondToDraw(string sessionToken, int matchId, bool isAccepted)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+
+        Action<IMatchService> respondToDraw = service => service.RespondToDraw(sessionToken, matchId, isAccepted);
+        Call(respondToDraw);
     }
 
     private void Call(Action<IMatchService> operation)
@@ -134,6 +204,16 @@ public sealed class MatchClient : IMatchClient
         if (cause is FaultException<IllegalWallFault> illegalWall)
         {
             return MatchContractTranslator.ToIllegalWallException(illegalWall);
+        }
+
+        if (cause is FaultException<DrawOfferRejectedFault> rejectedOffer)
+        {
+            return MatchContractTranslator.ToDrawOfferRejectedException(rejectedOffer);
+        }
+
+        if (cause is FaultException<DrawNotPendingFault>)
+        {
+            return new DrawNotPendingException(cause);
         }
 
         return ServiceFailureTranslator.ToClientException(cause);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Bastion.Domain.Accounts;
 using Bastion.Domain.Chat;
 using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
@@ -137,6 +138,55 @@ public sealed class MatchRepository : IMatchRepository
         return _newContextRunner.Run(findMatchIds);
     }
 
+    public IReadOnlyList<int> FindMatchIdsWithAbsentPlayer(DateTime now)
+    {
+        Func<BastionDbContext, List<int>> findMatchIds = context => LoadMatchIdsWithAbsentPlayer(context, now);
+        return _newContextRunner.Run(findMatchIds);
+    }
+
+    public Lookup<int> FindUnfinishedMatchId(int accountId)
+    {
+        Func<BastionDbContext, Lookup<int>> findMatchId = context => LoadUnfinishedMatchId(context, accountId);
+        return _newContextRunner.Run(findMatchId);
+    }
+
+    public IReadOnlyDictionary<int, string> FindNicknames(IReadOnlyCollection<int> accountIds)
+    {
+        ArgumentNullException.ThrowIfNull(accountIds);
+
+        Func<BastionDbContext, Dictionary<int, string>> findNicknames = context => LoadNicknames(context, accountIds);
+        return _newContextRunner.Run(findNicknames);
+    }
+
+    public void SaveConnection(Match match)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+
+        Func<BastionDbContext, int> saveConnection = context => UpdateMatchAndRoom(context, match);
+        _newContextRunner.Run(saveConnection);
+    }
+
+    public void SaveDrawOffer(Match match)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+
+        Func<BastionDbContext, int> saveDrawOffer = context => UpdateMatchAndRoom(context, match);
+        _newContextRunner.Run(saveDrawOffer);
+    }
+
+    public IReadOnlyList<Match> FindMatchesInProgress()
+    {
+        return _newContextRunner.Run(LoadMatchesInProgress);
+    }
+
+    public void SaveRecoveredMatches(IReadOnlyList<Match> matches)
+    {
+        ArgumentNullException.ThrowIfNull(matches);
+
+        Func<BastionDbContext, int> saveMatches = context => UpdateMatches(context, matches);
+        _newContextRunner.Run(saveMatches);
+    }
+
     private static bool HasUnfinishedParticipationInContext(BastionDbContext context, int accountId)
     {
         IQueryable<Participation> accountUnfinishedParticipations = SelectUnfinishedParticipations(context)
@@ -203,6 +253,7 @@ public sealed class MatchRepository : IMatchRepository
             .AsNoTracking()
             .Include(match => match.Participations)
             .Include(match => match.Moves)
+            .Include(match => match.DrawOffers)
             .Where(match => match.MatchId == matchId);
         Match? storedMatch = matchesWithId.FirstOrDefault();
         return Lookup.FromNullable(storedMatch, $"MatchId={matchId}");
@@ -274,6 +325,60 @@ public sealed class MatchRepository : IMatchRepository
                     && match.TurnStartedAt.AddMilliseconds(participation.RemainingClockMilliseconds.Value) <= now))
             .Select(match => match.MatchId);
         return [.. matchIds];
+    }
+
+    private static List<int> LoadMatchIdsWithAbsentPlayer(BastionDbContext context, DateTime now)
+    {
+        DateTime latestDisconnection = now - MatchConnectionPolicy.ReturnDelay;
+        IQueryable<int> matchIds = context.Matches
+            .AsNoTracking()
+            .Where(match => match.Status == MatchStatus.InProgress)
+            .Where(match => match.Participations.Any(
+                participation => !participation.Result.HasValue
+                    && !participation.IsConnected
+                    && participation.DisconnectedAt <= latestDisconnection))
+            .Where(match => match.Participations.Any(
+                participation => !participation.Result.HasValue && participation.IsConnected))
+            .Select(match => match.MatchId);
+        return [.. matchIds];
+    }
+
+    private static Lookup<int> LoadUnfinishedMatchId(BastionDbContext context, int accountId)
+    {
+        IQueryable<int> unfinishedMatchIds = SelectUnfinishedParticipations(context)
+            .Where(participation => participation.AccountId == accountId)
+            .OrderByDescending(participation => participation.MatchId)
+            .Select(participation => participation.MatchId);
+        List<int> matchIds = [.. unfinishedMatchIds.Take(1)];
+        if (matchIds.Count == 0)
+        {
+            return Lookup.Missing<int>($"AccountId={accountId}");
+        }
+
+        return Lookup.Found(matchIds[0]);
+    }
+
+    private static Dictionary<int, string> LoadNicknames(BastionDbContext context, IReadOnlyCollection<int> accountIds)
+    {
+        IQueryable<Account> accounts = context.Accounts
+            .AsNoTracking()
+            .Where(account => accountIds.Contains(account.AccountId));
+        return accounts.ToDictionary(account => account.AccountId, account => account.Nickname);
+    }
+
+    private static List<Match> LoadMatchesInProgress(BastionDbContext context)
+    {
+        IQueryable<Match> matchesInProgress = context.Matches
+            .AsNoTracking()
+            .Include(match => match.Participations)
+            .Where(match => match.Status == MatchStatus.InProgress);
+        return [.. matchesInProgress];
+    }
+
+    private static int UpdateMatches(BastionDbContext context, IReadOnlyList<Match> matches)
+    {
+        context.Matches.UpdateRange(matches);
+        return context.SaveChanges();
     }
 
     private static List<ModeStatistic> LoadModeStatistics(

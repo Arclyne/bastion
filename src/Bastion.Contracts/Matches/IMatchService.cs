@@ -111,4 +111,85 @@ public interface IMatchService
     [FaultContract(typeof(NotYourTurnFault))]
     [FaultContract(typeof(IllegalWallFault))]
     void PlaceWall(string? sessionToken, WallPlacement? wall);
+
+    /// <summary>
+    /// Finds the match the player of the session has not finished, with its whole state, without bringing the player
+    /// back to it: the player stays disconnected and the rivals can still claim the win.
+    /// </summary>
+    /// <param name="sessionToken">The token of the player's open session.</param>
+    /// <returns>Whether the player has an unfinished match and, if so, its state.</returns>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="InvalidSessionFault"/>: the session is not open.
+    /// </exception>
+    /// <exception cref="FaultException">The server could not read the database.</exception>
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    OngoingMatch FindOngoingMatch(string? sessionToken);
+
+    /// <summary>
+    /// Brings the player of the session back to the match after a disconnection and tells the other players. The state
+    /// holds every move, the pawns, the walls and the clocks with the running turn already taken off. When the match or
+    /// the player's part in it ended while the player was away, the state carries how it ended.
+    /// </summary>
+    /// <param name="sessionToken">The token of the player's open session.</param>
+    /// <param name="matchId">The match the player returns to.</param>
+    /// <returns>The whole state of the match as the server keeps it.</returns>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="InvalidSessionFault"/>: the session is not open.
+    /// </exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="MatchNotJoinedFault"/>: the player never played that match.
+    /// </exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    [FaultContract(typeof(MatchNotJoinedFault))]
+    MatchSnapshot RejoinMatch(string? sessionToken, int matchId);
+
+    /// <summary>
+    /// Offers a draw to the rival of the player of the session without stopping the match or the clocks. The rival
+    /// learns it through the notification channel. If the rival had already offered one, the offer is taken as the
+    /// agreement and the match ends in a draw.
+    /// </summary>
+    /// <param name="sessionToken">The token of the player's open session.</param>
+    /// <param name="matchId">The match the player plays.</param>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="InvalidSessionFault"/>: the session is not open.
+    /// </exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="MatchNotJoinedFault"/>: the player is not playing that match, or the match is over.
+    /// </exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="DrawOfferRejectedFault"/>: the match has four players, the player already has an offer pending,
+    /// or the player offered too recently; the detail says why and how many own moves are left.
+    /// </exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    [FaultContract(typeof(MatchNotJoinedFault))]
+    [FaultContract(typeof(DrawOfferRejectedFault))]
+    void OfferDraw(string? sessionToken, int matchId);
+
+    /// <summary>
+    /// Accepts or rejects the draw the rival offered. Accepting ends the match in a draw; rejecting tells the rival
+    /// through the notification channel and the match goes on.
+    /// </summary>
+    /// <param name="sessionToken">The token of the player's open session.</param>
+    /// <param name="matchId">The match the player plays.</param>
+    /// <param name="isAccepted">Whether the player accepts the draw.</param>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="InvalidSessionFault"/>: the session is not open.
+    /// </exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="MatchNotJoinedFault"/>: the player is not playing that match, or the match is over.
+    /// </exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="DrawNotPendingFault"/>: the rival has no draw offer pending, for example because it expired.
+    /// </exception>
+    /// <exception cref="FaultException">The server could not read or write the database.</exception>
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    [FaultContract(typeof(MatchNotJoinedFault))]
+    [FaultContract(typeof(DrawNotPendingFault))]
+    void RespondToDraw(string? sessionToken, int matchId, bool isAccepted);
 }

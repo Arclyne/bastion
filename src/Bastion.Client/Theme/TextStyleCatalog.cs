@@ -78,4 +78,23 @@ public static class TextStyleCatalog
     public static TextStyle WaitingClock { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 17, Palette.Muted);
 
     public static TextStyle LowClock { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 17, Palette.Error);
+
+    public static TextStyle BadgeTitle { get; } = new TextStyle(FontCatalog.Display, fontSize: 22, Palette.Ink);
+
+    public static TextStyle BadgeDetail { get; } = new TextStyle(FontCatalog.Bold, fontSize: 14, Palette.Body);
+
+    public static TextStyle BadgeNote { get; } = new TextStyle(FontCatalog.SemiBold, fontSize: 13, Palette.Muted);
+
+    public static TextStyle CountdownRunning { get; } =
+        new TextStyle(FontCatalog.ExtraBold, fontSize: 24, Palette.Warning);
+
+    public static TextStyle CountdownEnding { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 24, Palette.Accent);
+
+    public static TextStyle RivalAwayTitle { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 16, Palette.Ink);
+
+    public static TextStyle RivalAwayDetail { get; } = new TextStyle(FontCatalog.Bold, fontSize: 13, Palette.Body);
+
+    public static TextStyle PlayerAway { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 13, Palette.Warning);
+
+    public static TextStyle PlayerDrawOffer { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 13, Palette.Info);
 }

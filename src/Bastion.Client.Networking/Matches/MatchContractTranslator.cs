@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
+using Bastion.Client.Networking.Notifications;
 using Bastion.Contracts.Matches;
 using Bastion.Contracts.Notifications;
 
@@ -43,6 +44,14 @@ public static class MatchContractTranslator
         return new IllegalWallException(rejection, fault.Detail.BlockedTurnOrder, fault);
     }
 
+    public static DrawOfferRejectedException ToDrawOfferRejectedException(FaultException<DrawOfferRejectedFault> fault)
+    {
+        ArgumentNullException.ThrowIfNull(fault);
+
+        DrawOfferRefusal refusal = ToRefusal(fault.Detail.Reason);
+        return new DrawOfferRejectedException(refusal, fault.Detail.MovesLeft, fault);
+    }
+
     public static PlacedWallOrientation ToPlacedOrientation(WallOrientation orientation)
     {
         switch (orientation)
@@ -72,6 +81,21 @@ public static class MatchContractTranslator
                     nameof(orientation),
                     orientation,
                     "Unsupported wall orientation.");
+        }
+    }
+
+    private static DrawOfferRefusal ToRefusal(DrawOfferRejectionReason reason)
+    {
+        switch (reason)
+        {
+            case DrawOfferRejectionReason.NotTwoPlayers:
+                return DrawOfferRefusal.NotTwoPlayers;
+            case DrawOfferRejectionReason.AlreadyOffered:
+                return DrawOfferRefusal.AlreadyOffered;
+            case DrawOfferRejectionReason.TooSoon:
+                return DrawOfferRefusal.TooSoon;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported draw offer rejection.");
         }
     }
 
@@ -130,6 +154,41 @@ public static class MatchContractTranslator
         MatchStanding[] notifiedStandings = standings ?? Array.Empty<MatchStanding>();
         IEnumerable<PlayerStanding> playerStandings = notifiedStandings.Select(ToPlayerStanding);
         return [.. playerStandings];
+    }
+
+    public static ParticipationEndedEventArgs ToParticipationEndedEventArgs(
+        ParticipationEndedNotification notification)
+    {
+        EndedMatchReason endReason = ToEndedMatchReason(notification.EndReason);
+        IReadOnlyList<PlayerStanding> standings = ToPlayerStandings(notification.Standings);
+        return new ParticipationEndedEventArgs
+        {
+            MatchId = notification.MatchId,
+            EndReason = endReason,
+            DepartingTurnOrder = notification.DepartingTurnOrder,
+            ActivePlayerCount = notification.ActivePlayerCount,
+            NextTurnOrder = notification.NextTurnOrder,
+            NextMoveNumber = notification.NextMoveNumber,
+            MoveCount = notification.MoveCount,
+            PlayedSeconds = notification.PlayedSeconds,
+            Standings = standings,
+        };
+    }
+
+    public static MatchEndedEventArgs ToMatchEndedEventArgs(MatchEndedNotification notification)
+    {
+        EndedMatchReason endReason = ToEndedMatchReason(notification.EndReason);
+        IReadOnlyList<PlayerStanding> standings = ToPlayerStandings(notification.Standings);
+        return new MatchEndedEventArgs
+        {
+            MatchId = notification.MatchId,
+            EndReason = endReason,
+            DecidingTurnOrder = notification.DecidingTurnOrder,
+            IsRanked = notification.IsRanked,
+            MoveCount = notification.MoveCount,
+            PlayedSeconds = notification.PlayedSeconds,
+            Standings = standings,
+        };
     }
 
     private static PlayerStanding ToPlayerStanding(MatchStanding standing)

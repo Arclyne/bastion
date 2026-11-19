@@ -40,6 +40,12 @@ public sealed class NotificationCallback : INotificationCallback
         AddDispatcher<MatchFoundNotification>(dispatchersByNotificationType, DispatchMatchFound);
         AddDispatcher<PresenceRequestedNotification>(dispatchersByNotificationType, DispatchPresenceRequested);
         AddDispatcher<SearchEndedNotification>(dispatchersByNotificationType, DispatchSearchEnded);
+        AddDispatcher<OpponentDisconnectedNotification>(dispatchersByNotificationType, DispatchOpponentDisconnected);
+        AddDispatcher<OpponentReconnectedNotification>(dispatchersByNotificationType, DispatchOpponentReconnected);
+        AddDispatcher<MatchTakenOverNotification>(dispatchersByNotificationType, DispatchMatchTakenOver);
+        AddDispatcher<DrawOfferedNotification>(dispatchersByNotificationType, DispatchDrawOffered);
+        AddDispatcher<DrawRejectedNotification>(dispatchersByNotificationType, DispatchDrawRejected);
+        AddDispatcher<DrawOfferExpiredNotification>(dispatchersByNotificationType, DispatchDrawOfferExpired);
         _dispatchersByNotificationType = dispatchersByNotificationType;
     }
 
@@ -72,6 +78,18 @@ public sealed class NotificationCallback : INotificationCallback
     public event EventHandler<RoomUpdatedEventArgs>? RoomUpdated;
 
     public event EventHandler<RoomClosedEventArgs>? RoomClosed;
+
+    public event EventHandler<OpponentConnectionEventArgs>? OpponentDisconnected;
+
+    public event EventHandler<OpponentConnectionEventArgs>? OpponentReconnected;
+
+    public event EventHandler? MatchTakenOver;
+
+    public event EventHandler<DrawEventArgs>? DrawOffered;
+
+    public event EventHandler<DrawEventArgs>? DrawRejected;
+
+    public event EventHandler<DrawEventArgs>? DrawOfferExpired;
 
     /// <inheritdoc/>
     public void ReceiveNotification(Notification? notification)
@@ -147,27 +165,9 @@ public sealed class NotificationCallback : INotificationCallback
 
     private void DispatchParticipationEnded(ParticipationEndedNotification participationEnded)
     {
-        ParticipationEndedEventArgs participationEnd = ToParticipationEndedEventArgs(participationEnded);
+        var participationEnd =
+            MatchContractTranslator.ToParticipationEndedEventArgs(participationEnded);
         OnParticipationEnded(participationEnd);
-    }
-
-    private static ParticipationEndedEventArgs ToParticipationEndedEventArgs(
-        ParticipationEndedNotification notification)
-    {
-        var endReason = MatchContractTranslator.ToEndedMatchReason(notification.EndReason);
-        IReadOnlyList<PlayerStanding> standings = MatchContractTranslator.ToPlayerStandings(notification.Standings);
-        return new ParticipationEndedEventArgs
-        {
-            MatchId = notification.MatchId,
-            EndReason = endReason,
-            DepartingTurnOrder = notification.DepartingTurnOrder,
-            ActivePlayerCount = notification.ActivePlayerCount,
-            NextTurnOrder = notification.NextTurnOrder,
-            NextMoveNumber = notification.NextMoveNumber,
-            MoveCount = notification.MoveCount,
-            PlayedSeconds = notification.PlayedSeconds,
-            Standings = standings,
-        };
     }
 
     private void OnParticipationEnded(ParticipationEndedEventArgs e)
@@ -177,24 +177,8 @@ public sealed class NotificationCallback : INotificationCallback
 
     private void DispatchMatchEnded(MatchEndedNotification matchEnded)
     {
-        MatchEndedEventArgs matchEnd = ToMatchEndedEventArgs(matchEnded);
+        var matchEnd = MatchContractTranslator.ToMatchEndedEventArgs(matchEnded);
         OnMatchEnded(matchEnd);
-    }
-
-    private static MatchEndedEventArgs ToMatchEndedEventArgs(MatchEndedNotification notification)
-    {
-        var endReason = MatchContractTranslator.ToEndedMatchReason(notification.EndReason);
-        IReadOnlyList<PlayerStanding> standings = MatchContractTranslator.ToPlayerStandings(notification.Standings);
-        return new MatchEndedEventArgs
-        {
-            MatchId = notification.MatchId,
-            EndReason = endReason,
-            DecidingTurnOrder = notification.DecidingTurnOrder,
-            IsRanked = notification.IsRanked,
-            MoveCount = notification.MoveCount,
-            PlayedSeconds = notification.PlayedSeconds,
-            Standings = standings,
-        };
     }
 
     private void OnMatchEnded(MatchEndedEventArgs e)
@@ -447,5 +431,63 @@ public sealed class NotificationCallback : INotificationCallback
     private void OnSearchEnded(SearchEndedEventArgs e)
     {
         SearchEnded?.Invoke(this, e);
+    }
+
+    private void DispatchOpponentDisconnected(OpponentDisconnectedNotification disconnected)
+    {
+        var connection = new OpponentConnectionEventArgs
+        {
+            MatchId = disconnected.MatchId,
+            TurnOrder = disconnected.TurnOrder,
+            OccurredAt = disconnected.OccurredAt,
+        };
+        OpponentDisconnected?.Invoke(this, connection);
+    }
+
+    private void DispatchOpponentReconnected(OpponentReconnectedNotification reconnected)
+    {
+        var connection = new OpponentConnectionEventArgs
+        {
+            MatchId = reconnected.MatchId,
+            TurnOrder = reconnected.TurnOrder,
+            OccurredAt = reconnected.OccurredAt,
+        };
+        OpponentReconnected?.Invoke(this, connection);
+    }
+
+    private void DispatchMatchTakenOver(MatchTakenOverNotification takenOver)
+    {
+        _logger.Warn($"The match continues on another device. OccurredAt={takenOver.OccurredAt:O}");
+        MatchTakenOver?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void DispatchDrawOffered(DrawOfferedNotification drawOffered)
+    {
+        var draw = new DrawEventArgs
+        {
+            MatchId = drawOffered.MatchId,
+            OffererTurnOrder = drawOffered.OffererTurnOrder,
+        };
+        DrawOffered?.Invoke(this, draw);
+    }
+
+    private void DispatchDrawRejected(DrawRejectedNotification drawRejected)
+    {
+        var draw = new DrawEventArgs
+        {
+            MatchId = drawRejected.MatchId,
+            OffererTurnOrder = 0,
+        };
+        DrawRejected?.Invoke(this, draw);
+    }
+
+    private void DispatchDrawOfferExpired(DrawOfferExpiredNotification drawOfferExpired)
+    {
+        var draw = new DrawEventArgs
+        {
+            MatchId = drawOfferExpired.MatchId,
+            OffererTurnOrder = 0,
+        };
+        DrawOfferExpired?.Invoke(this, draw);
     }
 }

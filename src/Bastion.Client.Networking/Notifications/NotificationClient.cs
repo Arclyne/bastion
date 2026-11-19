@@ -70,6 +70,42 @@ public sealed class NotificationClient : INotificationClient, IDisposable
         remove => _notificationCallback.WallPlaced -= value;
     }
 
+    public event EventHandler<OpponentConnectionEventArgs>? OpponentDisconnected
+    {
+        add => _notificationCallback.OpponentDisconnected += value;
+        remove => _notificationCallback.OpponentDisconnected -= value;
+    }
+
+    public event EventHandler<OpponentConnectionEventArgs>? OpponentReconnected
+    {
+        add => _notificationCallback.OpponentReconnected += value;
+        remove => _notificationCallback.OpponentReconnected -= value;
+    }
+
+    public event EventHandler? MatchTakenOver
+    {
+        add => _notificationCallback.MatchTakenOver += value;
+        remove => _notificationCallback.MatchTakenOver -= value;
+    }
+
+    public event EventHandler<DrawEventArgs>? DrawOffered
+    {
+        add => _notificationCallback.DrawOffered += value;
+        remove => _notificationCallback.DrawOffered -= value;
+    }
+
+    public event EventHandler<DrawEventArgs>? DrawRejected
+    {
+        add => _notificationCallback.DrawRejected += value;
+        remove => _notificationCallback.DrawRejected -= value;
+    }
+
+    public event EventHandler<DrawEventArgs>? DrawOfferExpired
+    {
+        add => _notificationCallback.DrawOfferExpired += value;
+        remove => _notificationCallback.DrawOfferExpired -= value;
+    }
+
     public event EventHandler<MatchFoundEventArgs>? MatchFound
     {
         add => _notificationCallback.MatchFound += value;

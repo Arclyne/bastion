@@ -27,6 +27,8 @@ public sealed class NotificationChannelRegistry
     IMatchChatNotifier,
     IMatchEndNotifier,
     IMatchMoveNotifier,
+    IMatchConnectionNotifier,
+    IMatchDrawNotifier,
     IMatchmakingNotifier,
     IPlayerPresence,
     IFriendNotifier,
@@ -62,13 +64,25 @@ public sealed class NotificationChannelRegistry
         ArgumentNullException.ThrowIfNull(player);
         ArgumentNullException.ThrowIfNull(callback);
 
-        _callbacksByAccountId[player.AccountId] = callback;
+        INotificationCallback? replacedCallback = null;
+        _callbacksByAccountId.AddOrUpdate(
+            player.AccountId,
+            callback,
+            (_, previousCallback) =>
+            {
+                replacedCallback = previousCallback;
+                return callback;
+            });
         var callbackChannel = (ICommunicationObject)callback;
         EventHandler unregisterChannel = (_, _) => UnregisterChannel(player.AccountId, callback);
         callbackChannel.Closed += unregisterChannel;
         callbackChannel.Faulted += unregisterChannel;
         _logger.Info($"Player subscribed to notifications. AccountId={player.AccountId}");
         _presenceReporter.ReportConnected(player.AccountId);
+        if (replacedCallback is not null && !ReferenceEquals(replacedCallback, callback))
+        {
+            TakeOverChannel(player.AccountId, replacedCallback);
+        }
     }
 
     public void Broadcast(PostedChatLine postedLine)
@@ -163,6 +177,73 @@ public sealed class NotificationChannelRegistry
         NotifyPlayers(recipientAccountIds, notification);
     }
 
+    public void NotifyOpponentDisconnected(
+        int matchId,
+        IReadOnlyCollection<int> recipientAccountIds,
+        OpponentDisconnection disconnection)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+        ArgumentNullException.ThrowIfNull(disconnection);
+
+        var notification = new OpponentDisconnectedNotification
+        {
+            MatchId = matchId,
+            TurnOrder = disconnection.TurnOrder,
+            OccurredAt = disconnection.DisconnectedAt,
+        };
+        NotifyPlayers(recipientAccountIds, notification);
+    }
+
+    public void NotifyOpponentReconnected(int matchId, IReadOnlyCollection<int> recipientAccountIds, byte turnOrder)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+
+        var notification = new OpponentReconnectedNotification
+        {
+            MatchId = matchId,
+            TurnOrder = turnOrder,
+            OccurredAt = GetUtcNow(),
+        };
+        NotifyPlayers(recipientAccountIds, notification);
+    }
+
+    public void NotifyDrawOffered(int matchId, IReadOnlyCollection<int> recipientAccountIds, byte offererTurnOrder)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+
+        var notification = new DrawOfferedNotification
+        {
+            MatchId = matchId,
+            OffererTurnOrder = offererTurnOrder,
+            OccurredAt = GetUtcNow(),
+        };
+        NotifyPlayers(recipientAccountIds, notification);
+    }
+
+    public void NotifyDrawRejected(int matchId, IReadOnlyCollection<int> recipientAccountIds)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+
+        var notification = new DrawRejectedNotification
+        {
+            MatchId = matchId,
+            OccurredAt = GetUtcNow(),
+        };
+        NotifyPlayers(recipientAccountIds, notification);
+    }
+
+    public void NotifyDrawExpired(int matchId, IReadOnlyCollection<int> recipientAccountIds)
+    {
+        ArgumentNullException.ThrowIfNull(recipientAccountIds);
+
+        var notification = new DrawOfferExpiredNotification
+        {
+            MatchId = matchId,
+            OccurredAt = GetUtcNow(),
+        };
+        NotifyPlayers(recipientAccountIds, notification);
+    }
+
     public void NotifyPresenceRequested(PresenceRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -226,6 +307,22 @@ public sealed class NotificationChannelRegistry
 
         RoomClosedNotification notification = RoomTranslator.ToClosedNotification(room, GetUtcNow());
         NotifyPlayers(room.ListAccountIdsExcept(originAccountId), notification);
+    }
+
+    private void TakeOverChannel(int accountId, INotificationCallback replacedCallback)
+    {
+        var replacedChannel = (ICommunicationObject)replacedCallback;
+        if (replacedChannel.State != CommunicationState.Opened)
+        {
+            return;
+        }
+
+        _logger.Info($"The notifications of a player moved to another device. AccountId={accountId}");
+        var notification = new MatchTakenOverNotification
+        {
+            OccurredAt = GetUtcNow(),
+        };
+        DeliverNotification(accountId, replacedCallback, notification);
     }
 
     private void NotifyPlayers(IEnumerable<int> accountIds, Notification notification)

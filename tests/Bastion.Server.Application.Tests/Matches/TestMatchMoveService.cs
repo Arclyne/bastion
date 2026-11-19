@@ -41,6 +41,7 @@ public sealed class TestMatchMoveService
     private const byte SingleWallPerPlayer = 1;
     private const string QuickFirstPlayerGoalSquare = "d7";
     private const int TwoStartedStatistics = 2;
+    private const int BothPlayers = 2;
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 12, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _now = new DateTime(2026, 11, 12, 18, 0, 20, DateTimeKind.Utc);
@@ -60,12 +61,13 @@ public sealed class TestMatchMoveService
     private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
     private readonly FakeMatchMoveNotifier _matchMoveNotifier = new FakeMatchMoveNotifier();
     private readonly FakeMatchEndNotifier _matchEndNotifier = new FakeMatchEndNotifier();
+    private readonly FakeMatchDrawNotifier _drawNotifier = new FakeMatchDrawNotifier();
     private readonly MatchMoveService _matchMoveService;
 
     public TestMatchMoveService()
     {
         var matchCloser = new MatchCloser(_matchRepository, _matchEndNotifier);
-        var followUp = new MatchMoveFollowUp(_matchMoveNotifier, matchCloser);
+        var followUp = new MatchMoveFollowUp(_matchMoveNotifier, matchCloser, _drawNotifier);
         _matchMoveService = new MatchMoveService(_sessionVerifier, _matchRepository, followUp);
     }
 
@@ -504,6 +506,31 @@ public sealed class TestMatchMoveService
         Action placeWall = () => _matchMoveService.PlaceWall(FirstToken, centerWall, _afterClockRanOut);
 
         Assert.Throws<MatchNotJoinedException>(placeWall);
+    }
+
+    [Fact]
+    public void MovePawn_RivalOfferedDraw_TellsBothTheOfferExpired()
+    {
+        _sessionVerifier.Add(SecondToken, _secondPlayer);
+        AddFirstPlayerWithClassicMatch();
+        Match match = _matchRepository.MatchesById[MatchId];
+        match.OfferDraw(SecondAccountId, _now);
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+
+        _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
+
+        Assert.Equal(BothPlayers, _drawNotifier.ExpiryRecipients.Count);
+    }
+
+    [Fact]
+    public void MovePawn_NoDrawOffer_NotifiesNoExpiry()
+    {
+        AddFirstPlayerWithClassicMatch();
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+
+        _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
+
+        Assert.Empty(_drawNotifier.ExpiryRecipients);
     }
 
     private void PlayQuickMatchBeforeFirstPlayerGoal()

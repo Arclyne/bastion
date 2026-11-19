@@ -94,6 +94,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         Label versionLabel = ViewFactory.CreateVersionLabel();
         FriendsPanel friendsPanel = CreateFriendsPanel(friendsPanelViewModel);
         FriendRequestToast friendRequestToast = CreateRequestToast(friendsPanelViewModel.Requests);
+        var returningToMatchOverlay = new ReturningToMatchOverlay(viewModel);
         AddChild(identityChipPanel);
         AddChild(settingsButton);
         AddChild(friendsButton);
@@ -106,6 +107,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         AddChild(versionLabel);
         AddChild(friendsPanel);
         AddChild(friendRequestToast);
+        AddChild(returningToMatchOverlay);
         var removeFriendDialogView = new RemoveFriendDialogView(friendsPanelViewModel.Actions);
         var presenceDialogView = new PresenceDialogView(matchSearchViewModel);
         AddDialog(removeFriendDialogView, friendsPanelViewModel.Actions, nameof(FriendActionsViewModel.IsDialogOpen));

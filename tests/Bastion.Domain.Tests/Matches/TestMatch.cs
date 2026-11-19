@@ -51,6 +51,10 @@ public sealed class TestMatch
     private static readonly DateTime _goalReachedAt = new DateTime(2026, 11, 5, 18, 1, 0, DateTimeKind.Utc);
     private static readonly DateTime _turnOpensAt = _startedAt + MatchClockPolicy.OpeningDelay;
     private static readonly DateTime _clockRunsOutAt = _turnOpensAt.AddMilliseconds(FiveMinutesInMilliseconds);
+    private static readonly DateTime _disconnectedAt = new DateTime(2026, 11, 5, 18, 1, 0, DateTimeKind.Utc);
+    private static readonly DateTime _halfMinuteAway = _disconnectedAt.AddSeconds(30);
+    private static readonly DateTime _fullDelayAway = _disconnectedAt + MatchConnectionPolicy.ReturnDelay;
+    private static readonly DateTime _restartedAt = new DateTime(2026, 11, 5, 18, 2, 0, DateTimeKind.Utc);
     private static readonly MatchEntrant _firstEntrant = new MatchEntrant(FirstAccountId, FirstEloRating);
     private static readonly MatchEntrant _secondEntrant = new MatchEntrant(SecondAccountId, SecondEloRating);
     private static readonly MatchEntrant[] _entrants = { _firstEntrant, _secondEntrant };
@@ -1059,6 +1063,194 @@ public sealed class TestMatch
         Action movePawn = () => match.MovePawn(forwardMove, GameModeSampleFactory.ClassicBoardSize, _clockRunsOutAt);
 
         Assert.Throws<InvalidOperationException>(movePawn);
+    }
+
+    [Fact]
+    public void Disconnect_ActivePlayer_MarksParticipationDisconnected()
+    {
+        Match match = StartClassicMatch();
+
+        match.Disconnect(SecondAccountId, _disconnectedAt);
+
+        Participation second = match.GetParticipation(SecondAccountId);
+        Assert.False(second.IsConnected);
+    }
+
+    [Fact]
+    public void Disconnect_ActivePlayer_RecordsWhenItHappened()
+    {
+        Match match = StartClassicMatch();
+
+        match.Disconnect(SecondAccountId, _disconnectedAt);
+
+        Participation second = match.GetParticipation(SecondAccountId);
+        Assert.Equal(_disconnectedAt, second.DisconnectedAt);
+    }
+
+    [Fact]
+    public void Disconnect_Outsider_ThrowsInvalidOperationException()
+    {
+        Match match = StartClassicMatch();
+
+        Action disconnect = () => match.Disconnect(OutsiderAccountId, _disconnectedAt);
+
+        Assert.Throws<InvalidOperationException>(disconnect);
+    }
+
+    [Fact]
+    public void Reconnect_DisconnectedPlayer_MarksParticipationConnected()
+    {
+        Match match = StartClassicMatch();
+        match.Disconnect(SecondAccountId, _disconnectedAt);
+
+        match.Reconnect(SecondAccountId);
+
+        Participation second = match.GetParticipation(SecondAccountId);
+        Assert.True(second.IsConnected);
+    }
+
+    [Fact]
+    public void HasAbsentPlayerToTakeOut_AwayHalfAMinute_ReturnsFalse()
+    {
+        Match match = StartClassicMatch();
+        match.Disconnect(SecondAccountId, _disconnectedAt);
+
+        bool hasAbsentPlayer = match.HasAbsentPlayerToTakeOut(_halfMinuteAway);
+
+        Assert.False(hasAbsentPlayer);
+    }
+
+    [Fact]
+    public void HasAbsentPlayerToTakeOut_AwayTheWholeDelay_ReturnsTrue()
+    {
+        Match match = StartClassicMatch();
+        match.Disconnect(SecondAccountId, _disconnectedAt);
+
+        bool hasAbsentPlayer = match.HasAbsentPlayerToTakeOut(_fullDelayAway);
+
+        Assert.True(hasAbsentPlayer);
+    }
+
+    [Fact]
+    public void HasAbsentPlayerToTakeOut_CameBack_ReturnsFalse()
+    {
+        Match match = StartClassicMatch();
+        match.Disconnect(SecondAccountId, _disconnectedAt);
+        match.Reconnect(SecondAccountId);
+
+        bool hasAbsentPlayer = match.HasAbsentPlayerToTakeOut(_fullDelayAway);
+
+        Assert.False(hasAbsentPlayer);
+    }
+
+    [Fact]
+    public void HasAbsentPlayerToTakeOut_EveryPlayerAway_ReturnsFalse()
+    {
+        Match match = StartClassicMatch();
+        match.Disconnect(FirstAccountId, _disconnectedAt);
+        match.Disconnect(SecondAccountId, _disconnectedAt);
+
+        bool hasAbsentPlayer = match.HasAbsentPlayerToTakeOut(_fullDelayAway);
+
+        Assert.False(hasAbsentPlayer);
+    }
+
+    [Fact]
+    public void TakeOutAbsentPlayer_TwoPlayers_GivesTheConnectedPlayerTheWin()
+    {
+        Match match = StartClassicMatch();
+        match.Disconnect(SecondAccountId, _disconnectedAt);
+
+        match.TakeOutAbsentPlayer(_fullDelayAway);
+
+        Participation first = match.GetParticipation(FirstAccountId);
+        Assert.Equal(ParticipationResult.Won, first.Result);
+    }
+
+    [Fact]
+    public void TakeOutAbsentPlayer_TwoPlayers_EndsByAbandonment()
+    {
+        Match match = StartClassicMatch();
+        match.Disconnect(SecondAccountId, _disconnectedAt);
+
+        match.TakeOutAbsentPlayer(_fullDelayAway);
+
+        Assert.Equal(MatchEndReason.Abandonment, match.EndReason);
+    }
+
+    [Fact]
+    public void TakeOutAbsentPlayer_CheckedLate_EndsWhenTheDelayRanOut()
+    {
+        Match match = StartClassicMatch();
+        match.Disconnect(SecondAccountId, _disconnectedAt);
+
+        match.TakeOutAbsentPlayer(_restartedAt);
+
+        Assert.Equal(_fullDelayAway, match.EndedAt);
+    }
+
+    [Fact]
+    public void TakeOutAbsentPlayer_TwoPlayers_ReturnsTheAbsentAccount()
+    {
+        Match match = StartClassicMatch();
+        match.Disconnect(SecondAccountId, _disconnectedAt);
+
+        int absentAccountId = match.TakeOutAbsentPlayer(_fullDelayAway);
+
+        Assert.Equal(SecondAccountId, absentAccountId);
+    }
+
+    [Fact]
+    public void TakeOutAbsentPlayer_FourPlayers_GivesTheWorstFreePlace()
+    {
+        Match match = StartFourPlayerMatch();
+        match.Disconnect(SecondAccountId, _disconnectedAt);
+
+        match.TakeOutAbsentPlayer(_fullDelayAway);
+
+        Participation second = match.GetParticipation(SecondAccountId);
+        Assert.Equal(LastOfFourPlacement, second.Placement);
+    }
+
+    [Fact]
+    public void TakeOutAbsentPlayer_TooSoon_ThrowsInvalidOperationException()
+    {
+        Match match = StartClassicMatch();
+        match.Disconnect(SecondAccountId, _disconnectedAt);
+
+        Action takeOut = () => match.TakeOutAbsentPlayer(_halfMinuteAway);
+
+        Assert.Throws<InvalidOperationException>(takeOut);
+    }
+
+    [Fact]
+    public void RecoverAfterRestart_MatchInProgress_MarksEveryPlayerDisconnected()
+    {
+        Match match = StartClassicMatch();
+
+        match.RecoverAfterRestart(_restartedAt);
+
+        Assert.All(match.Participations, participation => Assert.False(participation.IsConnected));
+    }
+
+    [Fact]
+    public void RecoverAfterRestart_TurnStartedBefore_StartsTheTurnAtTheRestart()
+    {
+        Match match = StartClassicMatch();
+
+        match.RecoverAfterRestart(_restartedAt);
+
+        Assert.Equal(_restartedAt, match.TurnStartedAt);
+    }
+
+    [Fact]
+    public void RecoverAfterRestart_LongDowntime_LeavesTheClockRunning()
+    {
+        Match match = StartClassicMatch();
+
+        match.RecoverAfterRestart(_endedAt);
+
+        Assert.False(match.HasClockRunOut(_endedAt));
     }
 
     private static Match PlayFourPlayerMatchUntilFirstGoal()

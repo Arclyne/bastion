@@ -53,6 +53,7 @@
 
     <ItemGroup>
         <None Include="Content\Fonts\**" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="Content\Icons\**" CopyToOutputDirectory="PreserveNewest" />
         <None Update="log4net.config" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 

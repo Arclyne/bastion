@@ -2054,5 +2054,284 @@ namespace Bastion.Client.Localization {
                 return ResourceManager.GetString("MatchAbandonConfirmButton", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are back in the match..
+        /// </summary>
+        internal static string MatchBackNoMoves {
+            get {
+                return ResourceManager.GetString("MatchBackNoMoves", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are back in the match. While you were away, 1 move was played..
+        /// </summary>
+        internal static string MatchBackOneMove {
+            get {
+                return ResourceManager.GetString("MatchBackOneMove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are back in the match. While you were away, {0} moves were played..
+        /// </summary>
+        internal static string MatchBackMovesFormat {
+            get {
+                return ResourceManager.GetString("MatchBackMovesFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Go to the menu.
+        /// </summary>
+        internal static string MatchGoToMenuButton {
+            get {
+                return ResourceManager.GetString("MatchGoToMenuButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are on another device.
+        /// </summary>
+        internal static string MatchTakenOverTitle {
+            get {
+                return ResourceManager.GetString("MatchTakenOverTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You opened this match on another computer with your account. Your session stays open here..
+        /// </summary>
+        internal static string MatchTakenOverMessage {
+            get {
+                return ResourceManager.GetString("MatchTakenOverMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} lost the connection.
+        /// </summary>
+        internal static string RivalAwayTitleFormat {
+            get {
+                return ResourceManager.GetString("RivalAwayTitleFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is back in the match..
+        /// </summary>
+        internal static string RivalBackFormat {
+            get {
+                return ResourceManager.GetString("RivalBackFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Offline · {0}.
+        /// </summary>
+        internal static string PlayerAwayFormat {
+            get {
+                return ResourceManager.GetString("PlayerAwayFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} lost the connection and did not come back..
+        /// </summary>
+        internal static string MatchEndRivalLostConnectionFormat {
+            get {
+                return ResourceManager.GetString("MatchEndRivalLostConnectionFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You lost the connection and did not come back in time..
+        /// </summary>
+        internal static string MatchEndOwnLostConnection {
+            get {
+                return ResourceManager.GetString("MatchEndOwnLostConnection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for them to come back. If they do not come back in time, you win the match..
+        /// </summary>
+        internal static string RivalAwayDetail {
+            get {
+                return ResourceManager.GetString("RivalAwayDetail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If they do not come back in time, they take the worst free place and the match goes on..
+        /// </summary>
+        internal static string RivalAwayFourPlayersDetail {
+            get {
+                return ResourceManager.GetString("RivalAwayFourPlayersDetail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connection lost.
+        /// </summary>
+        internal static string LostConnectionTitle {
+            get {
+                return ResourceManager.GetString("LostConnectionTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reconnecting….
+        /// </summary>
+        internal static string LostConnectionDetail {
+            get {
+                return ResourceManager.GetString("LostConnectionDetail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your clock keeps running..
+        /// </summary>
+        internal static string LostConnectionClock {
+            get {
+                return ResourceManager.GetString("LostConnectionClock", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Back to your match.
+        /// </summary>
+        internal static string ReturningToMatchTitle {
+            get {
+                return ResourceManager.GetString("ReturningToMatchTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Against {0}….
+        /// </summary>
+        internal static string ReturningToMatchDetailFormat {
+            get {
+                return ResourceManager.GetString("ReturningToMatchDetailFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Offer a draw.
+        /// </summary>
+        internal static string DrawOfferButton {
+            get {
+                return ResourceManager.GetString("DrawOfferButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Draw offered.
+        /// </summary>
+        internal static string DrawOfferedButton {
+            get {
+                return ResourceManager.GetString("DrawOfferedButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Offer a draw · in 1 move.
+        /// </summary>
+        internal static string DrawOfferInOneMove {
+            get {
+                return ResourceManager.GetString("DrawOfferInOneMove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Offer a draw · in {0} moves.
+        /// </summary>
+        internal static string DrawOfferInMovesFormat {
+            get {
+                return ResourceManager.GetString("DrawOfferInMovesFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} offers a draw.
+        /// </summary>
+        internal static string DrawOfferTitleFormat {
+            get {
+                return ResourceManager.GetString("DrawOfferTitleFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If you play without answering, the offer is withdrawn. Your clock keeps running..
+        /// </summary>
+        internal static string DrawOfferDetail {
+            get {
+                return ResourceManager.GetString("DrawOfferDetail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accept the draw.
+        /// </summary>
+        internal static string DrawAcceptButton {
+            get {
+                return ResourceManager.GetString("DrawAcceptButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Decline.
+        /// </summary>
+        internal static string DrawRejectButton {
+            get {
+                return ResourceManager.GetString("DrawRejectButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} declined the draw..
+        /// </summary>
+        internal static string DrawRejectedFormat {
+            get {
+                return ResourceManager.GetString("DrawRejectedFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The draw offer was withdrawn: {0} played..
+        /// </summary>
+        internal static string DrawExpiredFormat {
+            get {
+                return ResourceManager.GetString("DrawExpiredFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You offered a draw.
+        /// </summary>
+        internal static string PlayerOfferedDraw {
+            get {
+                return ResourceManager.GetString("PlayerOfferedDraw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We could not send the draw offer..
+        /// </summary>
+        internal static string DrawOfferFailed {
+            get {
+                return ResourceManager.GetString("DrawOfferFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We could not answer the draw offer..
+        /// </summary>
+        internal static string DrawAnswerFailed {
+            get {
+                return ResourceManager.GetString("DrawAnswerFailed", resourceCulture);
+            }
+        }
     }
 }

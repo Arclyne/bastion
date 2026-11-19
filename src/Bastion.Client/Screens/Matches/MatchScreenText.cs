@@ -34,6 +34,15 @@ public static class MatchScreenText
         return string.Format(CultureInfo.InvariantCulture, ClockFormat, minutes, seconds);
     }
 
+    public static string FormatElapsed(TimeSpan elapsedTime)
+    {
+        double roundedDownSeconds = Math.Floor(Math.Max(elapsedTime.TotalSeconds, 0));
+        int elapsedSeconds = (int)roundedDownSeconds;
+        int minutes = elapsedSeconds / SecondsPerMinute;
+        int seconds = elapsedSeconds % SecondsPerMinute;
+        return string.Format(CultureInfo.InvariantCulture, ClockFormat, minutes, seconds);
+    }
+
     public static string FormatWallCount(byte wallCount)
     {
         return string.Format(CultureInfo.CurrentCulture, Strings.MatchWallsFormat, wallCount);

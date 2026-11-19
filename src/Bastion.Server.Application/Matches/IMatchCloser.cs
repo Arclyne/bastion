@@ -14,4 +14,10 @@ public interface IMatchCloser
     void AnnounceDeparture(Match match, int departingAccountId, DateTime now);
 
     void ExpireClock(Match match, DateTime now);
+
+    void TakeOutAbsentPlayer(Match match, DateTime now);
+
+    MatchEndNotice DescribeEnd(Match finishedMatch, int decidingAccountId);
+
+    ParticipationEndNotice DescribeDeparture(Match match, int departingAccountId, DateTime now);
 }

@@ -30,6 +30,7 @@ public sealed class TestMatchPlayViewModel : IDisposable
     private const string GrooveAheadOfSecondPawn = "e8";
     private const string CenterGroove = "e4";
     private const short ServerNextMoveNumber = 2;
+    private const int TwoMissedMoves = 2;
 
     private static readonly BoardCoordinates _firstStart = new BoardCoordinates(CenterColumnIndex, FirstRowIndex);
     private static readonly BoardCoordinates _secondStart = new BoardCoordinates(CenterColumnIndex, LastRowIndex);
@@ -522,6 +523,78 @@ public sealed class TestMatchPlayViewModel : IDisposable
         _timeProvider.Advance(_partOfOpening);
 
         Assert.True(hasTicked);
+    }
+
+    [Fact]
+    public void ApplyRejoinedMatch_RivalMovedAway_PlacesTheRivalPawn()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
+        RejoinedMatch rejoinedMatch = RejoinedMatchSampleFactory.CreateAfterRivalWallAndMove(joinedMatch);
+
+        viewModel.ApplyRejoinedMatch(rejoinedMatch);
+
+        Assert.Equal(_secondForward, viewModel.Pawns[Match.SecondTurnOrder]);
+    }
+
+    [Fact]
+    public void ApplyRejoinedMatch_RivalPlacedWall_AddsTheWall()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
+        RejoinedMatch rejoinedMatch = RejoinedMatchSampleFactory.CreateAfterRivalWallAndMove(joinedMatch);
+
+        viewModel.ApplyRejoinedMatch(rejoinedMatch);
+
+        Assert.Equal(_centerWall, viewModel.Walls.Single());
+    }
+
+    [Fact]
+    public void ApplyRejoinedMatch_TwoRivalMoves_CountsBothAsMissed()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
+        RejoinedMatch rejoinedMatch = RejoinedMatchSampleFactory.CreateAfterRivalWallAndMove(joinedMatch);
+
+        int missedMoveCount = viewModel.ApplyRejoinedMatch(rejoinedMatch);
+
+        Assert.Equal(TwoMissedMoves, missedMoveCount);
+    }
+
+    [Fact]
+    public void ApplyRejoinedMatch_ServerState_TakesTheNextMoveNumber()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
+        RejoinedMatch rejoinedMatch = RejoinedMatchSampleFactory.CreateAfterRivalWallAndMove(joinedMatch);
+
+        viewModel.ApplyRejoinedMatch(rejoinedMatch);
+
+        Assert.Equal(RejoinedMatchSampleFactory.NextMoveNumberAfterTwoMoves, viewModel.NextMoveNumber);
+    }
+
+    [Fact]
+    public void ApplyRejoinedMatch_ServerState_TakesTheRivalClock()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        JoinedMatch joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
+        RejoinedMatch rejoinedMatch = RejoinedMatchSampleFactory.CreateAfterRivalWallAndMove(joinedMatch);
+
+        viewModel.ApplyRejoinedMatch(rejoinedMatch);
+
+        TimeSpan remainingClock = viewModel.GetRemainingClock(Match.SecondTurnOrder);
+        Assert.Equal(_fourMinutes, remainingClock);
+    }
+
+    [Fact]
+    public async Task SelectSquare_Offline_ListsNoSquares()
+    {
+        MatchPlayViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
+        viewModel.GoOffline();
+
+        await viewModel.SelectSquare(_firstStart);
+
+        Assert.Empty(viewModel.ReachableSquares);
     }
 
     private static void DisposeViewModel(MatchPlayViewModel viewModel)

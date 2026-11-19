@@ -37,6 +37,17 @@ public sealed class MatchClockService : IMatchClockService
         }
     }
 
+    /// <inheritdoc/>
+    public void TakeOutAbsentPlayers(DateTime now)
+    {
+        IReadOnlyList<int> matchIds = _matchRepository.FindMatchIdsWithAbsentPlayer(now);
+        foreach (int matchId in matchIds)
+        {
+            Action takeOutAbsentPlayer = () => TakeOutAbsentPlayerOfMatch(matchId, now);
+            TryExpireClock(matchId, takeOutAbsentPlayer);
+        }
+    }
+
     private void TryExpireClock(int matchId, Action expireClock)
     {
         try
@@ -45,7 +56,7 @@ public sealed class MatchClockService : IMatchClockService
         }
         catch (MatchRepositoryException ex)
         {
-            _logger.Error($"A clock that ran out could not be applied; it is tried again. MatchId={matchId}", ex);
+            _logger.Error($"A timeout of the match could not be applied; it is tried again. MatchId={matchId}", ex);
         }
     }
 
@@ -64,5 +75,22 @@ public sealed class MatchClockService : IMatchClockService
         }
 
         _matchCloser.ExpireClock(match, now);
+    }
+
+    private void TakeOutAbsentPlayerOfMatch(int matchId, DateTime now)
+    {
+        Lookup<Match> foundMatch = _matchRepository.FindMatch(matchId);
+        if (!foundMatch.IsFound)
+        {
+            return;
+        }
+
+        Match match = foundMatch.GetValue();
+        if (!match.HasAbsentPlayerToTakeOut(now))
+        {
+            return;
+        }
+
+        _matchCloser.TakeOutAbsentPlayer(match, now);
     }
 }

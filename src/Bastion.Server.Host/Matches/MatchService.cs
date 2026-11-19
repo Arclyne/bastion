@@ -1,13 +1,16 @@
 using System;
 using System.Data.Common;
 using Bastion.Contracts.Matches;
+using Bastion.Domain.Common;
 using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Sessions;
 using CoreWCF;
 using log4net;
 using Microsoft.Extensions.DependencyInjection;
+using ContractMatchSnapshot = Bastion.Contracts.Matches.MatchSnapshot;
 using DomainAbandonmentPreview = Bastion.Domain.Matches.AbandonmentPreview;
+using DomainMatchSnapshot = Bastion.Server.Application.Matches.MatchSnapshot;
 
 namespace Bastion.Server.Host.Matches;
 
@@ -16,6 +19,7 @@ namespace Bastion.Server.Host.Matches;
 public sealed class MatchService : IMatchService
 {
     private const string ServerFailureReason = "The server could not record the match change.";
+    private const int NoMatchId = 0;
 
     private static readonly ILog _logger = LogManager.GetLogger(typeof(MatchService));
 
@@ -81,6 +85,39 @@ public sealed class MatchService : IMatchService
         TranslateMatchFailures(nameof(PlaceWall), wall.MatchId, placeWall);
     }
 
+    /// <inheritdoc/>
+    public OngoingMatch FindOngoingMatch(string? sessionToken)
+    {
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
+        Func<OngoingMatch> findOngoingMatch = () => FindOngoingMatchInRequestScope(token);
+        return TranslateFailures(nameof(FindOngoingMatch), NoMatchId, findOngoingMatch);
+    }
+
+    /// <inheritdoc/>
+    public ContractMatchSnapshot RejoinMatch(string? sessionToken, int matchId)
+    {
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
+        Func<ContractMatchSnapshot> rejoinMatch = () => RejoinMatchInRequestScope(token, matchId);
+        return TranslateMatchFailures(nameof(RejoinMatch), matchId, rejoinMatch);
+    }
+
+    /// <inheritdoc/>
+    public void OfferDraw(string? sessionToken, int matchId)
+    {
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
+        Action offerDraw = () => OfferDrawInRequestScope(token, matchId);
+        TranslateMatchFailures(nameof(OfferDraw), matchId, offerDraw);
+    }
+
+    /// <inheritdoc/>
+    public void RespondToDraw(string? sessionToken, int matchId, bool isAccepted)
+    {
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
+        var response = new DrawResponse(matchId, isAccepted);
+        Action respondToDraw = () => RespondToDrawInRequestScope(token, response);
+        TranslateMatchFailures(nameof(RespondToDraw), matchId, respondToDraw);
+    }
+
     private void AbandonMatchInRequestScope(string token, int matchId)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
@@ -112,11 +149,19 @@ public sealed class MatchService : IMatchService
         matchMoveService.PlaceWall(token, chosenWall, GetUtcNow());
     }
 
-    private TResult TranslateMatchFailures<TResult>(string operationName, int matchId, Func<TResult> operation)
+    private OngoingMatch FindOngoingMatchInRequestScope(string token)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchConnectionService connectionService = scope.ServiceProvider.GetRequiredService<IMatchConnectionService>();
+        Lookup<DomainMatchSnapshot> foundSnapshot = connectionService.FindOngoingMatch(token, GetUtcNow());
+        return MatchSnapshotTranslator.ToOngoingMatch(foundSnapshot);
+    }
+
+    private static TResult TranslateFailures<TResult>(string operationName, int matchId, Func<TResult> operation)
     {
         try
         {
-            return _matchGate.Run(matchId, operation);
+            return operation();
         }
         catch (InvalidSessionException ex)
         {
@@ -138,6 +183,14 @@ public sealed class MatchService : IMatchService
         {
             throw MatchTranslator.ToFault(ex);
         }
+        catch (DrawOfferRejectedException ex)
+        {
+            throw MatchTranslator.ToFault(ex);
+        }
+        catch (DrawNotPendingException ex)
+        {
+            throw MatchTranslator.ToFault(ex);
+        }
         catch (MatchRepositoryException ex)
         {
             _logger.Error($"The match repository could not be used. Operation={operationName}; MatchId={matchId}", ex);
@@ -148,6 +201,34 @@ public sealed class MatchService : IMatchService
             _logger.Error($"A database command failed. Operation={operationName}; MatchId={matchId}", ex);
             throw new FaultException(ServerFailureReason);
         }
+    }
+
+    private ContractMatchSnapshot RejoinMatchInRequestScope(string token, int matchId)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchConnectionService connectionService = scope.ServiceProvider.GetRequiredService<IMatchConnectionService>();
+        DomainMatchSnapshot snapshot = connectionService.RejoinMatch(token, matchId, GetUtcNow());
+        return MatchSnapshotTranslator.ToContractSnapshot(snapshot);
+    }
+
+    private TResult TranslateMatchFailures<TResult>(string operationName, int matchId, Func<TResult> operation)
+    {
+        Func<TResult> gatedOperation = () => _matchGate.Run(matchId, operation);
+        return TranslateFailures(operationName, matchId, gatedOperation);
+    }
+
+    private void OfferDrawInRequestScope(string token, int matchId)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchDrawService drawService = scope.ServiceProvider.GetRequiredService<IMatchDrawService>();
+        drawService.OfferDraw(token, matchId, GetUtcNow());
+    }
+
+    private void RespondToDrawInRequestScope(string token, DrawResponse response)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IMatchDrawService drawService = scope.ServiceProvider.GetRequiredService<IMatchDrawService>();
+        drawService.RespondToDraw(token, response, GetUtcNow());
     }
 
     private void TranslateMatchFailures(string operationName, int matchId, Action operation)

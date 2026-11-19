@@ -87,6 +87,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
     public bool IsSending { get; private set; }
 
+    public bool IsOffline { get; private set; }
+
     public BoardCoordinates? SelectedPawn { get; private set; }
 
     public IReadOnlyList<BoardCoordinates> ReachableSquares => _reachableSquares;
@@ -111,6 +113,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     public event EventHandler<ParticipationEndedEventArgs>? OwnParticipationEnded;
 
     public event EventHandler<MatchEndedEventArgs>? MatchEndReceived;
+
+    public event EventHandler<MatchRejoinedEventArgs>? Rejoined;
 
     public async Task SelectSquare(BoardCoordinates square)
     {
@@ -202,7 +206,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
     public bool CanPlaceWall()
     {
-        return !IsSending && IsWallTurn();
+        return !IsSending && !IsOffline && IsWallTurn();
     }
 
     public async Task PlaceWall(Wall wall)
@@ -232,6 +236,45 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         }
     }
 
+    public void GoOffline()
+    {
+        IsOffline = true;
+        ClearSelection();
+        OnStateChanged();
+    }
+
+    public int ApplyRejoinedMatch(RejoinedMatch rejoinedMatch)
+    {
+        ArgumentNullException.ThrowIfNull(rejoinedMatch);
+
+        short previousNextMoveNumber = NextMoveNumber;
+        StopWaitingForMoveNotification();
+        _pawnsByTurnOrder.Clear();
+        _walls.Clear();
+        foreach (RejoinedPlayer player in rejoinedMatch.Players)
+        {
+            PlaceRejoinedPlayer(player);
+        }
+
+        IEnumerable<RejoinedMove> wallMoves = rejoinedMatch.Moves.Where(playedMove => playedMove.IsWall);
+        foreach (RejoinedMove wallMove in wallMoves)
+        {
+            AddRejoinedWall(wallMove);
+        }
+
+        CurrentTurnOrder = rejoinedMatch.CurrentTurnOrder;
+        NextMoveNumber = rejoinedMatch.NextMoveNumber;
+        _turnStartedAt = _timeProvider.GetUtcNow() - rejoinedMatch.TurnElapsed;
+        IsOffline = false;
+        SelectedPawn = null;
+        _reachableSquares = [];
+        int missedMoveCount = rejoinedMatch.Moves.Count(
+            playedMove => playedMove.MoveNumber >= previousNextMoveNumber && playedMove.TurnOrder != _ownTurnOrder);
+        Rejoined?.Invoke(this, new MatchRejoinedEventArgs(rejoinedMatch));
+        FinishRejoin(rejoinedMatch);
+        return missedMoveCount;
+    }
+
     public void Dispose()
     {
         StopClocks();
@@ -254,6 +297,50 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
             _remainingWallsByTurnOrder[participant.TurnOrder] = format.WallsPerPlayer;
             _remainingClocksByTurnOrder[participant.TurnOrder] = startingClock;
         }
+    }
+
+    private void PlaceRejoinedPlayer(RejoinedPlayer player)
+    {
+        _remainingWallsByTurnOrder[player.TurnOrder] = player.RemainingWalls;
+        _remainingClocksByTurnOrder[player.TurnOrder] = player.RemainingClock;
+        BoardCoordinates square = BoardLayout.FindSquare(player.Square);
+        if (player.HasEnded || square == BoardLayout.OffBoardSquare)
+        {
+            return;
+        }
+
+        _pawnsByTurnOrder[player.TurnOrder] = square;
+    }
+
+    private void AddRejoinedWall(RejoinedMove wallMove)
+    {
+        BoardCoordinates groove = BoardLayout.FindSquare(wallMove.Groove);
+        if (groove == BoardLayout.OffBoardSquare)
+        {
+            _logger.Warn($"A wall of the rejoined match has a groove the board cannot place. Groove={wallMove.Groove}");
+            return;
+        }
+
+        var orientation = MatchWallTranslator.ToWallOrientation(wallMove.Orientation);
+        var wall = new Wall(groove, orientation);
+        _walls.Add(wall);
+    }
+
+    private void FinishRejoin(RejoinedMatch rejoinedMatch)
+    {
+        if (rejoinedMatch.Ending is not null)
+        {
+            ReceiveMatchEnd(rejoinedMatch.Ending);
+            return;
+        }
+
+        if (rejoinedMatch.OwnDeparture is not null)
+        {
+            ReceiveParticipationEnd(rejoinedMatch.OwnDeparture);
+            return;
+        }
+
+        OnStateChanged();
     }
 
     private void HandleClockTick(object? state)
@@ -459,7 +546,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
     private bool CanChooseMove()
     {
-        return !IsMatchOver && !IsSending;
+        return !IsMatchOver && !IsSending && !IsOffline;
     }
 
     private void SelectOwnPawn(BoardCoordinates square)

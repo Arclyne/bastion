@@ -36,6 +36,11 @@ public static class ServiceRegistration
         services.AddScoped<IMatchCloser, MatchCloser>();
         services.AddScoped<MatchMoveFollowUp>();
         services.AddScoped<IMatchClockService, MatchClockService>();
+        services.AddScoped<IMatchConnectionService, MatchConnectionService>();
+        services.AddScoped<IMatchRecoveryService, MatchRecoveryService>();
+        services.AddScoped<MatchConnectionFollowUp>();
+        services.AddScoped<IMatchDrawService, MatchDrawService>();
+        services.AddScoped<MatchDrawFollowUp>();
         services.AddScoped<IChatModerator, ChatModerator>();
         services.AddScoped<IMatchSearchService, MatchSearchService>();
         services.AddScoped<IMatchmakingPlayerVerifier, MatchmakingPlayerVerifier>();
@@ -76,11 +81,14 @@ public static class ServiceRegistration
         services.AddSingleton<IMatchmakingNotifier>(GetChannelRegistry);
         services.AddSingleton<IMatchEndNotifier>(GetChannelRegistry);
         services.AddSingleton<IMatchMoveNotifier>(GetChannelRegistry);
+        services.AddSingleton<IMatchConnectionNotifier>(GetChannelRegistry);
+        services.AddSingleton<IMatchDrawNotifier>(GetChannelRegistry);
         services.AddSingleton<IPlayerPresence>(GetChannelRegistry);
         services.AddSingleton<IFriendNotifier>(GetChannelRegistry);
         services.AddSingleton<IPrivateMessageNotifier>(GetChannelRegistry);
         services.AddSingleton<IRoomNotifier>(GetChannelRegistry);
         services.AddHostedService<MatchmakingBackgroundService>();
+        services.AddHostedService<MatchConnectionWatcher>();
         services.AddHostedService<MatchClockBackgroundService>();
         services.AddHostedService<RoomCleanupService>();
         services.AddTransient<AccountService>();

@@ -37,4 +37,18 @@ public interface IMatchRepository
     void SaveClosureWithoutMove(MatchClosure closure);
 
     IReadOnlyList<int> FindMatchIdsWithRunOutClock(DateTime now);
+
+    IReadOnlyList<int> FindMatchIdsWithAbsentPlayer(DateTime now);
+
+    Lookup<int> FindUnfinishedMatchId(int accountId);
+
+    IReadOnlyDictionary<int, string> FindNicknames(IReadOnlyCollection<int> accountIds);
+
+    void SaveConnection(Match match);
+
+    void SaveDrawOffer(Match match);
+
+    IReadOnlyList<Match> FindMatchesInProgress();
+
+    void SaveRecoveredMatches(IReadOnlyList<Match> matches);
 }

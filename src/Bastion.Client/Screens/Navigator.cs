@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Bastion.Client.Networking;
 using Bastion.Client.Networking.Accounts;
+using Bastion.Client.Networking.Matches;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Screens.Login;
 using Bastion.Client.Screens.MainMenu;
@@ -55,6 +56,7 @@ public sealed class Navigator : INavigator, IDisposable
 
         MainMenuViewModel mainMenuViewModel = OpenMainMenu(session);
         _ = RunSafely(mainMenuViewModel.ConnectNotifications());
+        _ = RunSafely(mainMenuViewModel.ReturnToOngoingMatch());
     }
 
     public void ReceiveEscapeKey()
@@ -94,7 +96,12 @@ public sealed class Navigator : INavigator, IDisposable
 
     private MainMenuViewModel OpenMainMenu(LoggedInSession session)
     {
-        var mainMenuViewModel = new MainMenuViewModel(session, _connection.Notifications);
+        var mainMenuServices = new MainMenuServices(
+            _connection.Notifications,
+            _connection.Matches,
+            _localServices.TimeProvider);
+        var mainMenuViewModel = new MainMenuViewModel(session, mainMenuServices);
+        mainMenuViewModel.MatchResumed += HandleMatchResumed;
         var chatClients = new ChatClientSet(_connection.Chat, _connection.Conversations, _connection.Notifications);
         var clients = new SocialClientSet(_connection.Friends, chatClients);
         var friendsPanel = new FriendsPanelViewModel(session, clients, _localServices);
@@ -113,6 +120,46 @@ public sealed class Navigator : INavigator, IDisposable
         return mainMenuViewModel;
     }
 
+    private void HandleMatchResumed(object? sender, MatchResumedEventArgs e)
+    {
+        if (_loggedInSession is null)
+        {
+            return;
+        }
+
+        RejoinedMatch rejoinedMatch = e.RejoinedMatch;
+        var joinedMatch = new JoinedMatch(_loggedInSession, rejoinedMatch.FoundMatch);
+        JoinedMatchViewModelSet joinedMatchViewModels = CreateJoinedMatchViewModels(joinedMatch);
+        _joinedMatch = joinedMatch;
+        _joinedMatchViewModels = joinedMatchViewModels;
+        ShowMatch(joinedMatch, joinedMatchViewModels);
+        joinedMatchViewModels.Connection.TrackRejoinedPlayers(rejoinedMatch);
+        joinedMatchViewModels.MatchPlay.ApplyRejoinedMatch(rejoinedMatch);
+    }
+
+    private JoinedMatchViewModelSet CreateJoinedMatchViewModels(JoinedMatch joinedMatch)
+    {
+        var matchChatViewModel = new MatchChatViewModel(joinedMatch, _connection.Chat, _localServices.TimeProvider);
+        var matchAbandonmentViewModel = new MatchAbandonmentViewModel(joinedMatch, _connection.Matches);
+        matchAbandonmentViewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
+        var matchPlayViewModel = new MatchPlayViewModel(joinedMatch, _connection.Matches, _localServices.TimeProvider);
+        var connectionServices = new MatchConnectionServices(
+            _connection.Notifications,
+            _connection.Matches,
+            _localServices.TimeProvider);
+        var matchConnectionViewModel = new MatchConnectionViewModel(
+            joinedMatch,
+            matchPlayViewModel,
+            connectionServices);
+        matchConnectionViewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
+        var matchDrawViewModel = new MatchDrawViewModel(joinedMatch, matchPlayViewModel, connectionServices);
+        return new JoinedMatchViewModelSet(matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel)
+        {
+            Connection = matchConnectionViewModel,
+            Draw = matchDrawViewModel,
+        };
+    }
+
     private void HandleMatchFound(object? sender, MatchFoundEventArgs e)
     {
         if (_loggedInSession is null)
@@ -126,19 +173,20 @@ public sealed class Navigator : INavigator, IDisposable
 
     private void ShowVersus(JoinedMatch joinedMatch)
     {
-        var matchChatViewModel = new MatchChatViewModel(joinedMatch, _connection.Chat, _localServices.TimeProvider);
-        var matchAbandonmentViewModel = new MatchAbandonmentViewModel(joinedMatch, _connection.Matches);
-        matchAbandonmentViewModel.ReturnToMenuRequested += HandleReturnToMenuRequested;
-        var matchPlayViewModel = new MatchPlayViewModel(joinedMatch, _connection.Matches, _localServices.TimeProvider);
+        JoinedMatchViewModelSet joinedMatchViewModels = CreateJoinedMatchViewModels(joinedMatch);
         var versusViewModel = new VersusViewModel(joinedMatch, _localServices.TimeProvider);
         versusViewModel.CountdownFinished += HandleCountdownFinished;
         var versusView = new VersusView(versusViewModel);
-        ShowScreen(versusView, versusViewModel, matchChatViewModel, matchAbandonmentViewModel, matchPlayViewModel);
+        ShowScreen(
+            versusView,
+            versusViewModel,
+            joinedMatchViewModels.Chat,
+            joinedMatchViewModels.Abandonment,
+            joinedMatchViewModels.MatchPlay,
+            joinedMatchViewModels.Connection,
+            joinedMatchViewModels.Draw);
         _joinedMatch = joinedMatch;
-        _joinedMatchViewModels = new JoinedMatchViewModelSet(
-            matchChatViewModel,
-            matchAbandonmentViewModel,
-            matchPlayViewModel);
+        _joinedMatchViewModels = joinedMatchViewModels;
     }
 
     private void HandleReturnToMenuRequested(object? sender, EventArgs e)
@@ -185,12 +233,16 @@ public sealed class Navigator : INavigator, IDisposable
             joinedMatchViewModels.MatchPlay);
         matchViewModel.MatchEnd.ReturnToMenuRequested += HandleReturnToMenuRequested;
         matchViewModel.MatchEnd.SearchAgainRequested += HandleSearchAgainRequested;
-        var matchView = new MatchView(matchViewModel, joinedMatchViewModels.Chat, joinedMatchViewModels.Abandonment);
+        matchViewModel.FollowConnection(joinedMatchViewModels.Connection);
+        matchViewModel.FollowDraw(joinedMatchViewModels.Draw);
+        var matchView = new MatchView(matchViewModel, joinedMatchViewModels);
         ShowScreen(
             matchView,
             joinedMatchViewModels.Chat,
             joinedMatchViewModels.Abandonment,
             joinedMatchViewModels.MatchPlay,
+            joinedMatchViewModels.Connection,
+            joinedMatchViewModels.Draw,
             matchViewModel);
         ShownMatch = matchViewModel;
     }

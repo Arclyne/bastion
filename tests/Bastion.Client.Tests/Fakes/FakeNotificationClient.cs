@@ -37,8 +37,35 @@ public sealed class FakeNotificationClient : INotificationClient
 
     public event EventHandler? Disconnected;
 
+    public event EventHandler<OpponentConnectionEventArgs>? OpponentDisconnected;
+
+    public event EventHandler<OpponentConnectionEventArgs>? OpponentReconnected;
+
+    public event EventHandler? MatchTakenOver;
+
+    public event EventHandler<DrawEventArgs>? DrawOffered;
+
+    public event EventHandler<DrawEventArgs>? DrawRejected;
+
+    public event EventHandler<DrawEventArgs>? DrawOfferExpired;
+
+    public Exception? ConnectFailure { get; set; }
+
+    public int ConnectCount { get; private set; }
+
     public void Connect(string sessionToken)
     {
+        if (ConnectFailure is not null)
+        {
+            throw ConnectFailure;
+        }
+
+        ConnectCount++;
+    }
+
+    public void RaiseDisconnected()
+    {
+        Disconnected?.Invoke(this, EventArgs.Empty);
     }
 
     public bool HasAnySubscribers()
@@ -61,6 +88,12 @@ public sealed class FakeNotificationClient : INotificationClient
             RoomUpdated,
             RoomClosed,
             Disconnected,
+            OpponentDisconnected,
+            OpponentReconnected,
+            MatchTakenOver,
+            DrawOffered,
+            DrawRejected,
+            DrawOfferExpired,
         };
         return Array.Exists(handlers, handler => handler is not null);
     }

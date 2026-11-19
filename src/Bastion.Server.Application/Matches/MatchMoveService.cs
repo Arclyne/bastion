@@ -18,6 +18,7 @@ public sealed class MatchMoveService : IMatchMoveService
     private readonly IMatchRepository _matchRepository;
     private readonly IMatchMoveNotifier _matchMoveNotifier;
     private readonly IMatchCloser _matchCloser;
+    private readonly IMatchDrawNotifier _drawNotifier;
 
     public MatchMoveService(
         ISessionVerifier sessionVerifier,
@@ -32,6 +33,7 @@ public sealed class MatchMoveService : IMatchMoveService
         _matchRepository = matchRepository;
         _matchMoveNotifier = followUp.MoveNotifier;
         _matchCloser = followUp.Closer;
+        _drawNotifier = followUp.DrawNotifier;
     }
 
     /// <inheritdoc/>
@@ -50,11 +52,13 @@ public sealed class MatchMoveService : IMatchMoveService
         EnsureReachable(match, pawnMove, boardSize);
         Participation mover = match.GetParticipation(player.AccountId);
         string fromSquare = mover.CurrentSquare;
+        bool hadDrawOffer = match.HasPendingDrawOfferFor(player.AccountId);
         match.MovePawn(pawnMove, boardSize, now);
         SaveAfterPawnMove(match);
         _logger.Info(
             $"A pawn moved. AccountId={player.AccountId}; MatchId={match.MatchId}; MoveNumber={chosenMove.MoveNumber}");
         NotifyPawnMoved(match, player, fromSquare);
+        NotifyExpiredDrawOffer(match, hadDrawOffer);
         AnnounceAfterPawnMove(match, player.AccountId, now);
     }
 
@@ -72,12 +76,14 @@ public sealed class MatchMoveService : IMatchMoveService
         var placement = new WallPlacement(player.AccountId, chosenWall.MoveNumber, wall);
         byte boardSize = FindBoardSize(match);
         EnsureWallFits(match, placement, boardSize);
+        bool hadDrawOffer = match.HasPendingDrawOfferFor(player.AccountId);
         match.PlaceWall(placement, boardSize, now);
         _matchRepository.SaveMove(match);
         _logger.Info(
             "A wall was placed. "
             + $"AccountId={player.AccountId}; MatchId={match.MatchId}; MoveNumber={chosenWall.MoveNumber}");
         NotifyWallPlaced(match, player, wall);
+        NotifyExpiredDrawOffer(match, hadDrawOffer);
     }
 
     private Match FindPlayedMatch(ConnectedPlayer player, int matchId)
@@ -205,6 +211,17 @@ public sealed class MatchMoveService : IMatchMoveService
     {
         IEnumerable<int> participantAccountIds = match.Participations.Select(participation => participation.AccountId);
         return [.. participantAccountIds];
+    }
+
+    private void NotifyExpiredDrawOffer(Match match, bool hadDrawOffer)
+    {
+        if (!hadDrawOffer || match.IsFinished())
+        {
+            return;
+        }
+
+        List<int> recipientAccountIds = ListParticipantAccountIds(match);
+        _drawNotifier.NotifyDrawExpired(match.MatchId, recipientAccountIds);
     }
 
     private void AnnounceAfterPawnMove(Match match, int moverAccountId, DateTime now)
