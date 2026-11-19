@@ -122,6 +122,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         AddDialog(removeFriendDialogView, friendsPanelViewModel.Actions, nameof(FriendActionsViewModel.IsDialogOpen));
         AddDialog(presenceDialogView, matchSearchViewModel, nameof(MatchSearchViewModel.IsPresenceDialogOpen));
         AddRoomDialogs();
+        AddDialog(CreateOfflineBadge(), viewModel, nameof(MainMenuViewModel.IsOffline));
     }
 
     public void ReceiveEscapeKey()
@@ -174,6 +175,18 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         AddDialog(settingsSheetView, _privateRoom.Sheet, nameof(RoomSettingsSheetViewModel.IsOpen));
         AddDialog(joinDialogView, _privateRoom.JoinDialog, nameof(JoinRoomDialogViewModel.IsOpen));
         AddDialog(kickDialogView, _privateRoom, nameof(PrivateRoomViewModel.IsKickDialogOpen));
+    }
+
+    private static ConnectionBadge CreateOfflineBadge()
+    {
+        Label[] lines =
+        [
+            ViewFactory.CreateLabel(nameof(Strings.LostConnectionTitle), TextStyleCatalog.BadgeTitle),
+            ViewFactory.CreateLabel(nameof(Strings.LostConnectionDetail), TextStyleCatalog.BadgeDetail),
+        ];
+        var badge = new ConnectionBadge(IconCatalog.LostConnection, Palette.ErrorSoft, lines);
+        badge.Anchor(Gum.Wireframe.Anchor.Center);
+        return badge;
     }
 
     private static Panel CreateIdentityChip()

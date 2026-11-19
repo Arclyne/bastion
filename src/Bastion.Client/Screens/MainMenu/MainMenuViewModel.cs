@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Bastion.Client.Localization;
 using Bastion.Client.Networking.Accounts;
@@ -15,7 +16,7 @@ using log4net;
 
 namespace Bastion.Client.Screens.MainMenu;
 
-public sealed class MainMenuViewModel : ViewModel
+public sealed class MainMenuViewModel : ViewModel, IDisposable
 {
     private const string RivalSeparator = ", ";
 
@@ -26,6 +27,10 @@ public sealed class MainMenuViewModel : ViewModel
     private readonly INotificationClient _notifications;
     private readonly IMatchClient _matches;
     private readonly TimeProvider _timeProvider;
+    private readonly SynchronizationContext? _uiContext;
+    private ITimer? _retryTimer;
+    private int _attemptNumber;
+    private bool _isClosed;
 
     public MainMenuViewModel(LoggedInSession session, MainMenuServices services)
     {
@@ -36,8 +41,10 @@ public sealed class MainMenuViewModel : ViewModel
         _notifications = services.Notifications;
         _matches = services.Matches;
         _timeProvider = services.TimeProvider;
+        _uiContext = SynchronizationContext.Current;
         Nickname = session.Nickname;
         ReturningDetailText = string.Empty;
+        _notifications.Disconnected += HandleDisconnected;
     }
 
     public string Nickname { get; }
@@ -56,6 +63,12 @@ public sealed class MainMenuViewModel : ViewModel
         private set => Set(value);
     }
 
+    public bool IsOffline
+    {
+        get => Get<bool>();
+        private set => Set(value);
+    }
+
     public event EventHandler<MatchResumedEventArgs>? MatchResumed;
 
     public async Task ConnectNotifications()
@@ -63,10 +76,13 @@ public sealed class MainMenuViewModel : ViewModel
         try
         {
             await Task.Run(() => _notifications.Connect(_session.Token));
+            _attemptNumber = 0;
+            IsOffline = false;
         }
         catch (InvalidSessionException ex)
         {
             _logger.Warn("The notification channel could not be connected because the session is no longer valid.", ex);
+            IsOffline = false;
         }
         catch (ServerUnreachableException ex)
         {
@@ -103,9 +119,62 @@ public sealed class MainMenuViewModel : ViewModel
         }
     }
 
-    private static void ReportConnectFailure(Exception cause)
+    public void Dispose()
     {
-        _logger.Error("The notification channel could not be connected.", cause);
+        _isClosed = true;
+        Interlocked.Exchange(ref _retryTimer, value: null)?.Dispose();
+        _notifications.Disconnected -= HandleDisconnected;
+    }
+
+    private void HandleDisconnected(object? sender, EventArgs e)
+    {
+        UiThread.Run(_uiContext, StartReconnecting);
+    }
+
+    private void StartReconnecting()
+    {
+        if (_isClosed || IsOffline)
+        {
+            return;
+        }
+
+        _logger.Warn("The notification channel dropped in the menu; it is connected again on its own.");
+        _attemptNumber = 0;
+        IsOffline = true;
+        ScheduleAttempt();
+    }
+
+    private void ScheduleAttempt()
+    {
+        if (_isClosed)
+        {
+            return;
+        }
+
+        Interlocked.Exchange(ref _retryTimer, value: null)?.Dispose();
+        int delayIndex = Math.Min(_attemptNumber, _retryDelaysInSeconds.Length - 1);
+        var delay = TimeSpan.FromSeconds(_retryDelaysInSeconds[delayIndex]);
+        _attemptNumber++;
+        _retryTimer = _timeProvider.CreateTimer(HandleRetryTimer, state: null, delay, Timeout.InfiniteTimeSpan);
+    }
+
+    private void HandleRetryTimer(object? state)
+    {
+        UiThread.Run(_uiContext, StartAttempt);
+    }
+
+    private void StartAttempt()
+    {
+        _ = ConnectNotifications();
+    }
+
+    private void ReportConnectFailure(Exception cause)
+    {
+        _logger.Warn(
+            $"The notification channel could not be connected; it is tried again. Attempt={_attemptNumber}",
+            cause);
+        IsOffline = true;
+        ScheduleAttempt();
     }
 
     private async Task<FoundOngoingMatch> LookForOngoingMatch()

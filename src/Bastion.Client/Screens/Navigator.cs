@@ -121,7 +121,7 @@ public sealed class Navigator : INavigator, IDisposable
         matchSearchViewModel.MatchFound += HandleMatchFound;
         _shownMatchSearch = matchSearchViewModel;
         var mainMenuView = new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel);
-        ShowScreen(mainMenuView, friendsPanel, matchSearchViewModel, privateRoomViewModel);
+        ShowScreen(mainMenuView, mainMenuViewModel, friendsPanel, matchSearchViewModel, privateRoomViewModel);
         _loggedInSession = session;
         _ = RunSafely(friendsPanel.LoadFriends());
         _ = RunSafely(friendsPanel.Requests.LoadRequests());

@@ -13,11 +13,15 @@ using Xunit;
 
 namespace Bastion.Client.Tests.Screens.MainMenu;
 
-public sealed class TestMainMenuViewModel
+public sealed class TestMainMenuViewModel : IDisposable
 {
     private const string SessionToken = "session-token";
     private const string PreferredLanguage = "es-MX";
 
+    private const int WaitStepMilliseconds = 10;
+    private const int MaximumWaitSteps = 200;
+
+    private static readonly TimeSpan _firstRetryDelay = TimeSpan.FromSeconds(2);
     private static readonly DateTimeOffset _now = new DateTimeOffset(2026, 11, 19, 18, 0, 0, TimeSpan.Zero);
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
@@ -33,10 +37,58 @@ public sealed class TestMainMenuViewModel
         var services = new MainMenuServices(_notificationClient, _matchClient, _timeProvider);
         var roomServices = new PrivateRoomServices(_roomClient, new FakeClipboard(), _timeProvider);
         var privateRoom = new PrivateRoomViewModel(session, roomServices);
-        _viewModel = new MainMenuViewModel(session, services)
+        Func<MainMenuViewModel> createViewModel = () => new MainMenuViewModel(session, services)
         {
             PrivateRoom = privateRoom,
         };
+        _viewModel = InlineUiContext.CreateViewModel(createViewModel);
+    }
+
+    public void Dispose()
+    {
+        _viewModel.Dispose();
+        _viewModel.PrivateRoom.Dispose();
+    }
+
+    [Fact]
+    public void Disconnected_InMenu_ShowsOffline()
+    {
+        _notificationClient.RaiseDisconnected();
+
+        Assert.True(_viewModel.IsOffline);
+    }
+
+    [Fact]
+    public async Task ConnectNotifications_ServerDown_ShowsOffline()
+    {
+        _notificationClient.ConnectFailure = new ServerUnreachableException();
+
+        await _viewModel.ConnectNotifications();
+
+        Assert.True(_viewModel.IsOffline);
+    }
+
+    [Fact]
+    public async Task ConnectNotifications_ServerBack_HidesOffline()
+    {
+        _notificationClient.ConnectFailure = new ServerUnreachableException();
+        await _viewModel.ConnectNotifications();
+        _notificationClient.ConnectFailure = null;
+
+        await _viewModel.ConnectNotifications();
+
+        Assert.False(_viewModel.IsOffline);
+    }
+
+    [Fact]
+    public async Task Disconnected_FirstDelayPassed_ConnectsAgain()
+    {
+        _notificationClient.RaiseDisconnected();
+
+        _timeProvider.Advance(_firstRetryDelay);
+
+        await WaitUntilConnected();
+        Assert.Equal(1, _notificationClient.ConnectCount);
     }
 
     [Fact]
@@ -103,6 +155,14 @@ public sealed class TestMainMenuViewModel
         await _viewModel.ReturnToOngoingMatch();
 
         Assert.False(isResumed);
+    }
+
+    private async Task WaitUntilConnected()
+    {
+        for (int step = 0; step < MaximumWaitSteps && _notificationClient.ConnectCount == 0; step++)
+        {
+            await Task.Delay(WaitStepMilliseconds);
+        }
     }
 
     private void GiveOngoingMatch()
