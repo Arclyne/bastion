@@ -171,7 +171,7 @@ public sealed class MatchMoveService : IMatchMoveService
     private static List<int> ListParticipantAccountIds(Match match)
     {
         IEnumerable<int> participantAccountIds = match.Participations.Select(participation => participation.AccountId);
-        return new List<int>(participantAccountIds);
+        return [.. participantAccountIds];
     }
 
     private static Wall ReadWall(ConnectedPlayer player, ChosenWall chosenWall)

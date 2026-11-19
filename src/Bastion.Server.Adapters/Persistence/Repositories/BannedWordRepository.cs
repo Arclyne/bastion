@@ -22,6 +22,6 @@ public sealed class BannedWordRepository : IBannedWordRepository
         IQueryable<string> chatTerms = _context.BannedWords
             .Where(bannedWord => bannedWord.Scope == BannedWordScope.Chat || bannedWord.Scope == BannedWordScope.Both)
             .Select(bannedWord => bannedWord.Term);
-        return new List<string>(chatTerms);
+        return [.. chatTerms];
     }
 }

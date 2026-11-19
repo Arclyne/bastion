@@ -69,7 +69,7 @@ public static class RoomContractTranslator
         IEnumerable<PrivateRoomMember> seatedMembers = stateMembers
             .Select(ToMember)
             .OrderBy(member => member.SeatIndex);
-        var members = new List<PrivateRoomMember>(seatedMembers);
+        List<PrivateRoomMember> members = [.. seatedMembers];
         return new PrivateRoom
         {
             Code = code,

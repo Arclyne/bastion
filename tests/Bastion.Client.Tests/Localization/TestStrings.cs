@@ -133,6 +133,6 @@ public sealed class TestStrings
         IEnumerable<string> placeholders = _placeholderPattern.Matches(text)
             .Select(match => match.Value)
             .Order(StringComparer.Ordinal);
-        return new List<string>(placeholders);
+        return [.. placeholders];
     }
 }

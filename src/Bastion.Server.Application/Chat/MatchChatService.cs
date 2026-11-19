@@ -55,7 +55,7 @@ public sealed class MatchChatService : IMatchChatService
 
         IEnumerable<int> otherParticipantAccountIds = activeParticipantAccountIds.Where(
             accountId => accountId != author.AccountId);
-        var recipientAccountIds = new List<int>(otherParticipantAccountIds);
+        List<int> recipientAccountIds = [.. otherParticipantAccountIds];
         var line = new ChatLine(author, screenedText, now);
         return _matchChatRelay.Post(submission.MatchId, line, recipientAccountIds);
     }

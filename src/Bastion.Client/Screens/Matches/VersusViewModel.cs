@@ -34,7 +34,7 @@ public sealed class VersusViewModel : ViewModel, IDisposable
             .Where(participant => !joinedMatch.IsOwnParticipant(participant))
             .OrderBy(participant => participant.TurnOrder)
             .Select(ToVersusPlayer);
-        Rivals = new List<VersusPlayer>(orderedRivals);
+        Rivals = [.. orderedRivals];
         ModeText = MatchScreenText.FormatMode(format.BoardSize, format.WallsPerPlayer);
         _secondsLeft = CountdownSeconds;
         CountdownText = FormatCountdown(_secondsLeft);

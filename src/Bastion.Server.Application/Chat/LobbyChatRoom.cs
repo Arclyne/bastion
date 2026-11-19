@@ -40,7 +40,7 @@ public sealed class LobbyChatRoom : ILobbyChatRoom
     {
         lock (_roomLock)
         {
-            return new List<PostedChatLine>(_recentLines);
+            return [.. _recentLines];
         }
     }
 

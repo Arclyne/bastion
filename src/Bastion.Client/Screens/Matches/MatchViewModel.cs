@@ -32,7 +32,7 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         IEnumerable<MatchPlayerViewModel> orderedPlayers = joinedMatch.FoundMatch.Participants
             .OrderBy(participant => participant.TurnOrder)
             .Select(participant => CreatePlayerViewModel(joinedMatch, participant, format));
-        Players = new List<MatchPlayerViewModel>(orderedPlayers);
+        Players = [.. orderedPlayers];
         BoardSize = joinedMatch.GetBoardSize();
         OwnTurnOrder = joinedMatch.GetOwnTurnOrder();
         _ownNickname = joinedMatch.Session.Nickname;

@@ -44,7 +44,7 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
     {
         IReadOnlyList<FriendSummary> friends = ListFriends(accountId);
         IEnumerable<int> friendAccountIds = friends.Select(friend => friend.Friend.AccountId);
-        return new List<int>(friendAccountIds);
+        return [.. friendAccountIds];
     }
 
     public void Add(Friendship friendship)

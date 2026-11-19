@@ -23,6 +23,6 @@ public sealed class FakeSanctionRepository : ISanctionRepository
     {
         IEnumerable<Sanction> chatSanctions = _sanctions
             .Where(sanction => sanction.AccountId == accountId && sanction.Scope == SanctionScope.Chat);
-        return new List<Sanction>(chatSanctions);
+        return [.. chatSanctions];
     }
 }

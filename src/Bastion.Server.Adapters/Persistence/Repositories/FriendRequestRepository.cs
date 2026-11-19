@@ -38,7 +38,7 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
         IQueryable<FriendRequest> requestsInvolvingAccount = _context.FriendRequests
             .AsNoTracking()
             .Where(request => request.RequesterId == accountId || request.RecipientId == accountId);
-        return new List<FriendRequest>(requestsInvolvingAccount);
+        return [.. requestsInvolvingAccount];
     }
 
     public IReadOnlyList<FriendRequestSummary> ListReceived(int accountId)
@@ -95,10 +95,10 @@ public sealed class FriendRequestRepository : IFriendRequestRepository
                 counterpartAccountIdSelector,
                 account => account.AccountId,
                 (request, counterpart) => new RequestWithCounterpart(request, counterpart));
-        var loadedRequests = new List<RequestWithCounterpart>(requestsWithCounterpart);
+        List<RequestWithCounterpart> loadedRequests = [.. requestsWithCounterpart];
         IEnumerable<FriendRequestSummary> summaries = loadedRequests
             .Select(ToSummary);
-        return new List<FriendRequestSummary>(summaries);
+        return [.. summaries];
     }
 
     private static FriendRequestSummary ToSummary(RequestWithCounterpart requestWithCounterpart)

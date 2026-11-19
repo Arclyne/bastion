@@ -32,7 +32,7 @@ public sealed class ManualTimeProvider : TimeProvider
     public void Advance(TimeSpan duration)
     {
         _utcNow += duration;
-        var timersToFire = new List<ManualTimer>(_timers);
+        List<ManualTimer> timersToFire = [.. _timers];
         foreach (ManualTimer timer in timersToFire)
         {
             timer.Fire();

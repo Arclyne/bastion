@@ -42,7 +42,7 @@ public sealed class PrivateChatService : IPrivateChatService
             player.AccountId);
         var friendAccountIds = new HashSet<int>(_unitOfWork.Friendships.ListFriendAccountIds(player.AccountId));
         IEnumerable<int> messagePartnerIds = latestMessages.Select(message => message.GetPartnerId(player.AccountId));
-        var partnerIds = new List<int>(messagePartnerIds);
+        List<int> partnerIds = [.. messagePartnerIds];
         IReadOnlyList<PlayerIdentity> partnerIdentities = _unitOfWork.Accounts.ListPlayerIdentities(partnerIds);
         var partnersById = new Dictionary<int, PlayerIdentity>(partnerIdentities.Count);
         foreach (PlayerIdentity identity in partnerIdentities)
@@ -69,7 +69,7 @@ public sealed class PrivateChatService : IPrivateChatService
 
         IEnumerable<ConversationSummary> orderedSummaries = summaries
             .OrderByDescending(summary => summary.LastMessage.Message.SentAt);
-        return new List<ConversationSummary>(orderedSummaries);
+        return [.. orderedSummaries];
     }
 
     /// <inheritdoc/>
@@ -93,7 +93,7 @@ public sealed class PrivateChatService : IPrivateChatService
         MarkPartnerMessagesRead(partner.AccountId, player.AccountId, now);
         IEnumerable<PrivateMessageEntry> messageEntries = messages
             .Select(message => ToMessageEntry(message, player.AccountId));
-        var entries = new List<PrivateMessageEntry>(messageEntries);
+        List<PrivateMessageEntry> entries = [.. messageEntries];
         var conversationPartner = new ConversationPartner(partner, isFriend);
         ChatMuteStatus muteStatus = _chatModerator.FindMuteStatus(player.AccountId, now);
         return new PrivateConversation(conversationPartner, entries, muteStatus);

@@ -365,7 +365,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
 
         Board board = BuildBoard();
         IReadOnlyList<BoardCoordinates> reachableSquares = PawnMovePolicy.ListReachableSquares(board, _ownTurnOrder);
-        _reachableSquares = new List<BoardCoordinates>(reachableSquares);
+        _reachableSquares = [.. reachableSquares];
         SelectedPawn = ownPawn;
         OnStateChanged();
     }

@@ -50,7 +50,7 @@ public sealed class FriendRequestService : IFriendRequestService
         IReadOnlyList<PlayerIdentity> foundPlayers = FindPlayers(searchText);
         IEnumerable<PlayerSearchResult> results = foundPlayers
             .Select(found => new PlayerSearchResult(found, resolver.Resolve(found.AccountId)));
-        return new List<PlayerSearchResult>(results);
+        return [.. results];
     }
 
     /// <inheritdoc/>
@@ -153,7 +153,7 @@ public sealed class FriendRequestService : IFriendRequestService
         IReadOnlyList<int> friendAccountIds = _unitOfWork.Friendships.ListFriendAccountIds(accountId);
         IReadOnlyList<FriendRequest> involvedRequests = _unitOfWork.FriendRequests.ListInvolving(accountId);
         IEnumerable<FriendRequest> unexpiredRequests = involvedRequests.Where(request => !request.IsExpiredAt(now));
-        var pendingRequests = new List<FriendRequest>(unexpiredRequests);
+        List<FriendRequest> pendingRequests = [.. unexpiredRequests];
         return new FriendRelationshipResolver(accountId, friendAccountIds, pendingRequests);
     }
 
@@ -221,7 +221,7 @@ public sealed class FriendRequestService : IFriendRequestService
         DateTime now)
     {
         IEnumerable<FriendRequestSummary> unexpiredRequests = requests.Where(request => request.ExpiresAt > now);
-        return new List<FriendRequestSummary>(unexpiredRequests);
+        return [.. unexpiredRequests];
     }
 
     private void RemoveRequest(int requesterAccountId, int recipientAccountId, DateTime now)

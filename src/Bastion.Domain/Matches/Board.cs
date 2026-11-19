@@ -18,7 +18,7 @@ public sealed record Board
 
         Size = size;
         _pawnsByTurnOrder = new Dictionary<byte, BoardCoordinates>(pawnsByTurnOrder);
-        _walls = new HashSet<Wall>(walls);
+        _walls = [.. walls];
     }
 
     public byte Size { get; }
@@ -38,7 +38,7 @@ public sealed record Board
 
     public IReadOnlyList<byte> ListTurnOrders()
     {
-        var turnOrders = new List<byte>(_pawnsByTurnOrder.Keys);
+        List<byte> turnOrders = [.. _pawnsByTurnOrder.Keys];
         return turnOrders;
     }
 

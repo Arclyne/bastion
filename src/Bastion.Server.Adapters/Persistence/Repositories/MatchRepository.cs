@@ -153,7 +153,7 @@ public sealed class MatchRepository : IMatchRepository
         IQueryable<int> accountIds = SelectUnfinishedParticipations(context)
             .Where(participation => participation.MatchId == matchId)
             .Select(participation => participation.AccountId);
-        return new List<int>(accountIds);
+        return [.. accountIds];
     }
 
     private static long AddMatchChatMessage(BastionDbContext context, Message message)

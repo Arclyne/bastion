@@ -121,7 +121,7 @@ public sealed class RoomRepository : IRoomRepository
     {
         IQueryable<Room> openRooms = context.Rooms
             .Where(room => room.Status == RoomStatus.Open);
-        var roomsLeftOpen = new List<Room>(openRooms);
+        List<Room> roomsLeftOpen = [.. openRooms];
         foreach (Room room in roomsLeftOpen)
         {
             room.Close(closedAt);
