@@ -19,6 +19,9 @@ public sealed class MatchPlayersPanel : Panel
     private const float RowContentX = 12;
     private const float PawnSize = 18;
     private const float NameWidth = 150;
+    private const float ClockWidth = 58;
+    private const float ClockHeight = 30;
+    private const float ClockRadius = 15;
     private const int HorizontalSideCount = 2;
     private const float RowWidth = PanelWidth - (PaddingX * HorizontalSideCount);
 
@@ -71,11 +74,11 @@ public sealed class MatchPlayersPanel : Panel
         };
         Panel pawnPanel = CreatePawn(player);
         Label wallsLabel = CreateWallsLabel(player);
-        Label clockLabel = ViewFactory.CreateUntranslatedLabel(player.ClockText, TextStyleCatalog.IdentityName);
+        Panel clockPanel = CreateClock(player);
         contentStackPanel.AddChild(pawnPanel);
         contentStackPanel.AddChild(nameColumnStackPanel);
         contentStackPanel.AddChild(wallsLabel);
-        contentStackPanel.AddChild(clockLabel);
+        contentStackPanel.AddChild(clockPanel);
         ViewFactory.CenterVertically(contentStackPanel);
 
         var rowPanel = new Panel
@@ -113,6 +116,40 @@ public sealed class MatchPlayersPanel : Panel
             TextStyleCatalog.IdentityDetail);
         wallsLabel.BindingContext = player;
         return wallsLabel;
+    }
+
+    private static Panel CreateClock(MatchPlayerViewModel player)
+    {
+        var clockPanel = new Panel
+        {
+            Width = ClockWidth,
+            WidthUnits = DimensionUnitType.Absolute,
+            Height = ClockHeight,
+            HeightUnits = DimensionUnitType.Absolute,
+            BindingContext = player,
+        };
+        var lowBackgroundPanel = new Panel();
+        lowBackgroundPanel.Dock(Gum.Wireframe.Dock.Fill);
+        lowBackgroundPanel.SetBinding(nameof(IsVisible), nameof(MatchPlayerViewModel.IsClockLow));
+        RectangleRuntime lowBackground = ShapeFactory.CreateRounded(Palette.ErrorSoft, ClockRadius);
+        ShapeFactory.InsertBehindContent(lowBackgroundPanel.Visual, lowBackground);
+        clockPanel.AddChild(lowBackgroundPanel);
+        AddClockFigure(clockPanel, nameof(MatchPlayerViewModel.IsClockRunning), TextStyleCatalog.RunningClock);
+        AddClockFigure(clockPanel, nameof(MatchPlayerViewModel.IsClockWaiting), TextStyleCatalog.WaitingClock);
+        AddClockFigure(clockPanel, nameof(MatchPlayerViewModel.IsClockLow), TextStyleCatalog.LowClock);
+        ViewFactory.CenterVertically(clockPanel);
+        return clockPanel;
+    }
+
+    private static void AddClockFigure(Panel clockPanel, string visibilityProperty, TextStyle style)
+    {
+        Label figureLabel = ViewFactory.CreateBoundNotice(
+            nameof(MatchPlayerViewModel.ClockText),
+            visibilityProperty,
+            style);
+        ViewFactory.CenterHorizontally(figureLabel);
+        ViewFactory.CenterVertically(figureLabel);
+        clockPanel.AddChild(figureLabel);
     }
 
     private static Panel CreateTurnHighlight(MatchPlayerViewModel player)

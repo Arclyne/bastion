@@ -4,6 +4,7 @@ using Bastion.Domain.Chat;
 using Bastion.Domain.Common;
 using Bastion.Domain.GameModes;
 using Bastion.Domain.Matches;
+using Bastion.Domain.Statistics;
 using Bastion.Server.Application.Matches;
 using Bastion.Server.Application.Tests.GameModes;
 
@@ -20,8 +21,12 @@ public sealed class FakeMatchRepository : IMatchRepository
         UnfinishedParticipantAccountIdsByMatchId = [];
         SavedMatchChatMessages = [];
         MatchesById = [];
-        MatchesSavedWithAbandonment = [];
+        MatchesSavedWithDeparture = [];
         MatchesSavedWithMove = [];
+        StoredModeStatistics = [];
+        ClosuresSavedWithMove = [];
+        ClosuresSavedWithoutMove = [];
+        MatchIdsWithRunOutClock = [];
     }
 
     public HashSet<int> AccountIdsWithUnfinishedParticipation { get; }
@@ -44,9 +49,21 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public Dictionary<int, Match> MatchesById { get; }
 
-    public List<Match> MatchesSavedWithAbandonment { get; }
+    public List<Match> MatchesSavedWithDeparture { get; }
 
     public List<Match> MatchesSavedWithMove { get; }
+
+    public List<ModeStatistic> StoredModeStatistics { get; }
+
+    public List<MatchClosure> ClosuresSavedWithMove { get; }
+
+    public List<MatchClosure> ClosuresSavedWithoutMove { get; }
+
+    public MatchRepositoryException? ClosureSaveFailure { get; set; }
+
+    public List<int> MatchIdsWithRunOutClock { get; }
+
+    public MatchRepositoryException? MatchReadFailure { get; set; }
 
     public bool HasUnfinishedParticipation(int accountId)
     {
@@ -100,13 +117,18 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public Lookup<Match> FindMatch(int matchId)
     {
+        if (MatchReadFailure is not null)
+        {
+            throw MatchReadFailure;
+        }
+
         Match? match = MatchesById.GetValueOrDefault(matchId);
         return Lookup.FromNullable(match, $"MatchId={matchId}");
     }
 
-    public void SaveAbandonment(Match match)
+    public void SaveDeparture(Match match)
     {
-        MatchesSavedWithAbandonment.Add(match);
+        MatchesSavedWithDeparture.Add(match);
     }
 
     public Lookup<GameMode> FindGameMode(byte gameModeId)
@@ -122,5 +144,35 @@ public sealed class FakeMatchRepository : IMatchRepository
     public void SaveMove(Match match)
     {
         MatchesSavedWithMove.Add(match);
+    }
+
+    public IReadOnlyList<ModeStatistic> FindModeStatistics(byte gameModeId, IReadOnlyCollection<int> accountIds)
+    {
+        return StoredModeStatistics;
+    }
+
+    public void SaveFinalMove(MatchClosure closure)
+    {
+        if (ClosureSaveFailure is not null)
+        {
+            throw ClosureSaveFailure;
+        }
+
+        ClosuresSavedWithMove.Add(closure);
+    }
+
+    public void SaveClosureWithoutMove(MatchClosure closure)
+    {
+        if (ClosureSaveFailure is not null)
+        {
+            throw ClosureSaveFailure;
+        }
+
+        ClosuresSavedWithoutMove.Add(closure);
+    }
+
+    public IReadOnlyList<int> FindMatchIdsWithRunOutClock(DateTime now)
+    {
+        return MatchIdsWithRunOutClock;
     }
 }

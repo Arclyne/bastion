@@ -17,21 +17,6 @@ public static class PawnMovedSampleFactory
             NextTurnOrder = Match.SecondTurnOrder,
             NextMoveNumber = SecondMoveNumber,
             RemainingClockMilliseconds = null,
-            IsMatchOver = false,
-        };
-    }
-
-    public static PawnMovedEventArgs CreateWinningMove(string moverNickname, string toSquare)
-    {
-        return new PawnMovedEventArgs
-        {
-            MatchId = JoinedMatchSampleFactory.MatchId,
-            MoverNickname = moverNickname,
-            ToSquare = toSquare,
-            NextTurnOrder = Match.SecondTurnOrder,
-            NextMoveNumber = SecondMoveNumber,
-            RemainingClockMilliseconds = null,
-            IsMatchOver = true,
         };
     }
 }

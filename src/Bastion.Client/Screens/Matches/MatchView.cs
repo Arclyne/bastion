@@ -7,7 +7,7 @@ using log4net;
 
 namespace Bastion.Client.Screens.Matches;
 
-public sealed class MatchView : ScreenView
+public sealed class MatchView : ScreenView, IEscapeKeyReceiver
 {
     private const float TurnPillPaddingX = 24;
     private const int HorizontalSideCount = 2;
@@ -50,11 +50,15 @@ public sealed class MatchView : ScreenView
         AddChild(abandonButton);
         AddChild(abandonStatusLabel);
         AddChild(playerLeftNoticeLabel);
-        var rivalAbandonedDialogView = new RivalAbandonedDialogView(abandonmentViewModel);
-        AddDialog(
-            rivalAbandonedDialogView,
-            abandonmentViewModel,
-            nameof(MatchAbandonmentViewModel.HasRivalAbandoned));
+        var abandonConfirmDialogView = new AbandonConfirmDialogView(abandonmentViewModel);
+        AddDialog(abandonConfirmDialogView, abandonmentViewModel, nameof(MatchAbandonmentViewModel.IsConfirming));
+        var matchEndDialogView = new MatchEndDialogView(matchViewModel.MatchEnd);
+        AddDialog(matchEndDialogView, matchViewModel.MatchEnd, nameof(MatchEndViewModel.IsShown));
+    }
+
+    public void ReceiveEscapeKey()
+    {
+        _abandonmentViewModel.CancelConfirmation();
     }
 
     private static MatchPlayersPanel CreatePlayersPanel(MatchViewModel matchViewModel)
@@ -139,7 +143,7 @@ public sealed class MatchView : ScreenView
     {
         try
         {
-            await _abandonmentViewModel.AbandonMatch();
+            await _abandonmentViewModel.OpenConfirmation();
         }
         catch (ObjectDisposedException ex)
         {

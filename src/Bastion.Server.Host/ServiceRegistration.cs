@@ -33,6 +33,9 @@ public static class ServiceRegistration
         services.AddScoped<IMatchChatService, MatchChatService>();
         services.AddScoped<IMatchAbandonmentService, MatchAbandonmentService>();
         services.AddScoped<IMatchMoveService, MatchMoveService>();
+        services.AddScoped<IMatchCloser, MatchCloser>();
+        services.AddScoped<MatchMoveFollowUp>();
+        services.AddScoped<IMatchClockService, MatchClockService>();
         services.AddScoped<IChatModerator, ChatModerator>();
         services.AddScoped<IMatchSearchService, MatchSearchService>();
         services.AddScoped<IMatchmakingPlayerVerifier, MatchmakingPlayerVerifier>();
@@ -56,6 +59,7 @@ public static class ServiceRegistration
         services.AddSingleton<IMatchChatRelay, MatchChatRelay>();
         services.AddSingleton<IPrivateChatRoom, PrivateChatRoom>();
         services.AddSingleton<IMatchmakingDispatcher, MatchmakingDispatcher>();
+        services.AddSingleton<IMatchGate, MatchGate>();
         return services;
     }
 
@@ -77,6 +81,7 @@ public static class ServiceRegistration
         services.AddSingleton<IPrivateMessageNotifier>(GetChannelRegistry);
         services.AddSingleton<IRoomNotifier>(GetChannelRegistry);
         services.AddHostedService<MatchmakingBackgroundService>();
+        services.AddHostedService<MatchClockBackgroundService>();
         services.AddHostedService<RoomCleanupService>();
         services.AddTransient<AccountService>();
         services.AddTransient<SessionService>();

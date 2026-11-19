@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using Bastion.Client.Localization;
 
@@ -7,6 +8,7 @@ public static class MatchScreenText
 {
     private const string ClockFormat = "{0}:{1:00}";
     private const int WholeMinuteSeconds = 0;
+    private const int SecondsPerMinute = 60;
 
     public static string FormatElo(short? eloRating)
     {
@@ -21,6 +23,15 @@ public static class MatchScreenText
     public static string FormatClock(byte clockMinutes)
     {
         return string.Format(CultureInfo.InvariantCulture, ClockFormat, clockMinutes, WholeMinuteSeconds);
+    }
+
+    public static string FormatClock(TimeSpan remainingClock)
+    {
+        double roundedUpSeconds = Math.Ceiling(remainingClock.TotalSeconds);
+        int remainingSeconds = (int)roundedUpSeconds;
+        int minutes = remainingSeconds / SecondsPerMinute;
+        int seconds = remainingSeconds % SecondsPerMinute;
+        return string.Format(CultureInfo.InvariantCulture, ClockFormat, minutes, seconds);
     }
 
     public static string FormatWallCount(byte wallCount)

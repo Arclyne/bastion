@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Bastion.Client.Localization;
+using Bastion.Client.Networking.Matches;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Screens.Matches;
 using Bastion.Client.Tests.Fakes;
@@ -17,10 +18,10 @@ public sealed class TestMatchViewModel : IDisposable
     private const int FirstRowIndex = 0;
     private const int SecondRowIndex = 1;
     private const string SecondRowSquare = "e2";
-    private const string FirstGoalSquare = "e9";
     private const string CenterGroove = "e4";
     private const int ClassicLastRowIndex = 8;
     private const string FiveMinuteClockText = "5:00";
+    private const string FourMinuteClockText = "4:00";
     private const int FourPlayers = 4;
     private const int FirstPlayerIndex = 0;
     private const int SecondPlayerIndex = 1;
@@ -35,6 +36,8 @@ public sealed class TestMatchViewModel : IDisposable
         PawnSymbol.Green,
     };
     private static readonly DateTimeOffset _startedAt = new DateTimeOffset(2026, 11, 15, 18, 0, 0, TimeSpan.Zero);
+    private static readonly TimeSpan _untilThirtySecondsLeft = MatchClockPolicy.OpeningDelay + TimeSpan.FromSeconds(270);
+    private static readonly TimeSpan _oneMinuteAfterOpening = MatchClockPolicy.OpeningDelay + TimeSpan.FromMinutes(1);
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
     private readonly ManualTimeProvider _timeProvider = new ManualTimeProvider(_startedAt);
@@ -174,31 +177,27 @@ public sealed class TestMatchViewModel : IDisposable
     }
 
     [Fact]
-    public void PawnMoved_OwnPawnReachedGoal_ShowsOwnWin()
+    public void MatchEnded_OwnPawnReachedGoal_ShowsOwnWin()
     {
         MatchViewModel viewModel = CreateViewModel(Match.FirstTurnOrder);
-        PawnMovedEventArgs winningMove = PawnMovedSampleFactory.CreateWinningMove(
-            JoinedMatchSampleFactory.OwnNickname,
-            FirstGoalSquare);
+        MatchEndedEventArgs matchEnd = MatchEndSampleFactory.CreateOwnGoalWin(Match.FirstTurnOrder);
 
-        _matchClient.RaisePawnMoved(winningMove);
+        _matchClient.RaiseMatchEnded(matchEnd);
 
         Assert.Equal(Strings.MatchYouWon, viewModel.TurnText);
     }
 
     [Fact]
-    public void PawnMoved_RivalReachedGoal_ShowsRivalWin()
+    public void MatchEnded_RivalReachedGoal_ShowsRivalWin()
     {
         string expectedText = string.Format(
             CultureInfo.CurrentCulture,
             Strings.MatchPlayerWonFormat,
             JoinedMatchSampleFactory.RivalNickname);
         MatchViewModel viewModel = CreateViewModel(Match.SecondTurnOrder);
-        PawnMovedEventArgs winningMove = PawnMovedSampleFactory.CreateWinningMove(
-            JoinedMatchSampleFactory.RivalNickname,
-            FirstGoalSquare);
+        MatchEndedEventArgs matchEnd = MatchEndSampleFactory.CreateRivalGoalWin(Match.SecondTurnOrder);
 
-        _matchClient.RaisePawnMoved(winningMove);
+        _matchClient.RaiseMatchEnded(matchEnd);
 
         Assert.Equal(expectedText, viewModel.TurnText);
     }
@@ -269,41 +268,43 @@ public sealed class TestMatchViewModel : IDisposable
     }
 
     [Fact]
-    public void MatchAbandoned_MatchGoesOn_RemovesPawnOfLeftPlayer()
+    public void ParticipationEnded_PlayerLeft_RemovesPawnOfLeftPlayer()
     {
         MatchViewModel viewModel = CreateFourPlayerViewModel();
 
-        _matchClient.RaiseMatchAbandoned(
-            JoinedMatchSampleFactory.MatchId,
-            JoinedMatchSampleFactory.ThirdRivalNickname,
-            isMatchOver: false);
+        RaiseFourthPlayerDeparture(EndedMatchReason.Abandonment);
 
         IEnumerable<PawnSymbol> symbols = viewModel.Pawns.Select(pawn => pawn.Symbol);
         Assert.Equal(_symbolsWithoutFourthPlayer, symbols);
     }
 
     [Fact]
-    public void MatchAbandoned_MatchGoesOn_MarksLeftPlayerRow()
+    public void ParticipationEnded_PlayerLeft_MarksLeftPlayerRow()
     {
         MatchViewModel viewModel = CreateFourPlayerViewModel();
 
-        _matchClient.RaiseMatchAbandoned(
-            JoinedMatchSampleFactory.MatchId,
-            JoinedMatchSampleFactory.ThirdRivalNickname,
-            isMatchOver: false);
+        RaiseFourthPlayerDeparture(EndedMatchReason.Abandonment);
 
         MatchPlayerViewModel fourthPlayer = viewModel.Players[FourthPlayerIndex];
         Assert.Equal(Strings.MatchPlayerLeft, fourthPlayer.DetailText);
     }
 
     [Fact]
+    public void ParticipationEnded_PlayerReachedGoal_MarksPlayerRowAtGoal()
+    {
+        MatchViewModel viewModel = CreateFourPlayerViewModel();
+
+        RaiseFourthPlayerDeparture(EndedMatchReason.Goal);
+
+        MatchPlayerViewModel fourthPlayer = viewModel.Players[FourthPlayerIndex];
+        Assert.Equal(Strings.MatchPlayerAtGoal, fourthPlayer.DetailText);
+    }
+
+    [Fact]
     public void Constructor_PlayerLeftDuringVersus_StartsWithoutLeftPawn()
     {
         MatchViewModelParts parts = CreateFourPlayerParts();
-        _matchClient.RaiseMatchAbandoned(
-            JoinedMatchSampleFactory.MatchId,
-            JoinedMatchSampleFactory.ThirdRivalNickname,
-            isMatchOver: false);
+        RaiseFourthPlayerDeparture(EndedMatchReason.Abandonment);
 
         using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
 
@@ -320,6 +321,30 @@ public sealed class TestMatchViewModel : IDisposable
     {
         MatchViewModelParts parts = CreateParts(ownTurnOrder);
         return CreateRegisteredViewModel(parts);
+    }
+
+    [Fact]
+    public void ClockTick_ThirtySecondsLeft_MarksTheClockLow()
+    {
+        MatchViewModelParts parts = CreateParts(Match.FirstTurnOrder);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
+
+        _timeProvider.Advance(_untilThirtySecondsLeft);
+
+        MatchPlayerViewModel turnPlayer = viewModel.Players[FirstPlayerIndex];
+        Assert.True(turnPlayer.IsClockLow);
+    }
+
+    [Fact]
+    public void ClockTick_OneMinuteAfterOpening_ShowsTheClockCountedDown()
+    {
+        MatchViewModelParts parts = CreateParts(Match.FirstTurnOrder);
+        using var viewModel = new MatchViewModel(parts.JoinedMatch, parts.Abandonment, parts.MatchPlay);
+
+        _timeProvider.Advance(_oneMinuteAfterOpening);
+
+        MatchPlayerViewModel turnPlayer = viewModel.Players[FirstPlayerIndex];
+        Assert.Equal(FourMinuteClockText, turnPlayer.ClockText);
     }
 
     private MatchViewModelParts CreateParts(byte ownTurnOrder)
@@ -369,6 +394,15 @@ public sealed class TestMatchViewModel : IDisposable
             JoinedMatchSampleFactory.MatchId,
             JoinedMatchSampleFactory.RivalNickname,
             SecondRowSquare);
+    }
+
+    private void RaiseFourthPlayerDeparture(EndedMatchReason endReason)
+    {
+        ParticipationEndedEventArgs departure = MatchEndSampleFactory.CreateDeparture(
+            JoinedMatchSampleFactory.MatchId,
+            Match.FourthTurnOrder,
+            endReason);
+        _matchClient.RaiseParticipationEnded(departure);
     }
 
     private MatchViewModel CreateFourPlayerViewModel()

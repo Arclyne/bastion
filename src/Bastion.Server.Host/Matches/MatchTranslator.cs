@@ -4,6 +4,9 @@ using Bastion.Contracts.Notifications;
 using Bastion.Server.Application.Matches;
 using Bastion.Server.Host.Common;
 using CoreWCF;
+using DomainAbandonmentPreview = Bastion.Domain.Matches.AbandonmentPreview;
+using DomainMatchEndReason = Bastion.Domain.Matches.MatchEndReason;
+using DomainParticipationResult = Bastion.Domain.Matches.ParticipationResult;
 using DomainWallOrientation = Bastion.Domain.Matches.WallOrientation;
 using DomainWallRejectionReason = Bastion.Domain.Matches.WallRejectionReason;
 
@@ -94,7 +97,6 @@ public static class MatchTranslator
             NextTurnOrder = notice.NextTurnOrder,
             NextMoveNumber = notice.NextMoveNumber,
             RemainingClockMilliseconds = notice.RemainingClockMilliseconds,
-            IsMatchOver = notice.IsMatchOver,
             OccurredAt = occurredAt,
         };
     }
@@ -121,18 +123,62 @@ public static class MatchTranslator
         };
     }
 
-    public static MatchAbandonedNotification ToAbandonedNotification(
+    public static AbandonmentPreview ToContractPreview(DomainAbandonmentPreview preview)
+    {
+        ArgumentNullException.ThrowIfNull(preview);
+
+        return new AbandonmentPreview
+        {
+            IsRanked = preview.IsRanked,
+            InitialElo = preview.InitialElo,
+            FinalElo = preview.FinalElo,
+            Placement = preview.Placement,
+            ActivePlayerCount = preview.ActivePlayerCount,
+        };
+    }
+
+    public static MatchEndedNotification ToMatchEndedNotification(
         int matchId,
-        AbandonmentNotice notice,
+        MatchEndNotice notice,
         DateTime occurredAt)
     {
         ArgumentNullException.ThrowIfNull(notice);
 
-        return new MatchAbandonedNotification
+        MatchEndReason endReason = ToContractEndReason(notice.EndReason);
+        MatchStanding[] standings = ContractArray.ConvertAll(notice.Standings, ToMatchStanding);
+        return new MatchEndedNotification
         {
             MatchId = matchId,
-            AbandoningNickname = notice.AbandoningNickname,
-            IsMatchOver = notice.IsMatchOver,
+            EndReason = endReason,
+            DecidingTurnOrder = notice.DecidingTurnOrder,
+            IsRanked = notice.IsRanked,
+            MoveCount = notice.MoveCount,
+            PlayedSeconds = notice.PlayedSeconds,
+            Standings = standings,
+            OccurredAt = occurredAt,
+        };
+    }
+
+    public static ParticipationEndedNotification ToParticipationEndedNotification(
+        int matchId,
+        ParticipationEndNotice notice,
+        DateTime occurredAt)
+    {
+        ArgumentNullException.ThrowIfNull(notice);
+
+        MatchEndReason endReason = ToContractEndReason(notice.EndReason);
+        MatchStanding[] standings = ContractArray.ConvertAll(notice.Standings, ToMatchStanding);
+        return new ParticipationEndedNotification
+        {
+            MatchId = matchId,
+            EndReason = endReason,
+            DepartingTurnOrder = notice.DepartingTurnOrder,
+            ActivePlayerCount = notice.ActivePlayerCount,
+            NextTurnOrder = notice.NextTurnOrder,
+            NextMoveNumber = notice.NextMoveNumber,
+            MoveCount = notice.MoveCount,
+            PlayedSeconds = notice.PlayedSeconds,
+            Standings = standings,
             OccurredAt = occurredAt,
         };
     }
@@ -183,6 +229,63 @@ public static class MatchTranslator
                     nameof(orientation),
                     orientation,
                     "Unsupported wall orientation.");
+        }
+    }
+
+    private static MatchEndReason ToContractEndReason(DomainMatchEndReason endReason)
+    {
+        switch (endReason)
+        {
+            case DomainMatchEndReason.Goal:
+                return MatchEndReason.Goal;
+            case DomainMatchEndReason.Timeout:
+                return MatchEndReason.Timeout;
+            case DomainMatchEndReason.Resignation:
+                return MatchEndReason.Resignation;
+            case DomainMatchEndReason.Draw:
+                return MatchEndReason.Draw;
+            case DomainMatchEndReason.Abandonment:
+                return MatchEndReason.Abandonment;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(endReason), endReason, "Unsupported match end reason.");
+        }
+    }
+
+    private static MatchStanding ToMatchStanding(PlayerStanding standing)
+    {
+        var matchStanding = new MatchStanding
+        {
+            TurnOrder = standing.TurnOrder,
+            Placement = standing.Placement,
+            InitialElo = standing.InitialElo,
+            FinalElo = standing.FinalElo,
+            RemainingWalls = standing.RemainingWalls,
+        };
+        if (standing.Result is DomainParticipationResult result)
+        {
+            matchStanding.Result = ToContractResult(result);
+        }
+
+        if (standing.EndReason is DomainMatchEndReason endReason)
+        {
+            matchStanding.EndReason = ToContractEndReason(endReason);
+        }
+
+        return matchStanding;
+    }
+
+    private static ParticipationResult ToContractResult(DomainParticipationResult result)
+    {
+        switch (result)
+        {
+            case DomainParticipationResult.Won:
+                return ParticipationResult.Won;
+            case DomainParticipationResult.Lost:
+                return ParticipationResult.Lost;
+            case DomainParticipationResult.Draw:
+                return ParticipationResult.Draw;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(result), result, "Unsupported participation result.");
         }
     }
 }

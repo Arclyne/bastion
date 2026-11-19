@@ -9,7 +9,9 @@ public sealed class FakeNotificationClient : INotificationClient
 
     public event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
 
-    public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
+    public event EventHandler<ParticipationEndedEventArgs>? ParticipationEnded;
+
+    public event EventHandler<MatchEndedEventArgs>? MatchEnded;
 
     public event EventHandler<PawnMovedEventArgs>? PawnMoved;
 
@@ -45,7 +47,8 @@ public sealed class FakeNotificationClient : INotificationClient
         {
             ChatMessageReceived,
             MatchChatMessageReceived,
-            MatchAbandoned,
+            ParticipationEnded,
+            MatchEnded,
             PawnMoved,
             WallPlaced,
             MatchFound,

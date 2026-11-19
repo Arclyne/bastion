@@ -39,24 +39,34 @@ public sealed class TestMatchMoveService
     private const string LastColumnGroove = "i1";
     private const byte ClassicWallsAfterOne = GameModeSampleFactory.ClassicWallsPerPlayer - 1;
     private const byte SingleWallPerPlayer = 1;
+    private const string QuickFirstPlayerGoalSquare = "d7";
+    private const int TwoStartedStatistics = 2;
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 12, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _now = new DateTime(2026, 11, 12, 18, 0, 20, DateTimeKind.Utc);
+    private static readonly DateTime _afterClockRanOut = new DateTime(2026, 11, 12, 18, 6, 0, DateTimeKind.Utc);
     private static readonly ConnectedPlayer _firstPlayer = new ConnectedPlayer(FirstAccountId, FirstNickname);
     private static readonly ConnectedPlayer _secondPlayer = new ConnectedPlayer(SecondAccountId, SecondNickname);
     private static readonly ConnectedPlayer _outsider = new ConnectedPlayer(OutsiderAccountId, OutsiderNickname);
     private static readonly MatchEntrant _firstEntrant = new MatchEntrant(FirstAccountId, StartingElo);
     private static readonly MatchEntrant _secondEntrant = new MatchEntrant(SecondAccountId, StartingElo);
     private static readonly MatchEntrant[] _entrants = { _firstEntrant, _secondEntrant };
+    private static readonly string[] _quickMovesBeforeFirstPlayerGoal =
+    {
+        "d2", "c7", "d3", "c6", "d4", "c5", "d5", "c4", "d6", "c3",
+    };
 
     private readonly FakeSessionVerifier _sessionVerifier = new FakeSessionVerifier();
     private readonly FakeMatchRepository _matchRepository = new FakeMatchRepository();
     private readonly FakeMatchMoveNotifier _matchMoveNotifier = new FakeMatchMoveNotifier();
+    private readonly FakeMatchEndNotifier _matchEndNotifier = new FakeMatchEndNotifier();
     private readonly MatchMoveService _matchMoveService;
 
     public TestMatchMoveService()
     {
-        _matchMoveService = new MatchMoveService(_sessionVerifier, _matchRepository, _matchMoveNotifier);
+        var matchCloser = new MatchCloser(_matchRepository, _matchEndNotifier);
+        var followUp = new MatchMoveFollowUp(_matchMoveNotifier, matchCloser);
+        _matchMoveService = new MatchMoveService(_sessionVerifier, _matchRepository, followUp);
     }
 
     [Fact]
@@ -380,6 +390,147 @@ public sealed class TestMatchMoveService
         Record.Exception(placeWall);
 
         Assert.Single(_matchRepository.MatchesSavedWithMove);
+    }
+
+    [Fact]
+    public void MovePawn_ValidMove_AnnouncesNoEnd()
+    {
+        AddFirstPlayerWithClassicMatch();
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+
+        _matchMoveService.MovePawn(FirstToken, chosenMove, _now);
+
+        Assert.Empty(_matchEndNotifier.NotifiedMatchEnds);
+    }
+
+    [Fact]
+    public void MovePawn_PawnReachesGoal_SavesClosureWithTheMove()
+    {
+        PlayQuickMatchBeforeFirstPlayerGoal();
+
+        MoveFirstPlayerToGoal();
+
+        Assert.Single(_matchRepository.ClosuresSavedWithMove);
+    }
+
+    [Fact]
+    public void MovePawn_PawnReachesGoal_SavesNoPlainMove()
+    {
+        PlayQuickMatchBeforeFirstPlayerGoal();
+        int savedMoveCount = _matchRepository.MatchesSavedWithMove.Count;
+
+        MoveFirstPlayerToGoal();
+
+        Assert.Equal(savedMoveCount, _matchRepository.MatchesSavedWithMove.Count);
+    }
+
+    [Fact]
+    public void MovePawn_PawnReachesGoal_StartsStatisticsOfBothPlayers()
+    {
+        PlayQuickMatchBeforeFirstPlayerGoal();
+
+        MoveFirstPlayerToGoal();
+
+        MatchClosure savedClosure = _matchRepository.ClosuresSavedWithMove.Single();
+        Assert.Equal(TwoStartedStatistics, savedClosure.StartedStatistics.Count);
+    }
+
+    [Fact]
+    public void MovePawn_PawnReachesGoal_AnnouncesGoalAsEndReason()
+    {
+        PlayQuickMatchBeforeFirstPlayerGoal();
+
+        MoveFirstPlayerToGoal();
+
+        NotifiedMatchEnd notified = _matchEndNotifier.NotifiedMatchEnds.Single();
+        Assert.Equal(MatchEndReason.Goal, notified.Notice.EndReason);
+    }
+
+    [Fact]
+    public void MovePawn_PawnReachesGoal_AnnouncesEndToBothPlayers()
+    {
+        PlayQuickMatchBeforeFirstPlayerGoal();
+        int[] expectedRecipients = { FirstAccountId, SecondAccountId };
+
+        MoveFirstPlayerToGoal();
+
+        NotifiedMatchEnd notified = _matchEndNotifier.NotifiedMatchEnds.Single();
+        Assert.Equal(expectedRecipients, notified.RecipientAccountIds);
+    }
+
+    [Fact]
+    public void MovePawn_ClockRanOut_ThrowsMatchNotJoinedException()
+    {
+        AddFirstPlayerWithClassicMatch();
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+
+        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, chosenMove, _afterClockRanOut);
+
+        Assert.Throws<MatchNotJoinedException>(movePawn);
+    }
+
+    [Fact]
+    public void MovePawn_ClockRanOut_SavesClosureWithoutTheMove()
+    {
+        AddFirstPlayerWithClassicMatch();
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+
+        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, chosenMove, _afterClockRanOut);
+        Record.Exception(movePawn);
+
+        MatchClosure closure = _matchRepository.ClosuresSavedWithoutMove.Single();
+        Assert.Empty(closure.Match.Moves);
+    }
+
+    [Fact]
+    public void MovePawn_ClockRanOut_AnnouncesTimeoutAsEndReason()
+    {
+        AddFirstPlayerWithClassicMatch();
+        ChosenPawnMove chosenMove = CreateMove(Match.FirstMoveNumber, ForwardSquare);
+
+        Action movePawn = () => _matchMoveService.MovePawn(FirstToken, chosenMove, _afterClockRanOut);
+        Record.Exception(movePawn);
+
+        NotifiedMatchEnd notified = _matchEndNotifier.NotifiedMatchEnds.Single();
+        Assert.Equal(MatchEndReason.Timeout, notified.Notice.EndReason);
+    }
+
+    [Fact]
+    public void PlaceWall_ClockRanOut_ThrowsMatchNotJoinedException()
+    {
+        AddFirstPlayerWithClassicMatch();
+        ChosenWall centerWall = CreateWall(Match.FirstMoveNumber, CenterGroove);
+
+        Action placeWall = () => _matchMoveService.PlaceWall(FirstToken, centerWall, _afterClockRanOut);
+
+        Assert.Throws<MatchNotJoinedException>(placeWall);
+    }
+
+    private void PlayQuickMatchBeforeFirstPlayerGoal()
+    {
+        _sessionVerifier.Add(FirstToken, _firstPlayer);
+        _sessionVerifier.Add(SecondToken, _secondPlayer);
+        GameMode quickMode = GameModeSampleFactory.CreateQuick();
+        _matchRepository.ActiveGameMode = quickMode;
+        var quickFormat = new MatchFormat(quickMode, ClockMinutes);
+        AddMatch(quickFormat);
+        string[] tokensInTurnOrder = { FirstToken, SecondToken };
+        for (int moveIndex = 0; moveIndex < _quickMovesBeforeFirstPlayerGoal.Length; moveIndex++)
+        {
+            string token = tokensInTurnOrder[moveIndex % tokensInTurnOrder.Length];
+            int moveNumber = moveIndex + Match.FirstMoveNumber;
+            short expectedMoveNumber = (short)moveNumber;
+            ChosenPawnMove chosenMove = CreateMove(expectedMoveNumber, _quickMovesBeforeFirstPlayerGoal[moveIndex]);
+            _matchMoveService.MovePawn(token, chosenMove, _now);
+        }
+    }
+
+    private void MoveFirstPlayerToGoal()
+    {
+        int moveNumber = _quickMovesBeforeFirstPlayerGoal.Length + Match.FirstMoveNumber;
+        short goalMoveNumber = (short)moveNumber;
+        ChosenPawnMove goalMove = CreateMove(goalMoveNumber, QuickFirstPlayerGoalSquare);
+        _matchMoveService.MovePawn(FirstToken, goalMove, _now);
     }
 
     private void AddFirstPlayerWithClassicMatch()

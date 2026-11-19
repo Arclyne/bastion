@@ -12,7 +12,8 @@ public interface IMatchService
 {
     /// <summary>
     /// Records that the player of the session leaves the match, and that player loses. With two players the rival wins
-    /// and the match ends; with four, the match goes on while two players are still in it.
+    /// and the match ends; with four, the match goes on while two players are still in it. The player who leaves and
+    /// the players still in it learn the result through the notification channel.
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
     /// <param name="matchId">The match the player leaves.</param>
@@ -29,9 +30,30 @@ public interface IMatchService
     void AbandonMatch(string? sessionToken, int matchId);
 
     /// <summary>
+    /// Works out what the player of the session would lose by leaving the match, without recording anything: the elo
+    /// the player entered with and the elo that would be left in a ranked match, the place taken in a four-player match
+    /// and how many players would still be in it.
+    /// </summary>
+    /// <param name="sessionToken">The token of the player's open session.</param>
+    /// <param name="matchId">The match the player thinks of leaving.</param>
+    /// <returns>What leaving the match would mean for the player.</returns>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="InvalidSessionFault"/>: the session is not open.
+    /// </exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="MatchNotJoinedFault"/>: the player is not playing that match, or the match is over.
+    /// </exception>
+    /// <exception cref="FaultException">The server could not read the database.</exception>
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    [FaultContract(typeof(MatchNotJoinedFault))]
+    AbandonmentPreview PreviewAbandonment(string? sessionToken, int matchId);
+
+    /// <summary>
     /// Moves the pawn of the player of the session one square, or over the rival pawn, and passes the turn. Every
-    /// player of the match learns the new position through the notification channel; with two players, a pawn that
-    /// reaches its goal row ends the match.
+    /// player of the match learns the new position through the notification channel. A pawn that reaches its goal row
+    /// ends a two-player match and takes the best free place in a four-player one; the players learn the result
+    /// through the same channel.
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
     /// <param name="pawnMove">The match, the expected move number and the destination square in board notation.</param>

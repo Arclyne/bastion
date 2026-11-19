@@ -29,6 +29,8 @@ public sealed class TestMatchAbandonmentService
     private const int FourthAccountId = 15;
     private const string RivalNickname = "rival_uno";
     private const string RivalToken = "rival-token";
+    private const int ThreeActivePlayers = 3;
+    private const short LeaverFinalElo = 984;
 
     private static readonly DateTime _startedAt = new DateTime(2026, 11, 5, 18, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime _now = new DateTime(2026, 11, 5, 18, 7, 0, DateTimeKind.Utc);
@@ -46,31 +48,55 @@ public sealed class TestMatchAbandonmentService
 
     public TestMatchAbandonmentService()
     {
-        _abandonmentService = new MatchAbandonmentService(_sessionVerifier, _matchRepository, _matchEndNotifier);
+        var matchCloser = new MatchCloser(_matchRepository, _matchEndNotifier);
+        _abandonmentService = new MatchAbandonmentService(_sessionVerifier, _matchRepository, matchCloser);
     }
 
     [Fact]
-    public void AbandonMatch_FourPlayers_TellsOthersMatchGoesOn()
+    public void AbandonMatch_FourPlayers_TellsOthersThreePlayersGoOn()
     {
         _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
         AddFourPlayerMatch();
 
         _abandonmentService.AbandonMatch(AbandoningToken, FourPlayerMatchId, _now);
 
-        NotifiedMatchAbandonment notified = _matchEndNotifier.NotifiedAbandonments.Single();
-        Assert.False(notified.Notice.IsMatchOver);
+        NotifiedParticipationEnd notified = _matchEndNotifier.NotifiedParticipationEnds.Single();
+        Assert.Equal(ThreeActivePlayers, notified.Notice.ActivePlayerCount);
     }
 
     [Fact]
-    public void AbandonMatch_FourPlayers_NotifiesRemainingPlayers()
+    public void AbandonMatch_FourPlayers_NotifiesAbandonmentAsEndReason()
     {
         _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
         AddFourPlayerMatch();
-        int[] expectedRecipients = { RivalAccountId, ThirdAccountId, FourthAccountId };
 
         _abandonmentService.AbandonMatch(AbandoningToken, FourPlayerMatchId, _now);
 
-        NotifiedMatchAbandonment notified = _matchEndNotifier.NotifiedAbandonments.Single();
+        NotifiedParticipationEnd notified = _matchEndNotifier.NotifiedParticipationEnds.Single();
+        Assert.Equal(MatchEndReason.Abandonment, notified.Notice.EndReason);
+    }
+
+    [Fact]
+    public void AbandonMatch_FourPlayers_SavesMatchWithoutClosingIt()
+    {
+        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
+        AddFourPlayerMatch();
+
+        _abandonmentService.AbandonMatch(AbandoningToken, FourPlayerMatchId, _now);
+
+        Assert.Single(_matchRepository.MatchesSavedWithDeparture);
+    }
+
+    [Fact]
+    public void AbandonMatch_FourPlayers_NotifiesLeaverAndRemainingPlayers()
+    {
+        _sessionVerifier.Add(AbandoningToken, _abandoningPlayer);
+        AddFourPlayerMatch();
+        int[] expectedRecipients = { AbandoningAccountId, RivalAccountId, ThirdAccountId, FourthAccountId };
+
+        _abandonmentService.AbandonMatch(AbandoningToken, FourPlayerMatchId, _now);
+
+        NotifiedParticipationEnd notified = _matchEndNotifier.NotifiedParticipationEnds.Single();
         Assert.Equal(expectedRecipients, notified.RecipientAccountIds);
     }
 
@@ -81,11 +107,11 @@ public sealed class TestMatchAbandonmentService
         _sessionVerifier.Add(RivalToken, _rival);
         AddFourPlayerMatch();
         _abandonmentService.AbandonMatch(AbandoningToken, FourPlayerMatchId, _now);
-        int[] expectedRecipients = { ThirdAccountId, FourthAccountId };
+        int[] expectedRecipients = { RivalAccountId, ThirdAccountId, FourthAccountId };
 
         _abandonmentService.AbandonMatch(RivalToken, FourPlayerMatchId, _now);
 
-        NotifiedMatchAbandonment secondNotice = _matchEndNotifier.NotifiedAbandonments.Last();
+        NotifiedParticipationEnd secondNotice = _matchEndNotifier.NotifiedParticipationEnds.Last();
         Assert.Equal(expectedRecipients, secondNotice.RecipientAccountIds);
     }
 
@@ -96,8 +122,8 @@ public sealed class TestMatchAbandonmentService
 
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Match savedMatch = _matchRepository.MatchesSavedWithAbandonment.Single();
-        Assert.Equal(MatchStatus.Finished, savedMatch.Status);
+        MatchClosure savedClosure = _matchRepository.ClosuresSavedWithoutMove.Single();
+        Assert.Equal(MatchStatus.Finished, savedClosure.Match.Status);
     }
 
     [Fact]
@@ -107,47 +133,55 @@ public sealed class TestMatchAbandonmentService
 
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        Match savedMatch = _matchRepository.MatchesSavedWithAbandonment.Single();
-        Participation abandoning = savedMatch.GetParticipation(AbandoningAccountId);
+        MatchClosure savedClosure = _matchRepository.ClosuresSavedWithoutMove.Single();
+        Participation abandoning = savedClosure.Match.GetParticipation(AbandoningAccountId);
         Assert.Equal(ParticipationResult.Lost, abandoning.Result);
     }
 
     [Fact]
-    public void AbandonMatch_Player_NotifiesOnlyTheRival()
+    public void AbandonMatch_Player_NotifiesLeaverAndRival()
     {
         AddAbandoningPlayerWithTwoPlayerMatch();
-        int[] expectedRecipients = { RivalAccountId };
+        int[] expectedRecipients = { AbandoningAccountId, RivalAccountId };
 
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        NotifiedMatchAbandonment notified = _matchEndNotifier.NotifiedAbandonments.Single();
+        NotifiedMatchEnd notified = _matchEndNotifier.NotifiedMatchEnds.Single();
         Assert.Equal(expectedRecipients, notified.RecipientAccountIds);
     }
 
     [Fact]
-    public void AbandonMatch_Player_NotifiesAbandoningNickname()
+    public void AbandonMatch_Player_NotifiesAbandoningPlayerAsDecidingPlayer()
     {
         AddAbandoningPlayerWithTwoPlayerMatch();
 
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        NotifiedMatchAbandonment notified = _matchEndNotifier.NotifiedAbandonments.Single();
-        Assert.Equal(AbandoningNickname, notified.Notice.AbandoningNickname);
+        NotifiedMatchEnd notified = _matchEndNotifier.NotifiedMatchEnds.Single();
+        Assert.Equal(Match.FirstTurnOrder, notified.Notice.DecidingTurnOrder);
     }
 
-    [Theory]
-    [InlineData("rival_one")]
-    [InlineData("peón_ñandú")]
-    public void AbandonMatch_EnglishOrSpanishNickname_NotifiesSameNickname(string nickname)
+    [Fact]
+    public void AbandonMatch_Player_NotifiesAbandonmentAsEndReason()
     {
-        var abandoningPlayer = new ConnectedPlayer(AbandoningAccountId, nickname);
-        _sessionVerifier.Add(AbandoningToken, abandoningPlayer);
-        AddTwoPlayerMatch();
+        AddAbandoningPlayerWithTwoPlayerMatch();
 
         _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
 
-        NotifiedMatchAbandonment notified = _matchEndNotifier.NotifiedAbandonments.Single();
-        Assert.Equal(nickname, notified.Notice.AbandoningNickname);
+        NotifiedMatchEnd notified = _matchEndNotifier.NotifiedMatchEnds.Single();
+        Assert.Equal(MatchEndReason.Abandonment, notified.Notice.EndReason);
+    }
+
+    [Fact]
+    public void AbandonMatch_ClosureNotSaved_NotifiesNobody()
+    {
+        AddAbandoningPlayerWithTwoPlayerMatch();
+        _matchRepository.ClosureSaveFailure = new MatchRepositoryException();
+        Action abandon = () => _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
+
+        Record.Exception(abandon);
+
+        Assert.Empty(_matchEndNotifier.NotifiedMatchEnds);
     }
 
     [Fact]
@@ -188,6 +222,58 @@ public sealed class TestMatchAbandonmentService
         Action abandon = () => _abandonmentService.AbandonMatch(UnknownToken, MatchId, _now);
 
         Assert.Throws<InvalidSessionException>(abandon);
+    }
+
+    [Fact]
+    public void PreviewAbandonment_RankedMatch_PredictsLeaverFinalElo()
+    {
+        AddAbandoningPlayerWithTwoPlayerMatch();
+
+        AbandonmentPreview preview = _abandonmentService.PreviewAbandonment(AbandoningToken, MatchId, _now);
+
+        Assert.Equal(LeaverFinalElo, preview.FinalElo);
+    }
+
+    [Fact]
+    public void PreviewAbandonment_RankedMatch_SavesNothing()
+    {
+        AddAbandoningPlayerWithTwoPlayerMatch();
+
+        _abandonmentService.PreviewAbandonment(AbandoningToken, MatchId, _now);
+
+        Assert.Empty(_matchRepository.ClosuresSavedWithoutMove);
+    }
+
+    [Fact]
+    public void PreviewAbandonment_RankedMatch_NotifiesNobody()
+    {
+        AddAbandoningPlayerWithTwoPlayerMatch();
+
+        _abandonmentService.PreviewAbandonment(AbandoningToken, MatchId, _now);
+
+        Assert.Empty(_matchEndNotifier.NotifiedMatchEnds);
+    }
+
+    [Fact]
+    public void PreviewAbandonment_ThenAbandon_StillAbandonsTheMatch()
+    {
+        AddAbandoningPlayerWithTwoPlayerMatch();
+        _abandonmentService.PreviewAbandonment(AbandoningToken, MatchId, _now);
+
+        _abandonmentService.AbandonMatch(AbandoningToken, MatchId, _now);
+
+        Assert.Single(_matchRepository.ClosuresSavedWithoutMove);
+    }
+
+    [Fact]
+    public void PreviewAbandonment_Outsider_ThrowsMatchNotJoinedException()
+    {
+        _sessionVerifier.Add(OutsiderToken, _outsider);
+        AddTwoPlayerMatch();
+
+        Func<AbandonmentPreview> preview = () => _abandonmentService.PreviewAbandonment(OutsiderToken, MatchId, _now);
+
+        Assert.Throws<MatchNotJoinedException>(preview);
     }
 
     private void AddFourPlayerMatch()

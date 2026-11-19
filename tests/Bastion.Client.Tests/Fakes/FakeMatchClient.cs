@@ -8,6 +8,17 @@ public sealed class FakeMatchClient : IMatchClient
 {
     public Exception? AbandonFailure { get; set; }
 
+    public Exception? PreviewFailure { get; set; }
+
+    public PreviewedAbandonment Preview { get; set; } = new PreviewedAbandonment
+    {
+        IsRanked = false,
+        InitialElo = null,
+        FinalElo = null,
+        Placement = null,
+        ActivePlayerCount = 0,
+    };
+
     public int? LastAbandonedMatchId { get; private set; }
 
     public Exception? MoveFailure { get; set; }
@@ -20,7 +31,9 @@ public sealed class FakeMatchClient : IMatchClient
 
     public int PlacedWallCount { get; private set; }
 
-    public event EventHandler<MatchAbandonedEventArgs>? MatchAbandoned;
+    public event EventHandler<ParticipationEndedEventArgs>? ParticipationEnded;
+
+    public event EventHandler<MatchEndedEventArgs>? MatchEnded;
 
     public event EventHandler<PawnMovedEventArgs>? PawnMoved;
 
@@ -34,6 +47,16 @@ public sealed class FakeMatchClient : IMatchClient
         }
 
         LastAbandonedMatchId = matchId;
+    }
+
+    public PreviewedAbandonment PreviewAbandonment(string sessionToken, int matchId)
+    {
+        if (PreviewFailure is not null)
+        {
+            throw PreviewFailure;
+        }
+
+        return Preview;
     }
 
     public void MovePawn(string sessionToken, ChosenPawnMove chosenMove)
@@ -57,9 +80,14 @@ public sealed class FakeMatchClient : IMatchClient
         PlacedWallCount++;
     }
 
-    public bool HasMatchAbandonedSubscribers()
+    public bool HasParticipationEndedSubscribers()
     {
-        return MatchAbandoned is not null;
+        return ParticipationEnded is not null;
+    }
+
+    public bool HasMatchEndedSubscribers()
+    {
+        return MatchEnded is not null;
     }
 
     public bool HasPawnMovedSubscribers()
@@ -67,10 +95,14 @@ public sealed class FakeMatchClient : IMatchClient
         return PawnMoved is not null;
     }
 
-    public void RaiseMatchAbandoned(int matchId, string abandoningNickname, bool isMatchOver)
+    public void RaiseParticipationEnded(ParticipationEndedEventArgs e)
     {
-        var abandonment = new MatchAbandonedEventArgs(matchId, abandoningNickname, isMatchOver);
-        MatchAbandoned?.Invoke(this, abandonment);
+        ParticipationEnded?.Invoke(this, e);
+    }
+
+    public void RaiseMatchEnded(MatchEndedEventArgs e)
+    {
+        MatchEnded?.Invoke(this, e);
     }
 
     public void RaisePawnMoved(PawnMovedEventArgs e)

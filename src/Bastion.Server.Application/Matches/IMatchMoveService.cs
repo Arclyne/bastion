@@ -11,7 +11,8 @@ public interface IMatchMoveService
 {
     /// <summary>
     /// Moves the pawn of the player of the session to the chosen square, records the move, passes the turn and
-    /// notifies every player of the match. With two players, a pawn that reaches its goal row ends the match.
+    /// notifies every player of the match. A pawn that reaches its goal row ends a two-player match and takes the
+    /// best free place in a four-player one; a match that ends records the elo and statistics if it is ranked.
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>
     /// <param name="chosenMove">The match, the move number the player expects and the destination square.</param>

@@ -13,6 +13,4 @@ public sealed record PawnMoveNotice
     public required short NextMoveNumber { get; init; }
 
     public required int? RemainingClockMilliseconds { get; init; }
-
-    public required bool IsMatchOver { get; init; }
 }

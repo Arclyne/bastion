@@ -25,7 +25,4 @@ public sealed class PawnMovedNotification : Notification
 
     [DataMember]
     public int? RemainingClockMilliseconds { get; set; }
-
-    [DataMember]
-    public bool IsMatchOver { get; set; }
 }

@@ -26,6 +26,7 @@ public sealed class Navigator : INavigator, IDisposable
     private LoggedInSession? _loggedInSession;
     private JoinedMatch? _joinedMatch;
     private JoinedMatchViewModelSet? _joinedMatchViewModels;
+    private MatchSearchViewModel? _shownMatchSearch;
 
     public Navigator(ServerConnection connection, LocalServiceSet localServices, IScreenHost screenHost)
     {
@@ -102,6 +103,7 @@ public sealed class Navigator : INavigator, IDisposable
             _connection.Matchmaking,
             _localServices.TimeProvider);
         matchSearchViewModel.MatchFound += HandleMatchFound;
+        _shownMatchSearch = matchSearchViewModel;
         var mainMenuView = new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel);
         ShowScreen(mainMenuView, friendsPanel, matchSearchViewModel);
         _loggedInSession = session;
@@ -149,6 +151,22 @@ public sealed class Navigator : INavigator, IDisposable
         OpenMainMenu(_loggedInSession);
     }
 
+    private void HandleSearchAgainRequested(object? sender, EventArgs e)
+    {
+        if (_loggedInSession is null)
+        {
+            return;
+        }
+
+        OpenMainMenu(_loggedInSession);
+        if (_shownMatchSearch is null)
+        {
+            return;
+        }
+
+        _ = RunSafely(_shownMatchSearch.StartSearch());
+    }
+
     private void HandleCountdownFinished(object? sender, EventArgs e)
     {
         if (_joinedMatch is null || _joinedMatchViewModels is null)
@@ -165,6 +183,8 @@ public sealed class Navigator : INavigator, IDisposable
             joinedMatch,
             joinedMatchViewModels.Abandonment,
             joinedMatchViewModels.MatchPlay);
+        matchViewModel.MatchEnd.ReturnToMenuRequested += HandleReturnToMenuRequested;
+        matchViewModel.MatchEnd.SearchAgainRequested += HandleSearchAgainRequested;
         var matchView = new MatchView(matchViewModel, joinedMatchViewModels.Chat, joinedMatchViewModels.Abandonment);
         ShowScreen(
             matchView,

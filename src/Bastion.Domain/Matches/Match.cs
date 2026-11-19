@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Bastion.Domain.Statistics;
 
 namespace Bastion.Domain.Matches;
 
@@ -15,7 +16,6 @@ public class Match
 
     private const int LastStandingPlayerCount = 1;
     private const int NotFoundIndex = -1;
-    private const byte FirstPlacement = 1;
 
     private readonly List<Participation> _participations;
     private readonly List<Move> _moves;
@@ -28,6 +28,7 @@ public class Match
         Status = MatchStatus.InProgress;
         ClockMinutes = format.ClockMinutes;
         StartedAt = startedAt;
+        TurnStartedAt = startedAt + MatchClockPolicy.OpeningDelay;
         CurrentTurnOrder = FirstTurnOrder;
     }
 
@@ -35,6 +36,25 @@ public class Match
     {
         _participations = [];
         _moves = [];
+    }
+
+    private Match(Match source)
+        : this()
+    {
+        MatchId = source.MatchId;
+        GameModeId = source.GameModeId;
+        MatchType = source.MatchType;
+        Status = source.Status;
+        ClockMinutes = source.ClockMinutes;
+        StartedAt = source.StartedAt;
+        TurnStartedAt = source.TurnStartedAt;
+        EndedAt = source.EndedAt;
+        EndReason = source.EndReason;
+        CurrentTurnOrder = source.CurrentTurnOrder;
+        IEnumerable<Participation> copiedParticipations = source._participations
+            .Select(participation => participation.CopyForPreview());
+        _participations.AddRange(copiedParticipations);
+        _moves.AddRange(source._moves);
     }
 
     public int MatchId { get; private set; }
@@ -48,6 +68,8 @@ public class Match
     public byte ClockMinutes { get; private set; }
 
     public DateTime StartedAt { get; private set; }
+
+    public DateTime TurnStartedAt { get; private set; }
 
     public DateTime? EndedAt { get; private set; }
 
@@ -131,6 +153,85 @@ public class Match
         LeaveFourPlayerMatch(abandoningAccountId, abandonedAt);
     }
 
+    public AbandonmentPreview PreviewAbandonment(int abandoningAccountId, DateTime abandonedAt)
+    {
+        if (!CanBeAbandonedBy(abandoningAccountId))
+        {
+            throw new InvalidOperationException("Only a player of a match in progress can preview its abandonment.");
+        }
+
+        var abandonedCopy = new Match(this);
+        abandonedCopy.Abandon(abandoningAccountId, abandonedAt);
+        if (abandonedCopy.CanBeRated())
+        {
+            abandonedCopy.Rate();
+        }
+
+        Participation leaver = abandonedCopy.GetParticipation(abandoningAccountId);
+        int activePlayerCount = abandonedCopy.CountActivePlayers();
+        bool isRanked = MatchType == MatchType.Ranked;
+        return new AbandonmentPreview
+        {
+            IsRanked = isRanked,
+            InitialElo = leaver.InitialElo,
+            FinalElo = leaver.FinalElo,
+            Placement = leaver.Placement,
+            ActivePlayerCount = activePlayerCount,
+        };
+    }
+
+    public Participation GetTurnParticipation()
+    {
+        int participationIndex = _participations.FindIndex(
+            participation => participation.TurnOrder == CurrentTurnOrder);
+        if (participationIndex == NotFoundIndex)
+        {
+            throw new InvalidOperationException("No participation has the current turn.");
+        }
+
+        return _participations[participationIndex];
+    }
+
+    public bool HasClockRunOut(DateTime now)
+    {
+        if (Status != MatchStatus.InProgress)
+        {
+            return false;
+        }
+
+        Participation turnParticipation = GetTurnParticipation();
+        if (turnParticipation.RemainingClockMilliseconds is not int remainingMilliseconds)
+        {
+            return false;
+        }
+
+        TimeSpan elapsedTime = now - TurnStartedAt;
+        return elapsedTime.TotalMilliseconds >= remainingMilliseconds;
+    }
+
+    public void ExpireClock(DateTime now)
+    {
+        if (!HasClockRunOut(now))
+        {
+            throw new InvalidOperationException("Only a clock that has run out can expire.");
+        }
+
+        Participation timedOut = GetTurnParticipation();
+        int remainingMilliseconds = timedOut.RemainingClockMilliseconds.GetValueOrDefault();
+        DateTime ranOutAt = TurnStartedAt.AddMilliseconds(remainingMilliseconds);
+        timedOut.RunOutOfClock();
+        if (IsTwoPlayerMatch())
+        {
+            Participation rival = _participations.First(participation => participation.AccountId != timedOut.AccountId);
+            FinishTwoPlayerMatch(rival.AccountId, MatchEndReason.Timeout, ranOutAt);
+            return;
+        }
+
+        byte placement = FindWorstFreePlacement();
+        timedOut.Leave(MatchEndReason.Timeout, placement);
+        EndOrPassTurnAfter(timedOut, MatchEndReason.Timeout, ranOutAt);
+    }
+
     public short GetNextMoveNumber()
     {
         int nextMoveNumber = _moves.Count + FirstMoveNumber;
@@ -183,6 +284,7 @@ public class Match
     {
         ArgumentNullException.ThrowIfNull(pawnMove);
 
+        EnsureClockLeft(playedAt);
         EnsurePawnCanMove(pawnMove, boardSize);
         Participation mover = GetParticipation(pawnMove.AccountId);
         MoveTiming timing = MeasureTurn(playedAt);
@@ -197,7 +299,51 @@ public class Match
             return;
         }
 
-        PassTurnFrom(mover.TurnOrder);
+        if (hasReachedGoal)
+        {
+            ClassifyAtGoal(mover, playedAt);
+            return;
+        }
+
+        PassTurnFrom(mover.TurnOrder, playedAt);
+    }
+
+    public bool CanBeRated()
+    {
+        bool isFinishedRankedDuel = MatchType == MatchType.Ranked && IsFinished() && IsTwoPlayerMatch();
+        return isFinishedRankedDuel && _participations.All(participation => participation.InitialElo.HasValue);
+    }
+
+    public void Rate()
+    {
+        if (!CanBeRated())
+        {
+            throw new InvalidOperationException(
+                "Only a finished two-player ranked match whose players have an initial elo can be rated.");
+        }
+
+        foreach (Participation participation in _participations)
+        {
+            RateParticipation(participation);
+        }
+    }
+
+    public bool HasAbandoned(int accountId)
+    {
+        Participation participation = GetParticipation(accountId);
+        if (participation.EndReason == MatchEndReason.Abandonment)
+        {
+            return true;
+        }
+
+        bool isLostDuel = IsTwoPlayerMatch() && participation.Result == ParticipationResult.Lost;
+        return isLostDuel && EndReason == MatchEndReason.Abandonment;
+    }
+
+    public int CountActivePlayers()
+    {
+        List<Participation> activeParticipations = ListActiveParticipations();
+        return activeParticipations.Count;
     }
 
     public WallRejection FindWallRejection(WallPlacement placement, byte boardSize)
@@ -225,6 +371,7 @@ public class Match
     {
         ArgumentNullException.ThrowIfNull(placement);
 
+        EnsureClockLeft(playedAt);
         EnsureExpectedMove(placement.AccountId, placement.MoveNumber);
         WallRejection rejection = FindWallRejection(placement, boardSize);
         if (rejection.Reason != WallRejectionReason.None)
@@ -237,7 +384,7 @@ public class Match
         var playedMove = new Move(placement, timing);
         RecordMove(placer, playedMove);
         placer.SpendWall();
-        PassTurnFrom(placer.TurnOrder);
+        PassTurnFrom(placer.TurnOrder, playedAt);
     }
 
     private void SeatEntrants(IReadOnlyList<MatchEntrant> entrantsInTurnOrder, MatchFormat format)
@@ -311,28 +458,87 @@ public class Match
 
     private void LeaveFourPlayerMatch(int abandoningAccountId, DateTime abandonedAt)
     {
-        List<Participation> activeParticipations = ListActiveParticipations();
         Participation abandoning = GetParticipation(abandoningAccountId);
-        byte placement = (byte)activeParticipations.Count;
+        byte placement = FindWorstFreePlacement();
         abandoning.Leave(MatchEndReason.Abandonment, placement);
-        activeParticipations.Remove(abandoning);
+        EndOrPassTurnAfter(abandoning, MatchEndReason.Abandonment, abandonedAt);
+    }
+
+    private void ClassifyAtGoal(Participation arriving, DateTime arrivedAt)
+    {
+        byte placement = FindBestFreePlacement();
+        arriving.ReachGoal(placement);
+        EndOrPassTurnAfter(arriving, MatchEndReason.Goal, arrivedAt);
+    }
+
+    private void EndOrPassTurnAfter(Participation departing, MatchEndReason endReason, DateTime departedAt)
+    {
+        List<Participation> activeParticipations = ListActiveParticipations();
         if (activeParticipations.Count > LastStandingPlayerCount)
         {
-            PassTurnFrom(abandoning.TurnOrder);
+            PassTurnFrom(departing.TurnOrder, departedAt);
             return;
         }
 
         Participation lastStanding = activeParticipations.Single();
-        lastStanding.Win(FirstPlacement);
-        Finish(MatchEndReason.Abandonment, abandonedAt);
+        byte placement = FindBestFreePlacement();
+        lastStanding.TakePlacement(placement);
+        Finish(endReason, departedAt);
     }
 
-    private void PassTurnFrom(byte turnOrder)
+    private byte FindBestFreePlacement()
+    {
+        int lastPlacement = _participations.Count;
+        for (int placementNumber = Participation.FirstPlacement; placementNumber <= lastPlacement; placementNumber++)
+        {
+            byte placement = (byte)placementNumber;
+            if (!IsPlacementTaken(placement))
+            {
+                return placement;
+            }
+        }
+
+        throw new InvalidOperationException("Every placement of the match is taken.");
+    }
+
+    private byte FindWorstFreePlacement()
+    {
+        int lastPlacement = _participations.Count;
+        for (int placementNumber = lastPlacement; placementNumber >= Participation.FirstPlacement; placementNumber--)
+        {
+            byte placement = (byte)placementNumber;
+            if (!IsPlacementTaken(placement))
+            {
+                return placement;
+            }
+        }
+
+        throw new InvalidOperationException("Every placement of the match is taken.");
+    }
+
+    private bool IsPlacementTaken(byte placement)
+    {
+        return _participations.Any(participation => participation.Placement == placement);
+    }
+
+    private void RateParticipation(Participation participation)
+    {
+        Participation rival = _participations.First(candidate => candidate.AccountId != participation.AccountId);
+        short ownElo = participation.InitialElo.GetValueOrDefault();
+        short rivalElo = rival.InitialElo.GetValueOrDefault();
+        ParticipationResult result = participation.Result.GetValueOrDefault();
+        short finalElo = EloPolicy.CalculateFinalElo(ownElo, rivalElo, result);
+        participation.RecordFinalElo(finalElo);
+    }
+
+    private void PassTurnFrom(byte turnOrder, DateTime turnEndedAt)
     {
         if (CurrentTurnOrder != turnOrder)
         {
             return;
         }
+
+        TurnStartedAt = turnEndedAt;
 
         List<Participation> activeParticipations = ListActiveParticipations();
         Participation nextPlayer = activeParticipations.FirstOrDefault(
@@ -376,6 +582,14 @@ public class Match
         return [.. placedWalls];
     }
 
+    private void EnsureClockLeft(DateTime playedAt)
+    {
+        if (HasClockRunOut(playedAt))
+        {
+            throw new InvalidOperationException("The clock of the player who has the turn ran out.");
+        }
+    }
+
     private void EnsurePawnCanMove(PawnMove pawnMove, byte boardSize)
     {
         EnsureExpectedMove(pawnMove.AccountId, pawnMove.MoveNumber);
@@ -402,8 +616,7 @@ public class Match
 
     private int GetTimeSpentMilliseconds(DateTime playedAt)
     {
-        DateTime turnStartedAt = _moves.Count == 0 ? StartedAt : _moves.Max(playedMove => playedMove.PlayedAt);
-        TimeSpan elapsedTime = playedAt - turnStartedAt;
+        TimeSpan elapsedTime = playedAt - TurnStartedAt;
         double elapsedMilliseconds = Math.Max(elapsedTime.TotalMilliseconds, 0);
         int timeSpentMilliseconds = (int)elapsedMilliseconds;
         return timeSpentMilliseconds;

@@ -504,9 +504,6 @@
   <data name="MatchOverTitle" xml:space="preserve">
     <value>Match over</value>
   </data>
-  <data name="MatchRivalAbandonedFormat" xml:space="preserve">
-    <value>{0} left the match. You win.</value>
-  </data>
   <data name="MatchBackToMenuButton" xml:space="preserve">
     <value>Back to menu</value>
   </data>
@@ -560,5 +557,125 @@
   </data>
   <data name="MatchWallWouldBlockFormat" xml:space="preserve">
     <value>That wall would shut in {0}.</value>
+  </data>
+  <data name="MatchEndRankedKind" xml:space="preserve">
+    <value>MATCH OVER · RANKED</value>
+  </data>
+  <data name="MatchEndPrivateKind" xml:space="preserve">
+    <value>MATCH OVER · PRIVATE</value>
+  </data>
+  <data name="MatchEndOwnPartKind" xml:space="preserve">
+    <value>YOUR MATCH IS OVER · PRIVATE</value>
+  </data>
+  <data name="MatchEndVictoryTitle" xml:space="preserve">
+    <value>Victory!</value>
+  </data>
+  <data name="MatchEndDefeatTitle" xml:space="preserve">
+    <value>Defeat</value>
+  </data>
+  <data name="MatchEndDrawTitle" xml:space="preserve">
+    <value>Draw</value>
+  </data>
+  <data name="MatchEndPlacementFormat" xml:space="preserve">
+    <value>Place {0}</value>
+  </data>
+  <data name="MatchEndOwnGoal" xml:space="preserve">
+    <value>You reached the goal.</value>
+  </data>
+  <data name="MatchEndRivalGoalFormat" xml:space="preserve">
+    <value>{0} reached the goal.</value>
+  </data>
+  <data name="MatchEndOwnTimeout" xml:space="preserve">
+    <value>Your clock ran out.</value>
+  </data>
+  <data name="MatchEndRivalTimeoutFormat" xml:space="preserve">
+    <value>{0}'s clock ran out.</value>
+  </data>
+  <data name="MatchEndOwnResignation" xml:space="preserve">
+    <value>You resigned.</value>
+  </data>
+  <data name="MatchEndRivalResignationFormat" xml:space="preserve">
+    <value>{0} resigned.</value>
+  </data>
+  <data name="MatchEndAgreedDraw" xml:space="preserve">
+    <value>You agreed to a draw.</value>
+  </data>
+  <data name="MatchEndOwnAbandonment" xml:space="preserve">
+    <value>You left the match.</value>
+  </data>
+  <data name="MatchEndRivalAbandonmentFormat" xml:space="preserve">
+    <value>{0} left the match.</value>
+  </data>
+  <data name="MatchEndGoesOnFormat" xml:space="preserve">
+    <value>The match goes on for {0} players.</value>
+  </data>
+  <data name="MatchEndOwnTag" xml:space="preserve">
+    <value>(you)</value>
+  </data>
+  <data name="MatchEndResultWon" xml:space="preserve">
+    <value>Won</value>
+  </data>
+  <data name="MatchEndResultLost" xml:space="preserve">
+    <value>Lost</value>
+  </data>
+  <data name="MatchEndResultDraw" xml:space="preserve">
+    <value>Draw</value>
+  </data>
+  <data name="MatchEndResultGoal" xml:space="preserve">
+    <value>Goal</value>
+  </data>
+  <data name="MatchEndResultLeft" xml:space="preserve">
+    <value>Left</value>
+  </data>
+  <data name="MatchEndResultPlaying" xml:space="preserve">
+    <value>Still playing</value>
+  </data>
+  <data name="MatchEndEloLabel" xml:space="preserve">
+    <value>Elo</value>
+  </data>
+  <data name="MatchEndPrivateNotice" xml:space="preserve">
+    <value>Private match: nobody's elo or statistics change.</value>
+  </data>
+  <data name="MatchEndSummaryFormat" xml:space="preserve">
+    <value>{0} moves · {1} played · {2} walls left</value>
+  </data>
+  <data name="MatchEndSummaryOneWallFormat" xml:space="preserve">
+    <value>{0} moves · {1} played · 1 wall left</value>
+  </data>
+  <data name="MatchEndSearchAgainButton" xml:space="preserve">
+    <value>Find another</value>
+  </data>
+  <data name="MatchPlayerAtGoal" xml:space="preserve">
+    <value>At the goal</value>
+  </data>
+  <data name="MatchPlayerReachedGoalFormat" xml:space="preserve">
+    <value>{0} reached the goal.</value>
+  </data>
+  <data name="MatchAbandonConfirmTitle" xml:space="preserve">
+    <value>Leave the match?</value>
+  </data>
+  <data name="MatchAbandonConfirmDuelFormat" xml:space="preserve">
+    <value>It counts as a loss and {0} wins the match. Your clock keeps running while you decide.</value>
+  </data>
+  <data name="MatchAbandonConfirmGroupFormat" xml:space="preserve">
+    <value>You take place {0} and your pawn leaves the board; your walls stay. The match goes on for the other {1} players.</value>
+  </data>
+  <data name="MatchAbandonConfirmPending" xml:space="preserve">
+    <value>It counts as a loss. Your clock keeps running while you decide.</value>
+  </data>
+  <data name="MatchAbandonEloLossFormat" xml:space="preserve">
+    <value>You will lose {0} elo: from {1} to {2}.</value>
+  </data>
+  <data name="MatchAbandonEloCalculating" xml:space="preserve">
+    <value>Working out how much elo you would lose...</value>
+  </data>
+  <data name="MatchAbandonEloUnknown" xml:space="preserve">
+    <value>You will lose elo. We could not work out how much; you will see it when you leave.</value>
+  </data>
+  <data name="MatchAbandonBackButton" xml:space="preserve">
+    <value>Back to the match</value>
+  </data>
+  <data name="MatchAbandonConfirmButton" xml:space="preserve">
+    <value>Leave</value>
   </data>
 </root>
