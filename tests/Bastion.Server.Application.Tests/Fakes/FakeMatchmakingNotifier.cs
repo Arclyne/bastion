@@ -7,10 +7,10 @@ public sealed class FakeMatchmakingNotifier : IMatchmakingNotifier
 {
     public FakeMatchmakingNotifier()
     {
-        SubscribedAccountIds = new HashSet<int>();
-        CreatedMatches = new List<CreatedMatch>();
-        PresenceRequests = new List<PresenceRequest>();
-        EndReasonsByAccountId = new Dictionary<int, SearchEndReason>();
+        SubscribedAccountIds = [];
+        CreatedMatches = [];
+        PresenceRequests = [];
+        EndReasonsByAccountId = [];
     }
 
     public HashSet<int> SubscribedAccountIds { get; }

@@ -8,10 +8,10 @@ public sealed class FakeFriendNotifier : IFriendNotifier
 {
     public FakeFriendNotifier()
     {
-        PresenceRecipientAccountIds = new List<int>();
-        PresenceChanges = new List<FriendPresenceChange>();
-        RequestRecipientAccountIds = new List<int>();
-        FriendshipStartedAccountIds = new List<int>();
+        PresenceRecipientAccountIds = [];
+        PresenceChanges = [];
+        RequestRecipientAccountIds = [];
+        FriendshipStartedAccountIds = [];
     }
 
     public List<int> PresenceRecipientAccountIds { get; }

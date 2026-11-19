@@ -7,7 +7,7 @@ public sealed class FakeBannedWordRepository : IBannedWordRepository
 {
     public FakeBannedWordRepository()
     {
-        ChatTerms = new List<string>();
+        ChatTerms = [];
     }
 
     public List<string> ChatTerms { get; }

@@ -17,8 +17,8 @@ public sealed class WaitingRoom
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(host);
 
-        _members = new List<RoomMember>();
-        _kickedAccountIds = new HashSet<int>();
+        _members = [];
+        _kickedAccountIds = [];
         Identity = identity;
         Settings = settings;
         HostAccountId = host.AccountId;

@@ -29,7 +29,7 @@ public sealed class PrivateConversationViewModel : ModeratedChatViewModel
         _session = context.Session;
         _conversations = context.Clients.Conversations;
         _partner = new PlayerTag(string.Empty, string.Empty);
-        Messages = new ObservableCollection<PrivateMessageRowViewModel>();
+        Messages = [];
         PartnerNickname = string.Empty;
         PresenceText = string.Empty;
         GreetingText = string.Empty;

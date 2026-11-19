@@ -32,7 +32,7 @@ public sealed class LobbyChatViewModel : ModeratedChatViewModel, IDisposable
         _chat = context.Clients.Lobby;
         _notifications = context.Clients.Notifications;
         _uiContext = SynchronizationContext.Current;
-        Messages = new ObservableCollection<ChatMessageRowViewModel>();
+        Messages = [];
         ChannelDetail = string.Empty;
         UnreadText = string.Empty;
         IsReadingLatest = true;

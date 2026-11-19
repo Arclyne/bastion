@@ -7,7 +7,7 @@ public sealed class FakeMatchChatNotifier : IMatchChatNotifier
 {
     public FakeMatchChatNotifier()
     {
-        NotifiedMessages = new List<NotifiedMatchChatMessage>();
+        NotifiedMessages = [];
     }
 
     public List<NotifiedMatchChatMessage> NotifiedMessages { get; }

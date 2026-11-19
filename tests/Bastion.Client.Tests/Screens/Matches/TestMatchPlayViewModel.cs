@@ -53,7 +53,7 @@ public sealed class TestMatchPlayViewModel : IDisposable
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
     private readonly ManualTimeProvider _timeProvider = new ManualTimeProvider(_startedAt);
-    private readonly List<MatchPlayViewModel> _viewModels = new List<MatchPlayViewModel>();
+    private readonly List<MatchPlayViewModel> _viewModels = [];
 
     public void Dispose()
     {

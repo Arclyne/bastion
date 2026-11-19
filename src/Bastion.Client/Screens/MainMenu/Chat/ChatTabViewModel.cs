@@ -44,7 +44,7 @@ public sealed class ChatTabViewModel : ViewModel, IDisposable
         _uiContext = SynchronizationContext.Current;
         LobbyChat = new LobbyChatViewModel(context);
         PrivateConversation = new PrivateConversationViewModel(context);
-        Conversations = new ObservableCollection<ConversationRowViewModel>();
+        Conversations = [];
         UnreadText = string.Empty;
         Pane = ChatPane.List;
         LobbyChat.PropertyChanged += HandleLobbyPropertyChanged;

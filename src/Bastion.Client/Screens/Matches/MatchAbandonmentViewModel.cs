@@ -30,7 +30,7 @@ public sealed class MatchAbandonmentViewModel : ViewModel, IDisposable
         _joinedMatch = joinedMatch;
         _matches = matches;
         _uiContext = SynchronizationContext.Current;
-        _leftNicknames = new List<string>();
+        _leftNicknames = [];
         StatusText = string.Empty;
         RivalAbandonedText = string.Empty;
         PlayerLeftText = string.Empty;

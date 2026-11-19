@@ -38,10 +38,10 @@ public sealed class FriendRequestsViewModel : ViewModel
         _session = session;
         _friends = friends;
         _timeProvider = timeProvider;
-        _receivedRequests = new List<FriendRequestRowViewModel>();
-        _sentRequests = new List<FriendRequestRowViewModel>();
+        _receivedRequests = [];
+        _sentRequests = [];
         IsReceivedTab = true;
-        VisibleRows = new ObservableCollection<FriendRequestRowViewModel>();
+        VisibleRows = [];
         ReceivedTitle = string.Empty;
         SentTitle = string.Empty;
         EmptyText = string.Empty;

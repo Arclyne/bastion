@@ -9,7 +9,7 @@ namespace Bastion.Server.Application.Matchmaking;
 public sealed class MatchmakingQueue : IMatchmakingQueue
 {
     private readonly object _searchesLock = new object();
-    private readonly Dictionary<int, MatchSearch> _searches = new Dictionary<int, MatchSearch>();
+    private readonly Dictionary<int, MatchSearch> _searches = [];
 
     public bool TryAdd(MatchSearch matchSearch)
     {

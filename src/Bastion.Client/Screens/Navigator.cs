@@ -36,7 +36,7 @@ public sealed class Navigator : INavigator, IDisposable
         _connection = connection;
         _localServices = localServices;
         _screenHost = screenHost;
-        _screenViewModels = new List<IDisposable>();
+        _screenViewModels = [];
     }
 
     public MatchViewModel? ShownMatch { get; private set; }

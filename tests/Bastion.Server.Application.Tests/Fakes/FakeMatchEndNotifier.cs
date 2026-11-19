@@ -7,7 +7,7 @@ public sealed class FakeMatchEndNotifier : IMatchEndNotifier
 {
     public FakeMatchEndNotifier()
     {
-        NotifiedAbandonments = new List<NotifiedMatchAbandonment>();
+        NotifiedAbandonments = [];
     }
 
     public List<NotifiedMatchAbandonment> NotifiedAbandonments { get; }

@@ -13,9 +13,9 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
 
     public FakeFriendshipRepository()
     {
-        _friendsByAccountId = new Dictionary<int, List<FriendSummary>>();
-        AddedFriendships = new List<Friendship>();
-        RemovedFriendAccountIds = new List<int>();
+        _friendsByAccountId = [];
+        AddedFriendships = [];
+        RemovedFriendAccountIds = [];
     }
 
     public List<Friendship> AddedFriendships { get; }
@@ -27,7 +27,7 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
         List<FriendSummary>? friends = _friendsByAccountId.GetValueOrDefault(accountId);
         if (friends is null)
         {
-            friends = new List<FriendSummary>();
+            friends = [];
             _friendsByAccountId[accountId] = friends;
         }
 

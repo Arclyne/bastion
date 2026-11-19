@@ -41,13 +41,13 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
         _notifications = clients.Chat.Notifications;
         _clipboard = localServices.Clipboard;
         _uiContext = SynchronizationContext.Current;
-        _allRows = new List<FriendRowViewModel>();
+        _allRows = [];
         _formattedFriendCode = string.Empty;
         AddFriend = new AddFriendViewModel(session, clients.Friends);
         Actions = new FriendActionsViewModel(session, clients.Friends);
         Requests = new FriendRequestsViewModel(session, clients.Friends, localServices.TimeProvider);
-        ConnectedFriends = new ObservableCollection<FriendRowViewModel>();
-        OfflineFriends = new ObservableCollection<FriendRowViewModel>();
+        ConnectedFriends = [];
+        OfflineFriends = [];
         SelectedTab = FriendsTab.Friends;
         FilterText = string.Empty;
         HeaderText = string.Empty;

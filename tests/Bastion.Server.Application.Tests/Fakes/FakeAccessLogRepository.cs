@@ -8,7 +8,7 @@ public sealed class FakeAccessLogRepository : IAccessLogRepository
 {
     public FakeAccessLogRepository()
     {
-        AccessLogs = new List<AccessLog>();
+        AccessLogs = [];
     }
 
     public List<AccessLog> AccessLogs { get; }

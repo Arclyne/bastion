@@ -47,7 +47,7 @@ public sealed class BoardScene : IDisposable
         ArgumentNullException.ThrowIfNull(content);
 
         _graphicsDevice = graphicsDevice;
-        _goalColorsByMeshName = new Dictionary<string, Color>();
+        _goalColorsByMeshName = [];
         _classicBoardModel = LoadSceneModel(content, ClassicBoardAssetName);
         _quickBoardModel = LoadSceneModel(content, QuickBoardAssetName);
         _pawnModel = LoadSceneModel(content, PawnAssetName);

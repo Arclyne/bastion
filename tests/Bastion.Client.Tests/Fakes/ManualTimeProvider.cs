@@ -13,7 +13,7 @@ public sealed class ManualTimeProvider : TimeProvider
 
     public ManualTimeProvider(DateTimeOffset utcNow)
     {
-        _timers = new List<ManualTimer>();
+        _timers = [];
         _utcNow = utcNow;
     }
 

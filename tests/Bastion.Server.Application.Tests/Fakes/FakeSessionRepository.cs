@@ -10,7 +10,7 @@ public sealed class FakeSessionRepository : ISessionRepository
 {
     public FakeSessionRepository()
     {
-        Sessions = new List<Session>();
+        Sessions = [];
     }
 
     public List<Session> Sessions { get; }

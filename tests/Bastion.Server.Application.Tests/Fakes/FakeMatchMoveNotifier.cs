@@ -7,8 +7,8 @@ public sealed class FakeMatchMoveNotifier : IMatchMoveNotifier
 {
     public FakeMatchMoveNotifier()
     {
-        NotifiedPawnMoves = new List<NotifiedPawnMove>();
-        NotifiedWallPlacements = new List<NotifiedWallPlacement>();
+        NotifiedPawnMoves = [];
+        NotifiedWallPlacements = [];
     }
 
     public List<NotifiedPawnMove> NotifiedPawnMoves { get; }
