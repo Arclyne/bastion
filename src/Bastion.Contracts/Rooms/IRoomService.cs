@@ -105,6 +105,24 @@ public interface IRoomService
     void StartMatch(string? sessionToken);
 
     /// <summary>
+    /// Takes a member out of the room hosted by the player of the session. The kicked player receives the room-closed
+    /// notification and cannot join that room again while it stays open; the other members receive the room update.
+    /// </summary>
+    /// <param name="sessionToken">The token of the host's open session.</param>
+    /// <param name="nickname">The nickname of the member to kick.</param>
+    /// <returns>The room after the kick; unchanged when nobody with that nickname is in it.</returns>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="InvalidSessionFault"/>: the session is not open.
+    /// </exception>
+    /// <exception cref="FaultException{TDetail}">
+    /// With <see cref="RoomRejectedFault"/>: the player is not hosting a room or tried to kick themselves.
+    /// </exception>
+    [OperationContract]
+    [FaultContract(typeof(InvalidSessionFault))]
+    [FaultContract(typeof(RoomRejectedFault))]
+    RoomState KickPlayer(string? sessionToken, string? nickname);
+
+    /// <summary>
     /// Takes the player of the session out of their room. When the host leaves, the room closes for everyone.
     /// </summary>
     /// <param name="sessionToken">The token of the player's open session.</param>

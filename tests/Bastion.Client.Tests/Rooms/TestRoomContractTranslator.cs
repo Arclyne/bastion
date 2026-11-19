@@ -1,6 +1,7 @@
 using System;
 using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Rooms;
+using Bastion.Contracts.Notifications;
 using Bastion.Contracts.Rooms;
 using Xunit;
 
@@ -25,5 +26,21 @@ public sealed class TestRoomContractTranslator
         Action translate = () => RoomContractTranslator.ToOwnRoom(result);
 
         Assert.Throws<ServerErrorException>(translate);
+    }
+
+    [Fact]
+    public void ToCloseReason_Kicked_IsKicked()
+    {
+        RoomCloseReason reason = RoomContractTranslator.ToCloseReason(RoomClosedReason.Kicked);
+
+        Assert.Equal(RoomCloseReason.Kicked, reason);
+    }
+
+    [Fact]
+    public void ToRejection_HostNotKickable_IsHostNotKickable()
+    {
+        RoomRejection rejection = RoomContractTranslator.ToRejection(RoomRejectionReason.HostNotKickable);
+
+        Assert.Equal(RoomRejection.HostNotKickable, rejection);
     }
 }

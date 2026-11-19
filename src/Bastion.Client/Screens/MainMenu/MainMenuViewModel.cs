@@ -9,6 +9,7 @@ using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Matches;
 using Bastion.Client.Networking.Notifications;
 using Bastion.Client.Networking.Sessions;
+using Bastion.Client.Screens.MainMenu.Rooms;
 using Gum.Mvvm;
 using log4net;
 
@@ -40,6 +41,8 @@ public sealed class MainMenuViewModel : ViewModel
     }
 
     public string Nickname { get; }
+
+    public required PrivateRoomViewModel PrivateRoom { get; init; }
 
     public bool IsReturningToMatch
     {

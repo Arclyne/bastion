@@ -16,4 +16,5 @@ public enum RoomRejection
     NotHost,
     NotReadyToStart,
     MatchStarted,
+    HostNotKickable,
 }

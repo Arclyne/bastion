@@ -29,6 +29,7 @@ public static class RoomTranslator
             [RoomRejection.NotHost] = RoomRejectionReason.NotHost,
             [RoomRejection.NotReadyToStart] = RoomRejectionReason.NotReadyToStart,
             [RoomRejection.MatchStarted] = RoomRejectionReason.MatchStarted,
+            [RoomRejection.HostNotKickable] = RoomRejectionReason.HostNotKickable,
         };
 
     public static FaultException<RoomRejectedFault> ToFault(RoomRejectedException rejection)
@@ -98,7 +99,10 @@ public static class RoomTranslator
         };
     }
 
-    public static RoomClosedNotification ToClosedNotification(RoomSnapshot room, DateTime now)
+    public static RoomClosedNotification ToClosedNotification(
+        RoomSnapshot room,
+        RoomClosedReason reason,
+        DateTime now)
     {
         ArgumentNullException.ThrowIfNull(room);
 
@@ -106,7 +110,7 @@ public static class RoomTranslator
         {
             OccurredAt = now,
             Code = room.Identity.Code,
-            Reason = RoomClosedReason.HostLeft,
+            Reason = reason,
         };
     }
 

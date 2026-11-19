@@ -759,4 +759,232 @@
   <data name="DrawAnswerFailed" xml:space="preserve">
     <value>No pudimos responder a la oferta de tablas.</value>
   </data>
+  <data name="RoomCreateTitle" xml:space="preserve">
+    <value>Crear sala</value>
+  </data>
+  <data name="RoomEditTitle" xml:space="preserve">
+    <value>Ajustes de la sala</value>
+  </data>
+  <data name="RoomOpen" xml:space="preserve">
+    <value>Abrir sala</value>
+  </data>
+  <data name="RoomSave" xml:space="preserve">
+    <value>Guardar</value>
+  </data>
+  <data name="RoomCancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="RoomModeLabel" xml:space="preserve">
+    <value>Modo</value>
+  </data>
+  <data name="RoomWallsLabel" xml:space="preserve">
+    <value>Muros por jugador</value>
+  </data>
+  <data name="RoomClockLabel" xml:space="preserve">
+    <value>Reloj por jugador</value>
+  </data>
+  <data name="RoomClassicName" xml:space="preserve">
+    <value>Clásico</value>
+  </data>
+  <data name="RoomFourPlayersName" xml:space="preserve">
+    <value>Cuatro</value>
+  </data>
+  <data name="RoomQuickName" xml:space="preserve">
+    <value>Rápida</value>
+  </data>
+  <data name="RoomModeDetailFormat" xml:space="preserve">
+    <value>{0} jugadores · {1}×{1}</value>
+  </data>
+  <data name="RoomModeWallsFormat" xml:space="preserve">
+    <value>{0} muros</value>
+  </data>
+  <data name="RoomModeCrowdedFormat" xml:space="preserve">
+    <value>Hay {0} jugadores</value>
+  </data>
+  <data name="RoomWallsHintFormat" xml:space="preserve">
+    <value>Entre 1 y 20. {0} propone {1}.</value>
+  </data>
+  <data name="RoomClockFormat" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="RoomFriendly" xml:space="preserve">
+    <value>Amistosa: no cambia el elo de nadie.</value>
+  </data>
+  <data name="RoomMembersNotice" xml:space="preserve">
+    <value>Los demás jugadores tendrán que volver a decir que están listos.</value>
+  </data>
+  <data name="RoomTitle" xml:space="preserve">
+    <value>Sala privada</value>
+  </data>
+  <data name="RoomFriendlyChip" xml:space="preserve">
+    <value>Amistosa · no cambia el elo</value>
+  </data>
+  <data name="RoomCodeLabel" xml:space="preserve">
+    <value>CÓDIGO DE LA SALA</value>
+  </data>
+  <data name="RoomCodeHint" xml:space="preserve">
+    <value>Compártelo por donde quieras. Se entra con «Unirse con código» en el menú.</value>
+  </data>
+  <data name="RoomCopyCode" xml:space="preserve">
+    <value>Copiar código</value>
+  </data>
+  <data name="RoomCodeCopied" xml:space="preserve">
+    <value>Copiado</value>
+  </data>
+  <data name="RoomSettingsLabel" xml:space="preserve">
+    <value>AJUSTES</value>
+  </data>
+  <data name="RoomChangeSettings" xml:space="preserve">
+    <value>Cambiar</value>
+  </data>
+  <data name="RoomModeValueFormat" xml:space="preserve">
+    <value>{0} · {1} jugadores · {2}×{2}</value>
+  </data>
+  <data name="RoomPlayersFormat" xml:space="preserve">
+    <value>JUGADORES · {0} DE {1}</value>
+  </data>
+  <data name="RoomFreeSeat" xml:space="preserve">
+    <value>Plaza libre</value>
+  </data>
+  <data name="RoomFreeSeatHint" xml:space="preserve">
+    <value>Entra quien tenga el código.</value>
+  </data>
+  <data name="RoomHostChip" xml:space="preserve">
+    <value>Anfitrión</value>
+  </data>
+  <data name="RoomReadyChip" xml:space="preserve">
+    <value>Listo</value>
+  </data>
+  <data name="RoomNotReadyChip" xml:space="preserve">
+    <value>Todavía no está listo</value>
+  </data>
+  <data name="RoomOwnNameFormat" xml:space="preserve">
+    <value>{0} (tú)</value>
+  </data>
+  <data name="RoomKick" xml:space="preserve">
+    <value>Expulsar</value>
+  </data>
+  <data name="RoomStartMatch" xml:space="preserve">
+    <value>Iniciar partida</value>
+  </data>
+  <data name="RoomStarting" xml:space="preserve">
+    <value>Iniciando…</value>
+  </data>
+  <data name="RoomWaitingOneSeat" xml:space="preserve">
+    <value>Falta que se ocupe 1 plaza.</value>
+  </data>
+  <data name="RoomWaitingSeatsFormat" xml:space="preserve">
+    <value>Falta que se ocupen {0} plazas.</value>
+  </data>
+  <data name="RoomWaitingReadyFormat" xml:space="preserve">
+    <value>Falta que {0} esté listo.</value>
+  </data>
+  <data name="RoomWaitingManyReady" xml:space="preserve">
+    <value>Falta que todos estén listos.</value>
+  </data>
+  <data name="RoomAllReady" xml:space="preserve">
+    <value>Todos listos.</value>
+  </data>
+  <data name="RoomReady" xml:space="preserve">
+    <value>Estoy listo</value>
+  </data>
+  <data name="RoomNotReady" xml:space="preserve">
+    <value>Ya no estoy listo</value>
+  </data>
+  <data name="RoomReadyHint" xml:space="preserve">
+    <value>Revisa los ajustes y avisa cuando estés listo.</value>
+  </data>
+  <data name="RoomReadyWaitingFormat" xml:space="preserve">
+    <value>Listo. Espera a que {0} inicie la partida.</value>
+  </data>
+  <data name="RoomCloseRoom" xml:space="preserve">
+    <value>Cerrar sala</value>
+  </data>
+  <data name="RoomLeaveRoom" xml:space="preserve">
+    <value>Salir de la sala</value>
+  </data>
+  <data name="RoomChangedNoticeFormat" xml:space="preserve">
+    <value>{0} cambió los ajustes. Revísalos y vuelve a decir que estás listo.</value>
+  </data>
+  <data name="RoomChangedChip" xml:space="preserve">
+    <value>Cambió</value>
+  </data>
+  <data name="RoomKickTitleFormat" xml:space="preserve">
+    <value>¿Expulsar a {0}?</value>
+  </data>
+  <data name="RoomKickMessage" xml:space="preserve">
+    <value>Saldrá de la sala y no podrá volver a entrar a esta sala, aunque tenga el código. No es una sanción.</value>
+  </data>
+  <data name="RoomKickedNoticeFormat" xml:space="preserve">
+    <value>{0} te sacó de su sala. No puedes volver a entrar a esa sala.</value>
+  </data>
+  <data name="RoomClosedNoticeFormat" xml:space="preserve">
+    <value>La sala se cerró. {0} salió de la sala.</value>
+  </data>
+  <data name="RoomLostConnectionNotice" xml:space="preserve">
+    <value>Saliste de la sala porque se perdió la conexión.</value>
+  </data>
+  <data name="RoomJoinTitle" xml:space="preserve">
+    <value>Unirse con código</value>
+  </data>
+  <data name="RoomJoinMessage" xml:space="preserve">
+    <value>Pídele el código a quien creó la sala.</value>
+  </data>
+  <data name="RoomJoinHint" xml:space="preserve">
+    <value>Seis letras o números. Puedes pegarlo.</value>
+  </data>
+  <data name="RoomJoinEnter" xml:space="preserve">
+    <value>Entrar</value>
+  </data>
+  <data name="RoomJoinEntering" xml:space="preserve">
+    <value>Entrando…</value>
+  </data>
+  <data name="RoomJoinInvalid" xml:space="preserve">
+    <value>El código tiene seis letras o números.</value>
+  </data>
+  <data name="RoomJoinNotFound" xml:space="preserve">
+    <value>No encontramos una sala abierta con ese código.</value>
+  </data>
+  <data name="RoomJoinFull" xml:space="preserve">
+    <value>Esa sala ya no tiene lugares libres.</value>
+  </data>
+  <data name="RoomJoinStarted" xml:space="preserve">
+    <value>La partida de esa sala ya empezó.</value>
+  </data>
+  <data name="RoomJoinKicked" xml:space="preserve">
+    <value>El anfitrión te expulsó de esa sala. No puedes volver a entrar.</value>
+  </data>
+  <data name="RoomJoinTooManyFormat" xml:space="preserve">
+    <value>Probaste demasiados códigos. Espera {0} para volver a intentarlo.</value>
+  </data>
+  <data name="RoomBusySearching" xml:space="preserve">
+    <value>Estás buscando partida. Cancela la búsqueda primero.</value>
+  </data>
+  <data name="RoomBusyMatch" xml:space="preserve">
+    <value>Tienes una partida en curso.</value>
+  </data>
+  <data name="RoomBusyInRoom" xml:space="preserve">
+    <value>Ya estás en una sala.</value>
+  </data>
+  <data name="RoomNotificationsUnavailable" xml:space="preserve">
+    <value>Las notificaciones aún no están conectadas. Inténtalo en un momento.</value>
+  </data>
+  <data name="RoomRequestFailed" xml:space="preserve">
+    <value>El servidor no pudo responder. Inténtalo de nuevo.</value>
+  </data>
+  <data name="RoomTooManyPlayers" xml:space="preserve">
+    <value>Ese modo tiene menos plazas que jugadores en la sala.</value>
+  </data>
+  <data name="RoomNotReadyToStart" xml:space="preserve">
+    <value>No todas las plazas están ocupadas y listas.</value>
+  </data>
+  <data name="RoomDismiss" xml:space="preserve">
+    <value>×</value>
+  </data>
+  <data name="RoomMinus" xml:space="preserve">
+    <value>-</value>
+  </data>
+  <data name="RoomPlus" xml:space="preserve">
+    <value>+</value>
+  </data>
 </root>

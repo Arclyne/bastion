@@ -83,6 +83,15 @@ public sealed class RoomClient : IRoomClient
         Call(startMatch);
     }
 
+    public PrivateRoom KickPlayer(string sessionToken, string nickname)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(nickname);
+
+        Func<IRoomService, RoomState> kickPlayer = service => service.KickPlayer(sessionToken, nickname);
+        return CallForRoom(kickPlayer);
+    }
+
     public void LeaveRoom(string sessionToken)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);

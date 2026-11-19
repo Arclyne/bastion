@@ -468,6 +468,97 @@ public sealed class TestPrivateRoomService
     }
 
     [Fact]
+    public void KickPlayer_Guest_FreesTheGuestSeat()
+    {
+        OpenHostRoomWithGuest();
+
+        RoomSnapshot room = _privateRoomService.KickPlayer(HostToken, GuestNickname, _now);
+
+        Assert.Single(room.Members);
+    }
+
+    [Fact]
+    public void KickPlayer_Guest_TellsTheGuest()
+    {
+        OpenHostRoomWithGuest();
+        int[] expectedAccountIds = { GuestAccountId };
+
+        _privateRoomService.KickPlayer(HostToken, GuestNickname, _now);
+
+        Assert.Equal(expectedAccountIds, _roomNotifier.KickedAccountIds);
+    }
+
+    [Fact]
+    public void KickPlayer_Guest_TellsTheOthersFromTheHost()
+    {
+        OpenHostRoomWithGuest();
+
+        _privateRoomService.KickPlayer(HostToken, GuestNickname, _now);
+
+        NotifiedRoom lastUpdate = _roomNotifier.UpdatedRooms.Last();
+        Assert.Equal(HostAccountId, lastUpdate.OriginAccountId);
+    }
+
+    [Fact]
+    public void KickPlayer_Guest_LetsTheGuestEnterOtherRooms()
+    {
+        OpenHostRoomWithGuest();
+
+        _privateRoomService.KickPlayer(HostToken, GuestNickname, _now);
+
+        bool isGuestInRoom = _roomRegistry.IsInRoom(GuestAccountId);
+        Assert.False(isGuestInRoom);
+    }
+
+    [Fact]
+    public void JoinRoom_KickedGuest_RejectsKicked()
+    {
+        OpenHostRoomWithGuest();
+        _privateRoomService.KickPlayer(HostToken, GuestNickname, _now);
+        Action joinAgain = () => _privateRoomService.JoinRoom(GuestToken, FirstCode, _now);
+
+        Exception? exception = Record.Exception(joinAgain);
+
+        var rejection = exception as RoomRejectedException;
+        Assert.Equal(RoomRejection.Kicked, rejection?.Rejection);
+    }
+
+    [Fact]
+    public void KickPlayer_Member_RejectsNotHost()
+    {
+        OpenHostRoomWithGuest();
+        Action kick = () => _privateRoomService.KickPlayer(GuestToken, HostNickname, _now);
+
+        Exception? exception = Record.Exception(kick);
+
+        var rejection = exception as RoomRejectedException;
+        Assert.Equal(RoomRejection.NotHost, rejection?.Rejection);
+    }
+
+    [Fact]
+    public void KickPlayer_OwnNickname_RejectsHostNotKickable()
+    {
+        OpenHostRoomWithGuest();
+        Action kick = () => _privateRoomService.KickPlayer(HostToken, HostNickname, _now);
+
+        Exception? exception = Record.Exception(kick);
+
+        var rejection = exception as RoomRejectedException;
+        Assert.Equal(RoomRejection.HostNotKickable, rejection?.Rejection);
+    }
+
+    [Fact]
+    public void KickPlayer_PlayerWhoAlreadyLeft_NotifiesNobody()
+    {
+        OpenHostRoomWithGuest();
+        _privateRoomService.LeaveRoom(GuestToken, _now);
+
+        _privateRoomService.KickPlayer(HostToken, GuestNickname, _now);
+
+        Assert.Empty(_roomNotifier.KickedAccountIds);
+    }
+
+    [Fact]
     public void FindOwnRoom_PlayerNotInRoom_ReturnsMissingRoom()
     {
         AddPlayer(GuestToken, _guest);

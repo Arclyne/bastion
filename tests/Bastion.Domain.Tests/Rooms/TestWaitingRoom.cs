@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Bastion.Domain.Common;
 using Bastion.Domain.Rooms;
 using Xunit;
 
@@ -158,6 +159,81 @@ public sealed class TestWaitingRoom
         Action removeHost = () => room.Remove(RoomSampleFactory.HostAccountId);
 
         Assert.Throws<InvalidOperationException>(removeHost);
+    }
+
+    [Fact]
+    public void Kick_Guest_FreesTheSeat()
+    {
+        WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
+        AdmitGuest(room);
+
+        room.Kick(GuestAccountId);
+
+        Assert.False(room.IsFull());
+    }
+
+    [Fact]
+    public void Kick_Guest_RemembersTheKick()
+    {
+        WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
+        AdmitGuest(room);
+
+        room.Kick(GuestAccountId);
+
+        Assert.True(room.HasKicked(GuestAccountId));
+    }
+
+    [Fact]
+    public void Kick_PlayerWhoAlreadyLeft_RemembersTheKick()
+    {
+        WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
+
+        room.Kick(GuestAccountId);
+
+        Assert.True(room.HasKicked(GuestAccountId));
+    }
+
+    [Fact]
+    public void Kick_Host_ThrowsInvalidOperationException()
+    {
+        WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
+
+        Action kickHost = () => room.Kick(RoomSampleFactory.HostAccountId);
+
+        Assert.Throws<InvalidOperationException>(kickHost);
+    }
+
+    [Fact]
+    public void Admit_KickedGuest_ThrowsInvalidOperationException()
+    {
+        WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
+        room.Kick(GuestAccountId);
+        RoomMember guest = CreateGuest();
+
+        Action admitGuest = () => room.Admit(guest);
+
+        Assert.Throws<InvalidOperationException>(admitGuest);
+    }
+
+    [Fact]
+    public void FindMember_SeatedGuest_FindsTheGuest()
+    {
+        WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
+        AdmitGuest(room);
+
+        Lookup<RoomMember> foundMember = room.FindMember(GuestNickname);
+
+        Assert.Equal(GuestAccountId, foundMember.GetValue().AccountId);
+    }
+
+    [Fact]
+    public void FindMember_UnknownNickname_FindsNothing()
+    {
+        WaitingRoom room = RoomSampleFactory.CreateTwoPlayerRoom();
+
+        Lookup<RoomMember> foundMember = room.FindMember(GuestNickname);
+
+        Assert.False(foundMember.IsFound);
     }
 
     private static WaitingRoom CreateFourPlayerRoomWithThreeMembers()

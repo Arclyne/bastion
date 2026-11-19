@@ -3,6 +3,7 @@ using Bastion.Client.Controls;
 using Bastion.Client.Localization;
 using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Screens.MainMenu.Friends;
+using Bastion.Client.Screens.MainMenu.Rooms;
 using Bastion.Client.Theme;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
@@ -62,6 +63,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
 
     private readonly FriendsPanelViewModel _friendsPanelViewModel;
     private readonly MatchSearchViewModel _matchSearchViewModel;
+    private readonly PrivateRoomViewModel _privateRoom;
 
     public MainMenuView(
         MainMenuViewModel viewModel,
@@ -74,6 +76,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
 
         _friendsPanelViewModel = friendsPanelViewModel;
         _matchSearchViewModel = matchSearchViewModel;
+        _privateRoom = viewModel.PrivateRoom;
         BindingContext = viewModel;
         var requestsBinding = new BadgeBinding(
             nameof(FriendRequestsViewModel.PendingCountText),
@@ -95,6 +98,9 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         FriendsPanel friendsPanel = CreateFriendsPanel(friendsPanelViewModel);
         FriendRequestToast friendRequestToast = CreateRequestToast(friendsPanelViewModel.Requests);
         var returningToMatchOverlay = new ReturningToMatchOverlay(viewModel);
+        var privateRoomPanel = new PrivateRoomPanel(_privateRoom);
+        RoomNoticeStrip roomNoticeStrip = CreateRoomNotice();
+        RoomNoticeStrip settingsNoticeStrip = CreateSettingsNotice();
         AddChild(identityChipPanel);
         AddChild(settingsButton);
         AddChild(friendsButton);
@@ -102,21 +108,72 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         AddChild(requestsBadgePanel);
         AddChild(unreadBadgePanel);
         AddChild(menuCardPanel);
+        AddChild(privateRoomPanel);
         AddChild(matchSearchPanel);
         AddChild(howToPlayButton);
         AddChild(versionLabel);
         AddChild(friendsPanel);
         AddChild(friendRequestToast);
+        AddChild(roomNoticeStrip);
+        AddChild(settingsNoticeStrip);
         AddChild(returningToMatchOverlay);
         var removeFriendDialogView = new RemoveFriendDialogView(friendsPanelViewModel.Actions);
         var presenceDialogView = new PresenceDialogView(matchSearchViewModel);
         AddDialog(removeFriendDialogView, friendsPanelViewModel.Actions, nameof(FriendActionsViewModel.IsDialogOpen));
         AddDialog(presenceDialogView, matchSearchViewModel, nameof(MatchSearchViewModel.IsPresenceDialogOpen));
+        AddRoomDialogs();
     }
 
     public void ReceiveEscapeKey()
     {
+        if (_privateRoom.CloseOpenDialog())
+        {
+            return;
+        }
+
         _friendsPanelViewModel.Close();
+    }
+
+    private RoomNoticeStrip CreateRoomNotice()
+    {
+        var binding = new NoticeBinding(
+            nameof(PrivateRoomViewModel.NoticeText),
+            nameof(PrivateRoomViewModel.HasNotice));
+        return new RoomNoticeStrip(Palette.InfoSoft, binding, HandleRoomNoticeClose)
+        {
+            BindingContext = _privateRoom,
+        };
+    }
+
+    private void HandleRoomNoticeClose(object? sender, EventArgs e)
+    {
+        _privateRoom.DismissNotice();
+    }
+
+    private RoomNoticeStrip CreateSettingsNotice()
+    {
+        var binding = new NoticeBinding(
+            nameof(PrivateRoomViewModel.SettingsNoticeText),
+            nameof(PrivateRoomViewModel.HasSettingsNotice));
+        return new RoomNoticeStrip(Palette.WarningSoft, binding, HandleSettingsNoticeClose)
+        {
+            BindingContext = _privateRoom,
+        };
+    }
+
+    private void HandleSettingsNoticeClose(object? sender, EventArgs e)
+    {
+        _privateRoom.DismissSettingsNotice();
+    }
+
+    private void AddRoomDialogs()
+    {
+        var settingsSheetView = new RoomSettingsSheetView(_privateRoom);
+        var joinDialogView = new JoinRoomDialogView(_privateRoom);
+        var kickDialogView = new KickPlayerDialogView(_privateRoom);
+        AddDialog(settingsSheetView, _privateRoom.Sheet, nameof(RoomSettingsSheetViewModel.IsOpen));
+        AddDialog(joinDialogView, _privateRoom.JoinDialog, nameof(JoinRoomDialogViewModel.IsOpen));
+        AddDialog(kickDialogView, _privateRoom, nameof(PrivateRoomViewModel.IsKickDialogOpen));
     }
 
     private static Panel CreateIdentityChip()
@@ -258,6 +315,8 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         };
         cardPanel.Anchor(Gum.Wireframe.Anchor.Top);
         cardPanel.Y = MenuCardY;
+        cardPanel.BindingContext = _privateRoom;
+        cardPanel.SetBinding(nameof(IsVisible), nameof(PrivateRoomViewModel.IsMenuShown));
         cardPanel.AddChild(contentStackPanel);
         CardSkin.Apply(cardPanel.Visual);
         return cardPanel;
@@ -347,7 +406,7 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
         return statusLabel;
     }
 
-    private static StackPanel CreatePrivateMatchButtons()
+    private StackPanel CreatePrivateMatchButtons()
     {
         var rowStackPanel = new StackPanel
         {
@@ -355,17 +414,31 @@ public sealed class MainMenuView : ScreenView, IEscapeKeyReceiver
             Spacing = PrivateButtonSpacing,
         };
         Button createRoomButton = CreatePrivateMatchButton(nameof(Strings.MainMenuCreateRoom));
+        createRoomButton.Click += HandleCreateRoomClick;
         Button joinWithCodeButton = CreatePrivateMatchButton(nameof(Strings.MainMenuJoinWithCode));
+        joinWithCodeButton.Click += HandleJoinWithCodeClick;
         rowStackPanel.AddChild(createRoomButton);
         rowStackPanel.AddChild(joinWithCodeButton);
         return rowStackPanel;
     }
 
-    private static Button CreatePrivateMatchButton(string textKey)
+    private Button CreatePrivateMatchButton(string textKey)
     {
         Button button = ViewFactory.CreateButton(textKey, PrivateButtonWidth, PrivateButtonHeight);
         ButtonSkin.CreateAndAttach(button, ButtonLookCatalog.Secondary);
+        button.BindingContext = _matchSearchViewModel;
+        button.SetBinding(nameof(IsEnabled), nameof(MatchSearchViewModel.CanStartSearch));
         return button;
+    }
+
+    private void HandleCreateRoomClick(object? sender, EventArgs e)
+    {
+        _privateRoom.OpenCreateSheet();
+    }
+
+    private void HandleJoinWithCodeClick(object? sender, EventArgs e)
+    {
+        _privateRoom.OpenJoinDialog();
     }
 
     private MatchSearchPanel CreateMatchSearchPanel()

@@ -28,6 +28,7 @@ public static class RoomContractTranslator
             [RoomRejectionReason.NotHost] = RoomRejection.NotHost,
             [RoomRejectionReason.NotReadyToStart] = RoomRejection.NotReadyToStart,
             [RoomRejectionReason.MatchStarted] = RoomRejection.MatchStarted,
+            [RoomRejectionReason.HostNotKickable] = RoomRejection.HostNotKickable,
         };
 
     public static RoomOptions ToRoomOptions(PrivateRoomOptions options)
@@ -85,6 +86,8 @@ public static class RoomContractTranslator
         {
             case RoomClosedReason.HostLeft:
                 return RoomCloseReason.HostLeft;
+            case RoomClosedReason.Kicked:
+                return RoomCloseReason.Kicked;
             default:
                 throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unsupported room closed reason.");
         }

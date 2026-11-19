@@ -305,8 +305,22 @@ public sealed class NotificationChannelRegistry
     {
         ArgumentNullException.ThrowIfNull(room);
 
-        RoomClosedNotification notification = RoomTranslator.ToClosedNotification(room, GetUtcNow());
+        RoomClosedNotification notification = RoomTranslator.ToClosedNotification(
+            room,
+            RoomClosedReason.HostLeft,
+            GetUtcNow());
         NotifyPlayers(room.ListAccountIdsExcept(originAccountId), notification);
+    }
+
+    public void NotifyKicked(RoomSnapshot room, int kickedAccountId)
+    {
+        ArgumentNullException.ThrowIfNull(room);
+
+        RoomClosedNotification notification = RoomTranslator.ToClosedNotification(
+            room,
+            RoomClosedReason.Kicked,
+            GetUtcNow());
+        NotifyPlayer(kickedAccountId, notification);
     }
 
     private void TakeOverChannel(int accountId, INotificationCallback replacedCallback)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Bastion.Domain.Common;
 
 namespace Bastion.Domain.Rooms;
 
@@ -101,6 +102,34 @@ public sealed class WaitingRoom
             RoomMember member = _members[memberIndex];
             member.TakeSeat(FirstSeatIndex + memberIndex);
             member.SetReady(IsHost(member.AccountId));
+        }
+    }
+
+    public Lookup<RoomMember> FindMember(string nickname)
+    {
+        ArgumentNullException.ThrowIfNull(nickname);
+
+        RoomMember? member = _members.FirstOrDefault(candidate => candidate.Nickname == nickname);
+        if (member is null)
+        {
+            return Lookup.Missing<RoomMember>($"Nickname={nickname}");
+        }
+
+        return Lookup.Found(member);
+    }
+
+    public void Kick(int accountId)
+    {
+        if (IsHost(accountId))
+        {
+            throw new InvalidOperationException("The host cannot be kicked from their own room.");
+        }
+
+        _kickedAccountIds.Add(accountId);
+        RoomMember? member = _members.FirstOrDefault(candidate => candidate.AccountId == accountId);
+        if (member is not null)
+        {
+            _members.Remove(member);
         }
     }
 

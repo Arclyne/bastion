@@ -76,6 +76,15 @@ public sealed class RoomService : IRoomService
     }
 
     /// <inheritdoc/>
+    public RoomState KickPlayer(string? sessionToken, string? nickname)
+    {
+        string token = SessionTranslator.RequireSessionToken(sessionToken);
+        string kickedNickname = nickname ?? string.Empty;
+        Func<RoomState> kickPlayer = () => KickPlayerInRequestScope(token, kickedNickname);
+        return TranslateRoomFailures(nameof(KickPlayer), kickPlayer);
+    }
+
+    /// <inheritdoc/>
     public void LeaveRoom(string? sessionToken)
     {
         Action<string> leaveRoom = LeaveRoomInRequestScope;
@@ -139,6 +148,15 @@ public sealed class RoomService : IRoomService
         using IServiceScope scope = _scopeFactory.CreateScope();
         IRoomMatchService roomMatchService = scope.ServiceProvider.GetRequiredService<IRoomMatchService>();
         roomMatchService.StartMatch(token, GetUtcNow());
+    }
+
+    private RoomState KickPlayerInRequestScope(string token, string kickedNickname)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IPrivateRoomService privateRoomService = scope.ServiceProvider.GetRequiredService<IPrivateRoomService>();
+        RoomSnapshot room = privateRoomService.KickPlayer(token, kickedNickname, GetUtcNow());
+        _logger.Info($"A host kicked a player from their room. RoomId={room.Identity.RoomId}");
+        return RoomTranslator.ToState(room);
     }
 
     private void LeaveRoomInRequestScope(string token)

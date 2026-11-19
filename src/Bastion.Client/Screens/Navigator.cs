@@ -10,6 +10,7 @@ using Bastion.Client.Screens.Login;
 using Bastion.Client.Screens.MainMenu;
 using Bastion.Client.Screens.MainMenu.Chat;
 using Bastion.Client.Screens.MainMenu.Friends;
+using Bastion.Client.Screens.MainMenu.Rooms;
 using Bastion.Client.Screens.Matches;
 using log4net;
 
@@ -100,7 +101,15 @@ public sealed class Navigator : INavigator, IDisposable
             _connection.Notifications,
             _connection.Matches,
             _localServices.TimeProvider);
-        var mainMenuViewModel = new MainMenuViewModel(session, mainMenuServices);
+        var privateRoomServices = new PrivateRoomServices(
+            _connection.Rooms,
+            _localServices.Clipboard,
+            _localServices.TimeProvider);
+        var privateRoomViewModel = new PrivateRoomViewModel(session, privateRoomServices);
+        var mainMenuViewModel = new MainMenuViewModel(session, mainMenuServices)
+        {
+            PrivateRoom = privateRoomViewModel,
+        };
         mainMenuViewModel.MatchResumed += HandleMatchResumed;
         var chatClients = new ChatClientSet(_connection.Chat, _connection.Conversations, _connection.Notifications);
         var clients = new SocialClientSet(_connection.Friends, chatClients);
@@ -112,11 +121,12 @@ public sealed class Navigator : INavigator, IDisposable
         matchSearchViewModel.MatchFound += HandleMatchFound;
         _shownMatchSearch = matchSearchViewModel;
         var mainMenuView = new MainMenuView(mainMenuViewModel, friendsPanel, matchSearchViewModel);
-        ShowScreen(mainMenuView, friendsPanel, matchSearchViewModel);
+        ShowScreen(mainMenuView, friendsPanel, matchSearchViewModel, privateRoomViewModel);
         _loggedInSession = session;
         _ = RunSafely(friendsPanel.LoadFriends());
         _ = RunSafely(friendsPanel.Requests.LoadRequests());
         _ = RunSafely(friendsPanel.Chat.LoadConversations());
+        _ = RunSafely(privateRoomViewModel.RestoreOwnRoom());
         return mainMenuViewModel;
     }
 

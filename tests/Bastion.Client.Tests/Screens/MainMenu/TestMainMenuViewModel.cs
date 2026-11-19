@@ -4,6 +4,7 @@ using Bastion.Client.Networking.Accounts;
 using Bastion.Client.Networking.Channels;
 using Bastion.Client.Networking.Matches;
 using Bastion.Client.Screens.MainMenu;
+using Bastion.Client.Screens.MainMenu.Rooms;
 using Bastion.Client.Screens.Matches;
 using Bastion.Client.Tests.Fakes;
 using Bastion.Client.Tests.Screens.Matches;
@@ -21,6 +22,7 @@ public sealed class TestMainMenuViewModel
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
     private readonly FakeNotificationClient _notificationClient = new FakeNotificationClient();
+    private readonly FakeRoomClient _roomClient = new FakeRoomClient();
     private readonly ManualTimeProvider _timeProvider = new ManualTimeProvider(_now);
     private readonly JoinedMatch _joinedMatch = JoinedMatchSampleFactory.CreateWithOwnTurnOrder(Match.FirstTurnOrder);
     private readonly MainMenuViewModel _viewModel;
@@ -29,7 +31,12 @@ public sealed class TestMainMenuViewModel
     {
         var session = new LoggedInSession(SessionToken, JoinedMatchSampleFactory.OwnNickname, PreferredLanguage);
         var services = new MainMenuServices(_notificationClient, _matchClient, _timeProvider);
-        _viewModel = new MainMenuViewModel(session, services);
+        var roomServices = new PrivateRoomServices(_roomClient, new FakeClipboard(), _timeProvider);
+        var privateRoom = new PrivateRoomViewModel(session, roomServices);
+        _viewModel = new MainMenuViewModel(session, services)
+        {
+            PrivateRoom = privateRoom,
+        };
     }
 
     [Fact]

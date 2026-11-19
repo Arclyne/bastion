@@ -2333,5 +2333,689 @@ namespace Bastion.Client.Localization {
                 return ResourceManager.GetString("DrawAnswerFailed", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create room.
+        /// </summary>
+        internal static string RoomCreateTitle {
+            get {
+                return ResourceManager.GetString("RoomCreateTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Room settings.
+        /// </summary>
+        internal static string RoomEditTitle {
+            get {
+                return ResourceManager.GetString("RoomEditTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open room.
+        /// </summary>
+        internal static string RoomOpen {
+            get {
+                return ResourceManager.GetString("RoomOpen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save.
+        /// </summary>
+        internal static string RoomSave {
+            get {
+                return ResourceManager.GetString("RoomSave", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        internal static string RoomCancel {
+            get {
+                return ResourceManager.GetString("RoomCancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mode.
+        /// </summary>
+        internal static string RoomModeLabel {
+            get {
+                return ResourceManager.GetString("RoomModeLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Walls per player.
+        /// </summary>
+        internal static string RoomWallsLabel {
+            get {
+                return ResourceManager.GetString("RoomWallsLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clock per player.
+        /// </summary>
+        internal static string RoomClockLabel {
+            get {
+                return ResourceManager.GetString("RoomClockLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Classic.
+        /// </summary>
+        internal static string RoomClassicName {
+            get {
+                return ResourceManager.GetString("RoomClassicName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Four.
+        /// </summary>
+        internal static string RoomFourPlayersName {
+            get {
+                return ResourceManager.GetString("RoomFourPlayersName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quick.
+        /// </summary>
+        internal static string RoomQuickName {
+            get {
+                return ResourceManager.GetString("RoomQuickName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} players · {1}×{1}.
+        /// </summary>
+        internal static string RoomModeDetailFormat {
+            get {
+                return ResourceManager.GetString("RoomModeDetailFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} walls.
+        /// </summary>
+        internal static string RoomModeWallsFormat {
+            get {
+                return ResourceManager.GetString("RoomModeWallsFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} players in the room.
+        /// </summary>
+        internal static string RoomModeCrowdedFormat {
+            get {
+                return ResourceManager.GetString("RoomModeCrowdedFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Between 1 and 20. {0} suggests {1}..
+        /// </summary>
+        internal static string RoomWallsHintFormat {
+            get {
+                return ResourceManager.GetString("RoomWallsHintFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} min.
+        /// </summary>
+        internal static string RoomClockFormat {
+            get {
+                return ResourceManager.GetString("RoomClockFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Friendly: nobody's elo changes..
+        /// </summary>
+        internal static string RoomFriendly {
+            get {
+                return ResourceManager.GetString("RoomFriendly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The other players will have to say they are ready again..
+        /// </summary>
+        internal static string RoomMembersNotice {
+            get {
+                return ResourceManager.GetString("RoomMembersNotice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Private room.
+        /// </summary>
+        internal static string RoomTitle {
+            get {
+                return ResourceManager.GetString("RoomTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Friendly · elo does not change.
+        /// </summary>
+        internal static string RoomFriendlyChip {
+            get {
+                return ResourceManager.GetString("RoomFriendlyChip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ROOM CODE.
+        /// </summary>
+        internal static string RoomCodeLabel {
+            get {
+                return ResourceManager.GetString("RoomCodeLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Share it however you like. Others join with «Join with code» in the menu..
+        /// </summary>
+        internal static string RoomCodeHint {
+            get {
+                return ResourceManager.GetString("RoomCodeHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy code.
+        /// </summary>
+        internal static string RoomCopyCode {
+            get {
+                return ResourceManager.GetString("RoomCopyCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copied.
+        /// </summary>
+        internal static string RoomCodeCopied {
+            get {
+                return ResourceManager.GetString("RoomCodeCopied", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SETTINGS.
+        /// </summary>
+        internal static string RoomSettingsLabel {
+            get {
+                return ResourceManager.GetString("RoomSettingsLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change.
+        /// </summary>
+        internal static string RoomChangeSettings {
+            get {
+                return ResourceManager.GetString("RoomChangeSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} · {1} players · {2}×{2}.
+        /// </summary>
+        internal static string RoomModeValueFormat {
+            get {
+                return ResourceManager.GetString("RoomModeValueFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PLAYERS · {0} OF {1}.
+        /// </summary>
+        internal static string RoomPlayersFormat {
+            get {
+                return ResourceManager.GetString("RoomPlayersFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Free seat.
+        /// </summary>
+        internal static string RoomFreeSeat {
+            get {
+                return ResourceManager.GetString("RoomFreeSeat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Anyone with the code can join..
+        /// </summary>
+        internal static string RoomFreeSeatHint {
+            get {
+                return ResourceManager.GetString("RoomFreeSeatHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Host.
+        /// </summary>
+        internal static string RoomHostChip {
+            get {
+                return ResourceManager.GetString("RoomHostChip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ready.
+        /// </summary>
+        internal static string RoomReadyChip {
+            get {
+                return ResourceManager.GetString("RoomReadyChip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not ready yet.
+        /// </summary>
+        internal static string RoomNotReadyChip {
+            get {
+                return ResourceManager.GetString("RoomNotReadyChip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} (you).
+        /// </summary>
+        internal static string RoomOwnNameFormat {
+            get {
+                return ResourceManager.GetString("RoomOwnNameFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Kick.
+        /// </summary>
+        internal static string RoomKick {
+            get {
+                return ResourceManager.GetString("RoomKick", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start match.
+        /// </summary>
+        internal static string RoomStartMatch {
+            get {
+                return ResourceManager.GetString("RoomStartMatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting….
+        /// </summary>
+        internal static string RoomStarting {
+            get {
+                return ResourceManager.GetString("RoomStarting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1 seat is still free..
+        /// </summary>
+        internal static string RoomWaitingOneSeat {
+            get {
+                return ResourceManager.GetString("RoomWaitingOneSeat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} seats are still free..
+        /// </summary>
+        internal static string RoomWaitingSeatsFormat {
+            get {
+                return ResourceManager.GetString("RoomWaitingSeatsFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not ready yet..
+        /// </summary>
+        internal static string RoomWaitingReadyFormat {
+            get {
+                return ResourceManager.GetString("RoomWaitingReadyFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Some players are not ready yet..
+        /// </summary>
+        internal static string RoomWaitingManyReady {
+            get {
+                return ResourceManager.GetString("RoomWaitingManyReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Everyone is ready..
+        /// </summary>
+        internal static string RoomAllReady {
+            get {
+                return ResourceManager.GetString("RoomAllReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to I'm ready.
+        /// </summary>
+        internal static string RoomReady {
+            get {
+                return ResourceManager.GetString("RoomReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to I'm not ready.
+        /// </summary>
+        internal static string RoomNotReady {
+            get {
+                return ResourceManager.GetString("RoomNotReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Check the settings and say when you are ready..
+        /// </summary>
+        internal static string RoomReadyHint {
+            get {
+                return ResourceManager.GetString("RoomReadyHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ready. Wait for {0} to start the match..
+        /// </summary>
+        internal static string RoomReadyWaitingFormat {
+            get {
+                return ResourceManager.GetString("RoomReadyWaitingFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Close room.
+        /// </summary>
+        internal static string RoomCloseRoom {
+            get {
+                return ResourceManager.GetString("RoomCloseRoom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Leave room.
+        /// </summary>
+        internal static string RoomLeaveRoom {
+            get {
+                return ResourceManager.GetString("RoomLeaveRoom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} changed the settings. Check them and say you are ready again..
+        /// </summary>
+        internal static string RoomChangedNoticeFormat {
+            get {
+                return ResourceManager.GetString("RoomChangedNoticeFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changed.
+        /// </summary>
+        internal static string RoomChangedChip {
+            get {
+                return ResourceManager.GetString("RoomChangedChip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Kick {0}?.
+        /// </summary>
+        internal static string RoomKickTitleFormat {
+            get {
+                return ResourceManager.GetString("RoomKickTitleFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to They will leave the room and cannot join this room again, even with the code. It is not a sanction..
+        /// </summary>
+        internal static string RoomKickMessage {
+            get {
+                return ResourceManager.GetString("RoomKickMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} took you out of their room. You cannot join that room again..
+        /// </summary>
+        internal static string RoomKickedNoticeFormat {
+            get {
+                return ResourceManager.GetString("RoomKickedNoticeFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The room closed. {0} left the room..
+        /// </summary>
+        internal static string RoomClosedNoticeFormat {
+            get {
+                return ResourceManager.GetString("RoomClosedNoticeFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You left the room because the connection was lost..
+        /// </summary>
+        internal static string RoomLostConnectionNotice {
+            get {
+                return ResourceManager.GetString("RoomLostConnectionNotice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Join with code.
+        /// </summary>
+        internal static string RoomJoinTitle {
+            get {
+                return ResourceManager.GetString("RoomJoinTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ask the person who created the room for the code..
+        /// </summary>
+        internal static string RoomJoinMessage {
+            get {
+                return ResourceManager.GetString("RoomJoinMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Six letters or numbers. You can paste it..
+        /// </summary>
+        internal static string RoomJoinHint {
+            get {
+                return ResourceManager.GetString("RoomJoinHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Join.
+        /// </summary>
+        internal static string RoomJoinEnter {
+            get {
+                return ResourceManager.GetString("RoomJoinEnter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Joining….
+        /// </summary>
+        internal static string RoomJoinEntering {
+            get {
+                return ResourceManager.GetString("RoomJoinEntering", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The code has six letters or numbers..
+        /// </summary>
+        internal static string RoomJoinInvalid {
+            get {
+                return ResourceManager.GetString("RoomJoinInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We found no open room with that code..
+        /// </summary>
+        internal static string RoomJoinNotFound {
+            get {
+                return ResourceManager.GetString("RoomJoinNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to That room has no free seats..
+        /// </summary>
+        internal static string RoomJoinFull {
+            get {
+                return ResourceManager.GetString("RoomJoinFull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The match of that room already started..
+        /// </summary>
+        internal static string RoomJoinStarted {
+            get {
+                return ResourceManager.GetString("RoomJoinStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The host kicked you out of that room. You cannot join it again..
+        /// </summary>
+        internal static string RoomJoinKicked {
+            get {
+                return ResourceManager.GetString("RoomJoinKicked", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You tried too many codes. Wait {0} to try again..
+        /// </summary>
+        internal static string RoomJoinTooManyFormat {
+            get {
+                return ResourceManager.GetString("RoomJoinTooManyFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are searching for a match. Cancel the search first..
+        /// </summary>
+        internal static string RoomBusySearching {
+            get {
+                return ResourceManager.GetString("RoomBusySearching", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have a match in progress..
+        /// </summary>
+        internal static string RoomBusyMatch {
+            get {
+                return ResourceManager.GetString("RoomBusyMatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are already in a room..
+        /// </summary>
+        internal static string RoomBusyInRoom {
+            get {
+                return ResourceManager.GetString("RoomBusyInRoom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notifications are not connected yet. Try again in a moment..
+        /// </summary>
+        internal static string RoomNotificationsUnavailable {
+            get {
+                return ResourceManager.GetString("RoomNotificationsUnavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server could not answer. Try again..
+        /// </summary>
+        internal static string RoomRequestFailed {
+            get {
+                return ResourceManager.GetString("RoomRequestFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to That mode has fewer seats than players in the room..
+        /// </summary>
+        internal static string RoomTooManyPlayers {
+            get {
+                return ResourceManager.GetString("RoomTooManyPlayers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not every seat is taken and ready..
+        /// </summary>
+        internal static string RoomNotReadyToStart {
+            get {
+                return ResourceManager.GetString("RoomNotReadyToStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ×.
+        /// </summary>
+        internal static string RoomDismiss {
+            get {
+                return ResourceManager.GetString("RoomDismiss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -.
+        /// </summary>
+        internal static string RoomMinus {
+            get {
+                return ResourceManager.GetString("RoomMinus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to +.
+        /// </summary>
+        internal static string RoomPlus {
+            get {
+                return ResourceManager.GetString("RoomPlus", resourceCulture);
+            }
+        }
     }
 }
