@@ -28,7 +28,7 @@ public sealed class AddFriendViewModel : ViewModel
         _session = session;
         _friends = friends;
         SearchText = string.Empty;
-        Results = new ObservableCollection<FoundPlayerRowViewModel>();
+        Results = [];
         StatusText = string.Empty;
     }
 

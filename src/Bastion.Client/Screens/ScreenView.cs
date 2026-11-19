@@ -11,7 +11,7 @@ public abstract class ScreenView : Panel
 
     protected ScreenView()
     {
-        _dialogs = new List<ModalLayer>();
+        _dialogs = [];
         Dock(Gum.Wireframe.Dock.Fill);
     }
 

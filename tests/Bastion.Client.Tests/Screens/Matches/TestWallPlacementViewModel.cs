@@ -28,7 +28,7 @@ public sealed class TestWallPlacementViewModel : IDisposable
 
     private readonly FakeMatchClient _matchClient = new FakeMatchClient();
     private readonly ManualTimeProvider _timeProvider = new ManualTimeProvider(_startedAt);
-    private readonly List<IDisposable> _viewModels = new List<IDisposable>();
+    private readonly List<IDisposable> _viewModels = [];
 
     public void Dispose()
     {

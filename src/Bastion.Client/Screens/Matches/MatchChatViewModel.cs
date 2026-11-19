@@ -30,7 +30,7 @@ public sealed class MatchChatViewModel : ChatComposerViewModel, IDisposable
         _joinedMatch = joinedMatch;
         _chat = chat;
         _uiContext = SynchronizationContext.Current;
-        Messages = new ObservableCollection<ChatMessageRowViewModel>();
+        Messages = [];
         _chat.MatchChatMessageReceived += HandleMatchChatMessageReceived;
     }
 

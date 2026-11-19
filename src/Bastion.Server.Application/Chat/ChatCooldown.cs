@@ -7,7 +7,7 @@ namespace Bastion.Server.Application.Chat;
 public sealed class ChatCooldown
 {
     private readonly object _cooldownLock = new object();
-    private readonly Dictionary<int, DateTime> _lastMessageTimesByAccountId = new Dictionary<int, DateTime>();
+    private readonly Dictionary<int, DateTime> _lastMessageTimesByAccountId = [];
 
     public bool TryStartCooldown(int accountId, DateTime now)
     {

@@ -12,8 +12,8 @@ public sealed class FakeSessionVerifier : ISessionVerifier
 
     public FakeSessionVerifier()
     {
-        _players = new Dictionary<string, ConnectedPlayer>();
-        _identities = new Dictionary<string, PlayerIdentity>();
+        _players = [];
+        _identities = [];
     }
 
     public void Add(string sessionToken, ConnectedPlayer player)

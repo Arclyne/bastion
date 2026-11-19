@@ -14,8 +14,8 @@ public sealed class FakeAccountRepository : IAccountRepository
 
     public FakeAccountRepository()
     {
-        _accounts = new List<Account>();
-        _playerIdentities = new List<PlayerIdentity>();
+        _accounts = [];
+        _playerIdentities = [];
     }
 
     public void AddAccount(Account account)

@@ -13,15 +13,15 @@ public sealed class FakeMatchRepository : IMatchRepository
 {
     public FakeMatchRepository()
     {
-        AccountIdsWithUnfinishedParticipation = new HashSet<int>();
+        AccountIdsWithUnfinishedParticipation = [];
         ActiveGameMode = GameModeSampleFactory.CreateClassic();
-        EloRatingsByAccountId = new Dictionary<int, short>();
-        SavedMatches = new List<Match>();
-        UnfinishedParticipantAccountIdsByMatchId = new Dictionary<int, List<int>>();
-        SavedMatchChatMessages = new List<Message>();
-        MatchesById = new Dictionary<int, Match>();
-        MatchesSavedWithAbandonment = new List<Match>();
-        MatchesSavedWithMove = new List<Match>();
+        EloRatingsByAccountId = [];
+        SavedMatches = [];
+        UnfinishedParticipantAccountIdsByMatchId = [];
+        SavedMatchChatMessages = [];
+        MatchesById = [];
+        MatchesSavedWithAbandonment = [];
+        MatchesSavedWithMove = [];
     }
 
     public HashSet<int> AccountIdsWithUnfinishedParticipation { get; }

@@ -10,7 +10,7 @@ public sealed class FakeMessageRepository : IMessageRepository
 {
     public FakeMessageRepository()
     {
-        Messages = new List<Message>();
+        Messages = [];
     }
 
     public List<Message> Messages { get; }

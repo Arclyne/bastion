@@ -18,9 +18,9 @@ public sealed class RoomRegistry : IRoomRegistry
         ArgumentNullException.ThrowIfNull(codeGenerator);
 
         _roomsLock = new object();
-        _roomsByCode = new Dictionary<string, WaitingRoom>();
-        _roomsByAccountId = new Dictionary<int, WaitingRoom>();
-        _attemptHistoriesByAccountId = new Dictionary<int, FailedCodeAttemptHistory>();
+        _roomsByCode = [];
+        _roomsByAccountId = [];
+        _attemptHistoriesByAccountId = [];
         _codeGenerator = codeGenerator;
     }
 

@@ -24,19 +24,19 @@ public static class PawnMovePolicy
     {
         if (!board.IsStepOpen(pawn, step))
         {
-            return new List<BoardCoordinates>();
+            return [];
         }
 
         BoardCoordinates neighbor = step.Advance(pawn);
         if (!board.IsOccupied(neighbor))
         {
-            return new List<BoardCoordinates> { neighbor };
+            return [neighbor];
         }
 
         if (CanStepFrom(board, neighbor, step))
         {
             BoardCoordinates straightLanding = step.Advance(neighbor);
-            return new List<BoardCoordinates> { straightLanding };
+            return [straightLanding];
         }
 
         List<BoardCoordinates> diagonalLandings = ListDiagonalLandings(board, neighbor, step);

@@ -7,7 +7,7 @@ public sealed class FakePlayerPresence : IPlayerPresence
 {
     public FakePlayerPresence()
     {
-        ConnectedAccountIds = new HashSet<int>();
+        ConnectedAccountIds = [];
     }
 
     public HashSet<int> ConnectedAccountIds { get; }

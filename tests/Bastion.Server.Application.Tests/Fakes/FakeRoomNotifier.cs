@@ -7,8 +7,8 @@ public sealed class FakeRoomNotifier : IRoomNotifier
 {
     public FakeRoomNotifier()
     {
-        UpdatedRooms = new List<NotifiedRoom>();
-        ClosedRooms = new List<NotifiedRoom>();
+        UpdatedRooms = [];
+        ClosedRooms = [];
     }
 
     public List<NotifiedRoom> UpdatedRooms { get; }

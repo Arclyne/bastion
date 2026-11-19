@@ -7,7 +7,7 @@ public sealed class FakeChatBroadcaster : IChatBroadcaster
 {
     public FakeChatBroadcaster()
     {
-        Lines = new List<PostedChatLine>();
+        Lines = [];
     }
 
     public List<PostedChatLine> Lines { get; }

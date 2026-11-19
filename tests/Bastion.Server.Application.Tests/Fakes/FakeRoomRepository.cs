@@ -18,12 +18,12 @@ public sealed class FakeRoomRepository : IRoomRepository
     {
         _nextRoomId = FirstRoomId;
         _nextMatchId = FirstMatchId;
-        TakenCodes = new HashSet<string>();
-        AddedRooms = new List<Room>();
-        ChangedSettingsByRoomId = new Dictionary<int, RoomSettings>();
-        ClosedRoomIds = new List<int>();
-        CodesInMatch = new HashSet<string>();
-        SavedMatchesByRoomId = new Dictionary<int, Match>();
+        TakenCodes = [];
+        AddedRooms = [];
+        ChangedSettingsByRoomId = [];
+        ClosedRoomIds = [];
+        CodesInMatch = [];
+        SavedMatchesByRoomId = [];
     }
 
     public HashSet<string> TakenCodes { get; }

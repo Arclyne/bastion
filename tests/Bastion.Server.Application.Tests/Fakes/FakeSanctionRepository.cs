@@ -11,7 +11,7 @@ public sealed class FakeSanctionRepository : ISanctionRepository
 
     public FakeSanctionRepository()
     {
-        _sanctions = new List<Sanction>();
+        _sanctions = [];
     }
 
     public void AddSanction(Sanction sanction)

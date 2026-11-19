@@ -33,8 +33,8 @@ public class Match
 
     private Match()
     {
-        _participations = new List<Participation>();
-        _moves = new List<Move>();
+        _participations = [];
+        _moves = [];
     }
 
     public int MatchId { get; private set; }
@@ -168,7 +168,7 @@ public class Match
         int participationIndex = FindActiveParticipationIndex(accountId);
         if (participationIndex == NotFoundIndex)
         {
-            return new List<BoardCoordinates>();
+            return [];
         }
 
         Participation participation = _participations[participationIndex];

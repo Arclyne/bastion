@@ -14,7 +14,7 @@ public sealed class FakeFriendRequestRepository : IFriendRequestRepository
 
     public FakeFriendRequestRepository()
     {
-        _requests = new List<FriendRequest>();
+        _requests = [];
     }
 
     public Lookup<FriendRequest> FindBetween(int firstAccountId, int secondAccountId)

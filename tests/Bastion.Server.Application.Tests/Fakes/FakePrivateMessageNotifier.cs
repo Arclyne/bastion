@@ -7,7 +7,7 @@ public sealed class FakePrivateMessageNotifier : IPrivateMessageNotifier
 {
     public FakePrivateMessageNotifier()
     {
-        Deliveries = new List<PrivateMessageDelivery>();
+        Deliveries = [];
     }
 
     public List<PrivateMessageDelivery> Deliveries { get; }

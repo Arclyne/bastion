@@ -50,8 +50,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         _turnOrdersByNickname = new Dictionary<string, byte>(participants.Count, StringComparer.Ordinal);
         _nicknamesByTurnOrder = new Dictionary<byte, string>(participants.Count);
         _remainingWallsByTurnOrder = new Dictionary<byte, byte>(participants.Count);
-        _walls = new List<Wall>();
-        _reachableSquares = new List<BoardCoordinates>();
+        _walls = [];
+        _reachableSquares = [];
         _boardSize = joinedMatch.GetBoardSize();
         _ownTurnOrder = joinedMatch.GetOwnTurnOrder();
         CurrentTurnOrder = Match.FirstTurnOrder;
@@ -134,7 +134,7 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
         }
 
         SelectedPawn = null;
-        _reachableSquares = new List<BoardCoordinates>();
+        _reachableSquares = [];
         OnStateChanged();
     }
 
