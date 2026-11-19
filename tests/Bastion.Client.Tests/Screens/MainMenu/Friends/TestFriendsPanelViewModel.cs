@@ -73,7 +73,7 @@ public sealed class TestFriendsPanelViewModel
     public void CopyOwnCode_ClipboardUnavailable_LeavesCodeNotCopied()
     {
         using FriendsPanelViewModel viewModel = CreateViewModel();
-        _clipboard.IsAvailable = false;
+        _clipboard.CanCopyText = false;
 
         viewModel.CopyOwnCode();
 

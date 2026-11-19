@@ -54,7 +54,8 @@ public sealed class PrivateChatService : IPrivateChatService
         foreach (Message message in latestMessages)
         {
             int partnerId = message.GetPartnerId(player.AccountId);
-            if (!partnersById.TryGetValue(partnerId, out PlayerIdentity? partner))
+            PlayerIdentity? partner = partnersById.GetValueOrDefault(partnerId);
+            if (partner is null)
             {
                 continue;
             }

@@ -24,7 +24,8 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
 
     public void AddFriendSummary(int accountId, FriendSummary friend)
     {
-        if (!_friendsByAccountId.TryGetValue(accountId, out List<FriendSummary>? friends))
+        List<FriendSummary>? friends = _friendsByAccountId.GetValueOrDefault(accountId);
+        if (friends is null)
         {
             friends = new List<FriendSummary>();
             _friendsByAccountId[accountId] = friends;
@@ -35,12 +36,8 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
 
     public IReadOnlyList<FriendSummary> ListFriends(int accountId)
     {
-        if (!_friendsByAccountId.TryGetValue(accountId, out List<FriendSummary>? friends))
-        {
-            return Array.Empty<FriendSummary>();
-        }
-
-        return friends;
+        IReadOnlyList<FriendSummary>? friends = _friendsByAccountId.GetValueOrDefault(accountId);
+        return friends ?? Array.Empty<FriendSummary>();
     }
 
     public IReadOnlyList<int> ListFriendAccountIds(int accountId)
@@ -80,7 +77,8 @@ public sealed class FakeFriendshipRepository : IFriendshipRepository
 
     private bool RemoveSummary(int accountId, int friendAccountId)
     {
-        if (!_friendsByAccountId.TryGetValue(accountId, out List<FriendSummary>? friends))
+        List<FriendSummary>? friends = _friendsByAccountId.GetValueOrDefault(accountId);
+        if (friends is null)
         {
             return false;
         }

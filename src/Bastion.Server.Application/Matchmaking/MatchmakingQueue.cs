@@ -41,7 +41,8 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
     {
         lock (_searchesLock)
         {
-            if (!_searches.TryGetValue(accountId, out MatchSearch? matchSearch))
+            MatchSearch? matchSearch = _searches.GetValueOrDefault(accountId);
+            if (matchSearch is null)
             {
                 return Lookup.Missing<DateTime>($"AccountId={accountId}");
             }
@@ -54,7 +55,8 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
     {
         lock (_searchesLock)
         {
-            if (!_searches.TryGetValue(accountId, out MatchSearch? matchSearch))
+            MatchSearch? matchSearch = _searches.GetValueOrDefault(accountId);
+            if (matchSearch is null)
             {
                 return false;
             }
@@ -68,7 +70,8 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
     {
         lock (_searchesLock)
         {
-            if (!_searches.TryGetValue(accountId, out MatchSearch? matchSearch))
+            MatchSearch? matchSearch = _searches.GetValueOrDefault(accountId);
+            if (matchSearch is null)
             {
                 return;
             }

@@ -117,7 +117,8 @@ public sealed class RoomRegistry : IRoomRegistry
     {
         lock (_roomsLock)
         {
-            if (!_roomsByAccountId.TryGetValue(accountId, out WaitingRoom? room))
+            WaitingRoom? room = _roomsByAccountId.GetValueOrDefault(accountId);
+            if (room is null)
             {
                 return Lookup.Missing<RoomDeparture>($"AccountId={accountId}");
             }
@@ -142,7 +143,8 @@ public sealed class RoomRegistry : IRoomRegistry
     {
         lock (_roomsLock)
         {
-            if (!_roomsByAccountId.TryGetValue(accountId, out WaitingRoom? room))
+            WaitingRoom? room = _roomsByAccountId.GetValueOrDefault(accountId);
+            if (room is null)
             {
                 return Lookup.Missing<RoomSnapshot>($"AccountId={accountId}");
             }
@@ -184,7 +186,8 @@ public sealed class RoomRegistry : IRoomRegistry
             throw new RoomRejectedException(RoomRejection.TooManyAttempts, attemptHistory.GetRetryDelay(now));
         }
 
-        if (!_roomsByCode.TryGetValue(code, out WaitingRoom? room))
+        WaitingRoom? room = _roomsByCode.GetValueOrDefault(code);
+        if (room is null)
         {
             attemptHistory.Record(now);
             throw new OpenRoomNotFoundException();
@@ -206,7 +209,8 @@ public sealed class RoomRegistry : IRoomRegistry
 
     private FailedCodeAttemptHistory GetAttemptHistory(int accountId)
     {
-        if (!_attemptHistoriesByAccountId.TryGetValue(accountId, out FailedCodeAttemptHistory? attemptHistory))
+        FailedCodeAttemptHistory? attemptHistory = _attemptHistoriesByAccountId.GetValueOrDefault(accountId);
+        if (attemptHistory is null)
         {
             attemptHistory = new FailedCodeAttemptHistory();
             _attemptHistoriesByAccountId.Add(accountId, attemptHistory);
@@ -236,7 +240,8 @@ public sealed class RoomRegistry : IRoomRegistry
 
     private WaitingRoom GetRoomOf(int accountId)
     {
-        if (!_roomsByAccountId.TryGetValue(accountId, out WaitingRoom? room))
+        WaitingRoom? room = _roomsByAccountId.GetValueOrDefault(accountId);
+        if (room is null)
         {
             throw new RoomRejectedException(RoomRejection.NotInRoom);
         }

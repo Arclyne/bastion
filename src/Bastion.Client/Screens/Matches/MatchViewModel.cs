@@ -100,9 +100,10 @@ public sealed class MatchViewModel : ViewModel, IDisposable
         var pawns = new List<BoardPawn>(Players.Count);
         foreach (MatchPlayerViewModel player in Players)
         {
-            if (!player.HasLeft && MatchPlay.Pawns.TryGetValue(player.TurnOrder, out BoardCoordinates? coordinates))
+            BoardCoordinates? pawnCoordinates = MatchPlay.Pawns.GetValueOrDefault(player.TurnOrder);
+            if (!player.HasLeft && pawnCoordinates is not null)
             {
-                var pawn = new BoardPawn(coordinates, player.PawnSymbol);
+                var pawn = new BoardPawn(pawnCoordinates, player.PawnSymbol);
                 pawns.Add(pawn);
             }
         }

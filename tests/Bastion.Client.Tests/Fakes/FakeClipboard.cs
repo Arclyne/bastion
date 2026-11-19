@@ -1,3 +1,4 @@
+using System;
 using Bastion.Client.Screens;
 
 namespace Bastion.Client.Tests.Fakes;
@@ -6,13 +7,16 @@ public sealed class FakeClipboard : IClipboard
 {
     public FakeClipboard()
     {
-        IsAvailable = true;
+        CanCopyText = true;
     }
 
-    public bool IsAvailable { get; set; }
+    public bool CanCopyText { get; set; }
 
-    public bool TryCopyText(string text)
+    public void CopyText(string text)
     {
-        return IsAvailable;
+        if (!CanCopyText)
+        {
+            throw new InvalidOperationException("Text cannot be copied because there is no clipboard.");
+        }
     }
 }

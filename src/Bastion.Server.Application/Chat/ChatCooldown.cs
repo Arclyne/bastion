@@ -25,7 +25,8 @@ public sealed class ChatCooldown
 
     private bool IsCoolingDown(int accountId, DateTime now)
     {
-        if (!_lastMessageTimesByAccountId.TryGetValue(accountId, out DateTime lastMessageAt))
+        bool hasSentMessage = _lastMessageTimesByAccountId.TryGetValue(accountId, out DateTime lastMessageAt);
+        if (!hasSentMessage)
         {
             return false;
         }

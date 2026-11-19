@@ -229,7 +229,8 @@ public sealed class NotificationChannelRegistry
 
     private void NotifyPlayer(int accountId, Notification notification)
     {
-        if (!_callbacksByAccountId.TryGetValue(accountId, out INotificationCallback? callback))
+        INotificationCallback? callback = _callbacksByAccountId.GetValueOrDefault(accountId);
+        if (callback is null)
         {
             return;
         }

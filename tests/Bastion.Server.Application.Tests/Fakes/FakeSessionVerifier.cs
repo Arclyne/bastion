@@ -29,7 +29,8 @@ public sealed class FakeSessionVerifier : ISessionVerifier
 
     public ConnectedPlayer Verify(string sessionToken, DateTime now)
     {
-        if (!_players.TryGetValue(sessionToken, out ConnectedPlayer? player))
+        ConnectedPlayer? player = _players.GetValueOrDefault(sessionToken);
+        if (player is null)
         {
             throw new InvalidSessionException();
         }
@@ -39,7 +40,8 @@ public sealed class FakeSessionVerifier : ISessionVerifier
 
     public PlayerIdentity VerifyIdentity(string sessionToken, DateTime now)
     {
-        if (!_identities.TryGetValue(sessionToken, out PlayerIdentity? identity))
+        PlayerIdentity? identity = _identities.GetValueOrDefault(sessionToken);
+        if (identity is null)
         {
             throw new InvalidSessionException();
         }

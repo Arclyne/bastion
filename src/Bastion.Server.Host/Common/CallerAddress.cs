@@ -9,14 +9,24 @@ public static class CallerAddress
 
     public static string GetCurrent()
     {
-        MessageProperties? properties = OperationContext.Current?.IncomingMessageProperties;
-        if (properties is null
-            || !properties.TryGetValue(RemoteEndpointMessageProperty.Name, out object? propertyValue)
-            || propertyValue is not RemoteEndpointMessageProperty endpoint)
+        MessageProperties? incomingProperties = OperationContext.Current?.IncomingMessageProperties;
+        if (incomingProperties is null)
         {
             return UnknownAddress;
         }
 
-        return endpoint.Address;
+        return ReadRemoteAddress(incomingProperties);
+    }
+
+    private static string ReadRemoteAddress(MessageProperties incomingProperties)
+    {
+        bool hasRemoteEndpoint = incomingProperties.TryGetValue(RemoteEndpointMessageProperty.Name, out object? property);
+        if (!hasRemoteEndpoint)
+        {
+            return UnknownAddress;
+        }
+
+        var remoteEndpoint = (RemoteEndpointMessageProperty)property;
+        return remoteEndpoint.Address;
     }
 }

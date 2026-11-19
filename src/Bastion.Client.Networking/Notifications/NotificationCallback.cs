@@ -20,6 +20,28 @@ public sealed class NotificationCallback : INotificationCallback
 {
     private static readonly ILog _logger = LogManager.GetLogger(typeof(NotificationCallback));
 
+    private readonly IReadOnlyDictionary<Type, Action<Notification>> _dispatchersByNotificationType;
+
+    public NotificationCallback()
+    {
+        var dispatchersByNotificationType = new Dictionary<Type, Action<Notification>>();
+        AddDispatcher<ChatMessageNotification>(dispatchersByNotificationType, DispatchChatMessage);
+        AddDispatcher<MatchChatMessageNotification>(dispatchersByNotificationType, DispatchMatchChatMessage);
+        AddDispatcher<MatchAbandonedNotification>(dispatchersByNotificationType, DispatchMatchAbandoned);
+        AddDispatcher<PawnMovedNotification>(dispatchersByNotificationType, DispatchPawnMoved);
+        AddDispatcher<WallPlacedNotification>(dispatchersByNotificationType, DispatchWallPlaced);
+        AddDispatcher<FriendPresenceNotification>(dispatchersByNotificationType, DispatchFriendPresence);
+        AddDispatcher<FriendRequestNotification>(dispatchersByNotificationType, DispatchFriendRequest);
+        AddDispatcher<FriendshipStartedNotification>(dispatchersByNotificationType, DispatchFriendshipStarted);
+        AddDispatcher<PrivateMessageNotification>(dispatchersByNotificationType, DispatchPrivateMessage);
+        AddDispatcher<RoomUpdatedNotification>(dispatchersByNotificationType, DispatchRoomUpdated);
+        AddDispatcher<RoomClosedNotification>(dispatchersByNotificationType, DispatchRoomClosed);
+        AddDispatcher<MatchFoundNotification>(dispatchersByNotificationType, DispatchMatchFound);
+        AddDispatcher<PresenceRequestedNotification>(dispatchersByNotificationType, DispatchPresenceRequested);
+        AddDispatcher<SearchEndedNotification>(dispatchersByNotificationType, DispatchSearchEnded);
+        _dispatchersByNotificationType = dispatchersByNotificationType;
+    }
+
     public event EventHandler<ChatMessageReceivedEventArgs>? ChatMessageReceived;
 
     public event EventHandler<MatchChatMessageReceivedEventArgs>? MatchChatMessageReceived;
@@ -57,48 +79,38 @@ public sealed class NotificationCallback : INotificationCallback
             return;
         }
 
+        Type notificationType = notification.GetType();
+        Action<Notification>? dispatch = _dispatchersByNotificationType.GetValueOrDefault(notificationType);
+        if (dispatch is null)
+        {
+            _logger.Warn($"A notification of an unknown type was ignored. Type={notificationType.Name}");
+            return;
+        }
+
         try
         {
-            if (TryDispatchChatNotification(notification)
-                || TryDispatchMatchAbandonedNotification(notification)
-                || TryDispatchMatchMoveNotification(notification)
-                || TryDispatchFriendNotification(notification)
-                || TryDispatchPrivateMessageNotification(notification)
-                || TryDispatchRoomNotification(notification)
-                || TryDispatchMatchmakingNotification(notification))
-            {
-                return;
-            }
+            dispatch(notification);
         }
         catch (ArgumentOutOfRangeException ex)
         {
             _logger.Warn(
-                "A notification was ignored because one of its values is out of range. "
-                + $"Type={notification.GetType().Name}",
+                $"A notification was ignored because one of its values is out of range. Type={notificationType.Name}",
                 ex);
-            return;
         }
-
-        _logger.Warn($"A notification of an unknown type was ignored. Type={notification.GetType().Name}");
     }
 
-    private bool TryDispatchChatNotification(Notification notification)
+    private static void AddDispatcher<TNotification>(
+        Dictionary<Type, Action<Notification>> dispatchersByNotificationType,
+        Action<TNotification> dispatch)
+        where TNotification : Notification
     {
-        if (notification is ChatMessageNotification chatMessage)
-        {
-            ChatMessageReceivedEventArgs lobbyMessage = ToChatMessageReceivedEventArgs(chatMessage);
-            OnChatMessageReceived(lobbyMessage);
-            return true;
-        }
+        dispatchersByNotificationType.Add(typeof(TNotification), notification => dispatch((TNotification)notification));
+    }
 
-        if (notification is MatchChatMessageNotification matchChatMessage)
-        {
-            MatchChatMessageReceivedEventArgs matchMessage = ToMatchChatMessageReceivedEventArgs(matchChatMessage);
-            OnMatchChatMessageReceived(matchMessage);
-            return true;
-        }
-
-        return false;
+    private void DispatchChatMessage(ChatMessageNotification chatMessage)
+    {
+        ChatMessageReceivedEventArgs lobbyMessage = ToChatMessageReceivedEventArgs(chatMessage);
+        OnChatMessageReceived(lobbyMessage);
     }
 
     private static ChatMessageReceivedEventArgs ToChatMessageReceivedEventArgs(ChatMessageNotification notification)
@@ -110,6 +122,12 @@ public sealed class NotificationCallback : INotificationCallback
     private void OnChatMessageReceived(ChatMessageReceivedEventArgs e)
     {
         ChatMessageReceived?.Invoke(this, e);
+    }
+
+    private void DispatchMatchChatMessage(MatchChatMessageNotification matchChatMessage)
+    {
+        MatchChatMessageReceivedEventArgs matchMessage = ToMatchChatMessageReceivedEventArgs(matchChatMessage);
+        OnMatchChatMessageReceived(matchMessage);
     }
 
     private static MatchChatMessageReceivedEventArgs ToMatchChatMessageReceivedEventArgs(
@@ -124,16 +142,10 @@ public sealed class NotificationCallback : INotificationCallback
         MatchChatMessageReceived?.Invoke(this, e);
     }
 
-    private bool TryDispatchMatchAbandonedNotification(Notification notification)
+    private void DispatchMatchAbandoned(MatchAbandonedNotification matchAbandoned)
     {
-        if (notification is not MatchAbandonedNotification matchAbandoned)
-        {
-            return false;
-        }
-
         MatchAbandonedEventArgs abandonment = ToMatchAbandonedEventArgs(matchAbandoned);
         OnMatchAbandoned(abandonment);
-        return true;
     }
 
     private static MatchAbandonedEventArgs ToMatchAbandonedEventArgs(MatchAbandonedNotification notification)
@@ -147,23 +159,10 @@ public sealed class NotificationCallback : INotificationCallback
         MatchAbandoned?.Invoke(this, e);
     }
 
-    private bool TryDispatchMatchMoveNotification(Notification notification)
+    private void DispatchPawnMoved(PawnMovedNotification pawnMoved)
     {
-        if (notification is PawnMovedNotification pawnMoved)
-        {
-            PawnMovedEventArgs pawnMove = ToPawnMovedEventArgs(pawnMoved);
-            OnPawnMoved(pawnMove);
-            return true;
-        }
-
-        if (notification is WallPlacedNotification wallPlaced)
-        {
-            WallPlacedEventArgs placement = ToWallPlacedEventArgs(wallPlaced);
-            OnWallPlaced(placement);
-            return true;
-        }
-
-        return false;
+        PawnMovedEventArgs pawnMove = ToPawnMovedEventArgs(pawnMoved);
+        OnPawnMoved(pawnMove);
     }
 
     private static PawnMovedEventArgs ToPawnMovedEventArgs(PawnMovedNotification notification)
@@ -185,6 +184,12 @@ public sealed class NotificationCallback : INotificationCallback
     private void OnPawnMoved(PawnMovedEventArgs e)
     {
         PawnMoved?.Invoke(this, e);
+    }
+
+    private void DispatchWallPlaced(WallPlacedNotification wallPlaced)
+    {
+        WallPlacedEventArgs placement = ToWallPlacedEventArgs(wallPlaced);
+        OnWallPlaced(placement);
     }
 
     private static WallPlacedEventArgs ToWallPlacedEventArgs(WallPlacedNotification notification)
@@ -210,30 +215,10 @@ public sealed class NotificationCallback : INotificationCallback
         WallPlaced?.Invoke(this, e);
     }
 
-    private bool TryDispatchFriendNotification(Notification notification)
+    private void DispatchFriendPresence(FriendPresenceNotification friendPresence)
     {
-        if (notification is FriendPresenceNotification friendPresence)
-        {
-            FriendPresenceChangedEventArgs presenceChange = ToFriendPresenceChangedEventArgs(friendPresence);
-            OnFriendPresenceChanged(presenceChange);
-            return true;
-        }
-
-        if (notification is FriendRequestNotification friendRequest)
-        {
-            FriendRequestReceivedEventArgs request = ToFriendRequestReceivedEventArgs(friendRequest);
-            OnFriendRequestReceived(request);
-            return true;
-        }
-
-        if (notification is FriendshipStartedNotification friendshipStarted)
-        {
-            FriendshipStartedEventArgs friendship = ToFriendshipStartedEventArgs(friendshipStarted);
-            OnFriendshipStarted(friendship);
-            return true;
-        }
-
-        return false;
+        FriendPresenceChangedEventArgs presenceChange = ToFriendPresenceChangedEventArgs(friendPresence);
+        OnFriendPresenceChanged(presenceChange);
     }
 
     private static FriendPresenceChangedEventArgs ToFriendPresenceChangedEventArgs(
@@ -248,6 +233,12 @@ public sealed class NotificationCallback : INotificationCallback
         FriendPresenceChanged?.Invoke(this, e);
     }
 
+    private void DispatchFriendRequest(FriendRequestNotification friendRequest)
+    {
+        FriendRequestReceivedEventArgs request = ToFriendRequestReceivedEventArgs(friendRequest);
+        OnFriendRequestReceived(request);
+    }
+
     private static FriendRequestReceivedEventArgs ToFriendRequestReceivedEventArgs(
         FriendRequestNotification notification)
     {
@@ -258,6 +249,12 @@ public sealed class NotificationCallback : INotificationCallback
     private void OnFriendRequestReceived(FriendRequestReceivedEventArgs e)
     {
         FriendRequestReceived?.Invoke(this, e);
+    }
+
+    private void DispatchFriendshipStarted(FriendshipStartedNotification friendshipStarted)
+    {
+        FriendshipStartedEventArgs friendship = ToFriendshipStartedEventArgs(friendshipStarted);
+        OnFriendshipStarted(friendship);
     }
 
     private static FriendshipStartedEventArgs ToFriendshipStartedEventArgs(FriendshipStartedNotification notification)
@@ -271,16 +268,10 @@ public sealed class NotificationCallback : INotificationCallback
         FriendshipStarted?.Invoke(this, e);
     }
 
-    private bool TryDispatchPrivateMessageNotification(Notification notification)
+    private void DispatchPrivateMessage(PrivateMessageNotification privateMessage)
     {
-        if (notification is not PrivateMessageNotification privateMessageNotification)
-        {
-            return false;
-        }
-
-        PrivateMessageReceivedEventArgs message = ToPrivateMessageReceivedEventArgs(privateMessageNotification);
+        PrivateMessageReceivedEventArgs message = ToPrivateMessageReceivedEventArgs(privateMessage);
         OnPrivateMessageReceived(message);
-        return true;
     }
 
     private static PrivateMessageReceivedEventArgs ToPrivateMessageReceivedEventArgs(
@@ -296,29 +287,16 @@ public sealed class NotificationCallback : INotificationCallback
         PrivateMessageReceived?.Invoke(this, e);
     }
 
-    private bool TryDispatchRoomNotification(Notification notification)
+    private void DispatchRoomUpdated(RoomUpdatedNotification roomUpdated)
     {
-        if (notification is RoomUpdatedNotification { Room: not null } roomUpdated)
-        {
-            RoomUpdatedEventArgs update = ToRoomUpdatedEventArgs(roomUpdated.Room);
-            OnRoomUpdated(update);
-            return true;
-        }
-
-        if (notification is RoomUpdatedNotification)
+        if (roomUpdated.Room is null)
         {
             _logger.Warn("A room update arrived without the room and was ignored.");
-            return true;
+            return;
         }
 
-        if (notification is RoomClosedNotification roomClosed)
-        {
-            RoomClosedEventArgs closure = ToRoomClosedEventArgs(roomClosed);
-            OnRoomClosed(closure);
-            return true;
-        }
-
-        return false;
+        RoomUpdatedEventArgs update = ToRoomUpdatedEventArgs(roomUpdated.Room);
+        OnRoomUpdated(update);
     }
 
     private static RoomUpdatedEventArgs ToRoomUpdatedEventArgs(RoomState room)
@@ -330,6 +308,12 @@ public sealed class NotificationCallback : INotificationCallback
     private void OnRoomUpdated(RoomUpdatedEventArgs e)
     {
         RoomUpdated?.Invoke(this, e);
+    }
+
+    private void DispatchRoomClosed(RoomClosedNotification roomClosed)
+    {
+        RoomClosedEventArgs closure = ToRoomClosedEventArgs(roomClosed);
+        OnRoomClosed(closure);
     }
 
     private static RoomClosedEventArgs ToRoomClosedEventArgs(RoomClosedNotification notification)
@@ -344,30 +328,10 @@ public sealed class NotificationCallback : INotificationCallback
         RoomClosed?.Invoke(this, e);
     }
 
-    private bool TryDispatchMatchmakingNotification(Notification notification)
+    private void DispatchMatchFound(MatchFoundNotification matchFound)
     {
-        if (notification is MatchFoundNotification matchFound)
-        {
-            MatchFoundEventArgs foundMatch = ToMatchFoundEventArgs(matchFound);
-            OnMatchFound(foundMatch);
-            return true;
-        }
-
-        if (notification is PresenceRequestedNotification presenceRequested)
-        {
-            PresenceRequestedEventArgs presenceRequest = ToPresenceRequestedEventArgs(presenceRequested);
-            OnPresenceRequested(presenceRequest);
-            return true;
-        }
-
-        if (notification is SearchEndedNotification searchEnded)
-        {
-            SearchEndedEventArgs searchEnd = ToSearchEndedEventArgs(searchEnded);
-            OnSearchEnded(searchEnd);
-            return true;
-        }
-
-        return false;
+        MatchFoundEventArgs foundMatch = ToMatchFoundEventArgs(matchFound);
+        OnMatchFound(foundMatch);
     }
 
     private static MatchFoundEventArgs ToMatchFoundEventArgs(MatchFoundNotification notification)
@@ -394,6 +358,12 @@ public sealed class NotificationCallback : INotificationCallback
         MatchFound?.Invoke(this, e);
     }
 
+    private void DispatchPresenceRequested(PresenceRequestedNotification presenceRequested)
+    {
+        PresenceRequestedEventArgs presenceRequest = ToPresenceRequestedEventArgs(presenceRequested);
+        OnPresenceRequested(presenceRequest);
+    }
+
     private static PresenceRequestedEventArgs ToPresenceRequestedEventArgs(PresenceRequestedNotification notification)
     {
         TimeSpan responseWindow = notification.Deadline - notification.OccurredAt;
@@ -403,6 +373,12 @@ public sealed class NotificationCallback : INotificationCallback
     private void OnPresenceRequested(PresenceRequestedEventArgs e)
     {
         PresenceRequested?.Invoke(this, e);
+    }
+
+    private void DispatchSearchEnded(SearchEndedNotification searchEnded)
+    {
+        SearchEndedEventArgs searchEnd = ToSearchEndedEventArgs(searchEnded);
+        OnSearchEnded(searchEnd);
     }
 
     private static SearchEndedEventArgs ToSearchEndedEventArgs(SearchEndedNotification notification)

@@ -232,13 +232,13 @@ public sealed class FriendsPanelViewModel : ViewModel, IFriendDirectory, IDispos
 
     public void CopyOwnCode()
     {
-        bool isCopied = _clipboard.TryCopyText(_formattedFriendCode);
-        if (!isCopied)
+        if (!_clipboard.CanCopyText)
         {
             _logger.Warn("The friend code could not be copied because there is no clipboard.");
             return;
         }
 
+        _clipboard.CopyText(_formattedFriendCode);
         IsCodeCopied = true;
     }
 

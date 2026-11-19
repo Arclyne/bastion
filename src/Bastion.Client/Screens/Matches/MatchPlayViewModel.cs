@@ -226,8 +226,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     private void ReceivePawnMove(PawnMovedEventArgs pawnMove)
     {
         BoardCoordinates destination = BoardLayout.FindSquare(pawnMove.ToSquare);
-        if (!_turnOrdersByNickname.TryGetValue(pawnMove.MoverNickname, out byte moverTurnOrder)
-            || destination == BoardLayout.OffBoardSquare)
+        bool isKnownMover = _turnOrdersByNickname.TryGetValue(pawnMove.MoverNickname, out byte moverTurnOrder);
+        if (!isKnownMover || destination == BoardLayout.OffBoardSquare)
         {
             _logger.Warn(
                 $"A pawn move arrived that the board cannot place. MatchId={pawnMove.MatchId}; "
@@ -298,8 +298,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
     private void ReceiveWallPlacement(WallPlacedEventArgs wallPlacement)
     {
         BoardCoordinates groove = BoardLayout.FindSquare(wallPlacement.Groove);
-        if (!_turnOrdersByNickname.TryGetValue(wallPlacement.PlacerNickname, out byte placerTurnOrder)
-            || groove == BoardLayout.OffBoardSquare)
+        bool isKnownPlacer = _turnOrdersByNickname.TryGetValue(wallPlacement.PlacerNickname, out byte placerTurnOrder);
+        if (!isKnownPlacer || groove == BoardLayout.OffBoardSquare)
         {
             _logger.Warn(
                 $"A wall arrived that the board cannot place. MatchId={wallPlacement.MatchId}; "
@@ -340,7 +340,8 @@ public sealed class MatchPlayViewModel : ViewModel, IDisposable
             return;
         }
 
-        if (!_turnOrdersByNickname.TryGetValue(abandoningNickname, out byte leftTurnOrder))
+        bool isKnownAbandoningPlayer = _turnOrdersByNickname.TryGetValue(abandoningNickname, out byte leftTurnOrder);
+        if (!isKnownAbandoningPlayer)
         {
             return;
         }
