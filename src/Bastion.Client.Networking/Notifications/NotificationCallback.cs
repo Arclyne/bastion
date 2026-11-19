@@ -339,7 +339,7 @@ public sealed class NotificationCallback : INotificationCallback
         MatchFoundParticipant[] notifiedParticipants =
             notification.Participants ?? Array.Empty<MatchFoundParticipant>();
         IEnumerable<FoundMatchParticipant> foundParticipants = notifiedParticipants.Select(ToFoundMatchParticipant);
-        var participants = new List<FoundMatchParticipant>(foundParticipants);
+        List<FoundMatchParticipant> participants = [.. foundParticipants];
         var format = new FoundMatchFormat(
             notification.BoardSize,
             notification.WallsPerPlayer,

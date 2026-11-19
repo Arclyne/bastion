@@ -7,8 +7,8 @@ using Bastion.Server.Application.Rooms;
 using Bastion.Server.Application.Sessions;
 using Bastion.Server.Host.Sessions;
 using CoreWCF;
-using Microsoft.Extensions.DependencyInjection;
 using log4net;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bastion.Server.Host.Rooms;
 

@@ -29,7 +29,7 @@ public sealed record RoomSnapshot
         ArgumentNullException.ThrowIfNull(room);
 
         IEnumerable<RoomMemberSnapshot> capturedMembers = room.Members.Select(member => CaptureMember(room, member));
-        var members = new List<RoomMemberSnapshot>(capturedMembers);
+        List<RoomMemberSnapshot> members = [.. capturedMembers];
         return new RoomSnapshot(room.Identity, room.Settings, members);
     }
 
@@ -50,7 +50,7 @@ public sealed record RoomSnapshot
         IEnumerable<int> accountIds = Members
             .Select(member => member.AccountId)
             .Where(accountId => accountId != excludedAccountId);
-        return new List<int>(accountIds);
+        return [.. accountIds];
     }
 
     private static RoomMemberSnapshot CaptureMember(WaitingRoom room, RoomMember member)

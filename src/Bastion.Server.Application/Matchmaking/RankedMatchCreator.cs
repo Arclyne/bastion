@@ -97,7 +97,7 @@ public sealed class RankedMatchCreator : IRankedMatchCreator
     private List<MatchEntrant> CreateEntrants(IReadOnlyList<MatchSearch> playersInTurnOrder, byte gameModeId)
     {
         IEnumerable<int> accountIdsInTurnOrder = playersInTurnOrder.Select(player => player.AccountId);
-        var accountIds = new List<int>(accountIdsInTurnOrder);
+        List<int> accountIds = [.. accountIdsInTurnOrder];
         IReadOnlyDictionary<int, short> eloRatingsByAccountId = _matchRepository.FindEloRatingsByAccountId(
             gameModeId,
             accountIds);

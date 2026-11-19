@@ -27,7 +27,7 @@ public sealed class FakeFriendRequestRepository : IFriendRequestRepository
     {
         IEnumerable<FriendRequest> involvingRequests = _requests
             .Where(request => request.RequesterId == accountId || request.RecipientId == accountId);
-        return new List<FriendRequest>(involvingRequests);
+        return [.. involvingRequests];
     }
 
     public IReadOnlyList<FriendRequestSummary> ListReceived(int accountId)
@@ -35,7 +35,7 @@ public sealed class FakeFriendRequestRepository : IFriendRequestRepository
         IEnumerable<FriendRequestSummary> receivedRequests = _requests
             .Where(request => request.RecipientId == accountId)
             .Select(request => ToSummary(request.RequesterId, request));
-        return new List<FriendRequestSummary>(receivedRequests);
+        return [.. receivedRequests];
     }
 
     public IReadOnlyList<FriendRequestSummary> ListSent(int accountId)
@@ -43,7 +43,7 @@ public sealed class FakeFriendRequestRepository : IFriendRequestRepository
         IEnumerable<FriendRequestSummary> sentRequests = _requests
             .Where(request => request.RequesterId == accountId)
             .Select(request => ToSummary(request.RecipientId, request));
-        return new List<FriendRequestSummary>(sentRequests);
+        return [.. sentRequests];
     }
 
     public void Add(FriendRequest request)

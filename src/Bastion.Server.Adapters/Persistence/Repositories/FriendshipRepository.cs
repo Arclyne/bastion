@@ -27,16 +27,16 @@ public sealed class FriendshipRepository : IFriendshipRepository
             .AsNoTracking()
             .Where(account => friendAccountIds.Contains(account.AccountId))
             .Where(account => account.AccountStatus != AccountStatus.Deleted);
-        var friends = new List<Account>(friendAccounts);
+        List<Account> friends = [.. friendAccounts];
         IEnumerable<FriendSummary> summaries = friends
             .Select(ToFriendSummary);
-        return new List<FriendSummary>(summaries);
+        return [.. summaries];
     }
 
     public IReadOnlyList<int> ListFriendAccountIds(int accountId)
     {
         IQueryable<int> friendAccountIds = SelectFriendAccountIds(accountId);
-        return new List<int>(friendAccountIds);
+        return [.. friendAccountIds];
     }
 
     public void Add(Friendship friendship)

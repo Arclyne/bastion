@@ -346,7 +346,7 @@ public class Match
         IEnumerable<Participation> activeParticipations = _participations
             .Where(participation => !participation.HasEnded())
             .OrderBy(participation => participation.TurnOrder);
-        return new List<Participation>(activeParticipations);
+        return [.. activeParticipations];
     }
 
     private BoardCoordinates FindPawnCoordinates(Participation participation, byte boardSize)
@@ -373,7 +373,7 @@ public class Match
         IEnumerable<Wall> placedWalls = _moves
             .Where(playedMove => playedMove.MoveType == MoveType.Wall)
             .Select(playedMove => playedMove.GetWall());
-        return new List<Wall>(placedWalls);
+        return [.. placedWalls];
     }
 
     private void EnsurePawnCanMove(PawnMove pawnMove, byte boardSize)

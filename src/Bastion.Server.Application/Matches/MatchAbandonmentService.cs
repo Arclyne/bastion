@@ -55,7 +55,7 @@ public sealed class MatchAbandonmentService : IMatchAbandonmentService
         IEnumerable<int> remainingAccountIds = match.Participations
             .Where(participation => participation.AccountId != player.AccountId && participation.EndReason is null)
             .Select(participation => participation.AccountId);
-        var recipientAccountIds = new List<int>(remainingAccountIds);
+        List<int> recipientAccountIds = [.. remainingAccountIds];
         var notice = new AbandonmentNotice(player.Nickname, isMatchOver);
         _matchEndNotifier.NotifyMatchAbandoned(matchId, recipientAccountIds, notice);
     }

@@ -37,7 +37,7 @@ public sealed class MessageRepository : IMessageRepository
             .OrderByDescending(message => message.SentAt)
             .ThenByDescending(message => message.MessageId)
             .Take(count);
-        var conversationMessages = new List<Message>(latestMessages);
+        List<Message> conversationMessages = [.. latestMessages];
         conversationMessages.Reverse();
         return conversationMessages;
     }
@@ -53,7 +53,7 @@ public sealed class MessageRepository : IMessageRepository
         IQueryable<Message> latestMessages = _context.Messages
             .AsNoTracking()
             .Where(message => latestMessageIds.Contains(message.MessageId));
-        return new List<Message>(latestMessages);
+        return [.. latestMessages];
     }
 
     public IReadOnlyDictionary<int, int> CountUnreadByAuthor(int recipientId)

@@ -14,7 +14,7 @@ public static class ConversationContractTranslator
     {
         ConversationEntry[] conversationEntries = entries ?? Array.Empty<ConversationEntry>();
         IEnumerable<ConversationPreview> previews = conversationEntries.Select(ToPreview);
-        return new List<ConversationPreview>(previews);
+        return [.. previews];
     }
 
     public static ConversationTranscript ToTranscript(PrivateConversationLog log)
@@ -24,7 +24,7 @@ public static class ConversationContractTranslator
         ConversationContact contact = ToContact(log.PartnerNickname, log.PartnerFriendCode, log.IsFriend);
         PrivateChatMessage[] logMessages = log.Messages ?? Array.Empty<PrivateChatMessage>();
         IEnumerable<PrivateMessage> privateMessages = logMessages.Select(ToPrivateMessage);
-        var messages = new List<PrivateMessage>(privateMessages);
+        List<PrivateMessage> messages = [.. privateMessages];
         var muteStatus = new ChatMuteStatus(log.IsMuted, log.MutedUntil);
         return new ConversationTranscript(contact, messages, muteStatus);
     }

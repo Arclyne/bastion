@@ -49,7 +49,7 @@ public sealed class LobbyChatService : ILobbyChatService
         IReadOnlyList<PostedChatLine> recentLines = _chatRoom.ListRecent();
         IEnumerable<ChatHistoryEntry> historyEntries = recentLines.Select(
             postedLine => new ChatHistoryEntry(postedLine, postedLine.Line.Sender.AccountId == player.AccountId));
-        var entries = new List<ChatHistoryEntry>(historyEntries);
+        List<ChatHistoryEntry> entries = [.. historyEntries];
         int connectedPlayerCount = _chatRoom.CountListeners();
         ChatMuteStatus muteStatus = _chatModerator.FindMuteStatus(player.AccountId, now);
         return new LobbyChatHistory(entries, connectedPlayerCount, muteStatus);

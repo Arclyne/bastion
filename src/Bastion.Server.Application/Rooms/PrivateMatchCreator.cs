@@ -39,13 +39,13 @@ public sealed class PrivateMatchCreator : IPrivateMatchCreator
             WallsPerPlayer = room.Settings.WallsPerPlayer,
         };
         IEnumerable<int> accountIdsInTurnOrder = membersInTurnOrder.Select(member => member.AccountId);
-        var accountIds = new List<int>(accountIdsInTurnOrder);
+        List<int> accountIds = [.. accountIdsInTurnOrder];
         IReadOnlyDictionary<int, short> eloRatingsByAccountId = _matchRepository.FindEloRatingsByAccountId(
             format.GameMode.GameModeId,
             accountIds);
         IEnumerable<MatchEntrant> unratedEntrants = membersInTurnOrder
             .Select(member => new MatchEntrant(member.AccountId, EloRating: null));
-        var entrants = new List<MatchEntrant>(unratedEntrants);
+        List<MatchEntrant> entrants = [.. unratedEntrants];
         var match = Match.StartPrivate(format, entrants, startedAt);
         int matchId = _roomRepository.SaveRoomMatch(room.Identity.RoomId, match);
         _logger.Info($"Private match created. MatchId={matchId}; RoomId={room.Identity.RoomId}");

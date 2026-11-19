@@ -87,10 +87,10 @@ public sealed class AccountRepository : IAccountRepository
 
     private static List<PlayerIdentity> ListIdentities(IQueryable<Account> accounts)
     {
-        var loadedAccounts = new List<Account>(accounts);
+        List<Account> loadedAccounts = [.. accounts];
         IEnumerable<PlayerIdentity> identities = loadedAccounts
             .Select(PlayerIdentity.FromAccount);
-        return new List<PlayerIdentity>(identities);
+        return [.. identities];
     }
 
     private IQueryable<Account> SelectActivePlayers()

@@ -26,7 +26,7 @@ public sealed class FakeMessageRepository : IMessageRepository
             .Where(message => message.GetPartnerId(accountId) == partnerId && IsInvolving(message, accountId))
             .OrderBy(message => message.SentAt)
             .TakeLast(count);
-        return new List<Message>(conversationMessages);
+        return [.. conversationMessages];
     }
 
     public IReadOnlyList<Message> ListLatestPerPartner(int accountId)
@@ -35,7 +35,7 @@ public sealed class FakeMessageRepository : IMessageRepository
             .Where(message => IsInvolving(message, accountId))
             .GroupBy(message => message.GetPartnerId(accountId))
             .Select(FindLatest);
-        return new List<Message>(latestMessages);
+        return [.. latestMessages];
     }
 
     public IReadOnlyDictionary<int, int> CountUnreadByAuthor(int recipientId)

@@ -24,6 +24,6 @@ public sealed class SanctionRepository : ISanctionRepository
             .AsNoTracking()
             .Where(sanction => sanction.AccountId == accountId)
             .Where(sanction => sanction.Scope == SanctionScope.Chat);
-        return new List<Sanction>(chatSanctions);
+        return [.. chatSanctions];
     }
 }

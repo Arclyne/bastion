@@ -15,7 +15,7 @@ public static class FriendContractTranslator
         string ownFriendCode = list.OwnFriendCode ?? string.Empty;
         FriendListEntry[] entries = list.Friends ?? Array.Empty<FriendListEntry>();
         IEnumerable<ListedFriend> listedFriends = entries.Select(ToListedFriend);
-        var friends = new List<ListedFriend>(listedFriends);
+        List<ListedFriend> friends = [.. listedFriends];
         return new FriendListing(ownFriendCode, friends, list.ListedAt);
     }
 
@@ -32,7 +32,7 @@ public static class FriendContractTranslator
     {
         PlayerSearchEntry[] searchEntries = entries ?? Array.Empty<PlayerSearchEntry>();
         IEnumerable<FoundPlayer> foundPlayers = searchEntries.Select(ToFoundPlayer);
-        return new List<FoundPlayer>(foundPlayers);
+        return [.. foundPlayers];
     }
 
     public static FriendRequestListing ToFriendRequestListing(FriendRequestList list)
@@ -154,7 +154,7 @@ public static class FriendContractTranslator
     {
         FriendRequestEntry[] requestEntries = entries ?? Array.Empty<FriendRequestEntry>();
         IEnumerable<PendingFriendRequest> pendingRequests = requestEntries.Select(ToPendingRequest);
-        return new List<PendingFriendRequest>(pendingRequests);
+        return [.. pendingRequests];
     }
 
     private static PendingFriendRequest ToPendingRequest(FriendRequestEntry entry)

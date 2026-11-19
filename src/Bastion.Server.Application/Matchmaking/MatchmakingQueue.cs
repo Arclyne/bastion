@@ -95,7 +95,7 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
     {
         IEnumerable<MatchSearch> unansweredSearches = _searches.Values
             .Where(matchSearch => matchSearch.HasPresenceExpired(now));
-        var expiredSearches = new List<MatchSearch>(unansweredSearches);
+        List<MatchSearch> expiredSearches = [.. unansweredSearches];
         RemoveAll(expiredSearches);
         return expiredSearches;
     }
@@ -116,7 +116,7 @@ public sealed class MatchmakingQueue : IMatchmakingQueue
             .Chunk(MatchmakingPolicy.PlayersPerMatch)
             .Where(players => players.Length == MatchmakingPolicy.PlayersPerMatch)
             .Select(players => new MatchPairing(players));
-        var pairings = new List<MatchPairing>(completePairings);
+        List<MatchPairing> pairings = [.. completePairings];
         foreach (MatchPairing pairing in pairings)
         {
             RemoveAll(pairing.Players);

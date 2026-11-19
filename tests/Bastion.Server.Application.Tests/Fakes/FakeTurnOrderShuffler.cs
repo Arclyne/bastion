@@ -16,6 +16,6 @@ public sealed class FakeTurnOrderShuffler : ITurnOrderShuffler
         }
 
         IEnumerable<TPlayer> reversedPlayers = Enumerable.Reverse(players);
-        return new List<TPlayer>(reversedPlayers);
+        return [.. reversedPlayers];
     }
 }

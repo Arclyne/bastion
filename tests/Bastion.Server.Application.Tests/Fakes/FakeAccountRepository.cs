@@ -67,14 +67,14 @@ public sealed class FakeAccountRepository : IAccountRepository
             .Where(playerIdentity => HasNicknamePrefix(playerIdentity, nicknamePrefix))
             .OrderBy(playerIdentity => playerIdentity.Nickname, StringComparer.OrdinalIgnoreCase)
             .Take(limit);
-        return new List<PlayerIdentity>(matchingIdentities);
+        return [.. matchingIdentities];
     }
 
     public IReadOnlyList<PlayerIdentity> ListPlayerIdentities(IReadOnlyCollection<int> accountIds)
     {
         IEnumerable<PlayerIdentity> listedIdentities = _playerIdentities
             .Where(playerIdentity => accountIds.Contains(playerIdentity.AccountId));
-        return new List<PlayerIdentity>(listedIdentities);
+        return [.. listedIdentities];
     }
 
     private static bool HasNicknamePrefix(PlayerIdentity playerIdentity, string nicknamePrefix)
