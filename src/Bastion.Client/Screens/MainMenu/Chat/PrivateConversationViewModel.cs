@@ -228,41 +228,19 @@ public sealed class PrivateConversationViewModel : ModeratedChatViewModel
         var draftMessage = new PrivateMessage(trimmedText, createdAt, isOwn: true);
         PrivateMessageRowViewModel row = AddMessage(draftMessage, isPending: true);
         Draft = string.Empty;
-        IsSending = true;
-        try
+        Func<DateTime> send = () => _conversations.SendMessage(_session.Token, partner.FriendCode, trimmedText);
+        Action<DateTime> confirmSent = sentAt => ConfirmSent(row, partner, draftMessage with { SentAt = sentAt });
+        await DeliverMessage(row, send, confirmSent);
+    }
+
+    protected override void ShowRejection(MessageRowViewModel row, ChatRejection rejection, DateTime? mutedUntil)
+    {
+        base.ShowRejection(row, rejection, mutedUntil);
+        if (rejection == ChatRejection.NotFriends)
         {
-            DateTime sentAt = await Task.Run(
-                () => _conversations.SendMessage(_session.Token, partner.FriendCode, trimmedText));
-            row.Confirm(sentAt);
-            PrivateMessage sentMessage = draftMessage with { SentAt = sentAt };
-            var messageSent = new PrivateMessageSentEventArgs(partner, sentMessage);
-            OnMessageSent(messageSent);
-        }
-        catch (ChatMessageRejectedException ex)
-        {
-            _logger.Warn($"The server turned down the private message. Rejection={ex.Rejection}", ex);
-            ShowRejection(row, ex.Rejection, ex.MutedUntil);
-        }
-        catch (InvalidSessionException ex)
-        {
-            _logger.Warn("The private message could not be sent because the session is no longer valid.", ex);
-            row.Fail(Strings.ChatSendFailed);
-        }
-        catch (ServerUnreachableException ex)
-        {
-            ReportSendFailure(row, ex);
-        }
-        catch (ConnectionLostException ex)
-        {
-            ReportSendFailure(row, ex);
-        }
-        catch (ServerErrorException ex)
-        {
-            ReportSendFailure(row, ex);
-        }
-        finally
-        {
-            IsSending = false;
+            IsFriend = false;
+            var nonFriendPresence = ConversationPresence.CreateForNonFriend();
+            ApplyPresence(nonFriendPresence);
         }
     }
 
@@ -372,31 +350,15 @@ public sealed class PrivateConversationViewModel : ModeratedChatViewModel
         HasLoadFailed = true;
     }
 
+    private void ConfirmSent(PrivateMessageRowViewModel row, PlayerTag partner, PrivateMessage sentMessage)
+    {
+        row.Confirm(sentMessage.SentAt);
+        var messageSent = new PrivateMessageSentEventArgs(partner, sentMessage);
+        OnMessageSent(messageSent);
+    }
+
     private void OnMessageSent(PrivateMessageSentEventArgs e)
     {
         MessageSent?.Invoke(this, e);
-    }
-
-    private void ShowRejection(PrivateMessageRowViewModel row, ChatRejection rejection, DateTime? mutedUntil)
-    {
-        row.Fail(ChatRejectionText.Describe(rejection));
-        if (rejection == ChatRejection.Muted)
-        {
-            var muteStatus = new ChatMuteStatus(IsMuted: true, mutedUntil);
-            ShowMuteStatus(muteStatus);
-        }
-
-        if (rejection == ChatRejection.NotFriends)
-        {
-            IsFriend = false;
-            var nonFriendPresence = ConversationPresence.CreateForNonFriend();
-            ApplyPresence(nonFriendPresence);
-        }
-    }
-
-    private void ReportSendFailure(PrivateMessageRowViewModel row, Exception cause)
-    {
-        _logger.Error("The private message could not be sent.", cause);
-        row.Fail(Strings.ChatSendFailed);
     }
 }

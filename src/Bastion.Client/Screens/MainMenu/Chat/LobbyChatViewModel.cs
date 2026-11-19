@@ -150,38 +150,8 @@ public sealed class LobbyChatViewModel : ModeratedChatViewModel, IDisposable
         UpdateReadingPosition(isReadingLatest: true);
         AddMessage(row);
         Draft = string.Empty;
-        IsSending = true;
-        try
-        {
-            DateTime sentAt = await Task.Run(() => _chat.SendLobbyChatMessage(_session.Token, trimmedText));
-            row.Confirm(sentAt);
-        }
-        catch (ChatMessageRejectedException ex)
-        {
-            _logger.Warn($"The server turned down the chat message. Rejection={ex.Rejection}", ex);
-            ShowRejection(row, ex.Rejection, ex.MutedUntil);
-        }
-        catch (InvalidSessionException ex)
-        {
-            _logger.Warn("The chat message could not be sent because the session is no longer valid.", ex);
-            row.Fail(Strings.ChatSendFailed);
-        }
-        catch (ServerUnreachableException ex)
-        {
-            ReportSendFailure(row, ex);
-        }
-        catch (ConnectionLostException ex)
-        {
-            ReportSendFailure(row, ex);
-        }
-        catch (ServerErrorException ex)
-        {
-            ReportSendFailure(row, ex);
-        }
-        finally
-        {
-            IsSending = false;
-        }
+        Func<DateTime> send = () => _chat.SendLobbyChatMessage(_session.Token, trimmedText);
+        await DeliverMessage(row, send, row.Confirm);
     }
 
     public void Dispose()
@@ -234,21 +204,5 @@ public sealed class LobbyChatViewModel : ModeratedChatViewModel, IDisposable
     {
         _logger.Error("The lobby chat could not be loaded.", cause);
         HasLoadFailed = true;
-    }
-
-    private void ShowRejection(ChatMessageRowViewModel row, ChatRejection rejection, DateTime? mutedUntil)
-    {
-        row.Fail(ChatRejectionText.Describe(rejection));
-        if (rejection == ChatRejection.Muted)
-        {
-            var muteStatus = new ChatMuteStatus(IsMuted: true, mutedUntil);
-            ShowMuteStatus(muteStatus);
-        }
-    }
-
-    private void ReportSendFailure(ChatMessageRowViewModel row, Exception cause)
-    {
-        _logger.Error("The chat message could not be sent.", cause);
-        row.Fail(Strings.ChatSendFailed);
     }
 }

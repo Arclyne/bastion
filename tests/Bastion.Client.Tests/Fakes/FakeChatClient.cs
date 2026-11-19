@@ -6,9 +6,11 @@ namespace Bastion.Client.Tests.Fakes;
 
 public sealed class FakeChatClient : IChatClient
 {
-    private const string LobbyChatNotSupported = "The tests that use this fake never use the lobby chat.";
+    private const string LobbyChatNotSupported = "The tests that use this fake never load the lobby chat.";
 
-    private static readonly DateTime _confirmedSentAt = new DateTime(2026, 11, 5, 18, 2, 0, DateTimeKind.Utc);
+    public static DateTime ConfirmedSentAt { get; } = new DateTime(2026, 11, 5, 18, 2, 0, DateTimeKind.Utc);
+
+    public Exception? LobbyChatSendFailure { get; set; }
 
     public Exception? MatchChatSendFailure { get; set; }
 
@@ -22,7 +24,13 @@ public sealed class FakeChatClient : IChatClient
 
     public DateTime SendLobbyChatMessage(string sessionToken, string text)
     {
-        throw new NotSupportedException(LobbyChatNotSupported);
+        if (LobbyChatSendFailure is not null)
+        {
+            throw LobbyChatSendFailure;
+        }
+
+        LastSentText = text;
+        return ConfirmedSentAt;
     }
 
     public DateTime SendMatchChatMessage(string sessionToken, int matchId, string text)
@@ -35,7 +43,7 @@ public sealed class FakeChatClient : IChatClient
         MatchChatSendCount++;
         LastSentMatchId = matchId;
         LastSentText = text;
-        return _confirmedSentAt;
+        return ConfirmedSentAt;
     }
 
     public LobbyChatTranscript OpenLobbyChat(string sessionToken)
