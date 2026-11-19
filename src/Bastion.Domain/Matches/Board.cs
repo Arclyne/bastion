@@ -27,7 +27,8 @@ public sealed record Board
 
     public BoardCoordinates GetPawnCoordinates(byte turnOrder)
     {
-        if (!_pawnsByTurnOrder.TryGetValue(turnOrder, out BoardCoordinates? pawn))
+        BoardCoordinates? pawn = _pawnsByTurnOrder.GetValueOrDefault(turnOrder);
+        if (pawn is null)
         {
             throw new ArgumentOutOfRangeException(nameof(turnOrder), turnOrder, "No pawn plays that turn.");
         }

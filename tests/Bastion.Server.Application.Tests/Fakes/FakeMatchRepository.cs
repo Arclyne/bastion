@@ -83,12 +83,8 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public IReadOnlyList<int> FindAccountIdsWithUnfinishedParticipation(int matchId)
     {
-        if (!UnfinishedParticipantAccountIdsByMatchId.TryGetValue(matchId, out List<int>? accountIds))
-        {
-            return Array.Empty<int>();
-        }
-
-        return accountIds;
+        IReadOnlyList<int>? accountIds = UnfinishedParticipantAccountIdsByMatchId.GetValueOrDefault(matchId);
+        return accountIds ?? Array.Empty<int>();
     }
 
     public long SaveMatchChatMessage(Message message)
@@ -104,12 +100,8 @@ public sealed class FakeMatchRepository : IMatchRepository
 
     public Lookup<Match> FindMatch(int matchId)
     {
-        if (!MatchesById.TryGetValue(matchId, out Match? match))
-        {
-            return Lookup.Missing<Match>($"MatchId={matchId}");
-        }
-
-        return Lookup.Found(match);
+        Match? match = MatchesById.GetValueOrDefault(matchId);
+        return Lookup.FromNullable(match, $"MatchId={matchId}");
     }
 
     public void SaveAbandonment(Match match)

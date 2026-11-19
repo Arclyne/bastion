@@ -80,7 +80,8 @@ public sealed class NotificationCallback : INotificationCallback
         }
 
         Type notificationType = notification.GetType();
-        if (!_dispatchersByNotificationType.TryGetValue(notificationType, out Action<Notification>? dispatch))
+        Action<Notification>? dispatch = _dispatchersByNotificationType.GetValueOrDefault(notificationType);
+        if (dispatch is null)
         {
             _logger.Warn($"A notification of an unknown type was ignored. Type={notificationType.Name}");
             return;
