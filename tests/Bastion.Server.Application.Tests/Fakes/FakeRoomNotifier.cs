@@ -9,11 +9,14 @@ public sealed class FakeRoomNotifier : IRoomNotifier
     {
         UpdatedRooms = [];
         ClosedRooms = [];
+        KickedAccountIds = [];
     }
 
     public List<NotifiedRoom> UpdatedRooms { get; }
 
     public List<NotifiedRoom> ClosedRooms { get; }
+
+    public List<int> KickedAccountIds { get; }
 
     public void NotifyRoomUpdated(RoomSnapshot room, int originAccountId)
     {
@@ -25,5 +28,10 @@ public sealed class FakeRoomNotifier : IRoomNotifier
     {
         var closedRoom = new NotifiedRoom(room, originAccountId);
         ClosedRooms.Add(closedRoom);
+    }
+
+    public void NotifyKicked(RoomSnapshot room, int kickedAccountId)
+    {
+        KickedAccountIds.Add(kickedAccountId);
     }
 }

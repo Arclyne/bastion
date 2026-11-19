@@ -113,6 +113,41 @@ public sealed class RoomRegistry : IRoomRegistry
         }
     }
 
+    public RoomKick Kick(int hostAccountId, string nickname)
+    {
+        ArgumentNullException.ThrowIfNull(nickname);
+
+        lock (_roomsLock)
+        {
+            WaitingRoom room = GetHostedRoom(hostAccountId);
+            Lookup<RoomMember> foundMember = room.FindMember(nickname);
+            if (!foundMember.IsFound)
+            {
+                return new RoomKick
+                {
+                    Room = RoomSnapshot.Capture(room),
+                    IsMemberKicked = false,
+                    KickedAccountId = 0,
+                };
+            }
+
+            int kickedAccountId = foundMember.GetValue().AccountId;
+            if (room.IsHost(kickedAccountId))
+            {
+                throw new RoomRejectedException(RoomRejection.HostNotKickable);
+            }
+
+            room.Kick(kickedAccountId);
+            _roomsByAccountId.Remove(kickedAccountId);
+            return new RoomKick
+            {
+                Room = RoomSnapshot.Capture(room),
+                IsMemberKicked = true,
+                KickedAccountId = kickedAccountId,
+            };
+        }
+    }
+
     public Lookup<RoomDeparture> Leave(int accountId)
     {
         lock (_roomsLock)

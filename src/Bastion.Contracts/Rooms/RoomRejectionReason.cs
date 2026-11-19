@@ -46,4 +46,7 @@ public enum RoomRejectionReason
 
     [EnumMember]
     MatchStarted,
+
+    [EnumMember]
+    HostNotKickable,
 }

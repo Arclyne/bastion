@@ -80,6 +80,20 @@ public sealed class RoomKeeper : IRoomKeeper
         return room;
     }
 
+    public RoomSnapshot Kick(int hostAccountId, string nickname)
+    {
+        ArgumentNullException.ThrowIfNull(nickname);
+
+        RoomKick kick = _roomRegistry.Kick(hostAccountId, nickname);
+        if (kick.IsMemberKicked)
+        {
+            _roomNotifier.NotifyKicked(kick.Room, kick.KickedAccountId);
+            _roomNotifier.NotifyRoomUpdated(kick.Room, hostAccountId);
+        }
+
+        return kick.Room;
+    }
+
     public void Leave(int accountId, DateTime now)
     {
         Lookup<RoomDeparture> foundDeparture = _roomRegistry.Leave(accountId);

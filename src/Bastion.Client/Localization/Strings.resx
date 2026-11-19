@@ -771,4 +771,232 @@
   <data name="DrawAnswerFailed" xml:space="preserve">
     <value>We could not answer the draw offer.</value>
   </data>
+  <data name="RoomCreateTitle" xml:space="preserve">
+    <value>Create room</value>
+  </data>
+  <data name="RoomEditTitle" xml:space="preserve">
+    <value>Room settings</value>
+  </data>
+  <data name="RoomOpen" xml:space="preserve">
+    <value>Open room</value>
+  </data>
+  <data name="RoomSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="RoomCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="RoomModeLabel" xml:space="preserve">
+    <value>Mode</value>
+  </data>
+  <data name="RoomWallsLabel" xml:space="preserve">
+    <value>Walls per player</value>
+  </data>
+  <data name="RoomClockLabel" xml:space="preserve">
+    <value>Clock per player</value>
+  </data>
+  <data name="RoomClassicName" xml:space="preserve">
+    <value>Classic</value>
+  </data>
+  <data name="RoomFourPlayersName" xml:space="preserve">
+    <value>Four</value>
+  </data>
+  <data name="RoomQuickName" xml:space="preserve">
+    <value>Quick</value>
+  </data>
+  <data name="RoomModeDetailFormat" xml:space="preserve">
+    <value>{0} players · {1}×{1}</value>
+  </data>
+  <data name="RoomModeWallsFormat" xml:space="preserve">
+    <value>{0} walls</value>
+  </data>
+  <data name="RoomModeCrowdedFormat" xml:space="preserve">
+    <value>{0} players in the room</value>
+  </data>
+  <data name="RoomWallsHintFormat" xml:space="preserve">
+    <value>Between 1 and 20. {0} suggests {1}.</value>
+  </data>
+  <data name="RoomClockFormat" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="RoomFriendly" xml:space="preserve">
+    <value>Friendly: nobody's elo changes.</value>
+  </data>
+  <data name="RoomMembersNotice" xml:space="preserve">
+    <value>The other players will have to say they are ready again.</value>
+  </data>
+  <data name="RoomTitle" xml:space="preserve">
+    <value>Private room</value>
+  </data>
+  <data name="RoomFriendlyChip" xml:space="preserve">
+    <value>Friendly · elo does not change</value>
+  </data>
+  <data name="RoomCodeLabel" xml:space="preserve">
+    <value>ROOM CODE</value>
+  </data>
+  <data name="RoomCodeHint" xml:space="preserve">
+    <value>Share it however you like. Others join with «Join with code» in the menu.</value>
+  </data>
+  <data name="RoomCopyCode" xml:space="preserve">
+    <value>Copy code</value>
+  </data>
+  <data name="RoomCodeCopied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="RoomSettingsLabel" xml:space="preserve">
+    <value>SETTINGS</value>
+  </data>
+  <data name="RoomChangeSettings" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="RoomModeValueFormat" xml:space="preserve">
+    <value>{0} · {1} players · {2}×{2}</value>
+  </data>
+  <data name="RoomPlayersFormat" xml:space="preserve">
+    <value>PLAYERS · {0} OF {1}</value>
+  </data>
+  <data name="RoomFreeSeat" xml:space="preserve">
+    <value>Free seat</value>
+  </data>
+  <data name="RoomFreeSeatHint" xml:space="preserve">
+    <value>Anyone with the code can join.</value>
+  </data>
+  <data name="RoomHostChip" xml:space="preserve">
+    <value>Host</value>
+  </data>
+  <data name="RoomReadyChip" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="RoomNotReadyChip" xml:space="preserve">
+    <value>Not ready yet</value>
+  </data>
+  <data name="RoomOwnNameFormat" xml:space="preserve">
+    <value>{0} (you)</value>
+  </data>
+  <data name="RoomKick" xml:space="preserve">
+    <value>Kick</value>
+  </data>
+  <data name="RoomStartMatch" xml:space="preserve">
+    <value>Start match</value>
+  </data>
+  <data name="RoomStarting" xml:space="preserve">
+    <value>Starting…</value>
+  </data>
+  <data name="RoomWaitingOneSeat" xml:space="preserve">
+    <value>1 seat is still free.</value>
+  </data>
+  <data name="RoomWaitingSeatsFormat" xml:space="preserve">
+    <value>{0} seats are still free.</value>
+  </data>
+  <data name="RoomWaitingReadyFormat" xml:space="preserve">
+    <value>{0} is not ready yet.</value>
+  </data>
+  <data name="RoomWaitingManyReady" xml:space="preserve">
+    <value>Some players are not ready yet.</value>
+  </data>
+  <data name="RoomAllReady" xml:space="preserve">
+    <value>Everyone is ready.</value>
+  </data>
+  <data name="RoomReady" xml:space="preserve">
+    <value>I'm ready</value>
+  </data>
+  <data name="RoomNotReady" xml:space="preserve">
+    <value>I'm not ready</value>
+  </data>
+  <data name="RoomReadyHint" xml:space="preserve">
+    <value>Check the settings and say when you are ready.</value>
+  </data>
+  <data name="RoomReadyWaitingFormat" xml:space="preserve">
+    <value>Ready. Wait for {0} to start the match.</value>
+  </data>
+  <data name="RoomCloseRoom" xml:space="preserve">
+    <value>Close room</value>
+  </data>
+  <data name="RoomLeaveRoom" xml:space="preserve">
+    <value>Leave room</value>
+  </data>
+  <data name="RoomChangedNoticeFormat" xml:space="preserve">
+    <value>{0} changed the settings. Check them and say you are ready again.</value>
+  </data>
+  <data name="RoomChangedChip" xml:space="preserve">
+    <value>Changed</value>
+  </data>
+  <data name="RoomKickTitleFormat" xml:space="preserve">
+    <value>Kick {0}?</value>
+  </data>
+  <data name="RoomKickMessage" xml:space="preserve">
+    <value>They will leave the room and cannot join this room again, even with the code. It is not a sanction.</value>
+  </data>
+  <data name="RoomKickedNoticeFormat" xml:space="preserve">
+    <value>{0} took you out of their room. You cannot join that room again.</value>
+  </data>
+  <data name="RoomClosedNoticeFormat" xml:space="preserve">
+    <value>The room closed. {0} left the room.</value>
+  </data>
+  <data name="RoomLostConnectionNotice" xml:space="preserve">
+    <value>You left the room because the connection was lost.</value>
+  </data>
+  <data name="RoomJoinTitle" xml:space="preserve">
+    <value>Join with code</value>
+  </data>
+  <data name="RoomJoinMessage" xml:space="preserve">
+    <value>Ask the person who created the room for the code.</value>
+  </data>
+  <data name="RoomJoinHint" xml:space="preserve">
+    <value>Six letters or numbers. You can paste it.</value>
+  </data>
+  <data name="RoomJoinEnter" xml:space="preserve">
+    <value>Join</value>
+  </data>
+  <data name="RoomJoinEntering" xml:space="preserve">
+    <value>Joining…</value>
+  </data>
+  <data name="RoomJoinInvalid" xml:space="preserve">
+    <value>The code has six letters or numbers.</value>
+  </data>
+  <data name="RoomJoinNotFound" xml:space="preserve">
+    <value>We found no open room with that code.</value>
+  </data>
+  <data name="RoomJoinFull" xml:space="preserve">
+    <value>That room has no free seats.</value>
+  </data>
+  <data name="RoomJoinStarted" xml:space="preserve">
+    <value>The match of that room already started.</value>
+  </data>
+  <data name="RoomJoinKicked" xml:space="preserve">
+    <value>The host kicked you out of that room. You cannot join it again.</value>
+  </data>
+  <data name="RoomJoinTooManyFormat" xml:space="preserve">
+    <value>You tried too many codes. Wait {0} to try again.</value>
+  </data>
+  <data name="RoomBusySearching" xml:space="preserve">
+    <value>You are searching for a match. Cancel the search first.</value>
+  </data>
+  <data name="RoomBusyMatch" xml:space="preserve">
+    <value>You have a match in progress.</value>
+  </data>
+  <data name="RoomBusyInRoom" xml:space="preserve">
+    <value>You are already in a room.</value>
+  </data>
+  <data name="RoomNotificationsUnavailable" xml:space="preserve">
+    <value>Notifications are not connected yet. Try again in a moment.</value>
+  </data>
+  <data name="RoomRequestFailed" xml:space="preserve">
+    <value>The server could not answer. Try again.</value>
+  </data>
+  <data name="RoomTooManyPlayers" xml:space="preserve">
+    <value>That mode has fewer seats than players in the room.</value>
+  </data>
+  <data name="RoomNotReadyToStart" xml:space="preserve">
+    <value>Not every seat is taken and ready.</value>
+  </data>
+  <data name="RoomDismiss" xml:space="preserve">
+    <value>×</value>
+  </data>
+  <data name="RoomMinus" xml:space="preserve">
+    <value>-</value>
+  </data>
+  <data name="RoomPlus" xml:space="preserve">
+    <value>+</value>
+  </data>
 </root>

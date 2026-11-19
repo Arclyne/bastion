@@ -20,6 +20,8 @@ public interface IRoomRegistry
 
     RoomSnapshot ChangeSettings(int accountId, RoomSettings settings);
 
+    RoomKick Kick(int hostAccountId, string nickname);
+
     Lookup<RoomDeparture> Leave(int accountId);
 
     Lookup<RoomSnapshot> FindRoomOf(int accountId);

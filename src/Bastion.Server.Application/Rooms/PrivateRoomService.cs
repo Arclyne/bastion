@@ -69,6 +69,15 @@ public sealed class PrivateRoomService : IPrivateRoomService
     }
 
     /// <inheritdoc/>
+    public RoomSnapshot KickPlayer(string sessionToken, string nickname, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(sessionToken);
+        ArgumentNullException.ThrowIfNull(nickname);
+
+        ConnectedPlayer host = _playerVerifier.VerifySession(sessionToken, now);
+        return _roomKeeper.Kick(host.AccountId, nickname);
+    }
+
     public void LeaveRoom(string sessionToken, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(sessionToken);

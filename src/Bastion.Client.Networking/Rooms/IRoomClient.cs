@@ -21,6 +21,8 @@ public interface IRoomClient
 
     void StartMatch(string sessionToken);
 
+    PrivateRoom KickPlayer(string sessionToken, string nickname);
+
     void LeaveRoom(string sessionToken);
 
     OwnRoom FindOwnRoom(string sessionToken);

@@ -70,6 +70,21 @@ public interface IPrivateRoomService
     RoomSnapshot ChangeSettings(string sessionToken, RequestedRoomSettings requestedSettings, DateTime now);
 
     /// <summary>
+    /// Takes a member out of the room hosted by the player of the session. The kicked player cannot join that room
+    /// again while it stays open.
+    /// </summary>
+    /// <param name="sessionToken">The token of the host's open session.</param>
+    /// <param name="nickname">The nickname of the member to kick.</param>
+    /// <param name="now">The current UTC time.</param>
+    /// <returns>The room after the kick; unchanged when nobody with that nickname is in it.</returns>
+    /// <exception cref="ArgumentNullException">An argument is null.</exception>
+    /// <exception cref="InvalidSessionException">The session is not open.</exception>
+    /// <exception cref="RoomRejectedException">
+    /// The player is not hosting a room, or tried to kick themselves.
+    /// </exception>
+    RoomSnapshot KickPlayer(string sessionToken, string nickname, DateTime now);
+
+    /// <summary>
     /// Takes the player of the session out of their room. When the host leaves, the room closes.
     /// Does nothing if the player is not in a room.
     /// </summary>

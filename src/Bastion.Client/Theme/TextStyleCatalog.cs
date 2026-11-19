@@ -97,4 +97,47 @@ public static class TextStyleCatalog
     public static TextStyle PlayerAway { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 13, Palette.Warning);
 
     public static TextStyle PlayerDrawOffer { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 13, Palette.Info);
+
+    public static TextStyle RoomTitle { get; } = new TextStyle(FontCatalog.Display, fontSize: 26, Palette.Ink);
+
+    public static TextStyle RoomHostChip { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 12, Palette.Accent);
+
+    public static TextStyle RoomReadyChip { get; } =
+        new TextStyle(FontCatalog.ExtraBold, fontSize: 12, Palette.Success);
+
+    public static TextStyle RoomWaitingChip { get; } =
+        new TextStyle(FontCatalog.ExtraBold, fontSize: 12, Palette.Warning);
+
+    public static TextStyle RoomFriendlyChip { get; } =
+        new TextStyle(FontCatalog.ExtraBold, fontSize: 12, Palette.Info);
+
+    public static TextStyle RoomValue { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 15, Palette.Ink);
+
+    public static TextStyle RoomCodeLetter { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 22, Palette.Ink);
+
+    public static TextStyle JoinCodeLetter { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 28, Palette.Ink);
+
+    public static TextStyle RoomFooterPositive { get; } =
+        new TextStyle(FontCatalog.Bold, fontSize: 14, Palette.Success);
+
+    public static TextStyle RoomFooterNeutral { get; } = new TextStyle(FontCatalog.Bold, fontSize: 14, Palette.Body);
+
+    public static TextStyle RoomModeName { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 15, Palette.Ink);
+
+    public static TextStyle RoomModeDetail { get; } = new TextStyle(FontCatalog.Bold, fontSize: 12, Palette.Body);
+
+    public static TextStyle RoomModeCaption { get; } = new TextStyle(FontCatalog.Bold, fontSize: 12, Palette.Muted);
+
+    public static TextStyle RoomStepperValue { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 20, Palette.Ink);
+
+    public static TextStyle RoomClockSelected { get; } =
+        new TextStyle(FontCatalog.ExtraBold, fontSize: 15, Palette.White);
+
+    public static TextStyle RoomClockIdle { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 15, Palette.Ink);
+
+    public static TextStyle RoomFriendly { get; } = new TextStyle(FontCatalog.Bold, fontSize: 13, Palette.Info);
+
+    public static TextStyle RoomSeatName { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 16, Palette.Ink);
+
+    public static TextStyle RoomFreeSeat { get; } = new TextStyle(FontCatalog.ExtraBold, fontSize: 16, Palette.Body);
 }

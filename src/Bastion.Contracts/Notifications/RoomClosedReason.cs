@@ -7,4 +7,7 @@ public enum RoomClosedReason
 {
     [EnumMember]
     HostLeft,
+
+    [EnumMember]
+    Kicked,
 }

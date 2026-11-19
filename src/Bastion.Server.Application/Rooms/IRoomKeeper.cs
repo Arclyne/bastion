@@ -15,6 +15,8 @@ public interface IRoomKeeper
 
     RoomSnapshot ChangeSettings(int accountId, RoomSettings settings, DateTime now);
 
+    RoomSnapshot Kick(int hostAccountId, string nickname);
+
     void Leave(int accountId, DateTime now);
 
     Lookup<RoomSnapshot> FindRoomOf(int accountId);
