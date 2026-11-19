@@ -25,7 +25,7 @@ public sealed class TestStrings
         nameof(Strings.LanguageNameEnglish),
         nameof(Strings.LanguageNameSpanish),
     };
-    private static readonly string[] _brokenCharacterMarks = { "�", "Ã", "Â", "â€" };
+    private static readonly string[] _brokenCharacterMarks = { "\uFFFD", "Ã", "Â", "â€" };
     private static readonly Regex _placeholderPattern = TextPattern.Create(@"\{\d+(?:[,:][^}]*)?\}");
 
     [Fact]
